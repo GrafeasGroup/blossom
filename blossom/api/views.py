@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 
 
 def index(request):
-    html = 'index.html'
+    html = 'farts.html'
 
     return render(request, html)
 
