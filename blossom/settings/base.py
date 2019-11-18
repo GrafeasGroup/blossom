@@ -25,8 +25,13 @@ SECRET_KEY = 'v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.grafeas.org', 'grafeas.org']
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static_dev')
+]
 
 # Application definition
 
@@ -37,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'blossom'
 ]
 
 MIDDLEWARE = [
@@ -54,7 +60,10 @@ ROOT_URLCONF = 'blossom.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates', 'website'),
+            os.path.join(BASE_DIR, 'templates', 'app')
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
