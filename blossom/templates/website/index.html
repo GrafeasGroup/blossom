@@ -1,5 +1,12 @@
-{% extends "partials/base.partial" %}
+{% extends "website/partials/base.partial" %}
 
 {% block content %}
-    TEST
+    {% for p in posts %}
+        <p>
+            {{ p.title }}
+        </p>
+        <p>
+            {{ p.body|safe }}
+        </p>
+    {% endfor %}
 {% endblock %}

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from blossom.website import views
+from blossom.api import views
 
 urlpatterns = [
     path('', views.index, name='homepage'),

@@ -20,6 +20,7 @@
 
 <body>
 <div class="content container">
+    {% include 'website/partials/navbar.partial' %}
     <div class="row">
         <div class="col-md-8">
             {% block content %}
