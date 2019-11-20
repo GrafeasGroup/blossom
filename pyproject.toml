@@ -8,6 +8,7 @@ authors = ["Grafeas Group Ltd. <devs@grafeas.org>"]
 python = "^3.8"
 django = "^2.2"
 django-hosts = "^3.0"
+django-widget-tweaks = "^1.4"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"

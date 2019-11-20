@@ -20,14 +20,20 @@ from django.urls import path
 
 from blossom.website.models import Post
 from blossom.website.urls import urlpatterns as website_urls
+from blossom.authentication.custom_user import BlossomUser
+from blossom.website.views import LoginView
 
+admin.autodiscover()
+admin.site.login = LoginView.as_view()
+
+admin.site.register(BlossomUser)
 admin.site.register(Post)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('/admin', admin.site.urls),
 ]
 
 urlpatterns += website_urls
 
-if settings.DEBUG :
+if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
