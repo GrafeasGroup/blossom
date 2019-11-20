@@ -28,8 +28,8 @@ class PostView(TemplateView):
 
 class LoginView(TemplateView):
     def get(self, request, *args, **kwargs):
-        form = LoginForm
-        return render(request, 'website/login.html', {'form': form})
+        form = LoginForm()
+        return render(request, 'website/generic_form.html', {'form': form})
 
     def post(self, request, *args, **kwargs):
         form = LoginForm(request.POST)
@@ -41,6 +41,7 @@ class LoginView(TemplateView):
                 login(request, user)
                 return HttpResponseRedirect(request.GET.get('next'))
             return HttpResponseRedirect('/')
+
 
 class PostDetail(DetailView):
     model = Post
@@ -61,7 +62,7 @@ class PostAdd(TemplateView):
             'form': PostAddForm(),
             'header': 'Add a new post!',
             'subheader': 'This will add a new post.',
-            # 'navbar': (
-            #     Post.objects.filter(Q(published=True) & Q(standalone_section=True))
-            # )
+            'navbar': (
+                Post.objects.filter(Q(published=True) & Q(standalone_section=True))
+            )
         })

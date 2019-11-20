@@ -30,7 +30,7 @@ admin.site.register(BlossomUser)
 admin.site.register(Post)
 
 urlpatterns = [
-    path('/admin', admin.site.urls),
+    path('admin/', admin.site.urls),
 ]
 
 urlpatterns += website_urls

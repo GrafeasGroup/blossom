@@ -61,3 +61,7 @@ pre {
     font-weight: 400;
     line-height: 18.5714px;
 }
+
+.content {
+    margin-top: 1em;
+}
