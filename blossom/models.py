@@ -1,3 +1,4 @@
+from blossom.api.models import *
 from blossom.authentication.custom_user import BlossomUser
 
 # This is only here because Django hates recognizing the AUTH_USER_MODEL when

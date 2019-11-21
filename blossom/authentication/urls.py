@@ -1,6 +1,8 @@
-from django.contrib import admin
 from django.urls import path
 
-from blossom.website import views
+from blossom.authentication.views import LoginView, LogoutView
 
-urlpatterns = []
+urlpatterns = [
+    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView, name='logout')
+]

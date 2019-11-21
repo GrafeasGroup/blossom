@@ -1,10 +1,13 @@
 {% extends 'website/partials/base.partial' %}
 
 {% block content %}
+    {% if request.user.is_authenticated %}
+        <a class="btn btn-primary" href="edit/">Edit!</a>
+    {% endif %}
     <p>
-        {{ post.title }}
+    <h1>{{ post.title }}</h1>
     </p>
     <p>
-        {{ post.body }}
+        {{ post.body|safe }}
     </p>
 {% endblock %}

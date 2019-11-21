@@ -18,22 +18,30 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
+from blossom.authentication.custom_user import BlossomUser
+from blossom.authentication.views import LoginView
 from blossom.website.models import Post
 from blossom.website.urls import urlpatterns as website_urls
-from blossom.authentication.custom_user import BlossomUser
-from blossom.website.views import LoginView
+from blossom.website.views import user_create
+from blossom.api.models import Submission, Volunteer, Transcription
+
 
 admin.autodiscover()
 admin.site.login = LoginView.as_view()
 
 admin.site.register(BlossomUser)
 admin.site.register(Post)
+admin.site.register(Submission)
+admin.site.register(Volunteer)
+admin.site.register(Transcription)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('superadmin/newuser', user_create, name='user_create'),
+    path('superadmin/', admin.site.urls),
 ]
 
 urlpatterns += website_urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

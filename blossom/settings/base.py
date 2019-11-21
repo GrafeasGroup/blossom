@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
+import dotenv
+from django_hosts.resolvers import reverse_lazy
+
+dotenv.load_dotenv()
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -19,22 +24,34 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx'
+SECRET_KEY = os.environ.get(
+    "BLOSSOM_SECRET_KEY",
+    'v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.grafeas.org', 'grafeas.org']
+# force cross-domain cookies so that wiki login can use the regular login page
+ALLOWED_HOSTS = ['.grafeas.org/', 'grafeas.org/']
+SESSION_COOKIE_DOMAIN = 'grafeas.org'
 
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/2.2/howto/static-files/
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static_dev')
 ]
 
+LOGIN_URL = "/login/"
+
 # for subdomain routing
 ROOT_HOSTCONF = 'blossom.hosts'
 DEFAULT_HOST = 'www'
+PARENT_HOST = 'grafeas.org'
 
 # Application definition
 
@@ -47,7 +64,24 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_hosts',
     'widget_tweaks',
+    # wiki
+    'django.contrib.sites.apps.SitesConfig',
+    'django.contrib.humanize.apps.HumanizeConfig',
+    'django_nyt.apps.DjangoNytConfig',
+    'mptt',
+    'sekizai',
+    'sorl.thumbnail',
+    'wiki.apps.WikiConfig',
+    'wiki.plugins.attachments.apps.AttachmentsConfig',
+    # todo: this is super broken for some reason
+    # 'wiki.plugins.notifications.apps.NotificationsConfig',
+    'wiki.plugins.images.apps.ImagesConfig',
+    'wiki.plugins.macros.apps.MacrosConfig',
     'blossom',
+    "rest_framework",
+    "rest_framework_api_key",
+    "drf_yasg",
+    "social_django",
 ]
 
 AUTH_USER_MODEL = 'blossom.BlossomUser'
@@ -61,9 +95,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'blossom.wiki.middleware.wiki_media_url_rewrite',
     'django_hosts.middleware.HostsResponseMiddleware',
 ]
 
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # One month
 ROOT_URLCONF = 'blossom.urls'
 
 TEMPLATES = [
@@ -71,6 +108,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'templates', 'wiki')
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -79,6 +117,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'sekizai.context_processors.sekizai',
             ],
         },
     },
@@ -91,9 +130,22 @@ WSGI_APPLICATION = 'blossom.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'blossom',
+        'USER': 'blossom_app',
+        'PASSWORD': os.getenv(
+            'DJANGO_BLOSSOM_DB_PASSWORD',
+            'Pink fluffy unicorns dancing on rainbows'
+        ),
+        'HOST': 'localhost',
+        'PORT': '',
     }
+}
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 25,
+    "DEFAULT_PERMISSION_CLASSES": ("blossom.api.authentication.BlossomApiPermission",),
 }
 
 # Password validation
@@ -115,7 +167,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'blossom.authentication.custom_auth.EmailBackend'
+    'blossom.authentication.custom_auth.EmailBackend',
+    "blossom.social_auth.reddit.RedditOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 # Internationalization
@@ -131,7 +185,15 @@ USE_L10N = True
 
 USE_TZ = True
 
+<<<<<<< HEAD
+SITE_ID = 1
+=======
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static_dev')
+]
+>>>>>>> 730e6d5 (add migrations, update settings to allow for postgres db, and fix betterexceptions)

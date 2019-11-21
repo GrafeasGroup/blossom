@@ -9,9 +9,27 @@ python = "^3.8"
 django = "^2.2"
 django-hosts = "^3.0"
 django-widget-tweaks = "^1.4"
+stripe = "^2.40.0"
+requests = "^2.22.0"
+wiki = "^0.5.0"
+pygments = "^2.4"
+pytest-django = "^3.7"
+pytest-cov = "^2.8"
+pytest-mock = "^1.13"
+djangorestframework = "^3.11.0"
+djangorestframework-api-key = "^1.4.1"
+psaw = "^0.0.7"
+redis = "^3.3.11"
+social-auth-app-django = "^3.1.0"
+python-dotenv = "^0.10.3"
+dpath = "^1.4.2"
+timeout-decorator = "^0.4.1"
+psycopg2-binary = "^2.8.4"
+drf-yasg = "^1.17"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"
+black = "^19.10b0"
 
 [build-system]
 requires = ["poetry>=0.12"]

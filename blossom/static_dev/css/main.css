@@ -14,7 +14,7 @@ Scribe Red: #e57378
 
 #navbar-logo {
     margin-bottom: 3px;
-    margin-right: 5px;
+    margin-right: 10px;
 }
 
 h1 {
@@ -35,7 +35,7 @@ h3 {
     line-height: 15.4px;
 }
 
-p {
+p li {
     font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
     font-size: 14px;
     font-style: normal;
@@ -62,6 +62,18 @@ pre {
     line-height: 18.5714px;
 }
 
+a {
+    color: black
+}
+
 .content {
     margin-top: 1em;
+}
+
+.real-link {
+    text-decoration: underline;
+}
+
+.footer {
+    font-size: smaller;
 }

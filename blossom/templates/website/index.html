@@ -1,12 +1,33 @@
 {% extends "website/partials/base.partial" %}
+{% load static %}
+{% load hosts %}
+{% load uri_helpers %}
+{% load fun_footers %}
 
 {% block content %}
+    {% if not posts %}
+        <p>
+        <h1 class="text-center">There's nothing here! Why not <a href="{% host_url "post_create" host 'www' %}"
+                                                                 style="text-decoration: underline">add
+            something?</a></h1>
+        </p>
+    {% endif %}
     {% for p in posts %}
         <p>
-            <h1>{{ p.title }}</h1>
+        <h1><a href="{% get_absolute_uri p request.host.name %}">{{ p.title }}</a></h1>
         </p>
         <p>
             {{ p.body|safe }}
         </p>
+        <hr>
     {% endfor %}
+    <div class="text-center">
+        {% if request.host.name == 'engineeringblog' %}
+            <div class="text-muted">
+                {% generate_engineering_footer %}
+            </div>
+        {% endif %}
+        <img src="{% static "images/logo.svg" %}" width="70px" alt="Logo">
+    </div>
+
 {% endblock %}
