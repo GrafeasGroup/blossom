@@ -18,7 +18,7 @@ class Post(models.Model):
         editable=False,
         max_length=70
     )
-    published = models.BooleanField()
+    published = models.BooleanField(default=False)
     header_order = models.IntegerField(
         help_text="Optional: an integer from 1-99 -- lower numbers will appear "
                   "more to the left.",

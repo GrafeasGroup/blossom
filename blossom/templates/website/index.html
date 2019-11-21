@@ -1,12 +1,18 @@
 {% extends "website/partials/base.partial" %}
+{% load static %}
 
 {% block content %}
     {% for p in posts %}
         <p>
-            <h1>{{ p.title }}</h1>
+        <h1><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></h1>
         </p>
         <p>
             {{ p.body|safe }}
         </p>
+        <hr>
     {% endfor %}
+    <div class="text-center">
+        <img src="{% static "images/logo.svg" %}" width="70px" alt="Logo">
+    </div>
+
 {% endblock %}

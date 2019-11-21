@@ -3,7 +3,7 @@
 <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #eae4da;">
     <div class="container">
         <a class="navbar-brand" href="/">
-            <img src="{% static "images/logo.svg" %}" width="30px" id="navbar-logo" alt="Grafeas Group Logo">Grafeas Group
+            <img src="{% static "images/logo.svg" %}" width="30px" id="navbar-logo" alt="Logo">Grafeas Group
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -12,12 +12,25 @@
 
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="/">News</a>
+                </li>
                 {% for item in n %}
                     <li class="nav-item active">
                         <a class="nav-link" href="{{ item.get_absolute_url }}">{{ item.title }}</a>
                     </li>
                 {% endfor %}
+                <li class="nav-item active">
+                    <a class="nav-link" rel="noreferrer" target="_blank" href="https://github.com/GrafeasGroup/">Github</a>
+                </li>
             </ul>
+            {% if request.user.is_authenticated %}
+                <ul class="navbar-nav my-2 my-lg-0">
+                    <li class="nav-item active">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            {% endif %}
         </div>
     </div>
 </nav>

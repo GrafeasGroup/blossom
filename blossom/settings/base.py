@@ -32,6 +32,8 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static_dev')
 ]
 
+LOGIN_URL = "login/"
+
 # for subdomain routing
 ROOT_HOSTCONF = 'blossom.hosts'
 DEFAULT_HOST = 'www'
