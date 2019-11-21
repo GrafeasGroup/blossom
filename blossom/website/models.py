@@ -1,13 +1,14 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.urls import reverse
 from django.utils.text import slugify
 from django.utils import timezone
+
+from django_hosts.resolvers import reverse
 
 
 class Post(models.Model):
     title = models.CharField(max_length=70)
-    body = models.TextField()
+    body = models.TextField(help_text="Feel free to use raw HTML tags for styling!")
     author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     date = models.DateTimeField(default=timezone.now)
 
@@ -24,13 +25,16 @@ class Post(models.Model):
                   "more to the left.",
         blank=True, null=True
     )
+    show_in_news_view = models.BooleanField(default=True)
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, request):
         kwargs = {
             'pk': self.id,
             'slug': self.slug
         }
-        return reverse('post_detail', kwargs=kwargs)
+        # TODO: FIX URL RESOLUTION
+        # https://stackoverflow.com/questions/4093999/how-to-use-django-to-get-the-name-for-the-host-server
+        return reverse('post_detail', kwargs=kwargs, host='www')
 
     def save(self, *args, **kwargs):
         value = self.title

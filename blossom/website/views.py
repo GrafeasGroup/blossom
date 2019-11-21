@@ -7,14 +7,20 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from blossom.website.models import Post
 from blossom.website.forms import LoginForm, PostAddForm
+from blossom.website.helpers import get_additional_context
 from blossom.authentication.custom_auth import EmailBackend
 
 def index(request):
+    c = {
+        'posts': Post.objects.filter(
+            Q(published=True) &
+            Q(standalone_section=False) &
+            Q(show_in_news_view=True)
+        )
+    }
+    c = get_additional_context(c)
     return render(
-        request, 'website/index.html', {
-            'posts': Post.objects.filter(Q(published=True) & Q(standalone_section=False)),
-            'navbar': Post.objects.filter(Q(published=True) & Q(standalone_section=True))
-        }
+        request, 'website/index.html', c
     )
 
 
@@ -56,9 +62,7 @@ class PostDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['navbar'] = (
-            Post.objects.filter(Q(published=True) & Q(standalone_section=True))
-        )
+        context = get_additional_context(context)
         return context
 
 
@@ -70,22 +74,19 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['navbar'] = (
-            Post.objects.filter(Q(published=True) & Q(standalone_section=True))
-        )
+        context = get_additional_context(context)
         return context
 
 
 class PostAdd(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
-        return render(request, 'website/generic_form.html', {
+        c = {
             'form': PostAddForm(),
             'header': 'Add a new post!',
             'subheader': 'Remember to toggle "Published" if you want your post to appear!',
-            'navbar': (
-                Post.objects.filter(Q(published=True) & Q(standalone_section=True))
-            )
-        })
+        }
+        c = get_additional_context(c)
+        return render(request, 'website/generic_form.html', c)
 
     def post(self, request, *args, **kwargs):
         form = PostAddForm(request.POST)

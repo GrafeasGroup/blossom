@@ -35,7 +35,7 @@ h3 {
     line-height: 15.4px;
 }
 
-p {
+p li {
     font-family: Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
     font-size: 14px;
     font-style: normal;
@@ -68,4 +68,12 @@ a {
 
 .content {
     margin-top: 1em;
+}
+
+.real-link {
+    text-decoration: underline;
+}
+
+.footer {
+    font-size: smaller;
 }
