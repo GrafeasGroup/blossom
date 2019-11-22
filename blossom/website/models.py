@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.utils import timezone
+from django.conf import settings
 
 from django_hosts.resolvers import reverse
 
@@ -27,13 +28,11 @@ class Post(models.Model):
     )
     show_in_news_view = models.BooleanField(default=True)
 
-    def get_absolute_url(self, request):
+    def get_absolute_url(self):
         kwargs = {
             'pk': self.id,
             'slug': self.slug
         }
-        # TODO: FIX URL RESOLUTION
-        # https://stackoverflow.com/questions/4093999/how-to-use-django-to-get-the-name-for-the-host-server
         return reverse('post_detail', kwargs=kwargs, host='www')
 
     def save(self, *args, **kwargs):

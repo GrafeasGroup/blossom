@@ -116,9 +116,9 @@ var handler = StripeCheckout.configure({
 """
 
 TOS_PAGE = """
-<p>
-We're not big fans of locking away things that can be used to help other people, so everything on this site is licensed under Creative Commons Attribution unless otherwise stated. Content on this site may be updated at any time and without notice and not all of our projects are publicly licensed, though the vast majority are. If you have any questions, please contact info@grafeas.org.
-</p>
+<p>Let's keep this really simple: Usage of content ("Content") produced by or associated with Grafeas Group, Ltd. or any of its projects, including but not limited to Transcribers Of Reddit, indicates acceptance of these terms of service ("Terms").</p>
+
+<p>Content is provided under the <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="nofollow noopener">Creative Commons v3.0 by Attribution license</a> on an as-is basis, without any warranty, to the fullest extent allowable by law.</p>
 """
 
 THANKS_PAGE = """
@@ -152,7 +152,7 @@ class Command(BaseCommand):
         if not BlossomUser.objects.filter(username="admin").first():
             BlossomUser.objects.create_superuser(
                 username="admin",
-                email="the_all_powerful@grafeas.org",
+                email="blossom@grafeas.org",
                 password="asdf"  # change me
             )
             self.stdout.write(

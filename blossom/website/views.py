@@ -1,14 +1,17 @@
-from django.db.models import Q
-from django.shortcuts import render, HttpResponseRedirect, reverse
-from django.views.generic import TemplateView
-from django.views.generic import DetailView, UpdateView
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
+from django.shortcuts import render, HttpResponseRedirect, redirect
+from django.utils.decorators import method_decorator
+from django.views.generic import DetailView, UpdateView
+from django.views.generic import TemplateView
 
-from blossom.website.models import Post
-from blossom.website.forms import LoginForm, PostAddForm
-from blossom.website.helpers import get_additional_context
 from blossom.authentication.custom_auth import EmailBackend
+from blossom.website.forms import LoginForm, PostAddForm, AddUserForm
+from blossom.website.helpers import get_additional_context
+from blossom.website.models import Post
+
 
 def index(request):
     c = {
@@ -95,3 +98,28 @@ class PostAdd(LoginRequiredMixin, TemplateView):
             element.author = request.user
             element.save()
             return HttpResponseRedirect(f"{element.get_absolute_url()}edit")
+
+
+class AdminView(LoginRequiredMixin, TemplateView):
+    def get(self, request, *args, **kwargs):
+        c = {
+            'posts': Post.objects.all()
+        }
+        c = get_additional_context(c)
+        return render(request, 'website/admin.html', c)
+
+
+@staff_member_required
+def user_create(request):
+    if request.method == 'POST':
+        f = AddUserForm(request.POST)
+        if f.is_valid():
+            f.save()
+            return redirect('homepage')
+
+    else:
+        f = AddUserForm()
+
+    c = {'form': f, 'header': 'Create New User'}
+
+    return render(request, 'website/generic_form.html', c)

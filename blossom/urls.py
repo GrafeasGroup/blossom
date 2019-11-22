@@ -21,7 +21,7 @@ from django.urls import path
 from blossom.website.models import Post
 from blossom.website.urls import urlpatterns as website_urls
 from blossom.authentication.custom_user import BlossomUser
-from blossom.website.views import LoginView
+from blossom.website.views import LoginView, user_create
 
 admin.autodiscover()
 admin.site.login = LoginView.as_view()
@@ -30,7 +30,8 @@ admin.site.register(BlossomUser)
 admin.site.register(Post)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('superadmin/newuser', user_create, name='user_create'),
+    path('superadmin/', admin.site.urls),
 ]
 
 urlpatterns += website_urls

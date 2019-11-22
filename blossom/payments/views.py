@@ -1,10 +1,12 @@
+import json
+
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import HttpResponse, HttpResponseRedirect
+from django.http import JsonResponse
 
 from blossom.website.models import Post
 
-from django_hosts.resolvers import reverse
 import stripe
 import requests
 
@@ -51,8 +53,7 @@ def charge(request, *args, **kwargs):
             json=json_data
         )
         thanks = Post.objects.get(slug="thank-you")
-        if settings.DEBUG:
-            return HttpResponseRedirect(f'http://localhost:8000{thanks.get_absolute_url()}')
+        return HttpResponseRedirect(f'{thanks.get_absolute_url()}')
     else:
         json_data = {
             'username': gringotts_name,
@@ -68,18 +69,18 @@ def charge(request, *args, **kwargs):
             slack_hook_url,
             json=json_data
         )
+        # todo: make an actual error page that they can land at
 
 
-def ping(self):
-    breakpoint()
-    if not hasattr(cherrypy.request, 'json'):
-        return "go away"
-    if cherrypy.request.json != {'hello there': 'general kenobi'}:
+@csrf_exempt
+def ping(request):
+    request_json = json.loads(request.body)
+    if request_json != {'hello there': 'general kenobi'}:
         return "go away"
 
     json_data = {
-        'username': self.gringotts_name,
-        'icon_url': self.gringotts_img,
+        'username': gringotts_name,
+        'icon_url': gringotts_img,
         'text': "What do you want? Go away!",
     }
     if settings.DEBUG:
@@ -88,11 +89,4 @@ def ping(self):
         slack_hook_url,
         json=json_data
     )
-
-
-class main(object):
-
-    def charge(self, *args, **kwargs):
-
-        raise cherrypy.HTTPRedirect('https://grafeas.org/thanks')
-
+    return JsonResponse({'bah': 'humbug.'})

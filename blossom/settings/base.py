@@ -32,11 +32,15 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static_dev')
 ]
 
-LOGIN_URL = "login/"
+LOGIN_URL = "/login/"
 
 # for subdomain routing
 ROOT_HOSTCONF = 'blossom.hosts'
 DEFAULT_HOST = 'www'
+if DEBUG:
+    PARENT_HOST = 'localhost:8000'
+else:
+    PARENT_HOST = 'grafeas.org'
 
 # Application definition
 
