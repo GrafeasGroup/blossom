@@ -106,3 +106,4 @@ venv.bak/
 static/
 .idea/*
 */migrations/*
+*/media/wiki/*

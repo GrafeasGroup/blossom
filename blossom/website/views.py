@@ -1,14 +1,11 @@
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import render, HttpResponseRedirect, redirect
-from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, UpdateView
 from django.views.generic import TemplateView
 
-from blossom.authentication.custom_auth import EmailBackend
-from blossom.website.forms import LoginForm, PostAddForm, AddUserForm
+from blossom.website.forms import PostAddForm, AddUserForm
 from blossom.website.helpers import get_additional_context
 from blossom.website.models import Post
 
@@ -34,28 +31,6 @@ class PostView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         pass
-
-
-class LoginView(TemplateView):
-    def get(self, request, *args, **kwargs):
-        form = LoginForm()
-        return render(request, 'website/generic_form.html', {'form': form})
-
-    def post(self, request, *args, **kwargs):
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            if user := EmailBackend().authenticate(
-                    username=data.get('email'), password=data.get('password')
-            ):
-                login(request, user)
-                return HttpResponseRedirect(request.GET.get('next', '/'))
-            return HttpResponseRedirect('/')
-
-
-def LogoutView(request):
-    logout(request)
-    return HttpResponseRedirect('/')
 
 
 class PostDetail(DetailView):

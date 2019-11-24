@@ -40,6 +40,10 @@ DATABASES = {
 
 * Minimum Python version: 3.8
 
+* In order to get the wiki to work, there are some extra system dependencies that need to be installed. 
+  * OSX: Download and install this: `http://ethan.tira-thompson.com/Mac_OS_X_Ports_files/libjpeg-libpng%20%28universal%29.dmg` (more information here: https://django-wiki.readthedocs.io/en/latest/installation.html#mac-os-x-10-5)
+  * Debian / Ubuntu: `sudo apt-get install libjpeg8 libjpeg-dev libpng12-0 libpng12-dev`
+
 * Install dependencies with `poetry install`. Don't have Poetry? Info here: https://poetry.eustace.io/
 
 * Run `python manage.py makemigrations blossom` to build the migrations, then commit them to the database with `python manage.py migrate --settings=blossom.local_settings`.
