@@ -1,0 +1,19 @@
+{% extends "wiki/base_site.html" %}
+{% load hosts %}
+
+{% block wiki_site_title %} - Wiki{% endblock %}
+
+{% block wiki_header_branding %}
+    <a class="navbar-brand" href="/">Grafeas Group, Ltd.</a>
+{% endblock %}
+
+{% block wiki_header_navlinks %}
+    <ul class="nav navbar-nav">
+        <li class="active"><a href="{% url 'wiki:root' %}">Wiki</a></li>
+    </ul>
+    <ul class="nav navbar-nav">
+        <li>
+            <a href="{% host_url 'homepage' host 'www' %}">Home</a>
+        </li>
+    </ul>
+{% endblock %}
