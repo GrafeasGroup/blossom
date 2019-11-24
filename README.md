@@ -22,7 +22,12 @@ better_exceptions.MAX_LENGTH = None
 # change how the server runs.
 
 DEBUG = True
+# this requires that you use "grafeas.localhost:8000" as your method for accessing
+# the site.
+# ALLOWED_HOSTS = ['.grafeas.localhost', 'grafeas.localhost', 'wiki.grafeas.localhost']
 ALLOWED_HOSTS = ['*']
+SESSION_COOKIE_DOMAIN = "grafeas.localhost"
+PARENT_HOST = 'grafeas.localhost:8000'
 
 CACHES = {
     'default': {
@@ -37,6 +42,11 @@ DATABASES = {
     }
 }
 ```
+
+## Notes on URLs
+
+Because there are subdomains that share a common session cookie, using `localhost:8000` as the development URL isn't an option because of some legacy issues with how the internet works. In Chrome, ending any URL with `.localhost` will automatically loop back to the host computer, so you don't have to modify your `hosts` file. Make sure that when you're working with the application, you're using `grafeas.localhost:8000` as the base url; for example, `wiki.grafeas.localhost:8000` or `payments.grafeas.localhost:8000`. This will translate to `grafeas.org` when deployed, so verify that anything that needs to be cross-subdomain is able to tell what the base host is.
+
 
 * Minimum Python version: 3.8
 
@@ -54,11 +64,11 @@ DATABASES = {
   * password: `asdf`
 
 You can use the above credentials to create yourself a new account.
-* Navigate to http://localhost:8000/superadmin/newuser and log in with the above credentials.
+* Navigate to http://grafeas.localhost:8000/superadmin/newuser and log in with the above credentials.
 * Create a personal user account with the requested fields. Make sure that you select "is superuser".
 
 Next, we'll disable the default admin account.
-* Navigate to http://localhost:8000/superadmin/blossom/blossomuser/ and click on the "admin" user.
+* Navigate to http://grafeas.localhost:8000/superadmin/blossom/blossomuser/ and click on the "admin" user.
 * Scroll to the bottom of the page and deselect "Active".
 * Click Save.
 
@@ -80,30 +90,34 @@ Run `python manage.py bootstrap` and see above for expected user credentials and
 
 ## Important links
 
-#### payments.localhost:8000
+#### payments.grafeas.localhost:8000
 
 The processing url for Stripe.
 
-#### payments.localhost:8000/ping
+#### payments.grafeas.localhost:8000/ping
 
 Used by Bubbles for site isup checks.
 
-#### localhost:8000
+#### grafeas.localhost:8000
 
 Site root.
 
-#### localhost:8000/admin/
+#### grafeas.localhost:8000/admin/
 
 General site administration, open to all user accounts.
 
-#### localhost:8000/superadmin/
+#### grafeas.localhost:8000/superadmin/
 
 User / post traditional admin. Requires staff acount.
 
-#### localhost:8000/superadmin/newuser
+#### grafeas.localhost:8000/superadmin/newuser
 
 Create a new user for the site.
 
-#### localhost:8000/newpost
+#### grafeas.localhost:8000/newpost
 
 Create a new post for the site.
+
+#### wiki.grafeas.localhost:8000/
+
+Root for wiki.
