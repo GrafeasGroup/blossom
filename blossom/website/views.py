@@ -19,21 +19,12 @@ def index(request):
             Q(published=True) &
             Q(standalone_section=False) &
             Q(show_in_news_view=True)
-        )
+        ).order_by('-date')
     }
     c = get_additional_context(c)
     return render(
         request, 'website/index.html', c
     )
-
-
-class PostView(TemplateView):
-
-    def get(self, request, *args, **kwargs):
-        pass
-
-    def post(self, request, *args, **kwargs):
-        pass
 
 
 class LoginView(TemplateView):
