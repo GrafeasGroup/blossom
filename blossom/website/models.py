@@ -12,7 +12,10 @@ class Post(models.Model):
     date = models.DateTimeField(default=timezone.now)
 
     # something that will go on engineering.grafeas.org
-    engineeringblogpost = models.BooleanField(default=False)
+    engineeringblogpost = models.BooleanField(
+        default=False,
+        help_text="Mark this post as an engineering blog post."
+    )
 
     # about page, for example
     standalone_section = models.BooleanField(default=False)

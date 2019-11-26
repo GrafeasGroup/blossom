@@ -18,7 +18,8 @@ def index(request):
         'posts': Post.objects.filter(
             Q(published=True) &
             Q(standalone_section=False) &
-            Q(show_in_news_view=True)
+            Q(show_in_news_view=True) &
+            Q(engineeringblogpost=False)
         ).order_by('-date')
     }
     c = get_additional_context(c)
