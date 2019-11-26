@@ -11,8 +11,11 @@ class Post(models.Model):
     author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     date = models.DateTimeField(default=timezone.now)
 
+    # something that will go on engineering.grafeas.org
+    engineeringblogpost = models.BooleanField(default=False)
+
     # about page, for example
-    standalone_section = models.BooleanField()
+    standalone_section = models.BooleanField(default=False)
     slug = models.SlugField(
         default='',
         editable=False,
