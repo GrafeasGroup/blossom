@@ -1,7 +1,14 @@
 {% extends "website/partials/base.partial" %}
 {% load static %}
+{% load hosts %}
 
 {% block content %}
+    {% if not posts %}
+        <p>
+        <h1 class="text-center">There's nothing here! Why not <a href="{% host_url "post_create" host 'www' %}"><u>add
+            something?</u></a></h1>
+        </p>
+    {% endif %}
     {% for p in posts %}
         <p>
         <h1><a href="{{ p.get_absolute_url }}">{{ p.title }}</a></h1>

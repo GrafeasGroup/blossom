@@ -1,8 +1,9 @@
 {% load static %}
+{% load hosts %}
 
 <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #eae4da;">
     <div class="container">
-        <a class="navbar-brand" href="/">
+        <a class="navbar-brand" href="{% host_url 'homepage' host 'www' %}">
             <img src="{% static "images/logo.svg" %}" width="30px" id="navbar-logo" alt="Logo">Grafeas Group
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
