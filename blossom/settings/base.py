@@ -26,21 +26,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['.grafeas.org', 'grafeas.org']
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static_dev')
-]
-
 LOGIN_URL = "/login/"
 
 # for subdomain routing
 ROOT_HOSTCONF = 'blossom.hosts'
 DEFAULT_HOST = 'www'
-if DEBUG:
-    PARENT_HOST = 'localhost:8000'
-else:
-    PARENT_HOST = 'grafeas.org'
+PARENT_HOST = 'grafeas.org'
 
 # Application definition
 
@@ -97,8 +88,15 @@ WSGI_APPLICATION = 'blossom.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'blossom',
+        'USER': 'blossom_app',
+        'PASSWORD': os.getenv(
+            'DJANGO_BLOSSOM_DB_PASSWORD',
+            'Pink fluffy unicorns dancing on rainbows'
+        ),
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
@@ -141,3 +139,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static_dev')
+]
