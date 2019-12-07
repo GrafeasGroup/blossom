@@ -128,8 +128,15 @@ WSGI_APPLICATION = 'blossom.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'blossom',
+        'USER': 'blossom_app',
+        'PASSWORD': os.getenv(
+            'DJANGO_BLOSSOM_DB_PASSWORD',
+            'Pink fluffy unicorns dancing on rainbows'
+        ),
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 

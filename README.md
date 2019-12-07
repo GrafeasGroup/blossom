@@ -35,12 +35,19 @@ CACHES = {
     }
 }
 
+# ideally this should be postgres, but developing against sqlite3 will work.
+# Just be aware of potential issues where sqlite3 and postgres do not play well
+# together -- namely, django migrations for sqlite3 will allow a field creation
+# and field alter call in the same transaction. Postgres... will not.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+# django-hosts base url
+PARENT_HOST = 'localhost:8000'
 ```
 
 ## Notes on URLs

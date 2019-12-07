@@ -1,9 +1,7 @@
-from django.db import models
 from django.contrib.auth import get_user_model
-from django.utils.text import slugify
+from django.db import models
 from django.utils import timezone
-from django.conf import settings
-
+from django.utils.text import slugify
 from django_hosts.resolvers import reverse
 
 
