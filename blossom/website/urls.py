@@ -16,3 +16,4 @@ urlpatterns = [
 ]
 
 urlpatterns += auth_urls
+

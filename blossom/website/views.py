@@ -1,14 +1,11 @@
 from django.contrib.admin.views.decorators import staff_member_required
-from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import render, HttpResponseRedirect, redirect
-from django.utils.decorators import method_decorator
 from django.views.generic import DetailView, UpdateView
 from django.views.generic import TemplateView
 
-from blossom.authentication.custom_auth import EmailBackend
-from blossom.website.forms import LoginForm, PostAddForm, AddUserForm
+from blossom.website.forms import PostAddForm, AddUserForm
 from blossom.website.helpers import get_additional_context
 from blossom.website.models import Post
 
@@ -28,26 +25,13 @@ def index(request):
     )
 
 
-class LoginView(TemplateView):
+class PostView(TemplateView):
+
     def get(self, request, *args, **kwargs):
-        form = LoginForm()
-        return render(request, 'website/generic_form.html', {'form': form})
+        pass
 
     def post(self, request, *args, **kwargs):
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            if user := EmailBackend().authenticate(
-                    username=data.get('email'), password=data.get('password')
-            ):
-                login(request, user)
-                return HttpResponseRedirect(request.GET.get('next', '/'))
-            return HttpResponseRedirect('/')
-
-
-def LogoutView(request):
-    logout(request)
-    return HttpResponseRedirect('/')
+        pass
 
 
 class PostDetail(DetailView):
@@ -69,6 +53,11 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update({
+            'enable_trumbowyg': True,
+            # id of html element we want to convert
+            'trumbowyg_target': 'id_body'
+        })
         context = get_additional_context(context)
         return context
 
@@ -79,6 +68,9 @@ class PostAdd(LoginRequiredMixin, TemplateView):
             'form': PostAddForm(),
             'header': 'Add a new post!',
             'subheader': 'Remember to toggle "Published" if you want your post to appear!',
+            'enable_trumbowyg': True,
+            # id of html element we want to convert
+            'trumbowyg_target': 'id_body'
         }
         c = get_additional_context(c)
         return render(request, 'website/generic_form.html', c)
