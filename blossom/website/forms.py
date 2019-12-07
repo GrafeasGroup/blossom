@@ -13,7 +13,14 @@ class LoginForm(forms.Form):
 class PostAddForm(forms.ModelForm):
     class Meta:
         model = Post
-        fields = ['title', 'body', 'published', 'standalone_section', 'header_order']
+        fields = [
+            'title',
+            'body',
+            'published',
+            'standalone_section',
+            'engineeringblogpost',
+            'header_order'
+        ]
 
 
 class AddUserForm(forms.Form):
