@@ -5,5 +5,6 @@ host_patterns = patterns(
     '',
     host(r'api', 'blossom.api.urls', name='api'),
     host(r'payments', 'blossom.payments.urls', name='payments'),
-    host(r'', settings.ROOT_URLCONF, name='www')
+    host(r'wiki', 'blossom.wiki.urls', name='wiki'),
+    host(r'', settings.ROOT_URLCONF, name='www'),  # must always be last
 )

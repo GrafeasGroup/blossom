@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
+from django_hosts.resolvers import reverse_lazy
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,14 +26,36 @@ SECRET_KEY = 'v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.grafeas.org', 'grafeas.org']
+# force cross-domain cookies so that wiki login can use the regular login page
+ALLOWED_HOSTS = ['.grafeas.org/', 'grafeas.org/']
+SESSION_COOKIE_DOMAIN = 'grafeas.org'
 
-LOGIN_URL = "/login/"
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/2.2/howto/static-files/
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static_dev')
+]
+
+LOGIN_URL = reverse_lazy("login", host='www')
+LOGOUT_URL = reverse_lazy("logout", host='www')
 
 # for subdomain routing
 ROOT_HOSTCONF = 'blossom.hosts'
 DEFAULT_HOST = 'www'
 PARENT_HOST = 'grafeas.org'
+
+# wiki
+WIKI_ACCOUNT_HANDLING = False
+# ideally, we would handle this with the following line:
+# WIKI_ANONYMOUS = False
+# but if we do, then the forced login redirects with a `next` parameter of '/',
+# which of course sends us back to the regular site instead of the proper
+# subdomain. Perhaps something to look into in the future.
+# todo: fix anonymous handling
 
 # Application definition
 
@@ -44,6 +68,19 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_hosts',
     'widget_tweaks',
+    # wiki
+    'django.contrib.sites.apps.SitesConfig',
+    'django.contrib.humanize.apps.HumanizeConfig',
+    'django_nyt.apps.DjangoNytConfig',
+    'mptt',
+    'sekizai',
+    'sorl.thumbnail',
+    'wiki.apps.WikiConfig',
+    'wiki.plugins.attachments.apps.AttachmentsConfig',
+    # todo: this is super broken for some reason
+    # 'wiki.plugins.notifications.apps.NotificationsConfig',
+    'wiki.plugins.images.apps.ImagesConfig',
+    'wiki.plugins.macros.apps.MacrosConfig',
     'blossom',
 ]
 
@@ -58,6 +95,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'blossom.wiki.middleware.wiki_media_url_rewrite',
     'django_hosts.middleware.HostsResponseMiddleware',
 ]
 
@@ -68,6 +106,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(BASE_DIR, 'templates'),
+            os.path.join(BASE_DIR, 'templates', 'wiki')
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -76,6 +115,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'sekizai.context_processors.sekizai',
             ],
         },
     },
@@ -135,11 +175,4 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static_dev')
-]
+SITE_ID = 1

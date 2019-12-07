@@ -23,10 +23,11 @@
     <meta name="Description"
           content="The Grafeas Group is a 501(c)(3) working on increasing accessibility on the internet though crowdsourcing and gamification.">
 
-    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
             crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
           integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="{% static "js/prism_js/prism-tomorrow-night.css" %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static "css/main.css" %}">
 
     <title>Grafeas Group, Ltd.</title>
@@ -61,12 +62,14 @@
                         <a class="text-muted" href="{{ item.get_absolute_url }}">{{ item.title }}</a>
                     </li>
                 {% endfor %}
-                <li><a class="text-muted" target="_blank" rel="noreferrer" href="https://github.com/grafeasgroup/">Github</a></li>
+                <li><a class="text-muted" target="_blank" rel="noreferrer" href="https://github.com/grafeasgroup/">Github</a>
+                </li>
             </ul>
         </div>
         <div class="col-xs-0 col-sm-4"></div>
         <div class="col-xs-12 col-sm-4">
-            <span class="text-muted">Disclaimer:<br>Grafeas Group, Ltd. is a registered 501(c)(3) nonprofit in the state of Indiana, U.S.A. Continued use of content associated with Grafeas Group indicates acceptance of our <a href="{{ tos.get_absolute_url }}" class="real-link text-muted">terms of service.</a></span>
+            <span class="text-muted">Disclaimer:<br>Grafeas Group, Ltd. is a registered 501(c)(3) nonprofit in the state of Indiana, U.S.A. Continued use of content associated with Grafeas Group indicates acceptance of our <a
+                    href="{{ tos.get_absolute_url }}" class="real-link text-muted">terms of service.</a></span>
         </div>
     </div>
     <p></p>
@@ -74,6 +77,7 @@
 
 
 <!-- Placed at the end of the document so the pages load faster -->
+<script src="{% static "js/prism_js/prism.js" %}"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
         crossorigin="anonymous"></script>

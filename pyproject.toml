@@ -11,6 +11,8 @@ django-hosts = "^3.0"
 django-widget-tweaks = "^1.4"
 stripe = "^2.40.0"
 requests = "^2.22.0"
+wiki = "^0.5.0"
+pygments = "^2.4"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"

@@ -18,10 +18,11 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
+from blossom.authentication.custom_user import BlossomUser
+from blossom.authentication.views import LoginView
 from blossom.website.models import Post
 from blossom.website.urls import urlpatterns as website_urls
-from blossom.authentication.custom_user import BlossomUser
-from blossom.website.views import LoginView, user_create
+from blossom.website.views import user_create
 
 admin.autodiscover()
 admin.site.login = LoginView.as_view()
@@ -38,3 +39,4 @@ urlpatterns += website_urls
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
