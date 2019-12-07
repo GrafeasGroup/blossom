@@ -32,12 +32,13 @@ class Post(models.Model):
     )
     show_in_news_view = models.BooleanField(default=True)
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, host='www'):
+
         kwargs = {
             'pk': self.id,
             'slug': self.slug
         }
-        return reverse('post_detail', kwargs=kwargs, host='www')
+        return reverse('post_detail', kwargs=kwargs, host=host)
 
     def save(self, *args, **kwargs):
         value = self.title

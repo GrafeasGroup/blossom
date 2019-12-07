@@ -3,6 +3,7 @@ from django.db.models import Q
 
 from blossom.website.models import Post
 
+
 def index(request):
 
     p = Post.objects.filter(

@@ -1,7 +1,14 @@
 {% load static %}
 {% load hosts %}
 
-<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #eae4da;">
+<nav
+        class="navbar navbar-expand-lg navbar-light"
+        {% if request.host.name == 'engineeringblog' %}
+            style="background-color: #ccc6ba;"
+        {% else %}
+            style="background-color: #eae4da;"
+        {% endif %}
+>
     <div class="container">
         <a class="navbar-brand" href="{% host_url 'homepage' host 'www' %}">
             <img src="{% static "images/logo.svg" %}" width="30px" id="navbar-logo" alt="Logo">Grafeas Group
@@ -22,7 +29,8 @@
                     </li>
                 {% endfor %}
                 <li class="nav-item active">
-                    <a class="nav-link" rel="noreferrer" target="_blank" href="https://github.com/GrafeasGroup/">Github</a>
+                    <a class="nav-link" rel="noreferrer" target="_blank"
+                       href="https://github.com/GrafeasGroup/">Github</a>
                 </li>
             </ul>
             {% if request.user.is_authenticated %}
