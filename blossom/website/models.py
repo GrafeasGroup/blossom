@@ -7,7 +7,7 @@ from django_hosts.resolvers import reverse
 
 class Post(models.Model):
     title = models.CharField(max_length=70)
-    body = models.TextField(help_text="Feel free to use raw HTML tags for styling!")
+    body = models.TextField()
     author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     date = models.DateTimeField(default=timezone.now)
 

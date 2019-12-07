@@ -52,6 +52,11 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context.update({
+            'enable_trumbowyg': True,
+            # id of html element we want to convert
+            'trumbowyg_target': 'id_body'
+        })
         context = get_additional_context(context)
         return context
 
@@ -62,6 +67,9 @@ class PostAdd(LoginRequiredMixin, TemplateView):
             'form': PostAddForm(),
             'header': 'Add a new post!',
             'subheader': 'Remember to toggle "Published" if you want your post to appear!',
+            'enable_trumbowyg': True,
+            # id of html element we want to convert
+            'trumbowyg_target': 'id_body'
         }
         c = get_additional_context(c)
         return render(request, 'website/generic_form.html', c)

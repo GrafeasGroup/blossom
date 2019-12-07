@@ -1,5 +1,6 @@
 {% extends 'website/partials/base.partial' %}
 {% load widget_tweaks %}
+{% load static %}
 
 {% block content %}
     <h1>{{ header }}</h1>
@@ -48,4 +49,40 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div>
+
+    {% if enable_trumbowyg %}
+        {# base #}
+        <link rel="stylesheet" href="{% static "js/trumbowyg/ui/trumbowyg.min.css" %}">
+        <script src="{% static "js/trumbowyg/trumbowyg.min.js" %}"></script>
+
+        {# code highlight plugin dependency #}
+        <script src="{% static "js/prism_js/prism.js" %}"></script>
+        <link href="{% static "js/prism_js/prism-tomorrow-night.css" %}" rel="stylesheet">
+
+        {# load code highlight plugin #}
+        <script src="{% static "js/trumbowyg/plugins/highlight/trumbowyg.highlight.min.js" %}"></script>
+        <link rel="stylesheet" href="{% static "js/trumbowyg/plugins/highlight/ui/trumbowyg.highlight.min.css" %}">
+
+        <script>
+            $('#{{trumbowyg_target}}').trumbowyg(
+                {
+                    btns: [
+                        ['viewHTML'],
+                        ['undo', 'redo'], // Only supported in Blink browsers
+                        ['formatting'],
+                        ['strong', 'em', 'del'],
+                        ['superscript', 'subscript'],
+                        ['link'],
+                        ['insertImage'],
+                        ['justifyLeft', 'justifyCenter', 'justifyRight', 'justifyFull'],
+                        ['unorderedList', 'orderedList'],
+                        ['horizontalRule'],
+                        ['removeformat'],
+                        ['fullscreen'],
+                        ['highlight'],
+                    ]
+                }
+            );
+        </script>
+    {% endif %}
 {% endblock %}

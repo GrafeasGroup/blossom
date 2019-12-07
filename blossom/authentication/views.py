@@ -70,7 +70,7 @@ class LoginView(TemplateView):
                     location = '/'
 
                 return HttpResponseRedirect(location)
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect(request.build_absolute_uri())
 
 
 def LogoutView(request):
