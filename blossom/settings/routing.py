@@ -1,13 +1,17 @@
 import os
 
+import dotenv
+
+dotenv.load_dotenv()
+
 # Route us to the correct settings file based on environment variables. Allows
 # us to add a stage environment really easily.
 
 env = os.environ.get('ENVIRONMENT', None)
 
 if env == 'local':
-    # noinspection PyUnresolvedReferences
     from blossom.settings.local import *
+elif env == 'testing':
+    from blossom.settings.testing import *
 else:
-    # noinspection PyUnresolvedReferences
     from blossom.settings.prod import *

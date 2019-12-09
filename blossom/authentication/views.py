@@ -20,6 +20,10 @@ class LoginView(TemplateView):
 
         # first let's see if the requested url DOES resolve in the base host.
         nextpath = request.GET['next']
+
+        if nextpath.startswith('http'):
+            nextpath = nextpath[nextpath.index('//'):]
+
         try:
             match = resolve(nextpath)
             try:
