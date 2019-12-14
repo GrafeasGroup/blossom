@@ -16,8 +16,8 @@ def get_additional_context(context):
             )
         else:
             raise ImproperlyConfigured(
-                "Cannot find the terms of service post; did you run the bootstrap"
-                " command? `python manage.py bootstrap` on prod or `python manage.py"
-                " bootstrap --settings=blossom.local_settings` on dev."
+                "Bootstrap command has not yet been run; `python manage.py"
+                " bootstrap` on prod or `python manage.py bootstrap"
+                " --settings=blossom.local_settings` on dev."
             )
     return context

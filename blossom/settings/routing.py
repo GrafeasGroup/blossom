@@ -1,9 +1,5 @@
 import os
 
-import dotenv
-
-dotenv.load_dotenv()
-
 # Route us to the correct settings file based on environment variables. Allows
 # us to add a stage environment really easily.
 

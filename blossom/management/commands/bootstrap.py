@@ -1,8 +1,11 @@
+import logging
+
 from django.core.management.base import BaseCommand
-from django.conf import settings
 
 from blossom.website.models import Post
 from blossom.authentication.custom_user import BlossomUser
+
+logger = logging.getLogger('blossom.management.bootstrap')
 
 ABOUT_PAGE = """
 <p>The best way to describe our organization is to start with our mission statement:</p>
@@ -141,16 +144,12 @@ class Command(BaseCommand):
     help = 'Creates the default entries required for the site.'
 
     def handle(self, *args, **options):
-        # don't log status messages if we're running unit tests.
-        write_messages_to_console = settings.ENVIRONMENT != 'testing'
-
         slugs = ['about-us', 'giving-to-grafeas', 'terms-of-service', 'thank-you']
 
         if Post.objects.filter(slug__in=slugs).count() == len(slugs):
-            if write_messages_to_console:
-                self.stdout.write(
-                    self.style.SUCCESS('No articles created; all present.')
-                )
+            logger.debug(
+                self.style.SUCCESS('No articles created; all present.')
+            )
 
         # First we gotta create a new author, otherwise this whole thing will be for naught
         if not BlossomUser.objects.filter(username="admin").first():
@@ -159,10 +158,9 @@ class Command(BaseCommand):
                 email="blossom@grafeas.org",
                 password="asdf"  # change me
             )
-            if write_messages_to_console:
-                self.stdout.write(
-                    self.style.SUCCESS('Admin user created!')
-                )
+            logger.debug(
+                self.style.SUCCESS('Admin user created!')
+            )
 
         admin = BlossomUser.objects.get(username="admin")
 
@@ -175,10 +173,9 @@ class Command(BaseCommand):
                 standalone_section=True,
                 header_order=10
             )
-            if write_messages_to_console:
-                self.stdout.write(
-                    self.style.SUCCESS('Wrote about page!')
-                )
+            logger.debug(
+                self.style.SUCCESS('Wrote about page!')
+            )
 
         if not Post.objects.filter(slug=slugs[1]).first():
             Post.objects.create(
@@ -189,10 +186,9 @@ class Command(BaseCommand):
                 standalone_section=True,
                 header_order=20
             )
-            if write_messages_to_console:
-                self.stdout.write(
-                    self.style.SUCCESS('Wrote donation page!')
-                )
+            logger.debug(
+                self.style.SUCCESS('Wrote donation page!')
+            )
 
         if not Post.objects.filter(slug=slugs[2]).first():
             Post.objects.create(
@@ -203,10 +199,9 @@ class Command(BaseCommand):
                 standalone_section=False,
                 show_in_news_view=False
             )
-            if write_messages_to_console:
-                self.stdout.write(
-                    self.style.SUCCESS('Wrote TOS page!')
-                )
+            logger.debug(
+                self.style.SUCCESS('Wrote TOS page!')
+            )
 
         if not Post.objects.filter(slug=slugs[3]).first():
             Post.objects.create(
@@ -217,7 +212,6 @@ class Command(BaseCommand):
                 standalone_section=False,
                 show_in_news_view=False
             )
-            if write_messages_to_console:
-                self.stdout.write(
-                    self.style.SUCCESS('Wrote donation thanks page!')
-                )
+            logger.debug(
+                self.style.SUCCESS('Wrote donation thanks page!')
+            )
