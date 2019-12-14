@@ -43,8 +43,8 @@ def test_login_bad_password(client, django_user_model):
         }
     )
     assert response.status_code == 302
-    assert response.wsgi_request.user.is_anonymous is True
-    assert response.wsgi_request.user.is_authenticated is False
+    assert response.wsgi_request.user.is_anonymous
+    assert not response.wsgi_request.user.is_authenticated
 
 
 def test_login_bad_user_info(client):
@@ -55,8 +55,8 @@ def test_login_bad_user_info(client):
         }
     )
     assert response.status_code == 302
-    assert response.wsgi_request.user.is_anonymous is True
-    assert response.wsgi_request.user.is_authenticated is False
+    assert response.wsgi_request.user.is_anonymous
+    assert not response.wsgi_request.user.is_authenticated
 
 
 def test_logout(client, django_user_model, setup_site):
@@ -66,9 +66,9 @@ def test_logout(client, django_user_model, setup_site):
 
     client.force_login(user)
 
-    assert client.request().context.get('user').is_authenticated is True
+    assert client.request().context.get('user').is_authenticated
     client.get('/logout/')
-    assert client.request().context.get('user').is_authenticated is False
+    assert not client.request().context.get('user').is_authenticated
 
 
 def test_hosts_redirect(client, django_user_model, setup_site):
@@ -119,7 +119,7 @@ def test_hosts_redirect_invalid_endpoint(client, django_user_model, setup_site, 
         HTTP_HOST='grafeas.localhost:8000',
     )
     with pytest.raises(Resolver404):
-        result = LoginView().get_redirect(
+        LoginView().get_redirect(
             request=response.wsgi_request, hosts=get_host_patterns()
         )
 
