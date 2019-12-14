@@ -83,32 +83,26 @@ def test_hosts_redirect(client, django_user_model, setup_site):
     assert response.wsgi_request.path == '/admin/'
 
 
-def test_hosts_redirect_subdomain(client, django_user_model, setup_site, settings):
-    # temporarily override settings for this test
-    settings.ROOT_HOSTCONF = 'blossom.hosts'
-    settings.DEFAULT_HOST = 'www'
+def test_hosts_redirect_subdomain(client, django_user_model, setup_site):
 
     create_test_user(django_user_model)
 
+    # this has to use the long form for HTTP_HOST because it checks a
+    # specific condition for the redirect.
     response = client.post(
-        '/login/?next=http%3A//wiki.grafeas.localhost%3A8000/', {
+        'login/?next=http%3A//wiki.grafeas.localhost%3A8000/', {
             'email': guy.email,
             'password': guy.password,
         },
         HTTP_HOST='grafeas.localhost:8000',
     )
-
     result = LoginView().get_redirect(
         request=response.wsgi_request, hosts=get_host_patterns()
     )
     assert result == '//wiki.grafeas.localhost:8000/'
 
 
-def test_hosts_redirect_invalid_endpoint(client, django_user_model, setup_site, settings):
-    # temporarily override settings for this test
-    settings.ROOT_HOSTCONF = 'blossom.hosts'
-    settings.DEFAULT_HOST = 'www'
-
+def test_hosts_redirect_invalid_endpoint(client, django_user_model, setup_site):
     create_test_user(django_user_model)
 
     response = client.post(

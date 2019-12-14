@@ -15,6 +15,7 @@ wiki = "^0.5.0"
 pygments = "^2.4"
 pytest-django = "^3.7"
 pytest-cov = "^2.8"
+pytest-mock = "^1.13"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"

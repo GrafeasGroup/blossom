@@ -9,5 +9,8 @@ omit =
   */media/*,
   blossom/local_settings.py,
   */urls.py,
-  */wsgi.py
+  */wsgi.py,
+  blossom/management/commands/*,
+  blossom/middleware.py,
+  blossom/settings/*
 
