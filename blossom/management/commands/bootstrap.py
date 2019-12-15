@@ -1,7 +1,11 @@
+import logging
+
 from django.core.management.base import BaseCommand
 
 from blossom.website.models import Post
 from blossom.authentication.custom_user import BlossomUser
+
+logger = logging.getLogger('blossom.management.bootstrap')
 
 ABOUT_PAGE = """
 <p>The best way to describe our organization is to start with our mission statement:</p>
@@ -140,11 +144,10 @@ class Command(BaseCommand):
     help = 'Creates the default entries required for the site.'
 
     def handle(self, *args, **options):
-
         slugs = ['about-us', 'giving-to-grafeas', 'terms-of-service', 'thank-you']
 
         if Post.objects.filter(slug__in=slugs).count() == len(slugs):
-            self.stdout.write(
+            logger.debug(
                 self.style.SUCCESS('No articles created; all present.')
             )
 
@@ -155,7 +158,7 @@ class Command(BaseCommand):
                 email="blossom@grafeas.org",
                 password="asdf"  # change me
             )
-            self.stdout.write(
+            logger.debug(
                 self.style.SUCCESS('Admin user created!')
             )
 
@@ -170,7 +173,7 @@ class Command(BaseCommand):
                 standalone_section=True,
                 header_order=10
             )
-            self.stdout.write(
+            logger.debug(
                 self.style.SUCCESS('Wrote about page!')
             )
 
@@ -183,7 +186,7 @@ class Command(BaseCommand):
                 standalone_section=True,
                 header_order=20
             )
-            self.stdout.write(
+            logger.debug(
                 self.style.SUCCESS('Wrote donation page!')
             )
 
@@ -196,7 +199,7 @@ class Command(BaseCommand):
                 standalone_section=False,
                 show_in_news_view=False
             )
-            self.stdout.write(
+            logger.debug(
                 self.style.SUCCESS('Wrote TOS page!')
             )
 
@@ -209,6 +212,6 @@ class Command(BaseCommand):
                 standalone_section=False,
                 show_in_news_view=False
             )
-            self.stdout.write(
+            logger.debug(
                 self.style.SUCCESS('Wrote donation thanks page!')
             )

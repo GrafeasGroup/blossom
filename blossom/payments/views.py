@@ -1,14 +1,14 @@
 import json
+from json.decoder import JSONDecodeError
 
+import requests
+import stripe
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
+from django.shortcuts import HttpResponse, HttpResponseRedirect
+from django.views.decorators.csrf import csrf_exempt
 
 from blossom.website.models import Post
-
-import stripe
-import requests
 
 gringotts_name = "Gringotts Bank"
 gringotts_img = "https://vignette.wikia.nocookie.net/harrypotter/images/0/07/GringottsLogo.gif/revision/latest?cb=20131206014841"
@@ -74,9 +74,13 @@ def charge(request, *args, **kwargs):
 
 @csrf_exempt
 def ping(request):
-    request_json = json.loads(request.body)
+    try:
+        request_json = json.loads(request.body)
+    except JSONDecodeError:
+        return HttpResponse('go away')
+
     if request_json != {'hello there': 'general kenobi'}:
-        return "go away"
+        return HttpResponse('go away')
 
     json_data = {
         'username': gringotts_name,

@@ -1,11 +1,9 @@
-from django_hosts.resolvers import get_host
 from django.shortcuts import redirect
 
 def wiki_media_url_rewrite(get_response):
     # All this does is force the incoming url for media content to redirect to
     # the base domain so that it resolves correctly ¯\_(ツ)_/¯
     def middleware(request):
-        print(request.get_host())
         if "media" in request.path:
             if "wiki" in request.get_host():
                 h = request.get_host()
