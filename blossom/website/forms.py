@@ -28,7 +28,7 @@ class AddUserForm(forms.Form):
     username = forms.CharField(label='Enter Username', min_length=4, max_length=150)
     email = forms.EmailField(label='Enter email')
     password = forms.CharField(label='Enter password', widget=forms.PasswordInput)
-    is_superuser = forms.BooleanField(label='Is this user a superuser?')
+    is_superuser = forms.BooleanField(label='Is this user a superuser?', required=False)
 
     # the clean functions will be run automatically on save
     def clean_username(self):

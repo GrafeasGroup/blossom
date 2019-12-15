@@ -25,15 +25,6 @@ def index(request):
     )
 
 
-class PostView(TemplateView):
-
-    def get(self, request, *args, **kwargs):
-        pass
-
-    def post(self, request, *args, **kwargs):
-        pass
-
-
 class PostDetail(DetailView):
     model = Post
     query_pk_and_slug = True

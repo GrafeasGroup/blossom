@@ -1,4 +1,4 @@
-from blossom.tests.helpers import guy, create_test_user
+from blossom.tests.helpers import create_test_user
 from blossom.website.models import Post
 
 def test_homepage_setup(client, setup_site):

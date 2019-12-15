@@ -12,5 +12,6 @@ omit =
   */wsgi.py,
   blossom/management/commands/*,
   blossom/middleware.py,
-  blossom/settings/*
+  blossom/settings/*,
+  blossom/api/*
 
