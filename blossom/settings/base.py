@@ -82,6 +82,10 @@ INSTALLED_APPS = [
     'wiki.plugins.images.apps.ImagesConfig',
     'wiki.plugins.macros.apps.MacrosConfig',
     'blossom',
+    "rest_framework",
+    "rest_framework_api_key",
+    "rest_framework_swagger",
+    "social_django",
 ]
 
 AUTH_USER_MODEL = 'blossom.BlossomUser'
@@ -99,6 +103,8 @@ MIDDLEWARE = [
     'django_hosts.middleware.HostsResponseMiddleware',
 ]
 
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # One month
 ROOT_URLCONF = 'blossom.urls'
 
 TEMPLATES = [
@@ -140,6 +146,12 @@ DATABASES = {
     }
 }
 
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 25,
+    "DEFAULT_PERMISSION_CLASSES": ("tor_app.api.authentication.TorAppApiPermission",),
+}
+
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
@@ -159,7 +171,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'blossom.authentication.custom_auth.EmailBackend'
+    'blossom.authentication.custom_auth.EmailBackend',
+    "tor_app.social_auth.reddit.RedditOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 # Internationalization

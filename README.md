@@ -45,9 +45,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
-# django-hosts base url
-PARENT_HOST = 'localhost:8000'
 ```
 
 ## Notes on URLs
