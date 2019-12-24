@@ -14,7 +14,7 @@ schema_view = get_schema_view(
       description="Handy-dandy API reference for our work on Reddit and elsewhere!",
       terms_of_service="https://grafeas.org/posts/3-terms-of-service/",
       contact=openapi.Contact(email="devs@grafeas.org"),
-      license=openapi.License(name="All Rights Reserved"),
+      license=openapi.License(name="MIT"),
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),

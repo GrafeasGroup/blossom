@@ -1,5 +1,6 @@
 import json
 from json.decoder import JSONDecodeError
+import os
 
 import requests
 import stripe
@@ -7,21 +8,24 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
+from dotenv import load_dotenv
 
 from blossom.website.models import Post
 
+load_dotenv()
+
 gringotts_name = "Gringotts Bank"
 gringotts_img = "https://vignette.wikia.nocookie.net/harrypotter/images/0/07/GringottsLogo.gif/revision/latest?cb=20131206014841"
-slack_hook_url = "https://hooks.slack.com/services/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"
+slack_hook_url = os.environ.get("SLACK_PAYMENT_HOOK")
 
 @csrf_exempt
 def charge(request, *args, **kwargs):
     # Set your secret key: remember to change this to your live secret key in production
     # See your keys here: https://dashboard.stripe.com/account/apikeys
     if settings.DEBUG:
-        stripe.api_key = "sk_test_0zx7hunbJ813fmvsTuuHv9D6"
+        stripe.api_key = os.environ.get('STRIPE_DEBUG_KEY')
     else:
-        stripe.api_key = "sk_live_s0i8NF8WBfvio39nvqqzvJiG"
+        stripe.api_key = os.environ.get('STRIPE_PROD_KEY')
     # Token is created using Checkout or Elements!
 
     try:
@@ -79,7 +83,10 @@ def ping(request):
     except JSONDecodeError:
         return HttpResponse('go away')
 
-    if request_json != {'hello there': 'general kenobi'}:
+    if request_json != {
+        os.environ.get("PAYMENT_PING_KEY"):
+            os.environ.get("PAYMENT_PING_VALUE")
+    }:
         return HttpResponse('go away')
 
     json_data = {

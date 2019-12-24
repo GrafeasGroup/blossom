@@ -1,9 +1,13 @@
 import logging
+import os
 
 from django.core.management.base import BaseCommand
+import dotenv
 
 from blossom.website.models import Post
 from blossom.authentication.custom_user import BlossomUser
+
+dotenv.load_dotenv()
 
 logger = logging.getLogger('blossom.management.bootstrap')
 
@@ -78,7 +82,7 @@ GIVING_PAGE = """
 Array.from(document.querySelectorAll('.stripe-button-el')).forEach(function(el) { el.style.display = 'none'; });
 
 var handler = StripeCheckout.configure({
-    key: 'pk_live_pRSTbdTHvPIh5i1YkXf1cmBG',
+    key: '',
     token: function(token) {
         // append your token id and email, submit your form
     	$("#stripeToken").val(token.id);
@@ -178,7 +182,7 @@ class Command(BaseCommand):
             )
 
         if not Post.objects.filter(slug=slugs[1]).first():
-            Post.objects.create(
+            p = Post.objects.create(
                 title="Giving to Grafeas",
                 body=GIVING_PAGE,
                 author=admin,
@@ -186,6 +190,10 @@ class Command(BaseCommand):
                 standalone_section=True,
                 header_order=20
             )
+            p.body.replace(
+                "key: ''", f"key: \'{os.environ.get('STRIPE_PROD_KEY')}\'"
+            )
+            p.save()
             logger.debug(
                 self.style.SUCCESS('Wrote donation page!')
             )

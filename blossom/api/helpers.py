@@ -41,7 +41,7 @@ class VolunteerMixin(object):
         if id:
             return Volunteer.objects.filter(id=id).first()
         if username:
-            return Volunteer.objects.filter(user__username=username).first()
+            return Volunteer.objects.filter(username=username).first()
         return None
 
     def get_volunteer_from_request(self, request: Request) -> [None, Volunteer]:
@@ -69,7 +69,7 @@ class RequestDataMixin(object):
         if v_id:
             return v_id
         if v_username:
-            v = Volunteer.objects.filter(user__username=v_username).first()
+            v = Volunteer.objects.filter(username=v_username).first()
             if v:
                 return v.id
 
