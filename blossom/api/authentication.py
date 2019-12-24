@@ -2,7 +2,7 @@ import rest_framework.permissions as rfperms
 import rest_framework_api_key.permissions as rfakperms
 
 
-class TorAppApiPermission(rfperms.BasePermission):
+class BlossomApiPermission(rfperms.BasePermission):
 
     # For some reason, combining the different auth patterns in the settings
     # file fails miserably and will default to HasAPIKey if it's enabled.

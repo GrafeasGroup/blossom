@@ -1,9 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-from tor_app.database.models import Post
-from tor_app.database.models import Transcription
-from tor_app.database.models import Volunteer
+from blossom.api.models import Submission, Transcription, Volunteer
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -25,12 +23,12 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
         )
 
 
-class PostSerializer(serializers.HyperlinkedModelSerializer):
+class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = Post
+        model = Submission
         fields = (
             "id",
-            "post_id",
+            "submission_id",
             "claimed_by",
             "completed_by",
             "claim_time",
@@ -44,7 +42,7 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Transcription
         fields = (
-            "post",
+            "submission",
             "author",
             "transcription_id",
             "completion_method",

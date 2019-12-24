@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from tor_app.database.models import Volunteer
+from blossom.api.models import Volunteer
 
 ERROR = "error"
 SUCCESS = "success"

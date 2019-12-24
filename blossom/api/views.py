@@ -8,21 +8,21 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from tor_app.api.helpers import (
+from blossom.api.helpers import (
     AuthMixin,
     VolunteerMixin,
     RequestDataMixin,
     ERROR,
     SUCCESS
 )
-from tor_app.api.responses import youre_not_an_admin
-from tor_app.api.serializers import (
+from blossom.api.responses import youre_not_an_admin
+from blossom.api.serializers import (
     VolunteerSerializer,
-    PostSerializer,
+    SubmissionSerializer,
     TranscriptionSerializer
 )
-from tor_app.database.models import (
-    Post,
+from blossom.api.models import (
+    Submission,
     Transcription,
     Volunteer,
     Summary
@@ -212,33 +212,33 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
         )
 
 
-class PostViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, VolunteerMixin):
-    queryset = Post.objects.all().order_by("-post_time")
-    serializer_class = PostSerializer
+class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, VolunteerMixin):
+    queryset = Submission.objects.all().order_by("-post_time")
+    serializer_class = SubmissionSerializer
 
     def get_queryset(self):
         """
-        Uses a `post_id` query string parameter to filter for a
+        Uses a `submission_id` query string parameter to filter for a
         specific post. For example:
 
-        GET http://localhost:8000/api/post/?post_id=t3_asdfgh
+        GET http://localhost:8000/api/post/?submission_id=t3_asdfgh
         """
-        queryset = Post.objects.all().order_by("id")
-        post_id = self.request.query_params.get("post_id", None)
-        if post_id is not None:
-            queryset = queryset.filter(post_id=post_id)
+        queryset = Submission.objects.all().order_by("id")
+        submission_id = self.request.query_params.get("submission_id", None)
+        if submission_id is not None:
+            queryset = queryset.filter(submission_id=submission_id)
         return queryset
 
     def _get_possible_claim_done_errors(
         self, request: Request, pk: int
-    ) -> [Tuple[Post, Volunteer], Response]:
+    ) -> [Tuple[Submission, Volunteer], Response]:
 
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
             return Response(youre_not_an_admin, status=status.HTTP_401_UNAUTHORIZED)
 
         try:
-            p = Post.objects.get(id=pk)
-        except Post.DoesNotExist:
+            p = Submission.objects.get(id=pk)
+        except Submission.DoesNotExist:
             return Response(
                 {ERROR: "No post with that ID."}, status=status.HTTP_404_NOT_FOUND
             )
@@ -277,7 +277,7 @@ class PostViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, VolunteerM
         p.save()
 
         return Response(
-            {SUCCESS: f"Post {p.post_id} claimed by {v.user.username}"},
+            {SUCCESS: f"Post {p.submission_id} claimed by {v.user.username}"},
             status=status.HTTP_200_OK
         )
 
@@ -302,7 +302,7 @@ class PostViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, VolunteerM
         p.save()
 
         return Response(
-            {SUCCESS: f"Post {p.post_id} completed by {v.user.username}"},
+            {SUCCESS: f"Post {p.submission_id} completed by {v.user.username}"},
             status=status.HTTP_200_OK
         )
 
@@ -311,7 +311,7 @@ class PostViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, VolunteerM
         Called by making a POST request against /api/post/. Must contain the following
         fields in JSON body:
 
-            post_id: str
+            submission_id: str
             source: str
 
         May optionally contain the following params in JSON body:
@@ -328,24 +328,24 @@ class PostViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, VolunteerM
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
             return Response(youre_not_an_admin, status=status.HTTP_401_UNAUTHORIZED)
 
-        post_id = request.data.get("post_id")
+        submission_id = request.data.get("submission_id")
         source = request.data.get("source")
 
         url = request.data.get("url")
         tor_url = request.data.get("tor_url")
 
-        if not post_id or not source:
+        if not submission_id or not source:
             return Response(
                 {
-                    ERROR: "Must contain the keys `post_id` (str, 20char max) "
+                    ERROR: "Must contain the keys `submission_id` (str, 20char max) "
                     "and `source` (str 20char max)"
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
-            p = Post.objects.create(
-                post_id=post_id, source=source, url=url, tor_url=tor_url
+            p = Submission.objects.create(
+                submission_id=submission_id, source=source, url=url, tor_url=tor_url
             )
             return Response(
                 {SUCCESS: f"Post object {p.id} created!"},
@@ -370,7 +370,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
         """
         Required fields:
 
-            post_id               | str
+            submission_id         | str
             v_id (or username)    | str
             t_id                  | str
             completion_method     | str
@@ -389,19 +389,19 @@ class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
             return Response(youre_not_an_admin)
 
-        post_id = request.data.get("post_id")
-        if not post_id:
+        submission_id = request.data.get("submission_id")
+        if not submission_id:
             return Response(
                 {
-                    ERROR: "Missing JSON body key `post_id`, str; the ID of "
+                    ERROR: "Missing JSON body key `submission_id`, str; the ID of "
                     "the post the transcription is on."
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-        p = Post.objects.filter(id=post_id).first()
+        p = Submission.objects.filter(id=submission_id).first()
         if not p:
             return Response(
-                {ERROR: f"No post found with ID {post_id}!"},
+                {ERROR: f"No post found with ID {submission_id}!"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -467,7 +467,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
         return Response(
             {
                 SUCCESS: f"Transcription ID {t.id} created on post"
-                f" {p.post_id}, written by {v.username}"
+                f" {p.submission_id}, written by {v.username}"
             },
             status=status.HTTP_200_OK
         )

@@ -84,7 +84,7 @@ INSTALLED_APPS = [
     'blossom',
     "rest_framework",
     "rest_framework_api_key",
-    "rest_framework_swagger",
+    "drf_yasg",
     "social_django",
 ]
 
@@ -149,7 +149,7 @@ DATABASES = {
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 25,
-    "DEFAULT_PERMISSION_CLASSES": ("tor_app.api.authentication.TorAppApiPermission",),
+    "DEFAULT_PERMISSION_CLASSES": ("blossom.api.authentication.BlossomApiPermission",),
 }
 
 # Password validation
@@ -172,7 +172,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTHENTICATION_BACKENDS = [
     'blossom.authentication.custom_auth.EmailBackend',
-    "tor_app.social_auth.reddit.RedditOAuth2",
+    "blossom.social_auth.reddit.RedditOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 ]
 

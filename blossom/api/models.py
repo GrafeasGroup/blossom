@@ -1,16 +1,22 @@
+import uuid
+
 import pytz
-from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
 from rest_framework_api_key.models import APIKey
+from django.contrib.auth.hashers import make_password, check_password
 
+from blossom.authentication.custom_user import BlossomUser
 
-class Post(models.Model):
+class Submission(models.Model):
     # It is rare, but possible, for a post to have more than one transcription.
     # Therefore, posts are separate from transcriptions, but there will almost
     # always be one transcription per post.
 
-    post_id = models.CharField(max_length=36)
+    def create_id(self):
+        return uuid.uuid4()
+
+    submission_id = models.CharField(max_length=36, default=create_id)
     post_time = models.DateTimeField(default=timezone.now)
     claimed_by = models.ForeignKey(
         "Volunteer",
@@ -41,17 +47,17 @@ class Post(models.Model):
     tor_url = models.CharField(max_length=2083, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.post_id}"
+        return f"{self.submission_id}"
 
 
 class Transcription(models.Model):
 
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     author = models.ForeignKey("Volunteer", on_delete=models.CASCADE)
     post_time = models.DateTimeField(default=timezone.now)
     # reddit comment ID or similar
     transcription_id = models.CharField(max_length=36)
-    # "reddit", "api", "tor_app". Leaving extra characters in case we want
+    # "reddit", "api", "blossom". Leaving extra characters in case we want
     # to expand the options.
     completion_method = models.CharField(max_length=20)
     url = models.CharField(max_length=2083, null=True, blank=True)
@@ -67,44 +73,38 @@ class Transcription(models.Model):
     removed_from_reddit = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.post} by {self.author.user.username}"
+        return f"{self.submission} by {self.author.username}"
 
 
 class Volunteer(models.Model):
-    """
-    We'll let Django handle the user security bits because frankly it's just
-    a lot easier. Make sure the security key has been set!
-
-    The only thing that changes here is to make sure that when creating a user,
-    an instance of the Django User is created first. For example:
-
-    u = User.objects.create_user(username='bob', password='bobiscool')
-    v = Volunteer.objects.create(user=u)
-
-    Then we can use v going forward -- we only need to relate to the Django
-    User model (for example, to get the username: v.user.username) when we
-    need potentially secure information.
-    """
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-
     accepted_coc = models.BooleanField(default=False)
     join_date = models.DateTimeField(default=timezone.now)
     last_login_time = models.DateTimeField(default=None, null=True, blank=True)
     api_key = models.OneToOneField(
         APIKey, on_delete=models.CASCADE, null=True, blank=True
     )
+    username = models.CharField(max_length=150)
+    password = models.CharField(max_length=100, default=None, null=True, blank=True)
+    staff_account = models.OneToOneField(
+        BlossomUser, on_delete=models.CASCADE, null=True, blank=True
+    )
+
+    def set_password(self, password):
+        self.password = make_password(password)
+
+    def check_password(self, password):
+        return check_password(self.password, password)
+
+    def set_unusable_password(self):
+        # Set a value that will never be a valid hash
+        self.password = make_password(None)
+
+    def is_staff(self):
+        return self.staff_account != None
 
     def __str__(self):
         # noinspection PyUnresolvedReferences
         return f"{self.user.username}"
-
-    @property
-    def username(self):
-        # the serializer can't access inherited models, so anything we want
-        # to expose through the API must have a top-level field which translates
-        # for it.
-        return self.user.username
 
     @property
     def gamma(self):
@@ -119,7 +119,7 @@ class Summary(object):
 
         # subtract 1 from volunteer count for anon volunteer
         return {
-            'volunteer_count': Volunteer.objects.count() - 1,
+            'volunteer_count': Volunteer.objects.count(),
             'transcription_count': Transcription.objects.count(),
             'days_since_inception': (
                 timezone.now() - pytz.timezone("UTC").localize(
