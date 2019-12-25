@@ -23,12 +23,17 @@ from blossom.authentication.views import LoginView
 from blossom.website.models import Post
 from blossom.website.urls import urlpatterns as website_urls
 from blossom.website.views import user_create
+from blossom.api.models import Submission, Volunteer, Transcription
+
 
 admin.autodiscover()
 admin.site.login = LoginView.as_view()
 
 admin.site.register(BlossomUser)
 admin.site.register(Post)
+admin.site.register(Submission)
+admin.site.register(Volunteer)
+admin.site.register(Transcription)
 
 urlpatterns = [
     path('superadmin/newuser', user_create, name='user_create'),

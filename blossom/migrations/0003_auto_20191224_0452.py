@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             name='Submission',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('submission_id', models.CharField(default=blossom.api.models.Submission.create_id, max_length=36)),
+                ('submission_id', models.CharField(default=blossom.api.models.create_id, max_length=36)),
                 ('post_time', models.DateTimeField(default=django.utils.timezone.now)),
                 ('redis_id', models.CharField(blank=True, max_length=12, null=True)),
                 ('claim_time', models.DateTimeField(blank=True, default=None, null=True)),

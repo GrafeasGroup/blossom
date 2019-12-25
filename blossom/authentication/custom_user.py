@@ -1,4 +1,4 @@
 from django.contrib.auth.models import AbstractUser
 
 class BlossomUser(AbstractUser):
-    pass
+    backend = 'blossom.authentication.custom_auth.EmailBackend'

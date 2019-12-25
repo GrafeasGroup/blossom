@@ -8,16 +8,18 @@ from django.contrib.auth.hashers import make_password, check_password
 
 from blossom.authentication.custom_user import BlossomUser
 
+
+def create_id():
+    return uuid.uuid4()
+
+
 class Submission(models.Model):
     # It is rare, but possible, for a post to have more than one transcription.
     # Therefore, posts are separate from transcriptions, but there will almost
     # always be one transcription per post.
 
-    def create_id(self):
-        return uuid.uuid4()
-
     submission_id = models.CharField(max_length=36, default=create_id)
-    post_time = models.DateTimeField(default=timezone.now)
+    submission_time = models.DateTimeField(default=timezone.now)
     claimed_by = models.ForeignKey(
         "Volunteer",
         on_delete=models.CASCADE,
@@ -104,7 +106,7 @@ class Volunteer(models.Model):
 
     def __str__(self):
         # noinspection PyUnresolvedReferences
-        return f"{self.user.username}"
+        return f"{self.username}"
 
     @property
     def gamma(self):
