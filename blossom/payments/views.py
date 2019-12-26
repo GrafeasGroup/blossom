@@ -1,11 +1,8 @@
-import json
-from json.decoder import JSONDecodeError
 import os
 
 import requests
 import stripe
 from django.conf import settings
-from django.http import JsonResponse
 from django.shortcuts import HttpResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
@@ -74,30 +71,3 @@ def charge(request, *args, **kwargs):
             json=json_data
         )
         # todo: make an actual error page that they can land at
-
-
-@csrf_exempt
-def ping(request):
-    try:
-        request_json = json.loads(request.body)
-    except JSONDecodeError:
-        return HttpResponse('go away')
-
-    if request_json != {
-        os.environ.get("PAYMENT_PING_KEY"):
-            os.environ.get("PAYMENT_PING_VALUE")
-    }:
-        return HttpResponse('go away')
-
-    json_data = {
-        'username': gringotts_name,
-        'icon_url': gringotts_img,
-        'text': "What do you want? Go away!",
-    }
-    if settings.DEBUG:
-        json_data.update({'channel': '#bottest'})
-    requests.post(
-        slack_hook_url,
-        json=json_data
-    )
-    return JsonResponse({'bah': 'humbug.'})

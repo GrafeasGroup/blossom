@@ -1,12 +1,10 @@
-from typing import Tuple
-
-from django.contrib.auth.models import User
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from typing import Tuple, Dict
 
 from blossom.api.helpers import (
     AuthMixin,
@@ -15,18 +13,35 @@ from blossom.api.helpers import (
     ERROR,
     SUCCESS
 )
-from blossom.api.responses import youre_not_an_admin
-from blossom.api.serializers import (
-    VolunteerSerializer,
-    SubmissionSerializer,
-    TranscriptionSerializer
-)
 from blossom.api.models import (
     Submission,
     Transcription,
     Volunteer,
     Summary
 )
+from blossom.api.responses import youre_not_an_admin
+from blossom.api.serializers import (
+    VolunteerSerializer,
+    SubmissionSerializer,
+    TranscriptionSerializer
+)
+
+
+def build_response(
+        result: str, message: str, status_code: int, data: Dict=None
+) -> Response:
+    resp = {result: message}
+    if data:
+        resp.update({"data": data})
+    return Response(resp, status=status_code)
+
+
+def not_an_admin() -> Response:
+    return build_response(
+        ERROR,
+        youre_not_an_admin,
+        status.HTTP_401_UNAUTHORIZED
+    )
 
 
 class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
@@ -59,37 +74,33 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
             the volunteer.
         """
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return Response(youre_not_an_admin)
+            return not_an_admin()
 
         username = self.request.query_params.get("username", None)
         if not username:
-            return Response(
-                {
-                    ERROR: "No username received. Use ?username= in your request."
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return build_response(
+                ERROR,
+                "No username received. Use ?username= in your request.",
+                status.HTTP_400_BAD_REQUEST
             )
         v = Volunteer.objects.filter(user__username=username).first()
         if not v:
-            return Response(
-                {
-                    ERROR: "No volunteer found with that username."
-                },
-                status=status.HTTP_404_NOT_FOUND
+            return build_response(
+                ERROR,
+                "No volunteer found with that username.",
+                status.HTTP_404_NOT_FOUND
             )
-        return Response(
-            {
-                SUCCESS: f"User {username} was found. See 'data' key for summary.",
-                'data': {
-                    'username': v.user.username,
-                    'gamma': Transcription.objects.filter(author=v).count(),
-                    'join_date': v.join_date,
-                    'accepted_coc': v.accepted_coc
-                }
-            },
-            status=status.HTTP_200_OK
+        return build_response(
+            SUCCESS,
+            f"User {username} was found. See 'data' key for summary.",
+            status.HTTP_200_OK,
+            data={
+                'username': v.user.username,
+                'gamma': Transcription.objects.filter(author=v).count(),
+                'join_date': v.join_date,
+                'accepted_coc': v.accepted_coc
+            }
         )
-
 
     @action(detail=True, methods=["post"])
     def set_gamma(self, request: Request, pk: int = None) -> Response:
@@ -110,30 +121,30 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
         # TODO: can get away from the integer gamma count
 
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return Response(youre_not_an_admin, status=status.HTTP_401_UNAUTHORIZED)
+            return not_an_admin()
 
         try:
             v = Volunteer.objects.get(id=pk)
         except Volunteer.DoesNotExist:
-            return Response(
-                {
-                    ERROR: "No volunteer with that ID."
-                },
-                status=status.HTTP_404_NOT_FOUND
+            return build_response(
+                ERROR,
+                "No volunteer with that ID.",
+                status.HTTP_404_NOT_FOUND
             )
 
-        gamma_count = request.data.get("gamma")
-        if gamma_count is None:
-            return Response(
-                {ERROR: "Must specify `gamma` in json with the new int value."},
-                status=status.HTTP_400_BAD_REQUEST
+        if gamma_count := request.data.get("gamma") is None:
+            return build_response(
+                ERROR,
+                "Must specify `gamma` in json with the new int value.",
+                status.HTTP_400_BAD_REQUEST
             )
 
         v.gamma = gamma_count
         v.save()
-        return Response(
-            {SUCCESS: f"Set gamma for user {v.user.username} to {v.gamma}"},
-            status=status.HTTP_200_OK
+        return build_response(
+            SUCCESS,
+            f"Set gamma for user {v.user.username} to {v.gamma}",
+            status.HTTP_200_OK
         )
 
     @action(detail=True, methods=["post"])
@@ -152,21 +163,23 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
         # TODO: Refactor this to actually affect dummy transcriptions so we
         # TODO: can get away from the integer gamma count
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return Response(youre_not_an_admin, status=status.HTTP_401_UNAUTHORIZED)
+            return not_an_admin()
 
         try:
             v = Volunteer.objects.get(id=pk)
         except Volunteer.DoesNotExist:
-            return Response(
-                {ERROR: "No volunteer with that ID."},
-                status=status.HTTP_404_NOT_FOUND
+            return build_response(
+                ERROR,
+                "No volunteer with that ID.",
+                status.HTTP_404_NOT_FOUND
             )
 
         v.gamma += 1
         v.save()
-        return Response(
-            {SUCCESS: f"Updated gamma for {v.user.username} to {v.gamma}."},
-            status=status.HTTP_200_OK
+        return build_response(
+            SUCCESS,
+            f"Updated gamma for {v.user.username} to {v.gamma}.",
+            status.HTTP_200_OK
         )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
@@ -183,32 +196,31 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
         :return: Response
         """
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return Response(youre_not_an_admin, status=status.HTTP_401_UNAUTHORIZED)
+            return not_an_admin()
 
         username = request.data.get("username")
 
         if not username:
-            return Response(
-                {ERROR: "Must have the `username` key in JSON body."},
-                status=status.HTTP_400_BAD_REQUEST
+            return build_response(
+                ERROR,
+                "Must have the `username` key in JSON body.",
+                status.HTTP_400_BAD_REQUEST
             )
 
-        existing_user = Volunteer.objects.filter(user__username=username).first()
+        existing_user = Volunteer.objects.filter(username=username).first()
         if existing_user:
-            return Response(
-                {
-                    ERROR: f"There is already a user with the username of"
-                    f" `{existing_user.username}`"
-                },
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY
+            return build_response(
+                ERROR,
+                f"There is already a user with the username of `{existing_user.username}`",
+                status.HTTP_422_UNPROCESSABLE_ENTITY
             )
 
-        u = User.objects.create_user(username=username)
-        v = Volunteer.objects.create(user=u)
+        v = Volunteer.objects.create(username=username)
 
-        return Response(
-            {SUCCESS: f"Volunteer created with username `{v.user.username}`"},
-            status=status.HTTP_200_OK
+        return build_response(
+            SUCCESS,
+            f"Volunteer created with username `{v.username}`",
+            status.HTTP_200_OK
         )
 
 
@@ -234,7 +246,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
     ) -> [Tuple[Submission, Volunteer], Response]:
 
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return Response(youre_not_an_admin, status=status.HTTP_401_UNAUTHORIZED)
+            return not_an_admin()
 
         try:
             p = Submission.objects.get(id=pk)
@@ -326,7 +338,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
         """
 
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return Response(youre_not_an_admin, status=status.HTTP_401_UNAUTHORIZED)
+            return not_an_admin()
 
         submission_id = request.data.get("submission_id")
         source = request.data.get("source")
@@ -387,10 +399,9 @@ class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
         :return:
         """
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return Response(youre_not_an_admin)
+            return not_an_admin()
 
-        submission_id = request.data.get("submission_id")
-        if not submission_id:
+        if submission_id := request.data.get("submission_id") is None:
             return Response(
                 {
                     ERROR: "Missing JSON body key `submission_id`, str; the ID of "
@@ -398,8 +409,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-        p = Submission.objects.filter(id=submission_id).first()
-        if not p:
+        if p := Submission.objects.filter(id=submission_id).first() is None:
             return Response(
                 {ERROR: f"No post found with ID {submission_id}!"},
                 status=status.HTTP_404_NOT_FOUND
@@ -479,3 +489,8 @@ class SummaryView(APIView):
     """
     def get(self, request, *args, **kw):
         return Response(Summary().generate_summary(), status=status.HTTP_200_OK)
+
+
+class PingView(APIView):
+    def get(self, request, *args, **kw):
+        return Response({"ping?!": "PONG"}, status=status.HTTP_200_OK)

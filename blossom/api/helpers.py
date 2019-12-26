@@ -22,15 +22,15 @@ class AuthMixin(object):
         :param request: the api request object
         :return: either False or the admin user we found.
         """
-        token = request.META.get("HTTP_API_TOKEN")
+        token = request.headers.get("X-Api-Key")
         if not token:
             return False
 
-        v = Volunteer.objects.filter(api_key__token=token).first()
+        v = Volunteer.objects.filter(staff_account=request.user).first()
         if not v:
             return False
 
-        if not v.user.is_staff:
+        if not v.api_key.is_valid(token):
             return False
         else:
             return v
