@@ -4,7 +4,7 @@ from blossom.tests.helpers import create_test_user
 from blossom.website.models import Post
 
 
-def test_post_create(client, django_user_model, setup_site):
+def test_post_create(client, django_user_model):
     user = create_test_user(django_user_model)
     client.force_login(user)
     data = {
@@ -39,3 +39,23 @@ def test_post_edit_context(client, django_user_model, setup_site):
     # if this is populated, it means that the additional context gathering
     # fired appropriately
     assert "enable_trumbowyg" in result.context
+
+
+def test_post_name(client, django_user_model):
+    user = create_test_user(django_user_model)
+    client.force_login(user)
+    data = {
+        'title': 'A',
+        'body': 'B',
+        'published': "on",
+    }
+    client.post(reverse("post_create", host="www"), data)
+    a = Post.objects.get(title='A')
+    assert str(a) == "A"
+
+    a.standalone_section = True
+    a.header_order = 99
+    a.save()
+
+    a = Post.objects.get(title='A')
+    assert str(a) == "Section | Header order 99: A"

@@ -147,6 +147,7 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 25,
     "DEFAULT_PERMISSION_CLASSES": ("blossom.api.authentication.BlossomApiPermission",),
 }
+API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators

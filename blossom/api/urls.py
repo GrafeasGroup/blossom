@@ -46,4 +46,5 @@ urlpatterns = [
         schema_view.with_ui('redoc', cache_timeout=0),
         name='schema-redoc'
     ),
+    url(r"^api/ping", views.PingView.as_view()),
 ]

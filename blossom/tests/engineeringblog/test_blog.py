@@ -1,7 +1,7 @@
 from django_hosts.resolvers import reverse
 
-from blossom.website.models import Post
 from blossom.tests.helpers import create_test_user
+from blossom.website.models import Post
 
 
 def test_properly_empty_blog(client, setup_site):
