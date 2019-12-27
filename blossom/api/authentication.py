@@ -1,17 +1,16 @@
 import rest_framework.permissions as rfperms
 from django.contrib.auth.models import AnonymousUser
 
-from blossom.api.models import Volunteer
 
-
-class APIKeyVolunteerAdminCheck(rfperms.BasePermission):
+class APIKeyCustomCheck(rfperms.BasePermission):
     message = "ack"
 
     def has_permission(self, request, view):
         if not isinstance(request.user, AnonymousUser):
-            if v := Volunteer.objects.filter(staff_account=request.user).first():
-                return v.api_key.is_valid(request.headers.get("X-Api-Key"))
-
+            if request.user.api_key:
+                return request.user.api_key.is_valid(request.headers.get("X-Api-Key"))
+            elif request.user.is_grafeas_staff or request.user.is_staff:
+                return True
 
 class BlossomApiPermission(rfperms.BasePermission):
 
@@ -26,6 +25,6 @@ class BlossomApiPermission(rfperms.BasePermission):
         return any(
             [
                 rfperms.IsAdminUser().has_permission(request, view),
-                APIKeyVolunteerAdminCheck().has_permission(request, view),
+                APIKeyCustomCheck().has_permission(request, view),
             ]
         )

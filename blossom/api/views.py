@@ -1,4 +1,5 @@
 from django.utils import timezone
+from django.db.models import Q
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -6,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from typing import Tuple, Dict
 
+from blossom.api import Summary
 from blossom.api.helpers import (
     AuthMixin,
     VolunteerMixin,
@@ -15,9 +17,7 @@ from blossom.api.helpers import (
 )
 from blossom.api.models import (
     Submission,
-    Transcription,
-    Volunteer,
-    Summary
+    Transcription
 )
 from blossom.api.responses import youre_not_an_admin
 from blossom.api.serializers import (
@@ -25,6 +25,7 @@ from blossom.api.serializers import (
     SubmissionSerializer,
     TranscriptionSerializer
 )
+from blossom.authentication.models import BlossomUser
 
 
 def build_response(
@@ -45,7 +46,7 @@ def not_an_admin() -> Response:
 
 
 class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
-    queryset = Volunteer.objects.all().order_by("-join_date")
+    queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
     serializer_class = VolunteerSerializer
     basename = "volunteer"
 
@@ -56,10 +57,10 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
 
         GET http://localhost:8000/api/volunteer/?username=asdfasdfasdf
         """
-        queryset = Volunteer.objects.all().order_by("id")
+        queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
         username = self.request.query_params.get("username", None)
         if username is not None:
-            queryset = queryset.filter(user__username=username)
+            queryset = queryset.filter(username=username)
         return queryset
 
     @action(detail=False, methods=["get"])
@@ -83,7 +84,9 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
                 "No username received. Use ?username= in your request.",
                 status.HTTP_400_BAD_REQUEST
             )
-        v = Volunteer.objects.filter(user__username=username).first()
+        v = BlossomUser.objects.filter(
+            Q(username=username) & Q(is_volunteer=True)
+        ).first()
         if not v:
             return build_response(
                 ERROR,
@@ -102,85 +105,85 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
             }
         )
 
-    @action(detail=True, methods=["post"])
-    def set_gamma(self, request: Request, pk: int = None) -> Response:
-        """
-        Set a user's gamma count to a specific number. This is for overriding
-        the existing count for whatever reason.
-
-        Example URL:
-
-        POST http://localhost:8000/api/volunteer/1/set_gamma
-
-        :param request: Request
-        :param pk: the primary key of the user we're modifying
-        :return: json, a message or error of the result.
-        """
-
-        # TODO: Refactor this to actually affect dummy transcriptions so we
-        # TODO: can get away from the integer gamma count
-
-        if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return not_an_admin()
-
-        try:
-            v = Volunteer.objects.get(id=pk)
-        except Volunteer.DoesNotExist:
-            return build_response(
-                ERROR,
-                "No volunteer with that ID.",
-                status.HTTP_404_NOT_FOUND
-            )
-
-        if gamma_count := request.data.get("gamma") is None:
-            return build_response(
-                ERROR,
-                "Must specify `gamma` in json with the new int value.",
-                status.HTTP_400_BAD_REQUEST
-            )
-
-        v.gamma = gamma_count
-        v.save()
-        return build_response(
-            SUCCESS,
-            f"Set gamma for user {v.user.username} to {v.gamma}",
-            status.HTTP_200_OK
-        )
-
-    @action(detail=True, methods=["post"])
-    def gamma_plusone(self, request: Request, pk: int) -> Response:
-        """
-        This endpoint updates the given score of a user by one.
-
-        Example URL:
-
-        POST http://localhost:8000/api/volunteer/1/gamma_plusone
-
-        :param request: the incoming API request.
-        :param pk: the primary key of the volunteer we're updating.
-        :return: json, an error or success message.
-        """
-        # TODO: Refactor this to actually affect dummy transcriptions so we
-        # TODO: can get away from the integer gamma count
-        if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return not_an_admin()
-
-        try:
-            v = Volunteer.objects.get(id=pk)
-        except Volunteer.DoesNotExist:
-            return build_response(
-                ERROR,
-                "No volunteer with that ID.",
-                status.HTTP_404_NOT_FOUND
-            )
-
-        v.gamma += 1
-        v.save()
-        return build_response(
-            SUCCESS,
-            f"Updated gamma for {v.user.username} to {v.gamma}.",
-            status.HTTP_200_OK
-        )
+    # @action(detail=True, methods=["post"])
+    # def set_gamma(self, request: Request, pk: int = None) -> Response:
+    #     """
+    #     Set a user's gamma count to a specific number. This is for overriding
+    #     the existing count for whatever reason.
+    #
+    #     Example URL:
+    #
+    #     POST http://localhost:8000/api/volunteer/1/set_gamma
+    #
+    #     :param request: Request
+    #     :param pk: the primary key of the user we're modifying
+    #     :return: json, a message or error of the result.
+    #     """
+    #
+    #     # TODO: Refactor this to actually affect dummy transcriptions so we
+    #     # TODO: can get away from the integer gamma count
+    #
+    #     if not any([self.is_admin_key(request), self.is_admin_user(request)]):
+    #         return not_an_admin()
+    #
+    #     try:
+    #         v = Volunteer.objects.get(id=pk)
+    #     except Volunteer.DoesNotExist:
+    #         return build_response(
+    #             ERROR,
+    #             "No volunteer with that ID.",
+    #             status.HTTP_404_NOT_FOUND
+    #         )
+    #
+    #     if gamma_count := request.data.get("gamma") is None:
+    #         return build_response(
+    #             ERROR,
+    #             "Must specify `gamma` in json with the new int value.",
+    #             status.HTTP_400_BAD_REQUEST
+    #         )
+    #
+    #     v.gamma = gamma_count
+    #     v.save()
+    #     return build_response(
+    #         SUCCESS,
+    #         f"Set gamma for user {v.user.username} to {v.gamma}",
+    #         status.HTTP_200_OK
+    #     )
+    #
+    # @action(detail=True, methods=["post"])
+    # def gamma_plusone(self, request: Request, pk: int) -> Response:
+    #     """
+    #     This endpoint updates the given score of a user by one.
+    #
+    #     Example URL:
+    #
+    #     POST http://localhost:8000/api/volunteer/1/gamma_plusone
+    #
+    #     :param request: the incoming API request.
+    #     :param pk: the primary key of the volunteer we're updating.
+    #     :return: json, an error or success message.
+    #     """
+    #     # TODO: Refactor this to actually affect dummy transcriptions so we
+    #     # TODO: can get away from the integer gamma count
+    #     if not any([self.is_admin_key(request), self.is_admin_user(request)]):
+    #         return not_an_admin()
+    #
+    #     try:
+    #         v = Volunteer.objects.get(id=pk)
+    #     except Volunteer.DoesNotExist:
+    #         return build_response(
+    #             ERROR,
+    #             "No volunteer with that ID.",
+    #             status.HTTP_404_NOT_FOUND
+    #         )
+    #
+    #     v.gamma += 1
+    #     v.save()
+    #     return build_response(
+    #         SUCCESS,
+    #         f"Updated gamma for {v.user.username} to {v.gamma}.",
+    #         status.HTTP_200_OK
+    #     )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
@@ -207,7 +210,7 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
                 status.HTTP_400_BAD_REQUEST
             )
 
-        existing_user = Volunteer.objects.filter(username=username).first()
+        existing_user = BlossomUser.objects.filter(username=username).first()
         if existing_user:
             return build_response(
                 ERROR,
@@ -215,7 +218,7 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
                 status.HTTP_422_UNPROCESSABLE_ENTITY
             )
 
-        v = Volunteer.objects.create(username=username)
+        v = BlossomUser.objects.create(username=username)
 
         return build_response(
             SUCCESS,
@@ -243,7 +246,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
 
     def _get_possible_claim_done_errors(
         self, request: Request, pk: int
-    ) -> [Tuple[Submission, Volunteer], Response]:
+    ) -> [Tuple[Submission, BlossomUser], Response]:
 
         if not any([self.is_admin_key(request), self.is_admin_user(request)]):
             return not_an_admin()

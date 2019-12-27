@@ -168,7 +168,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'blossom.authentication.custom_auth.EmailBackend',
+    'blossom.authentication.backends.EmailBackend',
     "blossom.social_auth.reddit.RedditOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 ]

@@ -6,7 +6,7 @@ from django.urls.resolvers import get_resolver
 from django.views.generic import TemplateView
 from django_hosts.resolvers import get_host_patterns, reverse
 
-from blossom.authentication.custom_auth import EmailBackend
+from blossom.authentication.backends import EmailBackend
 from blossom.website.forms import LoginForm
 
 
