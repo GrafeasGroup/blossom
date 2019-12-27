@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from typing import Tuple, Dict
 
-from blossom.api.models import Volunteer, APIKey
+from blossom.authentication.models import BlossomUser, APIKey
 
 
 guy = SimpleNamespace(
@@ -17,16 +17,23 @@ jane = SimpleNamespace(
 )
 
 
-def create_test_user(usermodel, superuser=False):
-    user, _ = usermodel.objects.get_or_create(
-        username=guy.username, email=guy.email, is_staff=superuser
+def create_test_user(user_info=None, superuser=False):
+    if not user_info:
+        user_info = guy
+
+    user, _ = BlossomUser.objects.get_or_create(
+        username=user_info.username,
+        email=user_info.email,
+        is_staff=superuser,
+        is_grafeas_staff=superuser,
+        is_volunteer=not superuser,
     )
     user.set_password(guy.password)
     user.save()
     return user
 
 
-def create_volunteer(with_api_key: bool=False) -> Tuple[Volunteer, Dict[str, str]]:
+def create_volunteer(with_api_key: bool=False) -> Tuple[BlossomUser, Dict[str, str]]:
     """
     Usage:
 
@@ -37,7 +44,7 @@ def create_volunteer(with_api_key: bool=False) -> Tuple[Volunteer, Dict[str, str
     :param with_api_key: bool
     :return:
     """
-    v = Volunteer.objects.create(username=jane.username)
+    v = create_test_user(user_info=jane)
     v.set_password(jane.password)
     v.save()
 
@@ -49,3 +56,10 @@ def create_volunteer(with_api_key: bool=False) -> Tuple[Volunteer, Dict[str, str
         return v, {"HTTP_X_API_KEY": key}
 
     return v
+
+
+def create_staff_volunteer_with_keys(client):
+    v, headers = create_volunteer(with_api_key=True)
+    client.force_login(v)
+
+    return client, headers

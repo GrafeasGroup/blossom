@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 import dotenv
 
 from blossom.website.models import Post
-from blossom.authentication.custom_user import BlossomUser
+from blossom.authentication.models import BlossomUser
 
 dotenv.load_dotenv()
 

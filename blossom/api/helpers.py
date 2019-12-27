@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from blossom.api.models import Volunteer
+from blossom.authentication.models import BlossomUser
 
 ERROR = "error"
 SUCCESS = "success"
@@ -10,9 +10,9 @@ SUCCESS = "success"
 
 class AuthMixin(object):
     def is_admin_user(self, request: Request) -> bool:
-        return request.user.is_staff
+        return any([request.user.is_staff, request.user.is_grafeas_staff])
 
-    def is_admin_key(self, request: Request) -> [bool, Volunteer]:
+    def is_admin_key(self, request: Request) -> bool:
         """
         Check the API key that we were passed and see if it belongs to a user.
         If it does, verify that the requested user is an admin. We expect that
@@ -20,31 +20,27 @@ class AuthMixin(object):
         then we'll return it in case we need the user later.
 
         :param request: the api request object
-        :return: either False or the admin user we found.
+        :return: bool
         """
         token = request.headers.get("X-Api-Key")
         if not token:
             return False
 
-        v = Volunteer.objects.filter(staff_account=request.user).first()
-        if not v:
-            return False
-
-        if not v.api_key.is_valid(token):
+        if not request.user.api_key.is_valid(token):
             return False
         else:
-            return v
+            return True
 
 
 class VolunteerMixin(object):
-    def get_volunteer(self, id: int = None, username: str = None) -> [Volunteer, None]:
+    def get_volunteer(self, id: int = None, username: str = None) -> [BlossomUser, None]:
         if id:
-            return Volunteer.objects.filter(id=id).first()
+            return BlossomUser.objects.filter(id=id).first()
         if username:
-            return Volunteer.objects.filter(username=username).first()
+            return BlossomUser.objects.filter(username=username).first()
         return None
 
-    def get_volunteer_from_request(self, request: Request) -> [None, Volunteer]:
+    def get_volunteer_from_request(self, request: Request) -> [None, BlossomUser]:
         v_id = request.data.get("v_id")
         username = request.data.get("username")
 
@@ -69,7 +65,7 @@ class RequestDataMixin(object):
         if v_id:
             return v_id
         if v_username:
-            v = Volunteer.objects.filter(username=v_username).first()
+            v = BlossomUser.objects.filter(username=v_username).first()
             if v:
                 return v.id
 

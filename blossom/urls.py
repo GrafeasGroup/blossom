@@ -18,12 +18,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path
 
-from blossom.authentication.custom_user import BlossomUser
+from blossom.authentication.models import BlossomUser
 from blossom.authentication.views import LoginView
 from blossom.website.models import Post
 from blossom.website.urls import urlpatterns as website_urls
 from blossom.website.views import user_create
-from blossom.api.models import Submission, Volunteer, Transcription
+from blossom.api.models import Submission, Transcription
 
 
 admin.autodiscover()
@@ -32,7 +32,6 @@ admin.site.login = LoginView.as_view()
 admin.site.register(BlossomUser)
 admin.site.register(Post)
 admin.site.register(Submission)
-admin.site.register(Volunteer)
 admin.site.register(Transcription)
 
 urlpatterns = [

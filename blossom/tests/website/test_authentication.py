@@ -18,8 +18,8 @@ def test_login_redirect_superadmin(client):
     assert resp.get("Location") == "/superadmin/login/?next=/superadmin/"
 
 
-def test_login(client, django_user_model):
-    user = create_test_user(django_user_model)
+def test_login(client):
+    user = create_test_user()
 
     response = client.post(
         '/login/', {
@@ -33,8 +33,8 @@ def test_login(client, django_user_model):
     assert response.wsgi_request.user.is_authenticated
 
 
-def test_login_bad_password(client, django_user_model):
-    user = create_test_user(django_user_model)
+def test_login_bad_password(client):
+    user = create_test_user()
 
     response = client.post(
         '/login/', {
@@ -59,10 +59,10 @@ def test_login_bad_user_info(client):
     assert not response.wsgi_request.user.is_authenticated
 
 
-def test_logout(client, django_user_model, setup_site):
+def test_logout(client, setup_site):
     # the setup_site fixture just runs the bootstrap management command
     # so `request()` will work
-    user = create_test_user(django_user_model)
+    user = create_test_user()
 
     client.force_login(user)
 
@@ -71,8 +71,8 @@ def test_logout(client, django_user_model, setup_site):
     assert not client.request().context.get('user').is_authenticated
 
 
-def test_hosts_redirect(client, django_user_model, setup_site):
-    user = create_test_user(django_user_model)
+def test_hosts_redirect(client, setup_site):
+    user = create_test_user()
 
     response = client.post(
         '/login/?next=/admin/', {
@@ -83,9 +83,9 @@ def test_hosts_redirect(client, django_user_model, setup_site):
     assert response.wsgi_request.path == '/admin/'
 
 
-def test_hosts_redirect_subdomain(client, django_user_model, setup_site):
+def test_hosts_redirect_subdomain(client, setup_site):
 
-    create_test_user(django_user_model)
+    create_test_user()
 
     # this has to use the long form for HTTP_HOST because it checks a
     # specific condition for the redirect.
@@ -102,8 +102,8 @@ def test_hosts_redirect_subdomain(client, django_user_model, setup_site):
     assert result == '//wiki.grafeas.localhost:8000/'
 
 
-def test_hosts_redirect_invalid_endpoint(client, django_user_model, setup_site):
-    create_test_user(django_user_model)
+def test_hosts_redirect_invalid_endpoint(client, setup_site):
+    create_test_user()
 
     response = client.post(
         '/login/?next=/snarfleblat/', {

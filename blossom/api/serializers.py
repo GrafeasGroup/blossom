@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-from blossom.api.models import Submission, Transcription, Volunteer
+from blossom.api.models import Submission, Transcription
+from blossom.authentication.models import BlossomUser
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -12,13 +13,13 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
 
 class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = Volunteer
+        model = BlossomUser
         fields = (
             "id",
             "username",
             "gamma",
-            "join_date",
-            "last_login_time",
+            "date_joined",
+            "last_login",
             "accepted_coc"
         )
 

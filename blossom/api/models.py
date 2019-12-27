@@ -1,12 +1,6 @@
 import uuid
-
-import pytz
 from django.db import models
 from django.utils import timezone
-from rest_framework_api_key.models import APIKey
-from django.contrib.auth.hashers import make_password, check_password
-
-from blossom.authentication.custom_user import BlossomUser
 
 
 def create_id():
@@ -21,7 +15,7 @@ class Submission(models.Model):
     submission_id = models.CharField(max_length=36, default=create_id)
     submission_time = models.DateTimeField(default=timezone.now)
     claimed_by = models.ForeignKey(
-        "Volunteer",
+        "blossom.BlossomUser",
         on_delete=models.CASCADE,
         related_name="claimed_by",
         null=True,
@@ -30,7 +24,7 @@ class Submission(models.Model):
     # This is only for handling the redis changeover
     redis_id = models.CharField(max_length=12, blank=True, null=True)
     completed_by = models.ForeignKey(
-        "Volunteer",
+        "blossom.BlossomUser",
         on_delete=models.CASCADE,
         related_name="completed_by",
         null=True,
@@ -55,7 +49,7 @@ class Submission(models.Model):
 class Transcription(models.Model):
 
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
-    author = models.ForeignKey("Volunteer", on_delete=models.CASCADE)
+    author = models.ForeignKey("blossom.BlossomUser", on_delete=models.CASCADE)
     post_time = models.DateTimeField(default=timezone.now)
     # reddit comment ID or similar
     transcription_id = models.CharField(max_length=36)
@@ -76,57 +70,3 @@ class Transcription(models.Model):
 
     def __str__(self):
         return f"{self.submission} by {self.author.username}"
-
-
-class Volunteer(models.Model):
-    accepted_coc = models.BooleanField(default=False)
-    join_date = models.DateTimeField(default=timezone.now)
-    last_login_time = models.DateTimeField(default=None, null=True, blank=True)
-    api_key = models.OneToOneField(
-        APIKey, on_delete=models.CASCADE, null=True, blank=True
-    )
-    username = models.CharField(max_length=150)
-    password = models.CharField(max_length=100, default=None, null=True, blank=True)
-    staff_account = models.OneToOneField(
-        BlossomUser, on_delete=models.CASCADE, null=True, blank=True
-    )
-
-    def set_password(self, password):
-        self.password = make_password(password)
-
-    def check_password(self, password):
-        return check_password(self.password, password)
-
-    def set_unusable_password(self):
-        # Set a value that will never be a valid hash
-        self.password = make_password(None)
-
-    def is_staff(self):
-        return self.staff_account != None
-
-    def __str__(self):
-        # noinspection PyUnresolvedReferences
-        return f"{self.username}"
-
-    @property
-    def gamma(self):
-        return Transcription.objects.filter(author=self).count()
-
-
-class Summary(object):
-    """
-    A basic object that just generates a summary view that's easy to access.
-    """
-    def generate_summary(self):
-
-        # subtract 1 from volunteer count for anon volunteer
-        return {
-            'volunteer_count': Volunteer.objects.count(),
-            'transcription_count': Transcription.objects.count(),
-            'days_since_inception': (
-                timezone.now() - pytz.timezone("UTC").localize(
-                    timezone.datetime(day=1, month=4, year=2017),
-                    is_dst=None
-                )
-            ).days
-        }
