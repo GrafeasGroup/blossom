@@ -1,14 +1,12 @@
-import pytest
-from django.core.exceptions import ValidationError
 from django_hosts.resolvers import reverse
 
+from blossom.authentication.models import BlossomUser
 from blossom.tests.helpers import create_test_user, guy, jane
 from blossom.website.forms import PostAddForm, AddUserForm
-from blossom.authentication.models import BlossomUser
 
 
 def test_post_form_load(client, setup_site):
-    user = create_test_user()
+    user = create_test_user(is_grafeas_staff=True)
     client.force_login(user)
 
     result = client.get(reverse("post_create", host="www"))

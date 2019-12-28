@@ -115,6 +115,7 @@ class AdminView(LoginRequiredMixin, TemplateView):
         return render(request, 'website/admin.html', c)
 
 
+# superadmin role
 @staff_member_required
 def user_create(request):
     if request.method == 'POST':

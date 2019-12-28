@@ -1,13 +1,14 @@
 import pytest
-
-from blossom.tests.helpers import guy, create_test_user
-from blossom.authentication.views import LoginView
-from blossom.website.forms import LoginForm
-from django_hosts.resolvers import get_host_patterns
 from django.urls.exceptions import Resolver404
+from django_hosts.resolvers import get_host_patterns, reverse
 
-def test_login_redirect_admin(client):
-    resp = client.get('/admin/')
+from blossom.authentication.views import LoginView
+from blossom.tests.helpers import guy, create_test_user
+from blossom.website.forms import LoginForm
+
+
+def test_login_redirect_admin(client, settings):
+    resp = client.get(reverse("admin_view", host='www'), HTTP_HOST=settings.PARENT_HOST)
     assert resp.get("Location") == "//grafeas.localhost:8000/login/?next=/admin/"
 
 
@@ -72,7 +73,7 @@ def test_logout(client, setup_site):
 
 
 def test_hosts_redirect(client, setup_site):
-    user = create_test_user()
+    create_test_user(is_grafeas_staff=True)
 
     response = client.post(
         '/login/?next=/admin/', {

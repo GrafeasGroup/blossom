@@ -17,7 +17,12 @@ jane = SimpleNamespace(
 )
 
 
-def create_test_user(user_info=None, superuser=False):
+def create_test_user(
+        user_info=None,
+        superuser=False,
+        is_volunteer=True,
+        is_grafeas_staff=False
+):
     if not user_info:
         user_info = guy
 
@@ -25,8 +30,8 @@ def create_test_user(user_info=None, superuser=False):
         username=user_info.username,
         email=user_info.email,
         is_staff=superuser,
-        is_grafeas_staff=superuser,
-        is_volunteer=not superuser,
+        is_grafeas_staff=is_grafeas_staff,
+        is_volunteer=is_volunteer,
     )
     user.set_password(guy.password)
     user.save()
