@@ -26,10 +26,10 @@ class AuthMixin(object):
         if not token:
             return False
 
-        if not request.user.api_key.is_valid(token):
-            return False
-        else:
+        if request.user.api_key.is_valid(token) and request.user.is_grafeas_staff:
             return True
+        else:
+            return False
 
 
 class VolunteerMixin(object):

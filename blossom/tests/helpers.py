@@ -65,6 +65,8 @@ def create_volunteer(with_api_key: bool=False) -> Tuple[BlossomUser, Dict[str, s
 
 def create_staff_volunteer_with_keys(client):
     v, headers = create_volunteer(with_api_key=True)
+    v.is_grafeas_staff = True
+    v.save()
     client.force_login(v)
 
     return client, headers
