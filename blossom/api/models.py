@@ -11,7 +11,6 @@ class Submission(models.Model):
     # It is rare, but possible, for a post to have more than one transcription.
     # Therefore, posts are separate from transcriptions, but there will almost
     # always be one transcription per post.
-
     submission_id = models.CharField(max_length=36, default=create_id)
     submission_time = models.DateTimeField(default=timezone.now)
     claimed_by = models.ForeignKey(
@@ -47,7 +46,6 @@ class Submission(models.Model):
 
 
 class Transcription(models.Model):
-
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     author = models.ForeignKey("blossom.BlossomUser", on_delete=models.CASCADE)
     post_time = models.DateTimeField(default=timezone.now)

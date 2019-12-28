@@ -1,7 +1,7 @@
 from django_hosts.resolvers import reverse
 
 from blossom.authentication.models import BlossomUser
-from blossom.tests.helpers import create_test_user, create_volunteer
+from blossom.tests.helpers import create_test_user, create_volunteer, create_staff_volunteer_with_keys
 
 
 def test_volunteer_creation_without_credentials(client):
@@ -27,15 +27,14 @@ def test_volunteer_creation_with_normal_user(client):
 
 
 def test_volunteer_creation_with_admin_user(client):
-    user = create_test_user(superuser=True)
-    client.force_login(user)
+    client, headers = create_staff_volunteer_with_keys(client)
 
     data = {
         'username': 'Narf'
     }
 
     assert len(BlossomUser.objects.all()) == 1
-    client.post(reverse('volunteer-list', host='api'), data, HTTP_HOST='api')
+    client.post(reverse('volunteer-list', host='api'), data, HTTP_HOST='api', **headers)
     assert len(BlossomUser.objects.all()) == 2
 
 
@@ -54,9 +53,7 @@ def test_volunteer_creation_with_non_admin_api_key(client):
 
 
 def test_volunteer_creation_with_admin_api_key(client):
-    v, headers = create_volunteer(with_api_key=True)
-    client.force_login(v)
-
+    client, headers = create_staff_volunteer_with_keys(client)
     data = {
         'username': 'Narf'
     }

@@ -1,5 +1,6 @@
-from django.utils import timezone
+import uuid
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -8,6 +9,7 @@ from rest_framework.views import APIView
 from typing import Tuple, Dict
 
 from blossom.api import Summary
+from blossom.api.authentication import AdminApiKeyCustomCheck
 from blossom.api.helpers import (
     AuthMixin,
     VolunteerMixin,
@@ -19,7 +21,6 @@ from blossom.api.models import (
     Submission,
     Transcription
 )
-from blossom.api.responses import youre_not_an_admin
 from blossom.api.serializers import (
     VolunteerSerializer,
     SubmissionSerializer,
@@ -37,25 +38,18 @@ def build_response(
     return Response(resp, status=status_code)
 
 
-def not_an_admin() -> Response:
-    return build_response(
-        ERROR,
-        youre_not_an_admin,
-        status.HTTP_401_UNAUTHORIZED
-    )
-
-
 class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
     queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
     serializer_class = VolunteerSerializer
     basename = "volunteer"
+    permission_classes = (AdminApiKeyCustomCheck,)
 
     def get_queryset(self):
         """
         Uses a `username` query string parameter to filter for a
         specific volunteer. For example:
 
-        GET http://localhost:8000/api/volunteer/?username=asdfasdfasdf
+        GET http://api.grafeas.localhost:8000/volunteer/?username=asdfasdfasdf
         """
         queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
         username = self.request.query_params.get("username", None)
@@ -74,9 +68,6 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
         :return: json, a dict that gives relevant information about
             the volunteer.
         """
-        if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return not_an_admin()
-
         username = self.request.query_params.get("username", None)
         if not username:
             return build_response(
@@ -98,92 +89,60 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
             f"User {username} was found. See 'data' key for summary.",
             status.HTTP_200_OK,
             data={
-                'username': v.user.username,
-                'gamma': Transcription.objects.filter(author=v).count(),
-                'join_date': v.join_date,
+                'username': v.username,
+                'gamma': v.gamma,
+                'join_date': v.date_joined,
                 'accepted_coc': v.accepted_coc
             }
         )
 
-    # @action(detail=True, methods=["post"])
-    # def set_gamma(self, request: Request, pk: int = None) -> Response:
-    #     """
-    #     Set a user's gamma count to a specific number. This is for overriding
-    #     the existing count for whatever reason.
-    #
-    #     Example URL:
-    #
-    #     POST http://localhost:8000/api/volunteer/1/set_gamma
-    #
-    #     :param request: Request
-    #     :param pk: the primary key of the user we're modifying
-    #     :return: json, a message or error of the result.
-    #     """
-    #
-    #     # TODO: Refactor this to actually affect dummy transcriptions so we
-    #     # TODO: can get away from the integer gamma count
-    #
-    #     if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-    #         return not_an_admin()
-    #
-    #     try:
-    #         v = Volunteer.objects.get(id=pk)
-    #     except Volunteer.DoesNotExist:
-    #         return build_response(
-    #             ERROR,
-    #             "No volunteer with that ID.",
-    #             status.HTTP_404_NOT_FOUND
-    #         )
-    #
-    #     if gamma_count := request.data.get("gamma") is None:
-    #         return build_response(
-    #             ERROR,
-    #             "Must specify `gamma` in json with the new int value.",
-    #             status.HTTP_400_BAD_REQUEST
-    #         )
-    #
-    #     v.gamma = gamma_count
-    #     v.save()
-    #     return build_response(
-    #         SUCCESS,
-    #         f"Set gamma for user {v.user.username} to {v.gamma}",
-    #         status.HTTP_200_OK
-    #     )
-    #
-    # @action(detail=True, methods=["post"])
-    # def gamma_plusone(self, request: Request, pk: int) -> Response:
-    #     """
-    #     This endpoint updates the given score of a user by one.
-    #
-    #     Example URL:
-    #
-    #     POST http://localhost:8000/api/volunteer/1/gamma_plusone
-    #
-    #     :param request: the incoming API request.
-    #     :param pk: the primary key of the volunteer we're updating.
-    #     :return: json, an error or success message.
-    #     """
-    #     # TODO: Refactor this to actually affect dummy transcriptions so we
-    #     # TODO: can get away from the integer gamma count
-    #     if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-    #         return not_an_admin()
-    #
-    #     try:
-    #         v = Volunteer.objects.get(id=pk)
-    #     except Volunteer.DoesNotExist:
-    #         return build_response(
-    #             ERROR,
-    #             "No volunteer with that ID.",
-    #             status.HTTP_404_NOT_FOUND
-    #         )
-    #
-    #     v.gamma += 1
-    #     v.save()
-    #     return build_response(
-    #         SUCCESS,
-    #         f"Updated gamma for {v.user.username} to {v.gamma}.",
-    #         status.HTTP_200_OK
-    #     )
+    @action(detail=True, methods=["post"])
+    def gamma_plusone(self, request: Request, pk: int) -> Response:
+        def _generate_dummy_post(request):
+            return Submission.objects.create(
+                source="blossom_gamma_plusone",
+                completed_by=request.user
+            )
+
+        def _generate_dummy_transcription(request, post=None):
+            if post is None:
+                post = _generate_dummy_post(request)
+            Transcription.objects.create(
+                submission=post,
+                author=request.user,
+                transcription_id=str(uuid.uuid4()),
+                completion_method="blossom_gamma_plusone",
+                text="dummy transcription"
+            )
+        """
+        This endpoint updates the given score of a user by one by forcing a
+        fake transcription in their name; this should only be used in times
+        where the proper methods do not work.
+
+        Example URL:
+
+        POST http://localhost:8000/api/volunteer/1/gamma_plusone
+
+        :param request: the incoming API request.
+        :param pk: the primary key of the volunteer we're updating.
+        :return: json, an error or success message.
+        """
+        try:
+            v = BlossomUser.objects.get(id=pk)
+        except BlossomUser.DoesNotExist:
+            return build_response(
+                ERROR,
+                "No volunteer with that ID.",
+                status.HTTP_404_NOT_FOUND
+            )
+
+        _generate_dummy_transcription(request)
+
+        return build_response(
+            SUCCESS,
+            f"Updated gamma for {v.username} to {v.gamma}.",
+            status.HTTP_200_OK
+        )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
@@ -191,16 +150,13 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
 
         Example URL:
 
-        POST http://localhost:8000/api/volunteer
+        POST http://api.grafeas.localhost:8000/volunteer
 
         :param request: the rest framework request object
         :param args: *
         :param kwargs: **
         :return: Response
         """
-        if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return not_an_admin()
-
         username = request.data.get("username")
 
         if not username:
@@ -210,15 +166,16 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
                 status.HTTP_400_BAD_REQUEST
             )
 
-        existing_user = BlossomUser.objects.filter(username=username).first()
-        if existing_user:
+        if existing_user := BlossomUser.objects.filter(username=username).first():
             return build_response(
                 ERROR,
-                f"There is already a user with the username of `{existing_user.username}`",
+                f"There is already a user with the username of"
+                f" `{existing_user.username}`.",
                 status.HTTP_422_UNPROCESSABLE_ENTITY
             )
 
         v = BlossomUser.objects.create(username=username)
+        v.set_unusable_password()
 
         return build_response(
             SUCCESS,
@@ -230,6 +187,7 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
 class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, VolunteerMixin):
     queryset = Submission.objects.all().order_by("-post_time")
     serializer_class = SubmissionSerializer
+    permission_classes = (AdminApiKeyCustomCheck,)
 
     def get_queryset(self):
         """
@@ -247,10 +205,6 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
     def _get_possible_claim_done_errors(
         self, request: Request, pk: int
     ) -> [Tuple[Submission, BlossomUser], Response]:
-
-        if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return not_an_admin()
-
         try:
             p = Submission.objects.get(id=pk)
         except Submission.DoesNotExist:
@@ -292,7 +246,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
         p.save()
 
         return Response(
-            {SUCCESS: f"Post {p.submission_id} claimed by {v.user.username}"},
+            {SUCCESS: f"Post {p.submission_id} claimed by {v.username}"},
             status=status.HTTP_200_OK
         )
 
@@ -317,7 +271,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
         p.save()
 
         return Response(
-            {SUCCESS: f"Post {p.submission_id} completed by {v.user.username}"},
+            {SUCCESS: f"Post {p.submission_id} completed by {v.username}"},
             status=status.HTTP_200_OK
         )
 
@@ -339,10 +293,6 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
         :param kwargs:
         :return: Response object.
         """
-
-        if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return not_an_admin()
-
         submission_id = request.data.get("submission_id")
         source = request.data.get("source")
 
@@ -380,6 +330,8 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
 class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
     queryset = Transcription.objects.all().order_by("-post_time")
     serializer_class = TranscriptionSerializer
+    permission_classes = (AdminApiKeyCustomCheck,)
+
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
@@ -401,9 +353,6 @@ class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
         :param kwargs:
         :return:
         """
-        if not any([self.is_admin_key(request), self.is_admin_user(request)]):
-            return not_an_admin()
-
         if submission_id := request.data.get("submission_id") is None:
             return Response(
                 {
