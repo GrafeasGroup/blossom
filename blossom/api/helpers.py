@@ -58,15 +58,14 @@ class RequestDataMixin(object):
                 {
                     ERROR: "Must give either `v_id` (int, volunteer ID number)"
                     " or `v_username` (str, the username of the person"
-                    "you're looking for) in request json."
+                    " you're looking for) in request json."
                 }, status=status.HTTP_400_BAD_REQUEST
             )
 
         if v_id:
             return v_id
         if v_username:
-            v = BlossomUser.objects.filter(username=v_username).first()
-            if v:
+            if v := BlossomUser.objects.filter(username=v_username).first():
                 return v.id
 
         return None

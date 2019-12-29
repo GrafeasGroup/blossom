@@ -194,7 +194,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
         Uses a `submission_id` query string parameter to filter for a
         specific post. For example:
 
-        GET http://localhost:8000/api/post/?submission_id=t3_asdfgh
+        GET http://api.grafeas.localhost:8000/submission/?submission_id=t3_asdfgh
         """
         queryset = Submission.objects.all().order_by("id")
         submission_id = self.request.query_params.get("submission_id", None)
@@ -277,8 +277,8 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
-        Called by making a POST request against /api/post/. Must contain the following
-        fields in JSON body:
+        Called by making a POST request against /submission/. Must contain
+        the following fields in JSON body:
 
             submission_id: str
             source: str
@@ -308,23 +308,14 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        try:
-            p = Submission.objects.create(
-                submission_id=submission_id, source=source, url=url, tor_url=tor_url
-            )
-            return Response(
-                {SUCCESS: f"Post object {p.id} created!"},
-                status=status.HTTP_200_OK
+        p = Submission.objects.create(
+            submission_id=submission_id, source=source, url=url, tor_url=tor_url
+        )
+        return Response(
+            {SUCCESS: f"Post object {p.id} created!"},
+            status=status.HTTP_200_OK
 
-            )
-        except:
-            return Response(
-                {
-                    ERROR: "Something went wrong during the creation of the"
-                    " post. Please check your arguments and try again."
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        )
 
 
 class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
