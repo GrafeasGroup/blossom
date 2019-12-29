@@ -3,10 +3,11 @@ import json
 from django_hosts.resolvers import reverse
 
 from blossom.authentication.models import BlossomUser
-from blossom.tests.helpers import (
-    create_test_user, create_volunteer, create_staff_volunteer_with_keys
-)
 from blossom.models import Transcription, Submission
+from blossom.tests.helpers import (
+    create_volunteer, create_staff_volunteer_with_keys
+)
+
 
 class TestVolunteerSummary():
     def test_volunteer_summary_proper_request(self, client):
@@ -166,3 +167,19 @@ class TestVolunteerCreation():
             "error": "There is already a user with the username of `janeeyre`."
         }
         assert BlossomUser.objects.filter(username="janeeyre").count() == 1
+
+    def test_volunteer_create_no_username(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+
+        assert BlossomUser.objects.count() == 1
+        result = client.post(
+            reverse('volunteer-list', host='api'),
+            HTTP_HOST='api',
+            content_type='application/json',
+            **headers,
+        )
+        assert result.status_code == 400
+        assert result.json() == {
+            "error": "Must have the `username` key in JSON body."
+        }
+        assert BlossomUser.objects.count() == 1
