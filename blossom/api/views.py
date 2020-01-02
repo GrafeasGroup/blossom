@@ -68,7 +68,7 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
         :return: json, a dict that gives relevant information about
             the volunteer.
         """
-        username = self.request.query_params.get("username", None)
+        username = request.query_params.get("username", None)
         if not username:
             return build_response(
                 ERROR,
@@ -208,8 +208,10 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
         try:
             p = Submission.objects.get(id=pk)
         except Submission.DoesNotExist:
-            return Response(
-                {ERROR: "No post with that ID."}, status=status.HTTP_404_NOT_FOUND
+            return build_response(
+                ERROR,
+                "No post with that ID.",
+                status.HTTP_404_NOT_FOUND
             )
 
         resp = self.get_user_info_from_json(request, error_out_if_bad_data=True)
@@ -220,9 +222,10 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
 
         v = self.get_volunteer(id=v_id)
         if not v:
-            return Response(
-                {ERROR: "No volunteer with that ID / username."},
-                status=status.HTTP_404_NOT_FOUND
+            return build_response(
+                ERROR,
+                "No volunteer with that ID / username.",
+                status.HTTP_404_NOT_FOUND
             )
         return p, v
 
@@ -237,18 +240,22 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
             p, v = resp
 
         if p.claimed_by is not None:
-            return Response(
-                {ERROR: f"Post ID {p.id} has been claimed already by {p.claimed_by}!"},
-                status=status.HTTP_409_CONFLICT
+            return build_response(
+                ERROR,
+                f"Post ID {p.id} has been claimed already by {p.claimed_by}!",
+                status.HTTP_409_CONFLICT
             )
+
         p.claimed_by = v
         p.claim_time = timezone.now()
         p.save()
 
-        return Response(
-            {SUCCESS: f"Post {p.submission_id} claimed by {v.username}"},
-            status=status.HTTP_200_OK
+        return build_response(
+            SUCCESS,
+            f"Post {p.submission_id} claimed by {v.username}",
+            status.HTTP_200_OK
         )
+
 
     @action(detail=True, methods=["post"])
     def done(self, request: Request, pk: int) -> Response:
@@ -260,19 +267,27 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
             p, v = resp
 
         if p.completed_by is not None:
-            return Response(
-                {
-                    ERROR: f"Post ID {p.id} has already been completed by {p.completed_by}!"
-                },
-                status=status.HTTP_409_CONFLICT
+            return build_response(
+                ERROR,
+                f"Submission ID {p.submission_id} has already been completed"
+                    f" by {p.completed_by}!",
+                status.HTTP_409_CONFLICT
+            )
+
+        if p.claimed_by is None:
+            return build_response(
+                ERROR,
+                f"Submission ID {p.submission_id} has not yet been claimed!",
+                status.HTTP_412_PRECONDITION_FAILED
             )
         p.completed_by = v
         p.complete_time = timezone.now()
         p.save()
 
-        return Response(
-            {SUCCESS: f"Post {p.submission_id} completed by {v.username}"},
-            status=status.HTTP_200_OK
+        return build_response(
+            SUCCESS,
+            f"Submission ID {p.submission_id} completed by {v.username}",
+            status.HTTP_200_OK
         )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
@@ -300,21 +315,20 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
         tor_url = request.data.get("tor_url")
 
         if not submission_id or not source:
-            return Response(
-                {
-                    ERROR: "Must contain the keys `submission_id` (str, 20char max) "
-                    "and `source` (str 20char max)"
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return build_response(
+                ERROR,
+                "Must contain the keys `submission_id` (str, 20char max) and "
+                    "`source` (str 20char max)",
+                status.HTTP_400_BAD_REQUEST
             )
 
         p = Submission.objects.create(
             submission_id=submission_id, source=source, url=url, tor_url=tor_url
         )
-        return Response(
-            {SUCCESS: f"Post object {p.id} created!"},
-            status=status.HTTP_200_OK
-
+        return build_response(
+            SUCCESS,
+            f"Post object {p.id} created!",
+            status.HTTP_200_OK
         )
 
 
@@ -344,72 +358,75 @@ class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
         :param kwargs:
         :return:
         """
-        if submission_id := request.data.get("submission_id") is None:
-            return Response(
-                {
-                    ERROR: "Missing JSON body key `submission_id`, str; the ID of "
-                    "the post the transcription is on."
-                },
-                status=status.HTTP_400_BAD_REQUEST
+        submission_id = request.data.get("submission_id")
+        if submission_id is None:
+            return build_response(
+                ERROR,
+                "Missing JSON body key `submission_id`, str; the ID of "
+                    "the post the transcription is on.",
+                status.HTTP_400_BAD_REQUEST
             )
-        if p := Submission.objects.filter(id=submission_id).first() is None:
-            return Response(
-                {ERROR: f"No post found with ID {submission_id}!"},
-                status=status.HTTP_404_NOT_FOUND
-            )
+
+        # did they give us an actual submission id?
+        p = Submission.objects.filter(submission_id=submission_id).first()
+        if not p:
+            # ...or did they give us the database ID of a submission?
+            p = Submission.objects.filter(id=submission_id).first()
+            if not p:
+                return build_response(
+                    ERROR,
+                    f"No post found with ID {submission_id}!",
+                    status.HTTP_404_NOT_FOUND
+                )
 
         v = self.get_volunteer_from_request(request)
         if not v:
-            return Response(
-                {ERROR: "No volunteer found with that ID / username."},
-                status=status.HTTP_404_NOT_FOUND
+            return build_response(
+                ERROR,
+                "No volunteer found with that ID / username.",
+                status.HTTP_404_NOT_FOUND
             )
 
         t_id = request.data.get("t_id")
         if not t_id:
-            return Response(
-                {
-                    ERROR: "Missing JSON body key `t_id`, str; the ID of "
-                    "the transcription."
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return build_response(
+                ERROR,
+                "Missing JSON body key `t_id`, str; the ID of the transcription.",
+                status.HTTP_400_BAD_REQUEST
             )
 
         completion_method = request.data.get("completion_method")
         if not completion_method:
-            return Response(
-                {
-                    ERROR: "Missing JSON body key `completion_method`, str;"
+            return build_response(
+                ERROR,
+                "Missing JSON body key `completion_method`, str;"
                     " the service this transcription was completed"
-                    " through. `app`, `ToR`, etc. 20char max."
-                },
-                status=status.HTTP_400_BAD_REQUEST
+                    " through. `app`, `ToR`, etc. 20char max.",
+                status.HTTP_400_BAD_REQUEST
             )
 
         t_url = request.data.get("t_url")
         if not t_url:
-            return Response(
-                {
-                    ERROR: "Missing JSON body key `t_url`, str; the direct"
+            return build_response(
+                ERROR,
+                "Missing JSON body key `t_url`, str; the direct"
                     " URL for the transcription. Use string `None` if"
-                    " no URL is available."
-                },
-                status=status.HTTP_400_BAD_REQUEST
+                    " no URL is available.",
+                status.HTTP_400_BAD_REQUEST
             )
 
         t_text = request.data.get("t_text")
         if not t_text:
-            return Response(
-                {
-                    ERROR: "Missing JSON body key `t_text`, str; the content"
-                    " of the transcription."
-                },
-                status=status.HTTP_400_BAD_REQUEST
+            return build_response(
+                ERROR,
+                "Missing JSON body key `t_text`, str; the content"
+                    " of the transcription.",
+                status.HTTP_400_BAD_REQUEST
             )
         removed_from_reddit = request.data.get("removed_from_reddit", False)
 
         t = Transcription.objects.create(
-            post=p,
+            submission=p,
             author=v,
             transcription_id=t_id,
             completion_method=completion_method,
@@ -417,12 +434,11 @@ class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
             text=t_text,
             removed_from_reddit=removed_from_reddit,
         )
-        return Response(
-            {
-                SUCCESS: f"Transcription ID {t.id} created on post"
-                f" {p.submission_id}, written by {v.username}"
-            },
-            status=status.HTTP_200_OK
+        return build_response(
+            SUCCESS,
+            f"Transcription ID {t.id} created on post"
+                f" {p.submission_id}, written by {v.username}",
+            status.HTTP_200_OK
         )
 
 
