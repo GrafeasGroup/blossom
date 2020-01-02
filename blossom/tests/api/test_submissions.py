@@ -3,10 +3,11 @@ import json
 from django_hosts.resolvers import reverse
 
 from blossom.authentication.models import BlossomUser
-from blossom.models import Transcription, Submission
-from blossom.tests.helpers import (
-    create_test_user, create_staff_volunteer_with_keys
-)
+from blossom.models import Submission
+from blossom.tests.helpers import create_staff_volunteer_with_keys
+from blossom.tests.helpers import create_test_submission
+from blossom.tests.helpers import create_test_user
+
 
 class TestSubmissionCreation():
     def test_submission_create(self, client):
@@ -98,7 +99,7 @@ class TestSubmissionMiscEndpoints():
     def test_get_submissions(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
 
-        Submission.objects.create(submission_id='AAA', source='BBB')
+        create_test_submission()
 
         result = client.get(
             reverse('submission-list', host='api'),
@@ -114,8 +115,8 @@ class TestSubmissionMiscEndpoints():
         client, headers = create_staff_volunteer_with_keys(client)
 
         # create 2 -- call should only return one
-        Submission.objects.create(submission_id='AAA', source='BBB')
-        Submission.objects.create(submission_id='CCC', source='DDD')
+        create_test_submission(s_id='AAA', source='BBB')
+        create_test_submission(s_id='CCC', source='DDD')
 
         result = client.get(
             reverse('submission-list', host='api') + "?submission_id=CCC",
@@ -142,7 +143,7 @@ class TestSubmissionMiscEndpoints():
 class TestSubmissionClaimProcess():
     def test_claim(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
-        Submission.objects.create(submission_id='AAA', source='BBB')
+        create_test_submission()
         data = {
             "v_username": "janeeyre"
         }
@@ -176,7 +177,7 @@ class TestSubmissionClaimProcess():
 
     def test_claim_wrong_volunteer_username(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
-        Submission.objects.create(submission_id='AAA', source='BBB')
+        create_test_submission()
         data = {
             "v_username": "asdfasdfasdf"
         }
@@ -192,7 +193,7 @@ class TestSubmissionClaimProcess():
 
     def test_claim_no_volunteer_info(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
-        Submission.objects.create(submission_id='AAA', source='BBB')
+        create_test_submission()
         result = client.post(
             reverse('submission-claim', host='api', args=[1]),
             HTTP_HOST='api',
@@ -210,7 +211,7 @@ class TestSubmissionClaimProcess():
         client, headers = create_staff_volunteer_with_keys(client)
         guy = create_test_user()
 
-        s = Submission.objects.create(submission_id='AAA', source='BBB')
+        s = create_test_submission()
         s.claimed_by = BlossomUser.objects.get(id=1)
         s.save()
 
@@ -226,4 +227,79 @@ class TestSubmissionClaimProcess():
         assert result.status_code == 409
         assert result.json() == {
             'error': 'Post ID 1 has been claimed already by janeeyre!'
+        }
+
+
+class TestSubmissionDone():
+    def test_done_process(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        user = BlossomUser.objects.get(id=1)
+        s.claimed_by = user
+        s.save()
+
+        data = {'v_id': user.id}
+
+        result = client.post(
+            reverse('submission-done', host='api', args=[1]),
+            json.dumps(data),
+            HTTP_HOST='api',
+            content_type='application/json',
+            **headers,
+        )
+        assert result.status_code == 200
+        assert result.json() == {'success': 'Submission ID AAA completed by janeeyre'}
+
+    def test_done_without_claim(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        create_test_submission()
+        user = BlossomUser.objects.get(id=1)
+
+        data = {'v_id': user.id}
+
+        result = client.post(
+            reverse('submission-done', host='api', args=[1]),
+            json.dumps(data),
+            HTTP_HOST='api',
+            content_type='application/json',
+            **headers,
+        )
+        assert result.status_code == 412
+        assert result.json() == {'error': 'Submission ID AAA has not yet been claimed!'}
+
+    def test_done_without_user_info(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        create_test_submission()
+
+        result = client.post(
+            reverse('submission-done', host='api', args=[1]),
+            HTTP_HOST='api',
+            content_type='application/json',
+            **headers,
+        )
+        assert result.status_code == 400
+        assert result.json().get('error').startswith("Must give either `v_id`")
+
+    def test_done_already_completed(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        user = BlossomUser.objects.get(id=1)
+
+        s.claimed_by = user
+        s.completed_by = user
+        s.save()
+
+        data = {'v_id': user.id}
+
+        result = client.post(
+            reverse('submission-done', host='api', args=[1]),
+            json.dumps(data),
+            HTTP_HOST='api',
+            content_type='application/json',
+            **headers,
+        )
+
+        assert result.status_code == 409
+        assert result.json() == {
+            'error': 'Submission ID AAA has already been completed by janeeyre!'
         }

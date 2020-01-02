@@ -1,8 +1,8 @@
 from types import SimpleNamespace
 from typing import Tuple, Dict
 
+from blossom.api.models import Submission
 from blossom.authentication.models import BlossomUser, APIKey
-
 
 guy = SimpleNamespace(
     username="guymontag",
@@ -70,3 +70,10 @@ def create_staff_volunteer_with_keys(client):
     client.force_login(v)
 
     return client, headers
+
+
+def create_test_submission(s_id=None, source=None):
+    return Submission.objects.create(
+        submission_id=s_id if s_id else 'AAA',
+        source=source if source else 'BBB'
+    )
