@@ -7,20 +7,18 @@ from blossom.tests.helpers import create_volunteer
 
 def test_ping(client):
     result = client.get(
-        reverse('ping', host='api'),
-        HTTP_HOST='api',
-        content_type='application/json',
+        reverse("ping", host="api"), HTTP_HOST="api", content_type="application/json",
     )
-    assert result.json() == {'ping?!': 'PONG'}
+    assert result.json() == {"ping?!": "PONG"}
 
 
 def test_summary(client):
     client, headers = create_staff_volunteer_with_keys(client)
 
     result = client.get(
-        reverse('summary', host='api'),
-        HTTP_HOST='api',
-        content_type='application/json',
+        reverse("summary", host="api"),
+        HTTP_HOST="api",
+        content_type="application/json",
         **headers,
     )
     assert len(result.json().keys()) == 3

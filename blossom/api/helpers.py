@@ -9,7 +9,9 @@ SUCCESS = "success"
 
 
 class VolunteerMixin(object):
-    def get_volunteer(self, id: int = None, username: str = None) -> [BlossomUser, None]:
+    def get_volunteer(
+        self, id: int = None, username: str = None
+    ) -> [BlossomUser, None]:
         if id:
             return BlossomUser.objects.filter(id=id).first()
         if username:
@@ -35,7 +37,8 @@ class RequestDataMixin(object):
                     ERROR: "Must give either `v_id` (int, volunteer ID number)"
                     " or `v_username` (str, the username of the person"
                     " you're looking for) in request json."
-                }, status=status.HTTP_400_BAD_REQUEST
+                },
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if v_id:

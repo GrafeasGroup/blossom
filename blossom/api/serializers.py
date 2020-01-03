@@ -20,7 +20,7 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
             "gamma",
             "date_joined",
             "last_login",
-            "accepted_coc"
+            "accepted_coc",
         )
 
 

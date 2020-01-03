@@ -11,17 +11,12 @@ guy = SimpleNamespace(
 )
 
 jane = SimpleNamespace(
-    username="janeeyre",
-    email="miltonsux@bl.uk",
-    password="20ch35732"
+    username="janeeyre", email="miltonsux@bl.uk", password="20ch35732"
 )
 
 
 def create_test_user(
-        user_info=None,
-        superuser=False,
-        is_volunteer=True,
-        is_grafeas_staff=False
+    user_info=None, superuser=False, is_volunteer=True, is_grafeas_staff=False
 ):
     if not user_info:
         user_info = guy
@@ -38,8 +33,9 @@ def create_test_user(
     return user
 
 
-def create_volunteer(with_api_key: bool=False) \
-        -> Union[BlossomUser, Tuple[BlossomUser, Dict[str, str]]]:
+def create_volunteer(
+    with_api_key: bool = False,
+) -> Union[BlossomUser, Tuple[BlossomUser, Dict[str, str]]]:
     """
     Usage:
 
@@ -75,6 +71,5 @@ def create_staff_volunteer_with_keys(client):
 
 def create_test_submission(s_id=None, source=None):
     return Submission.objects.create(
-        submission_id=s_id if s_id else 'AAA',
-        source=source if source else 'BBB'
+        submission_id=s_id if s_id else "AAA", source=source if source else "BBB"
     )

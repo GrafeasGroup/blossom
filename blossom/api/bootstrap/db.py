@@ -15,17 +15,14 @@ def get_or_create_user(username):
         logger.info("Volunteer already exists! Pulled existing record.")
     except Volunteer.DoesNotExist:
         # we'll set a random password; if they need it, we can reset it.
-        v = Volunteer.objects.create(
-            username=username,
-            accepted_coc=True
-        )
+        v = Volunteer.objects.create(username=username, accepted_coc=True)
         v.set_unusable_password()
         v.save()
     return v
 
 
 def get_or_create_transcription(
-        post, volunteer, t_comment, comment_body, transcribot_text=None
+    post, volunteer, t_comment, comment_body, transcribot_text=None
 ):
     try:
         Transcription.objects.get(submission=post)
@@ -59,13 +56,15 @@ def get_or_create_post(tor_post, v, claim, done, redis_id):
         if claim is None:
             claim_time = None
         else:
-            claim_time = datetime.utcfromtimestamp(claim.created_utc)\
-                .replace(tzinfo=pytz.UTC)
+            claim_time = datetime.utcfromtimestamp(claim.created_utc).replace(
+                tzinfo=pytz.UTC
+            )
         if done is None:
             complete_time = None
         else:
-            complete_time = datetime.utcfromtimestamp(done.created_utc)\
-                .replace(tzinfo=pytz.UTC)
+            complete_time = datetime.utcfromtimestamp(done.created_utc).replace(
+                tzinfo=pytz.UTC
+            )
 
         p = Submission.objects.create(
             submission_id=tor_post.id,
@@ -85,15 +84,12 @@ def get_or_create_post(tor_post, v, claim, done, redis_id):
 
 
 def get_anon_user():
-    return get_or_create_user('GrafeasAnonymousUser')
+    return get_or_create_user("GrafeasAnonymousUser")
 
 
 def generate_dummy_post(vlntr=None):
     logger.info(f"creating dummy post...")
-    return Submission.objects.create(
-        source="bootstrap_from_redis",
-        completed_by=vlntr
-    )
+    return Submission.objects.create(source="bootstrap_from_redis", completed_by=vlntr)
 
 
 def generate_dummy_transcription(vlntr, post=None):
@@ -116,5 +112,5 @@ def generate_dummy_transcription(vlntr, post=None):
         author=vlntr,
         transcription_id=str(uuid.uuid4()),
         completion_method="bootstrap_from_redis",
-        text="dummy transcription"
+        text="dummy transcription",
     )

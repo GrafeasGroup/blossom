@@ -9,7 +9,7 @@ from blossom.authentication.models import BlossomUser
 
 dotenv.load_dotenv()
 
-logger = logging.getLogger('blossom.management.bootstrap')
+logger = logging.getLogger("blossom.management.bootstrap")
 
 ABOUT_PAGE = """
 <p>The best way to describe our organization is to start with our mission statement:</p>
@@ -145,32 +145,25 @@ THANKS_PAGE = """
 
 
 class Command(BaseCommand):
-    help = 'Creates the default entries required for the site.'
+    help = "Creates the default entries required for the site."
 
     def handle(self, *args, **options):
-        slugs = ['about-us', 'giving-to-grafeas', 'terms-of-service', 'thank-you']
+        slugs = ["about-us", "giving-to-grafeas", "terms-of-service", "thank-you"]
 
         if Post.objects.filter(slug__in=slugs).count() == len(slugs):
-            logger.debug(
-                self.style.SUCCESS('No articles created; all present.')
-            )
+            logger.debug(self.style.SUCCESS("No articles created; all present."))
 
         # First we gotta create a new author, otherwise this whole thing will be for naught
         if not BlossomUser.objects.filter(username="admin").first():
             BlossomUser.objects.create_superuser(
                 username="admin",
                 email="blossom@grafeas.org",
-                password="asdf"  # change me
+                password="asdf",  # change me
             )
-            logger.debug(
-                self.style.SUCCESS('Admin user created!')
-            )
+            logger.debug(self.style.SUCCESS("Admin user created!"))
 
         if not BlossomUser.objects.filter(username="u/ToR").first():
-            BlossomUser.objects.create_user(
-                username="u/ToR",
-                email="tor@grafeas.org"
-            )
+            BlossomUser.objects.create_user(username="u/ToR", email="tor@grafeas.org")
 
         admin = BlossomUser.objects.get(username="admin")
 
@@ -181,11 +174,9 @@ class Command(BaseCommand):
                 author=admin,
                 published=True,
                 standalone_section=True,
-                header_order=10
+                header_order=10,
             )
-            logger.debug(
-                self.style.SUCCESS('Wrote about page!')
-            )
+            logger.debug(self.style.SUCCESS("Wrote about page!"))
 
         if not Post.objects.filter(slug=slugs[1]).first():
             p = Post.objects.create(
@@ -194,15 +185,11 @@ class Command(BaseCommand):
                 author=admin,
                 published=True,
                 standalone_section=True,
-                header_order=20
+                header_order=20,
             )
-            p.body.replace(
-                "key: ''", f"key: \'{os.environ.get('STRIPE_PROD_KEY')}\'"
-            )
+            p.body.replace("key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'")
             p.save()
-            logger.debug(
-                self.style.SUCCESS('Wrote donation page!')
-            )
+            logger.debug(self.style.SUCCESS("Wrote donation page!"))
 
         if not Post.objects.filter(slug=slugs[2]).first():
             Post.objects.create(
@@ -211,11 +198,9 @@ class Command(BaseCommand):
                 author=admin,
                 published=True,
                 standalone_section=False,
-                show_in_news_view=False
+                show_in_news_view=False,
             )
-            logger.debug(
-                self.style.SUCCESS('Wrote TOS page!')
-            )
+            logger.debug(self.style.SUCCESS("Wrote TOS page!"))
 
         if not Post.objects.filter(slug=slugs[3]).first():
             Post.objects.create(
@@ -224,8 +209,6 @@ class Command(BaseCommand):
                 author=admin,
                 published=True,
                 standalone_section=False,
-                show_in_news_view=False
+                show_in_news_view=False,
             )
-            logger.debug(
-                self.style.SUCCESS('Wrote donation thanks page!')
-            )
+            logger.debug(self.style.SUCCESS("Wrote donation thanks page!"))

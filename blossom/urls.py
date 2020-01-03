@@ -35,8 +35,8 @@ admin.site.register(Submission)
 admin.site.register(Transcription)
 
 urlpatterns = [
-    path('superadmin/newuser', user_create, name='user_create'),
-    path('superadmin/', admin.site.urls),
+    path("superadmin/newuser", user_create, name="user_create"),
+    path("superadmin/", admin.site.urls),
 ]
 
 urlpatterns += website_urls

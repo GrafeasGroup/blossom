@@ -11,7 +11,7 @@ def test_post_form_load(client, setup_site):
 
     result = client.get(reverse("post_create", host="www"))
     assert result.status_code == 200
-    for f in result.context['form'].fields:
+    for f in result.context["form"].fields:
         assert f in PostAddForm.Meta.fields
 
 
@@ -21,7 +21,7 @@ def test_adduser_form_load(client, setup_site):
 
     result = client.get(reverse("user_create", host="www"))
     assert result.status_code == 200
-    for f in result.context['form'].fields:
+    for f in result.context["form"].fields:
         assert f in AddUserForm.declared_fields
 
 
@@ -37,10 +37,10 @@ def test_adduser_form_add_user(client, setup_site):
     client.force_login(superuser)
 
     data = {
-        'username': jane.username,
-        'password': jane.password,
-        'email': jane.email,
-        'is_superuser': "off"  # why the hell is it not True or False‽
+        "username": jane.username,
+        "password": jane.password,
+        "email": jane.email,
+        "is_superuser": "off",  # why the hell is it not True or False‽
     }
 
     assert BlossomUser.objects.filter(username=jane.username).count() == 0
@@ -53,14 +53,14 @@ def test_adduser_form_duplicate_username(client, setup_site):
     client.force_login(superuser)
 
     data = {
-        'username': guy.username,  # same username as our superuser
-        'password': guy.password,
-        'email': jane.email,  # email that isn't already in the db
-        'is_superuser': "off"
+        "username": guy.username,  # same username as our superuser
+        "password": guy.password,
+        "email": jane.email,  # email that isn't already in the db
+        "is_superuser": "off",
     }
 
     result = client.post(reverse("user_create", host="www"), data)
-    assert result.context['form'].errors['username'][0] == "Username already exists"
+    assert result.context["form"].errors["username"][0] == "Username already exists"
 
 
 def test_adduser_form_duplicate_email(client, setup_site):
@@ -68,11 +68,11 @@ def test_adduser_form_duplicate_email(client, setup_site):
     client.force_login(superuser)
 
     data = {
-        'username': jane.username,  # username that isn't already in the db
-        'password': jane.password,
-        'email': guy.email,  # email that is the same as our superuser
-        'is_superuser': "off"
+        "username": jane.username,  # username that isn't already in the db
+        "password": jane.password,
+        "email": guy.email,  # email that is the same as our superuser
+        "is_superuser": "off",
     }
 
     result = client.post(reverse("user_create", host="www"), data)
-    assert result.context['form'].errors['email'][0] == "Email already exists"
+    assert result.context["form"].errors["email"][0] == "Email already exists"

@@ -4,8 +4,8 @@ from unittest.mock import Mock
 
 def test_wiki_media_rewrite():
     request = Mock()
-    request.get_host.return_value = 'wiki.grafeas.localhost:8000'
-    request.path = '/media/img1.jpg'
+    request.get_host.return_value = "wiki.grafeas.localhost:8000"
+    request.path = "/media/img1.jpg"
     request.scheme = "http"
 
     response = Mock()
@@ -17,8 +17,8 @@ def test_wiki_media_rewrite():
 
 def test_middleware_non_wiki_domain():
     request = Mock()
-    request.get_host.return_value = 'engineering.grafeas.localhost:8000'
-    request.path = '/media/img1.jpg'
+    request.get_host.return_value = "engineering.grafeas.localhost:8000"
+    request.path = "/media/img1.jpg"
 
     response = Mock()
     response.return_value = "Woohoo!"
@@ -28,8 +28,8 @@ def test_middleware_non_wiki_domain():
 
 def test_middleware_non_media_url():
     request = Mock()
-    request.get_host.return_value = 'wiki.grafeas.localhost:8000'
-    request.path = '/'
+    request.get_host.return_value = "wiki.grafeas.localhost:8000"
+    request.path = "/"
 
     response = Mock()
     response.return_value = "Woohoo!"

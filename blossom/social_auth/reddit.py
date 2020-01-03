@@ -20,7 +20,7 @@ class RedditOAuth2(BaseOAuth2):
         # https://python-social-auth-docs.readthedocs.io/en/latest/use_cases.html#multiple-scopes-per-provider
         scope = super().get_scope()
         # See above link for why this is not scope += [()]
-        scope = scope + ['identity']
+        scope = scope + ["identity"]
         return scope
 
     def get_user_details(self, response):
