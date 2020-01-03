@@ -8,30 +8,6 @@ ERROR = "error"
 SUCCESS = "success"
 
 
-class AuthMixin(object):
-    def is_admin_user(self, request: Request) -> bool:
-        return any([request.user.is_staff, request.user.is_grafeas_staff])
-
-    def is_admin_key(self, request: Request) -> bool:
-        """
-        Check the API key that we were passed and see if it belongs to a user.
-        If it does, verify that the requested user is an admin. We expect that
-        this will only be used in a boolean fashion, but if it finds the user
-        then we'll return it in case we need the user later.
-
-        :param request: the api request object
-        :return: bool
-        """
-        token = request.headers.get("X-Api-Key")
-        if not token:
-            return False
-
-        if request.user.api_key.is_valid(token) and request.user.is_grafeas_staff:
-            return True
-        else:
-            return False
-
-
 class VolunteerMixin(object):
     def get_volunteer(self, id: int = None, username: str = None) -> [BlossomUser, None]:
         if id:

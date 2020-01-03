@@ -26,8 +26,11 @@ def get_additional_context(context):
     return context
 
 
-def grafeas_staff_required(view_func=None, redirect_field_name=REDIRECT_FIELD_NAME,
-                          login_url=None):
+def grafeas_staff_required(
+        view_func=None,
+        redirect_field_name=REDIRECT_FIELD_NAME,
+        login_url=None
+):
     """
     Decorator for views that checks that the user is logged in and is a staff
     member, redirecting to the login page if necessary.
@@ -35,7 +38,8 @@ def grafeas_staff_required(view_func=None, redirect_field_name=REDIRECT_FIELD_NA
     if not login_url:
         login_url = settings.LOGIN_URL
     actual_decorator = user_passes_test(
-        lambda u: u.is_active and u.is_grafeas_staff,
+        # superadmins should be allowed in too
+        lambda u: u.is_active and (u.is_grafeas_staff or u.is_staff),
         login_url=login_url,
         redirect_field_name=redirect_field_name
     )

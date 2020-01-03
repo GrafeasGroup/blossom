@@ -289,7 +289,7 @@ class TestSubmissionDone():
         s.completed_by = user
         s.save()
 
-        data = {'v_id': user.id}
+        data = {'v_username': user.username}
 
         result = client.post(
             reverse('submission-done', host='api', args=[1]),

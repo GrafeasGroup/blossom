@@ -1,6 +1,7 @@
 from django_hosts.resolvers import reverse
 
 from blossom.authentication.models import BlossomUser
+from blossom.api.authentication import BlossomApiPermission
 from blossom.tests.helpers import create_test_user, create_volunteer, create_staff_volunteer_with_keys
 
 
@@ -63,3 +64,32 @@ def test_volunteer_creation_with_admin_api_key(client):
         reverse('volunteer-list', host='api'), data, **headers, HTTP_HOST='api'
     )
     assert result.json() == {'success': 'Volunteer created with username `Narf`'}
+
+
+class TestPermissionsCheck():
+    def test_permissions_1(self, rf):
+        user = create_test_user()
+        request = rf.get('/')
+        request.user = user
+        assert not BlossomApiPermission().has_permission(request, None)
+
+    def test_permissions_2(self, rf):
+        user = create_test_user(superuser=True)
+        request = rf.get('/')
+        request.user = user
+        assert BlossomApiPermission().has_permission(request, None)
+
+    def test_permissions_3(self, rf):
+        # this should fail because they don't have an api key
+        user = create_test_user(is_grafeas_staff=True)
+        request = rf.get('/')
+        request.user = user
+        assert not BlossomApiPermission().has_permission(request, None)
+
+    def test_permissions_4(self, client, rf):
+        client, headers = create_staff_volunteer_with_keys(client)
+        user = BlossomUser.objects.get(id=1)
+        request = rf.get('/')
+        request.user = user
+        request.headers = {'X-Api-Key': headers.get("HTTP_X_API_KEY")}
+        assert BlossomApiPermission().has_permission(request, None)

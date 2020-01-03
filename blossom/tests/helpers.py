@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Union
 
 from blossom.api.models import Submission
 from blossom.authentication.models import BlossomUser, APIKey
@@ -38,7 +38,8 @@ def create_test_user(
     return user
 
 
-def create_volunteer(with_api_key: bool=False) -> Tuple[BlossomUser, Dict[str, str]]:
+def create_volunteer(with_api_key: bool=False) \
+        -> Union[BlossomUser, Tuple[BlossomUser, Dict[str, str]]]:
     """
     Usage:
 
