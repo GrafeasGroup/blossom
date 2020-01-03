@@ -12,7 +12,10 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
+import dotenv
 from django_hosts.resolvers import reverse_lazy
+
+dotenv.load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -21,32 +24,32 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx'
+SECRET_KEY = os.environ.get(
+    "BLOSSOM_SECRET_KEY", "v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 # force cross-domain cookies so that wiki login can use the regular login page
-ALLOWED_HOSTS = ['.grafeas.org/', 'grafeas.org/']
-SESSION_COOKIE_DOMAIN = 'grafeas.org'
+ALLOWED_HOSTS = [".grafeas.org/", "grafeas.org/"]
+SESSION_COOKIE_DOMAIN = "grafeas.org"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-MEDIA_URL = '/media/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static_dev')
-]
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = "/media/"
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static_dev")]
 
-LOGIN_URL = reverse_lazy("login", host='www')
-LOGOUT_URL = reverse_lazy("logout", host='www')
+LOGIN_URL = reverse_lazy("login", host="www")
+LOGOUT_URL = reverse_lazy("logout", host="www")
 
 # for subdomain routing
-ROOT_HOSTCONF = 'blossom.hosts'
-DEFAULT_HOST = 'www'
-PARENT_HOST = 'grafeas.org'
+ROOT_HOSTCONF = "blossom.hosts"
+DEFAULT_HOST = "www"
+PARENT_HOST = "grafeas.org"
 
 # wiki
 WIKI_ACCOUNT_HANDLING = False
@@ -60,114 +63,122 @@ WIKI_ACCOUNT_HANDLING = False
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django_hosts',
-    'widget_tweaks',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_hosts",
+    "widget_tweaks",
     # wiki
-    'django.contrib.sites.apps.SitesConfig',
-    'django.contrib.humanize.apps.HumanizeConfig',
-    'django_nyt.apps.DjangoNytConfig',
-    'mptt',
-    'sekizai',
-    'sorl.thumbnail',
-    'wiki.apps.WikiConfig',
-    'wiki.plugins.attachments.apps.AttachmentsConfig',
+    "django.contrib.sites.apps.SitesConfig",
+    "django.contrib.humanize.apps.HumanizeConfig",
+    "django_nyt.apps.DjangoNytConfig",
+    "mptt",
+    "sekizai",
+    "sorl.thumbnail",
+    "wiki.apps.WikiConfig",
+    "wiki.plugins.attachments.apps.AttachmentsConfig",
     # todo: this is super broken for some reason
     # 'wiki.plugins.notifications.apps.NotificationsConfig',
-    'wiki.plugins.images.apps.ImagesConfig',
-    'wiki.plugins.macros.apps.MacrosConfig',
-    'blossom',
+    "wiki.plugins.images.apps.ImagesConfig",
+    "wiki.plugins.macros.apps.MacrosConfig",
+    "blossom",
+    "rest_framework",
+    "rest_framework_api_key",
+    "drf_yasg",
+    "social_django",
 ]
 
-AUTH_USER_MODEL = 'blossom.BlossomUser'
+AUTH_USER_MODEL = "blossom.BlossomUser"
 
 MIDDLEWARE = [
-    'django_hosts.middleware.HostsRequestMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'blossom.wiki.middleware.wiki_media_url_rewrite',
-    'django_hosts.middleware.HostsResponseMiddleware',
+    "django_hosts.middleware.HostsRequestMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "blossom.wiki.middleware.wiki_media_url_rewrite",
+    "django_hosts.middleware.HostsResponseMiddleware",
 ]
 
-ROOT_URLCONF = 'blossom.urls'
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 30  # One month
+ROOT_URLCONF = "blossom.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(BASE_DIR, 'templates'),
-            os.path.join(BASE_DIR, 'templates', 'wiki')
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [
+            os.path.join(BASE_DIR, "templates"),
+            os.path.join(BASE_DIR, "templates", "wiki"),
         ],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-                'sekizai.context_processors.sekizai',
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+                "sekizai.context_processors.sekizai",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'blossom.wsgi.application'
+WSGI_APPLICATION = "blossom.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'blossom',
-        'USER': 'blossom_app',
-        'PASSWORD': os.getenv(
-            'DJANGO_BLOSSOM_DB_PASSWORD',
-            'Pink fluffy unicorns dancing on rainbows'
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "blossom",
+        "USER": "blossom_app",
+        "PASSWORD": os.getenv(
+            "DJANGO_BLOSSOM_DB_PASSWORD", "Pink fluffy unicorns dancing on rainbows"
         ),
-        'HOST': 'localhost',
-        'PORT': '',
+        "HOST": "localhost",
+        "PORT": "",
     }
 }
+
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 25,
+    "DEFAULT_PERMISSION_CLASSES": ("blossom.api.authentication.BlossomApiPermission",),
+}
+API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
 ]
 
 AUTHENTICATION_BACKENDS = [
-    'blossom.authentication.custom_auth.EmailBackend'
+    "blossom.authentication.backends.EmailBackend",
+    "blossom.social_auth.reddit.RedditOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 

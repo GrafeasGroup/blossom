@@ -10,7 +10,7 @@ def test_setup_site_check():
 
 
 def test_bootstrap_check(settings):
-    settings.ENVIRONMENT = 'prod'
+    settings.ENVIRONMENT = "prod"
 
     with pytest.raises(ImproperlyConfigured):
         get_additional_context({})
