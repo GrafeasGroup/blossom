@@ -20,9 +20,9 @@ def charge(request, *args, **kwargs):
     # Set your secret key: remember to change this to your live secret key in production
     # See your keys here: https://dashboard.stripe.com/account/apikeys
     if settings.DEBUG:
-        stripe.api_key = os.environ.get('STRIPE_DEBUG_KEY')
+        stripe.api_key = os.environ.get('STRIPE_DEBUG_KEY', "sk_test_abcdefghijk")
     else:
-        stripe.api_key = os.environ.get('STRIPE_PROD_KEY')
+        stripe.api_key = os.environ.get('STRIPE_PROD_KEY', "sk_live_abcdefghijk")
     # Token is created using Checkout or Elements!
 
     try:

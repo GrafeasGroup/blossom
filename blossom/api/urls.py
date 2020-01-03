@@ -30,7 +30,7 @@ router.register(r"transcription", views.TranscriptionViewSet, basename="transcri
 urlpatterns = [
     url(r"", include(router.urls)),
     url(r"^auth/", include("rest_framework.urls")),
-    url(r"^summary/", views.SummaryView.as_view()),
+    url(r"^summary/", views.SummaryView.as_view(), name="summary"),
     url(
         r'^swagger(?P<format>\.json|\.yaml)$',
         schema_view.without_ui(cache_timeout=0),
@@ -46,5 +46,5 @@ urlpatterns = [
         schema_view.with_ui('redoc', cache_timeout=0),
         name='schema-redoc'
     ),
-    url(r"^api/ping", views.PingView.as_view()),
+    url(r"^api/ping", views.PingView.as_view(), name="ping"),
 ]

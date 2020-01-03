@@ -26,10 +26,7 @@ class LoginView(TemplateView):
 
         try:
             match = resolve(nextpath)
-            try:
-                return reverse(match.view_name)
-            except NoReverseMatch:
-                pass
+            return reverse(match.view_name)
         except Resolver404:
             pass
 

@@ -166,6 +166,12 @@ class Command(BaseCommand):
                 self.style.SUCCESS('Admin user created!')
             )
 
+        if not BlossomUser.objects.filter(username="u/ToR").first():
+            BlossomUser.objects.create_user(
+                username="u/ToR",
+                email="tor@grafeas.org"
+            )
+
         admin = BlossomUser.objects.get(username="admin")
 
         if not Post.objects.filter(slug=slugs[0]).first():

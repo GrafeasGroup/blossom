@@ -3,6 +3,7 @@ from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,7 +12,6 @@ from typing import Tuple, Dict
 from blossom.api import Summary
 from blossom.api.authentication import AdminApiKeyCustomCheck
 from blossom.api.helpers import (
-    AuthMixin,
     VolunteerMixin,
     RequestDataMixin,
     ERROR,
@@ -38,7 +38,7 @@ def build_response(
     return Response(resp, status=status_code)
 
 
-class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
+class VolunteerViewSet(viewsets.ModelViewSet):
     queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
     serializer_class = VolunteerSerializer
     basename = "volunteer"
@@ -184,7 +184,7 @@ class VolunteerViewSet(viewsets.ModelViewSet, AuthMixin):
         )
 
 
-class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, VolunteerMixin):
+class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin):
     queryset = Submission.objects.all().order_by("-post_time")
     serializer_class = SubmissionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
@@ -332,7 +332,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, AuthMixin, RequestDataMixin, Volu
         )
 
 
-class TranscriptionViewSet(viewsets.ModelViewSet, AuthMixin, VolunteerMixin):
+class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
     queryset = Transcription.objects.all().order_by("-post_time")
     serializer_class = TranscriptionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
@@ -446,10 +446,12 @@ class SummaryView(APIView):
     """
     send an unauthenticated request to /api/summary
     """
+    permission_classes = (AdminApiKeyCustomCheck,)
     def get(self, request, *args, **kw):
         return Response(Summary().generate_summary(), status=status.HTTP_200_OK)
 
 
 class PingView(APIView):
+    permission_classes = (AllowAny,)
     def get(self, request, *args, **kw):
         return Response({"ping?!": "PONG"}, status=status.HTTP_200_OK)
