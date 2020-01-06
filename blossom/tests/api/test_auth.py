@@ -85,5 +85,5 @@ class TestPermissionsCheck:
         user = BlossomUser.objects.get(id=1)
         request = rf.get("/")
         request.user = user
-        request.headers = {"X-Api-Key": headers.get("HTTP_X_API_KEY")}
+        request.META.update(headers)
         assert BlossomApiPermission().has_permission(request, None)
