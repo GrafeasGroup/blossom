@@ -6,13 +6,12 @@ def test_wiki_media_rewrite():
     request = Mock()
     request.get_host.return_value = "wiki.grafeas.localhost:8000"
     request.path = "/media/img1.jpg"
-    request.scheme = "http"
 
     response = Mock()
     response.return_value = "Woohoo!"
     result = wiki_media_url_rewrite(response)(request)
 
-    assert result.url == "http://grafeas.localhost:8000/media/img1.jpg"
+    assert result.url == "//grafeas.localhost:8000/media/img1.jpg"
 
 
 def test_middleware_non_wiki_domain():
