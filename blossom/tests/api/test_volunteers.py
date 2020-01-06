@@ -19,7 +19,7 @@ class TestVolunteerSummary:
 
     def test_volunteer_summary_wrong_key(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
-        headers["HTTP_X_API_KEY"] = "obviously broken key"
+        headers["Authorization"] = "obviously broken key"
         result = client.get(
             reverse("volunteer-summary", host="api") + "?username=janeeyre",
             HTTP_HOST="api",
@@ -59,6 +59,13 @@ class TestVolunteerSummary:
             **headers,
         )
         assert result.json() == {"error": "No volunteer found with that username."}
+
+    def test_volunteer_summary_no_key(self, client):
+        result = client.get(
+            reverse("volunteer-summary", host="api") + "?username=asdfasdfasdf",
+            HTTP_HOST="api",
+        )
+        assert result.status_code == 403
 
 
 class TestVolunteerAssortedFunctions:
