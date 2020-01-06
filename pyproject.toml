@@ -26,6 +26,7 @@ dpath = "^1.4.2"
 timeout-decorator = "^0.4.1"
 psycopg2-binary = "^2.8.4"
 drf-yasg = "^1.17"
+toml = "^0.10.0"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"
