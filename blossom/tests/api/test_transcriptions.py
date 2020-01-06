@@ -34,7 +34,7 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == 200
         assert (
-            result.json().get("success")
+            result.json().get("message")
             == "Transcription ID 1 created on post AAA, written by janeeyre"
         )
 
@@ -67,7 +67,7 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == 200
         assert (
-            result.json().get("success")
+            result.json().get("message")
             == "Transcription ID 1 created on post AAA, written by janeeyre"
         )
 
@@ -90,7 +90,7 @@ class TestTranscriptionCreation:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json().get("error") == (
+        assert result.json().get("message") == (
             "Missing JSON body key `submission_id`, str; the ID of the post"
             " the transcription is on."
         )
@@ -115,7 +115,7 @@ class TestTranscriptionCreation:
             **headers,
         )
         assert result.status_code == 404
-        assert result.json().get("error") == "No post found with ID 999!"
+        assert result.json().get("message") == "No post found with ID 999!"
 
     def test_transcription_with_invalid_volunteer_id(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -137,7 +137,7 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == 404
         assert (
-            result.json().get("error") == "No volunteer found with that ID / username."
+            result.json().get("message") == "No volunteer found with that ID / username."
         )
 
     def test_transcription_with_missing_transcription_id(self, client):
@@ -160,7 +160,7 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == 400
         assert (
-            result.json().get("error")
+            result.json().get("message")
             == "Missing JSON body key `t_id`, str; the ID of the transcription."
         )
 
@@ -183,7 +183,7 @@ class TestTranscriptionCreation:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json().get("error") == (
+        assert result.json().get("message") == (
             "Missing JSON body key `completion_method`, str; the service this"
             " transcription was completed through. `app`, `ToR`, etc. 20char max."
         )
@@ -207,7 +207,7 @@ class TestTranscriptionCreation:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json().get("error") == (
+        assert result.json().get("message") == (
             "Missing JSON body key `t_url`, str; the direct URL for the"
             " transcription. Use string `None` if no URL is available."
         )
@@ -231,6 +231,6 @@ class TestTranscriptionCreation:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json().get("error") == (
+        assert result.json().get("message") == (
             "Missing JSON body key `t_text`, str; the content of the transcription."
         )

@@ -57,7 +57,7 @@ def test_volunteer_creation_with_admin_api_key(client):
     result = client.post(
         reverse("volunteer-list", host="api"), data, **headers, HTTP_HOST="api"
     )
-    assert result.json() == {"success": "Volunteer created with username `Narf`"}
+    assert result.json().get("message") == "Volunteer created with username `Narf`"
 
 
 class TestPermissionsCheck:

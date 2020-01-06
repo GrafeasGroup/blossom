@@ -7,11 +7,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from typing import Tuple, Dict
+from typing import Tuple
 
 from blossom.api import Summary
 from blossom.api.authentication import AdminApiKeyCustomCheck
-from blossom.api.helpers import VolunteerMixin, RequestDataMixin, ERROR, SUCCESS
+from blossom.api.helpers import (
+    VolunteerMixin, RequestDataMixin, ERROR, SUCCESS, build_response
+)
 from blossom.api.models import Submission, Transcription
 from blossom.api.serializers import (
     VolunteerSerializer,
@@ -19,15 +21,6 @@ from blossom.api.serializers import (
     TranscriptionSerializer,
 )
 from blossom.authentication.models import BlossomUser
-
-
-def build_response(
-    result: str, message: str, status_code: int, data: Dict = None
-) -> Response:
-    resp = {result: message}
-    if data:
-        resp.update({"data": data})
-    return Response(resp, status=status_code)
 
 
 class VolunteerViewSet(viewsets.ModelViewSet):
