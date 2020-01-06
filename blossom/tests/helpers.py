@@ -55,7 +55,7 @@ def create_volunteer(
         v.api_key = api_key
         v.save()
         # preformat the headers
-        return v, {"HTTP_X_API_KEY": key}
+        return v, {"Authorization": f"Api-Key {key}"}
 
     return v
 
