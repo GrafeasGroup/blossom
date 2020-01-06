@@ -9,7 +9,7 @@ def wiki_media_url_rewrite(get_response):
             if "wiki" in request.get_host():
                 h = request.get_host()
                 return redirect(
-                    request.scheme + "://" + h[h.index(".") + 1 :] + request.path
+                    "//" + h[h.index(".") + 1 :] + request.path
                 )
 
         response = get_response(request)
