@@ -8,9 +8,18 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
     def has_permission(self, request, view):
         if not isinstance(request.user, AnonymousUser):
             if request.user.api_key:
+                if request_key := request.headers.get("Authentication"):
+                    request_key = request_key.split()
+                    if len(request_key) == 1:
+                        # they didn't have the Api-Key bit
+                        return
+                else:
+                    return
+
                 return all(
                     [
-                        request.user.api_key.is_valid(request.headers.get("X-Api-Key")),
+                        request_key[0] == "Api-Key",
+                        request.user.api_key.is_valid(request_key[1]),
                         request.user.is_grafeas_staff or request.user.is_staff,
                     ]
                 )

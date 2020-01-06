@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # force cross-domain cookies so that wiki login can use the regular login page
 ALLOWED_HOSTS = [".grafeas.org/", "grafeas.org/"]
