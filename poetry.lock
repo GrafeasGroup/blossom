@@ -646,7 +646,7 @@ python-versions = "*"
 version = "0.4.1"
 
 [[package]]
-category = "dev"
+category = "main"
 description = "Python Library for Tom's Obvious, Minimal Language"
 name = "toml"
 optional = false
@@ -712,7 +712,7 @@ django-sekizai = ">=0.10"
 sorl-thumbnail = ">=12,<13"
 
 [metadata]
-content-hash = "5246bb396354c716a7fbabf98527d1ca98ab7730e2c54ea6e820d1e06c011c88"
+content-hash = "04a0139c36c437b76b4efa58cb9edd437a9b8748c1b94a770c633d2c6467e990"
 python-versions = "^3.8"
 
 [metadata.hashes]

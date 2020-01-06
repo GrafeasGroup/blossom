@@ -83,7 +83,7 @@ class RedditCommentTree(object):
 
         for item in top_level_comments:
             self.tree[item.id] = {"object": item, "children": {}}
-        while True:
+        for _ in range(99999):
             checkpoint = datetime.now()
             if checkpoint > kill_time:
                 raise StopIteration

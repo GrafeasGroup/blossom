@@ -57,7 +57,7 @@ def test_volunteer_creation_with_admin_api_key(client):
     result = client.post(
         reverse("volunteer-list", host="api"), data, **headers, HTTP_HOST="api"
     )
-    assert result.json() == {"success": "Volunteer created with username `Narf`"}
+    assert result.json().get("message") == "Volunteer created with username `Narf`"
 
 
 class TestPermissionsCheck:
@@ -85,5 +85,5 @@ class TestPermissionsCheck:
         user = BlossomUser.objects.get(id=1)
         request = rf.get("/")
         request.user = user
-        request.headers = {"X-Api-Key": headers.get("HTTP_X_API_KEY")}
+        request.META.update(headers)
         assert BlossomApiPermission().has_permission(request, None)

@@ -22,7 +22,7 @@ class TestSubmissionCreation:
             **headers,
         )
         assert result.status_code == 200
-        assert result.json() == {"success": "Post object 1 created!"}
+        assert result.json().get("message") == "Post object 1 created!"
 
         obj = Submission.objects.get(id=1)
         assert obj.submission_id == "spaaaaace"
@@ -66,10 +66,11 @@ class TestSubmissionCreation:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json() == {
-            "error": "Must contain the keys `submission_id` (str, 20char max)"
+        assert result.json().get("result") == "error"
+        assert result.json().get("message") == (
+            "Must contain the keys `submission_id` (str, 20char max)"
             " and `source` (str 20char max)"
-        }
+        )
 
     def test_incomplete_submission_create_2(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -86,10 +87,11 @@ class TestSubmissionCreation:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json() == {
-            "error": "Must contain the keys `submission_id` (str, 20char max)"
+        assert result.json().get("result") == "error"
+        assert result.json().get("message") == (
+            "Must contain the keys `submission_id` (str, 20char max)"
             " and `source` (str 20char max)"
-        }
+        )
 
 
 class TestSubmissionMiscEndpoints:
@@ -151,7 +153,8 @@ class TestSubmissionClaimProcess:
         v = BlossomUser.objects.first()
         s = Submission.objects.first()
         assert result.status_code == 200
-        assert result.json() == {"success": "Post AAA claimed by janeeyre"}
+        assert result.json().get("result") == "success"
+        assert result.json().get("message") == "Post AAA claimed by janeeyre"
         assert s.claimed_by == v
 
     def test_claim_wrong_post_id(self, client):
@@ -165,7 +168,7 @@ class TestSubmissionClaimProcess:
             **headers,
         )
         assert result.status_code == 404
-        assert result.json() == {"error": "No post with that ID."}
+        assert result.json().get("message") == "No post with that ID."
 
     def test_claim_wrong_volunteer_username(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -179,7 +182,7 @@ class TestSubmissionClaimProcess:
             **headers,
         )
         assert result.status_code == 404
-        assert result.json() == {"error": "No volunteer with that ID / username."}
+        assert result.json().get("message") == "No volunteer with that ID / username."
 
     def test_claim_no_volunteer_info(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -191,11 +194,11 @@ class TestSubmissionClaimProcess:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json() == {
-            "error": "Must give either `v_id` (int, volunteer ID number) or"
+        assert result.json().get("message") == (
+            "Must give either `v_id` (int, volunteer ID number) or"
             " `v_username` (str, the username of the person you're"
             " looking for) in request json."
-        }
+    )
 
     def test_claim_already_claimed(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -215,9 +218,9 @@ class TestSubmissionClaimProcess:
             **headers,
         )
         assert result.status_code == 409
-        assert result.json() == {
-            "error": "Post ID 1 has been claimed already by janeeyre!"
-        }
+        assert result.json().get("message") == (
+            "Post ID 1 has been claimed already by janeeyre!"
+        )
 
 
 class TestSubmissionDone:
@@ -238,7 +241,7 @@ class TestSubmissionDone:
             **headers,
         )
         assert result.status_code == 200
-        assert result.json() == {"success": "Submission ID AAA completed by janeeyre"}
+        assert result.json().get("message") == "Submission ID AAA completed by janeeyre"
 
     def test_done_without_claim(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -255,7 +258,9 @@ class TestSubmissionDone:
             **headers,
         )
         assert result.status_code == 412
-        assert result.json() == {"error": "Submission ID AAA has not yet been claimed!"}
+        assert result.json().get("message") == (
+            "Submission ID AAA has not yet been claimed!"
+        )
 
     def test_done_without_user_info(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -268,7 +273,7 @@ class TestSubmissionDone:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json().get("error").startswith("Must give either `v_id`")
+        assert result.json().get("message").startswith("Must give either `v_id`")
 
     def test_done_already_completed(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -290,6 +295,6 @@ class TestSubmissionDone:
         )
 
         assert result.status_code == 409
-        assert result.json() == {
-            "error": "Submission ID AAA has already been completed by janeeyre!"
-        }
+        assert result.json().get("message") == (
+            "Submission ID AAA has already been completed by janeeyre!"
+        )

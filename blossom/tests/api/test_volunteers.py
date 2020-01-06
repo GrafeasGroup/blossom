@@ -19,7 +19,7 @@ class TestVolunteerSummary:
 
     def test_volunteer_summary_wrong_key(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
-        headers["HTTP_X_API_KEY"] = "obviously broken key"
+        headers["Authorization"] = "obviously broken key"
         result = client.get(
             reverse("volunteer-summary", host="api") + "?username=janeeyre",
             HTTP_HOST="api",
@@ -47,9 +47,9 @@ class TestVolunteerSummary:
         result = client.get(
             reverse("volunteer-summary", host="api"), HTTP_HOST="api", **headers
         )
-        assert result.json() == {
-            "error": "No username received. Use ?username= in your request."
-        }
+        assert result.json().get("message") == (
+            "No username received. Use ?username= in your request."
+        )
 
     def test_volunteer_summary_nonexistent_username(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -58,7 +58,14 @@ class TestVolunteerSummary:
             HTTP_HOST="api",
             **headers,
         )
-        assert result.json() == {"error": "No volunteer found with that username."}
+        assert result.json().get("message") == "No volunteer found with that username."
+
+    def test_volunteer_summary_no_key(self, client):
+        result = client.get(
+            reverse("volunteer-summary", host="api") + "?username=asdfasdfasdf",
+            HTTP_HOST="api",
+        )
+        assert result.status_code == 403
 
 
 class TestVolunteerAssortedFunctions:
@@ -125,7 +132,7 @@ class TestVolunteerGammaPlusOne:
         )
 
         assert result.status_code == 404
-        assert result.json() == {"error": "No volunteer with that ID."}
+        assert result.json().get("message") == "No volunteer with that ID."
         # shouldn't have created anything
         assert Transcription.objects.count() == 0
         assert Submission.objects.count() == 0
@@ -144,9 +151,9 @@ class TestVolunteerCreation:
             **headers,
         )
         assert result.status_code == 200
-        assert result.json() == {
-            "success": "Volunteer created with username `SPAAAACE`"
-        }
+        assert result.json().get("message") == (
+            "Volunteer created with username `SPAAAACE`"
+        )
         assert BlossomUser.objects.filter(username="SPAAAACE").count() == 1
 
     def test_volunteer_create_duplicate_username(self, client):
@@ -161,9 +168,9 @@ class TestVolunteerCreation:
             **headers,
         )
         assert result.status_code == 422
-        assert result.json() == {
-            "error": "There is already a user with the username of `janeeyre`."
-        }
+        assert result.json().get("message") == (
+            "There is already a user with the username of `janeeyre`."
+        )
         assert BlossomUser.objects.filter(username="janeeyre").count() == 1
 
     def test_volunteer_create_no_username(self, client):
@@ -177,5 +184,7 @@ class TestVolunteerCreation:
             **headers,
         )
         assert result.status_code == 400
-        assert result.json() == {"error": "Must have the `username` key in JSON body."}
+        assert result.json().get("message") == (
+            "Must have the `username` key in JSON body."
+        )
         assert BlossomUser.objects.count() == 1
