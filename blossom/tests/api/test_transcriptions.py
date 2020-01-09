@@ -46,6 +46,38 @@ class TestTranscriptionCreation:
         assert obj.url == "https://example.com"
         assert obj.text == "test content"
 
+    def test_transcription_create_ocr_text(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        v = BlossomUser.objects.first()
+        # this data comes from tor_ocr and does not have the t_text key
+        data = {
+            "submission_id": s.submission_id,
+            "v_id": v.id,
+            "t_id": "ABC",
+            "completion_method": "automated tests",
+            "t_url": "https://example.com",
+            "ocr_text": "test content",
+        }
+        assert Transcription.objects.count() == 0
+        result = client.post(
+            reverse("transcription-list", host="api"),
+            json.dumps(data),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == 200
+        assert (
+            result.json().get("message")
+            == "Transcription ID 1 created on post AAA, written by janeeyre"
+        )
+
+        obj = Transcription.objects.get(id=1)
+        assert obj.submission == s
+        assert obj.text == None
+        assert obj.ocr_text == "test content"
+
     def test_transcription_create_alt_submission_id(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
         s = create_test_submission()
@@ -233,4 +265,29 @@ class TestTranscriptionCreation:
         assert result.status_code == 400
         assert result.json().get("message") == (
             "Missing JSON body key `t_text`, str; the content of the transcription."
+        )
+
+    def test_transcription_with_t_text_and_ocr_text(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        v = BlossomUser.objects.first()
+        data = {
+            "submission_id": s.submission_id,
+            "v_id": v.id,
+            "t_id": "ABC",
+            "completion_method": "automated tests",
+            "t_url": "https://example.com",
+            "t_text": "test content",
+            "ocr_text": "ocr content"
+        }
+        result = client.post(
+            reverse("transcription-list", host="api"),
+            json.dumps(data),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == 400
+        assert result.json().get("message") == (
+            "Received both t_text and ocr_text -- must be one or the other."
         )
