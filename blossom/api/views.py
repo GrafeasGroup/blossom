@@ -322,11 +322,17 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             t_id                  | str
             completion_method     | str
             t_url                 | str
-            t_text                | str
+            ---
+            t_text                | str  OR
+            ocr_text              | str
 
         Optional fields:
 
             removed_from_reddit   | bool
+
+        There must be one field that has text on it, either t_text or ocr_text.
+        t_text is used for submitting human-generated text from a volunteer
+        and ocr_text is used for submitting text from tor_ocr.
 
         :param request:
         :param args:
@@ -390,14 +396,26 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
                 status.HTTP_400_BAD_REQUEST,
             )
 
+        ocr_text = request.data.get("ocr_text")
         t_text = request.data.get("t_text")
         if not t_text:
+            # missing t_text is okay if we have ocr_text.
+            if not ocr_text:
+                return build_response(
+                    ERROR,
+                    "Missing JSON body key `t_text`, str; the content"
+                    " of the transcription.",
+                    status.HTTP_400_BAD_REQUEST,
+                )
+
+        if t_text and ocr_text:
             return build_response(
                 ERROR,
-                "Missing JSON body key `t_text`, str; the content"
-                " of the transcription.",
-                status.HTTP_400_BAD_REQUEST,
+                "Received both t_text and ocr_text -- must be one or"
+                " the other.",
+                status.HTTP_400_BAD_REQUEST
             )
+
         removed_from_reddit = request.data.get("removed_from_reddit", False)
 
         t = Transcription.objects.create(
@@ -407,6 +425,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             completion_method=completion_method,
             url=t_url,
             text=t_text,
+            ocr_text=ocr_text,
             removed_from_reddit=removed_from_reddit,
         )
         return build_response(

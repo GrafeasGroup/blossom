@@ -40,6 +40,8 @@ class Submission(models.Model):
     # recommended max length https://stackoverflow.com/a/219664
     url = models.CharField(max_length=2083, null=True, blank=True)
     tor_url = models.CharField(max_length=2083, null=True, blank=True)
+    # has a completed post been handled by tor_archivist?
+    archived = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.submission_id}"
@@ -56,7 +58,7 @@ class Transcription(models.Model):
     completion_method = models.CharField(max_length=20)
     url = models.CharField(max_length=2083, null=True, blank=True)
     # force SQL longtext type, per https://stackoverflow.com/a/23169977
-    text = models.TextField(max_length=4_294_000_000)
+    text = models.TextField(max_length=4_294_000_000, null=True, blank=True)
     ocr_text = models.TextField(max_length=4_294_000_000, null=True, blank=True)
     # sometimes posts get stuck in the spam filter. We can still validate those,
     # but it takes some effort. It is good to store the fact that it was

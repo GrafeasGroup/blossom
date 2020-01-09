@@ -46,6 +46,7 @@ DATABASES = {
     }
 }
 ```
+This file will be ignored by git, so make any changes you need to while developing.
 
 ## Notes on URLs
 
@@ -76,9 +77,7 @@ Next, we'll disable the default admin account.
 * Scroll to the bottom of the page and deselect "Active".
 * Click Save.
 
-You are now the only admin for the site. Other users must be added through the original form that 
-
-This file will be ignored by git, so make any changes you need to while developing.
+You are now the only admin for the site. Other users must be added through the original form that can be accessed through the link above. 
 
 Run the server with `python manage.py runserver --settings=blossom.local_settings` Any time you need to run a django command that will affect the database when running locally, always end it with `--settings=blossom.local_settings`.
 
@@ -125,3 +124,11 @@ Create a new post for the site.
 #### wiki.grafeas.localhost:8000/
 
 Root for wiki.
+
+#### api.grafeas.localhost:8000/swagger
+
+The swagger API endpoint list.
+
+#### api.grafeas.localhost:8000/redoc
+
+The same thing as swagger, just with a different layout.
