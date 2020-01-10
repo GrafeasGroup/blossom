@@ -162,8 +162,17 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Admin user created!"))
 
-        if not BlossomUser.objects.filter(username="u/ToR").first():
-            BlossomUser.objects.create_user(username="u/ToR", email="tor@grafeas.org")
+        if not BlossomUser.objects.filter(username="transcribersofreddit").first():
+            BlossomUser.objects.create_user(username="transcribersofreddit", email="transcribersofreddit@grafeas.org")
+            logger.debug(self.style.SUCCESS("Created user transcribersofreddit"))
+
+        if not BlossomUser.objects.filter(username="transcribot").first():
+            BlossomUser.objects.create_user(username="transcribot", email="transcribot@grafeas.org")
+            logger.debug(self.style.SUCCESS("Created user transcribot"))
+
+        if not BlossomUser.objects.filter(username="tor_archivist").first():
+            BlossomUser.objects.create_user(username="tor_archivist", email="archivist@grafeas.org")
+            logger.debug(self.style.SUCCESS("Created user tor_archivist"))
 
         admin = BlossomUser.objects.get(username="admin")
 

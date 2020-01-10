@@ -1,5 +1,8 @@
 import uuid
+
+from django.apps import apps
 from django.db import models
+from django.db.models import Q
 from django.utils import timezone
 
 
@@ -45,6 +48,15 @@ class Submission(models.Model):
 
     def __str__(self):
         return f"{self.submission_id}"
+
+    @property
+    def has_ocr_transcription(self):
+        # lazy load transcription model
+        T = apps.get_model(app_label='blossom', model_name='Transcription')
+        return True if Transcription.objects.filter(
+            Q(submission=self) &
+            Q(author__username='tor_ocr')
+        ).first() else False
 
 
 class Transcription(models.Model):
