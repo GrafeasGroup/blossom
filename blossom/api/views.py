@@ -143,7 +143,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         if not username:
             return build_response(
                 ERROR,
-                "Must have the `username` key in JSON body.",
+                "Must have the `username` key in data body.",
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -271,12 +271,12 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
         Called by making a POST request against /submission/. Must contain
-        the following fields in JSON body:
+        the following fields in data body:
 
             submission_id: str
             source: str
 
-        May optionally contain the following params in JSON body:
+        May optionally contain the following params in data body:
 
             url: str
             tor_url: str
@@ -343,7 +343,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         if submission_id is None:
             return build_response(
                 ERROR,
-                "Missing JSON body key `submission_id`, str; the ID of "
+                "Missing data body key `submission_id`, str; the ID of "
                 "the post the transcription is on.",
                 status.HTTP_400_BAD_REQUEST,
             )
@@ -372,7 +372,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         if not t_id:
             return build_response(
                 ERROR,
-                "Missing JSON body key `t_id`, str; the ID of the transcription.",
+                "Missing data body key `t_id`, str; the ID of the transcription.",
                 status.HTTP_400_BAD_REQUEST,
             )
 
@@ -380,7 +380,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         if not completion_method:
             return build_response(
                 ERROR,
-                "Missing JSON body key `completion_method`, str;"
+                "Missing data body key `completion_method`, str;"
                 " the service this transcription was completed"
                 " through. `app`, `ToR`, etc. 20char max.",
                 status.HTTP_400_BAD_REQUEST,
@@ -390,7 +390,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         if not t_url:
             return build_response(
                 ERROR,
-                "Missing JSON body key `t_url`, str; the direct"
+                "Missing data body key `t_url`, str; the direct"
                 " URL for the transcription. Use string `None` if"
                 " no URL is available.",
                 status.HTTP_400_BAD_REQUEST,
@@ -403,7 +403,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             if not ocr_text:
                 return build_response(
                     ERROR,
-                    "Missing JSON body key `t_text`, str; the content"
+                    "Missing data body key `t_text`, str; the content"
                     " of the transcription.",
                     status.HTTP_400_BAD_REQUEST,
                 )
