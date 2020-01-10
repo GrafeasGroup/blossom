@@ -55,7 +55,7 @@ class Submission(models.Model):
         T = apps.get_model(app_label='blossom', model_name='Transcription')
         return True if Transcription.objects.filter(
             Q(submission=self) &
-            Q(author__username='tor_ocr')
+            Q(author__username='transcribot')
         ).first() else False
 
 
