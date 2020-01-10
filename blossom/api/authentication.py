@@ -8,7 +8,13 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
     def has_permission(self, request, view):
         if not isinstance(request.user, AnonymousUser):
             if request.user.api_key:
-                if request_key := request.META.get("Authorization"):
+                request_key = None
+                # authorization will be in one of two places and I'm not sure why right now
+                if k := request.META.get("Authorization"):
+                    request_key = k
+                elif k := request.headers.get("Authorization"):
+                    request_key = k
+                if request_key:
                     request_key = request_key.split()
                     if len(request_key) == 1:
                         # they didn't have the Api-Key bit

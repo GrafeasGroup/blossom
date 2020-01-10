@@ -1,15 +1,17 @@
+from blossom.authentication.backends import EmailBackend
+from blossom.website.forms import LoginForm
 from django.contrib.auth import login, logout
 from django.shortcuts import render, HttpResponseRedirect
 from django.urls import resolve
 from django.urls.exceptions import Resolver404, NoReverseMatch
 from django.urls.resolvers import get_resolver
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 from django_hosts.resolvers import get_host_patterns, reverse
 
-from blossom.authentication.backends import EmailBackend
-from blossom.website.forms import LoginForm
 
-
+@method_decorator(csrf_exempt, name='dispatch')
 class LoginView(TemplateView):
     def get_redirect(self, request, hosts):
         # work around a super obnoxious problem with django-hosts where if it

@@ -15,4 +15,5 @@ omit =
   blossom/settings/*,
   blossom/api/bootstrap/*
   blossom/social_auth/*
-  blossom/conftest.py
+  blossom/conftest.py,
+  blossom/docs/*

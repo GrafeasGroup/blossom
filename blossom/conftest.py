@@ -1,5 +1,4 @@
 import pytest
-from rest_framework.test import APIClient, APIRequestFactory
 
 from blossom.management.commands import bootstrap_site
 
@@ -33,7 +32,8 @@ Example:
 ---
 
 We want to get //api.grafeas.localhost:8000/volunteer. This appears in DRF
-as 'volunteer-list', so our three parts of the `reverse` call look like this:
+as 'volunteer-list', so our three parts of the `get` and `reverse` call look
+like this:
 
 1) path name: 'volunteer-list'
 2) host: 'api', because that's what the name of the subdomain is in hosts.py.
