@@ -150,18 +150,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         slugs = ["about-us", "giving-to-grafeas", "terms-of-service", "thank-you"]
 
-        if Post.objects.filter(slug__in=slugs).count() == len(slugs):
-            logger.debug(self.style.SUCCESS("No articles created; all present."))
-
-        # First we gotta create a new author, otherwise this whole thing will be for naught
-        if not BlossomUser.objects.filter(username="admin").first():
-            BlossomUser.objects.create_superuser(
-                username="admin",
-                email="blossom@grafeas.org",
-                password="asdf",  # change me
-            )
-            logger.debug(self.style.SUCCESS("Admin user created!"))
-
         if not BlossomUser.objects.filter(username="transcribersofreddit").first():
             BlossomUser.objects.create_user(username="transcribersofreddit", email="transcribersofreddit@grafeas.org")
             logger.debug(self.style.SUCCESS("Created user transcribersofreddit"))
@@ -174,7 +162,19 @@ class Command(BaseCommand):
             BlossomUser.objects.create_user(username="tor_archivist", email="archivist@grafeas.org")
             logger.debug(self.style.SUCCESS("Created user tor_archivist"))
 
+        # First we gotta create a new author, otherwise this whole thing will be for naught
+        if not BlossomUser.objects.filter(username="admin").first():
+            BlossomUser.objects.create_superuser(
+                username="admin",
+                email="blossom@grafeas.org",
+                password="asdf",  # change me
+            )
+            logger.debug(self.style.SUCCESS("Admin user created!"))
+
         admin = BlossomUser.objects.get(username="admin")
+
+        if Post.objects.filter(slug__in=slugs).count() == len(slugs):
+            logger.debug(self.style.SUCCESS("No articles created; all present."))
 
         if not Post.objects.filter(slug=slugs[0]).first():
             Post.objects.create(
