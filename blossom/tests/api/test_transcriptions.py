@@ -123,7 +123,7 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == 400
         assert result.json().get("message") == (
-            "Missing JSON body key `submission_id`, str; the ID of the post"
+            "Missing data body key `submission_id`, str; the ID of the post"
             " the transcription is on."
         )
 
@@ -193,7 +193,7 @@ class TestTranscriptionCreation:
         assert result.status_code == 400
         assert (
             result.json().get("message")
-            == "Missing JSON body key `t_id`, str; the ID of the transcription."
+            == "Missing data body key `t_id`, str; the ID of the transcription."
         )
 
     def test_transcription_with_missing_completion_method(self, client):
@@ -216,7 +216,7 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == 400
         assert result.json().get("message") == (
-            "Missing JSON body key `completion_method`, str; the service this"
+            "Missing data body key `completion_method`, str; the service this"
             " transcription was completed through. `app`, `ToR`, etc. 20char max."
         )
 
@@ -240,7 +240,7 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == 400
         assert result.json().get("message") == (
-            "Missing JSON body key `t_url`, str; the direct URL for the"
+            "Missing data body key `t_url`, str; the direct URL for the"
             " transcription. Use string `None` if no URL is available."
         )
 
@@ -264,7 +264,7 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == 400
         assert result.json().get("message") == (
-            "Missing JSON body key `t_text`, str; the content of the transcription."
+            "Missing data body key `t_text`, str; the content of the transcription."
         )
 
     def test_transcription_with_t_text_and_ocr_text(self, client):
@@ -291,3 +291,35 @@ class TestTranscriptionCreation:
         assert result.json().get("message") == (
             "Received both t_text and ocr_text -- must be one or the other."
         )
+
+def test_random_transcription_for_review(client):
+    client, headers = create_staff_volunteer_with_keys(client)
+    s = create_test_submission()
+    v = BlossomUser.objects.first()
+
+    result = client.get(
+        reverse("transcription-review-random", host="api"),
+        HTTP_HOST="api",
+        **headers,
+    )
+
+    assert result.json().get('message') == 'No available transcriptions to review.'
+    assert result.status_code == 200
+    assert result.json().get('data') is None
+
+    t = Transcription.objects.create(
+        submission=s,
+        author=v,
+        transcription_id='ABC',
+        completion_method='tests'
+    )
+
+    result = client.get(
+        reverse("transcription-review-random", host="api"),
+        HTTP_HOST="api",
+        **headers,
+    )
+
+    assert result.json().get('data') is not None
+    assert result.json().get('data').get('submission') is not None
+    assert result.status_code == 200

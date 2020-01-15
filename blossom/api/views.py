@@ -1,4 +1,6 @@
 import uuid
+import random
+from datetime import timedelta
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status, viewsets
@@ -435,6 +437,32 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             status.HTTP_200_OK,
         )
 
+    @action(detail=False, methods=["get"])
+    def review_random(self, request: Request, *args, **kwargs) -> Response:
+        """
+        Pull a random transcription that was completed in the last hour and return it.
+        :return: Transcription obj
+        """
+        one_hour_ago = timezone.now() - timedelta(hours=1)
+
+        queryset = Transcription.objects.filter(post_time__gte=one_hour_ago)
+
+        # TODO: Add system so that we're not pulling the same one over and over
+
+        if not queryset:
+            return build_response(
+                SUCCESS,
+                "No available transcriptions to review.",
+                status_code=status.HTTP_200_OK
+            )
+        else:
+            serializer = self.get_serializer(random.choice(queryset))
+            return build_response(
+                SUCCESS,
+                "Found this post from the last hour that can be reviewed. More in the `data` key!",
+                status_code=status.HTTP_200_OK,
+                data=serializer.data
+            )
 
 class SummaryView(APIView):
     """

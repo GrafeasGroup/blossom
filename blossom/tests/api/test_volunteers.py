@@ -185,6 +185,6 @@ class TestVolunteerCreation:
         )
         assert result.status_code == 400
         assert result.json().get("message") == (
-            "Must have the `username` key in JSON body."
+            "Must have the `username` key in data body."
         )
         assert BlossomUser.objects.count() == 1

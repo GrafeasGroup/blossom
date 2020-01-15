@@ -9,7 +9,6 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
         if not isinstance(request.user, AnonymousUser):
             if request.user.api_key:
                 request_key = None
-                # authorization will be in one of two places and I'm not sure why right now
                 if k := request.META.get("Authorization"):
                     request_key = k
                 elif k := request.headers.get("Authorization"):

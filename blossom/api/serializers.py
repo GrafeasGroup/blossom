@@ -41,6 +41,7 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
+    author = serializers.HyperlinkedIdentityField(view_name="volunteer-detail")
     class Meta:
         model = Transcription
         fields = (
