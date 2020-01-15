@@ -54,8 +54,10 @@ def create_volunteer(
         api_key, key = APIKey.objects.create_key(name="jane")
         v.api_key = api_key
         v.save()
-        # preformat the headers
-        return v, {"Authorization": f"Api-Key {key}"}
+        # preformat the headers -- this is present halfway through the process.
+        # The header will come in as "Authorization", django will reformat it to
+        # "HTTP_AUTHORIZATION", then later re-reformat it back to "Authorization.
+        return v, {"HTTP_AUTHORIZATION": f"Api-Key {key}"}
 
     return v
 

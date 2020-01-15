@@ -16,6 +16,21 @@ def test_volunteer_creation_without_credentials(client):
     assert result.status_code == 403
 
 
+def test_volunteer_with_admin_key_without_sending_it(client):
+    client, headers = create_staff_volunteer_with_keys(client)
+    result = client.get(reverse("volunteer-list", host="api"), HTTP_HOST="api")
+    assert result.status_code == 403
+
+
+def test_volunteer_with_wrong_key_header(client):
+    client, headers = create_staff_volunteer_with_keys(client)
+    # so that it looks like {Authorization: mykey}
+    # instead of {Authorization: Api-Key mykey}
+    headers['HTTP_AUTHORIZATION'] = headers.get('HTTP_AUTHORIZATION').split()[1]
+    result = client.get(reverse("volunteer-list", host="api"), HTTP_HOST="api", **headers)
+    assert result.status_code == 403
+
+
 def test_volunteer_creation_with_normal_user(client):
     user = create_test_user()
     client.force_login(user)
@@ -87,3 +102,4 @@ class TestPermissionsCheck:
         request.user = user
         request.META.update(headers)
         assert BlossomApiPermission().has_permission(request, None)
+
