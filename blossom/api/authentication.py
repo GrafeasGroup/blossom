@@ -28,6 +28,9 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
                         request.user.is_grafeas_staff or request.user.is_staff,
                     ]
                 )
+            elif request.user.is_staff:
+                # just make the web interface work if they're a superadmin.
+                return True
 
 
 class BlossomApiPermission(rfperms.BasePermission):
