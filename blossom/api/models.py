@@ -53,7 +53,7 @@ class Submission(models.Model):
     def has_ocr_transcription(self):
         # lazy load transcription model
         T = apps.get_model(app_label='blossom', model_name='Transcription')
-        return True if Transcription.objects.filter(
+        return True if T.objects.filter(
             Q(submission=self) &
             Q(author__username='transcribot')
         ).first() else False
