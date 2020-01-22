@@ -25,6 +25,9 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
+    claimed_by = serializers.HyperlinkedIdentityField(view_name="volunteer-detail")
+    completed_by = serializers.HyperlinkedIdentityField(view_name="volunteer-detail")
+
     class Meta:
         model = Submission
         fields = (
