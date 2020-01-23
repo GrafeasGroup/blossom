@@ -16,6 +16,12 @@ class Submission(models.Model):
     # always be one transcription per post.
     submission_id = models.CharField(max_length=36, default=create_id)
     submission_time = models.DateTimeField(default=timezone.now)
+
+    # This is only for handling the redis changeover
+    redis_id = models.CharField(max_length=12, blank=True, null=True)
+
+    # obviously these should be the same, but it makes it a lot easier to
+    # perform checks as to who claimed so that we don't have to query reddit
     claimed_by = models.ForeignKey(
         "blossom.BlossomUser",
         on_delete=models.CASCADE,
@@ -23,8 +29,6 @@ class Submission(models.Model):
         null=True,
         blank=True,
     )
-    # This is only for handling the redis changeover
-    redis_id = models.CharField(max_length=12, blank=True, null=True)
     completed_by = models.ForeignKey(
         "blossom.BlossomUser",
         on_delete=models.CASCADE,
@@ -33,8 +37,6 @@ class Submission(models.Model):
         blank=True,
     )
 
-    # obviously these should be the same, but it makes it a lot easier to
-    # perform checks as to who claimed so that we don't have to query reddit
     claim_time = models.DateTimeField(default=None, null=True, blank=True)
     complete_time = models.DateTimeField(default=None, null=True, blank=True)
 
