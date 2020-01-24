@@ -8,6 +8,16 @@ A Django app that, right now, is our website, payment portal for donations, engi
 
 ## Local development
 
+### NOTE FOR OSX:
+
+OSX does not route .localhost domains correctly, so in order to work with the API, you'll have to modify your hosts file. Edit /etc/hosts to add the following line at the bottom:
+
+```
+127.0.0.1	api.grafeas.localhost
+```
+
+Flush the DNS cache with `sudo dscacheutil -flushcache`; then requests to the local version of the api (for example, "http://api.grafeas.localhost:8000/submissions/", should work.)
+
 Create a file under the top level `blossom` folder called `local_settings.py`. Populate it with the following:
 
 ```python
