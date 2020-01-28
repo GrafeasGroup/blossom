@@ -319,11 +319,11 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         """
         Required fields:
 
-            submission_id         | str
-            v_id (or username)    | str
-            t_id                  | str
-            completion_method     | str
-            t_url                 | str
+            submission_id         | str, the post on r/ToR
+            v_id (or username)    | str, volunteer ID in Blossom
+            t_id                  | str, base36 transcription comment ID
+            completion_method     | str, whatever system submitted this object
+            t_url                 | str, direct url for the transcription
             ---
             t_text                | str  OR
             ocr_text              | str
