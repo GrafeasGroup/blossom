@@ -17,7 +17,7 @@ class BlossomAPI(object):
         if not password:
             raise ConfigurationError("Need a password!")
         if not api_key:
-            raise ConfigurationError("Need a password!")
+            raise ConfigurationError("Need an API key!")
 
         self.email = email
         self.password = password
