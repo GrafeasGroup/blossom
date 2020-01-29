@@ -492,6 +492,44 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         )
 
     @action(detail=False, methods=["get"])
+    def search(self, request: Request, *args, **kwargs) -> Response:
+        """
+        Right now, only supports submission_id.
+
+        Usage: http://api.grafeas.org/transcription/search/?submission_id=3
+
+        submission_id   | str, the r/ToR post ID
+
+        :return:
+        """
+
+        s_id = request.query_params.get("submission_id", None)
+
+        if not s_id:
+            return build_response(
+                ERROR,
+                "This endpoint only supports submission_id as the current search"
+                " ability.",
+                status.HTTP_400_BAD_REQUEST
+            )
+
+        queryset = Transcription.objects.filter(submission__submission_id=s_id)
+        if queryset:
+            serializer = self.get_serializer(queryset, many=True)
+            return build_response(
+                SUCCESS,
+                f"Found the folowing transcriptions for requested ID {s_id}.",
+                status.HTTP_200_OK,
+                data=serializer.data
+            )
+        else:
+            return build_response(
+                SUCCESS,
+                f"Did not find any transcriptions for requested ID {s_id}.",
+                status.HTTP_200_OK
+            )
+
+    @action(detail=False, methods=["get"])
     def review_random(self, request: Request, *args, **kwargs) -> Response:
         """
         Pull a random transcription that was completed in the last hour and return it.

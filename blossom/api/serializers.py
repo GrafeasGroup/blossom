@@ -65,4 +65,5 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
             "completion_method",
             "url",
             "text",
+            "ocr_text"
         )
