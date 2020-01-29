@@ -173,8 +173,6 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
     serializer_class = SubmissionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
 
-    # TODO: Create a view to get all completed posts that have not been archived
-
     def get_queryset(self):
         """
         Uses a `submission_id` query string parameter to filter for a
@@ -215,7 +213,21 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
 
     @action(detail=False, methods=["get"])
     def expired(self, request: Request) -> Response:
-        delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+        """
+        Return all submissions that are older than 18 hours and have not
+        been claimed or completed yet.
+
+        If the query string of ctq is passed in with a value of True then
+        return all posts that have not been completed or claimed.
+
+        :param request:
+        :return:
+        """
+        CTQ = request.query_params.get("ctq", False)
+        if CTQ:
+            delay_time = timezone.now()
+        else:
+            delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
         queryset = Submission.objects.filter(
             Q(completed_by=None)
             & Q(claimed_by=None)
@@ -366,8 +378,6 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
     queryset = Transcription.objects.all().order_by("-post_time")
     serializer_class = TranscriptionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
-
-    # TODO: Create a view to search by submission_id
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
