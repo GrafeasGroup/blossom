@@ -172,6 +172,8 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
     serializer_class = SubmissionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
 
+    # TODO: Create a view to get all completed posts that have not been archived
+
     def get_queryset(self):
         """
         Uses a `submission_id` query string parameter to filter for a
@@ -314,6 +316,8 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
     queryset = Transcription.objects.all().order_by("-post_time")
     serializer_class = TranscriptionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
+
+    # TODO: Create a view to search by submission_id
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
