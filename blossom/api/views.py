@@ -1,6 +1,7 @@
 import uuid
 import random
 from datetime import timedelta
+from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status, viewsets
@@ -211,6 +212,55 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
                 status.HTTP_404_NOT_FOUND,
             )
         return p, v
+
+    @action(detail=False, methods=["get"])
+    def expired(self, request: Request) -> Response:
+        delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+        queryset = Submission.objects.filter(
+            Q(completed_by=None)
+            & Q(claimed_by=None)
+            & Q(submission_time__lt=delay_time)
+            & Q(archived=False)
+        )
+        if not queryset:
+            return build_response(
+                SUCCESS,
+                "No available transcriptions to remove.",
+                status_code=status.HTTP_200_OK
+            )
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+            return build_response(
+                SUCCESS,
+                "Found the following posts to remove. More in the `data` key!",
+                status_code=status.HTTP_200_OK,
+                data=serializer.data
+            )
+
+    @action(detail=False, methods=["get"])
+    def unarchived(self, request: Request) -> Response:
+        delay_time = timezone.now() - timedelta(
+            hours=settings.ARCHIVIST_COMPLETED_DELAY_TIME
+        )
+        queryset = Submission.objects.filter(
+            ~Q(completed_by=None)
+            & Q(complete_time__lt=delay_time)
+            & Q(archived=False)
+        )
+        if not queryset:
+            return build_response(
+                SUCCESS,
+                "No available transcriptions to archive.",
+                status_code=status.HTTP_200_OK
+            )
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+            return build_response(
+                SUCCESS,
+                "Found the following posts to archive. More in the `data` key!",
+                status_code=status.HTTP_200_OK,
+                data=serializer.data
+            )
 
     @action(detail=True, methods=["post"])
     def claim(self, request: Request, pk: int) -> Response:

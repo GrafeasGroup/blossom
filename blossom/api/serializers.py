@@ -25,14 +25,21 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
-    claimed_by = serializers.HyperlinkedIdentityField(view_name="volunteer-detail")
-    completed_by = serializers.HyperlinkedIdentityField(view_name="volunteer-detail")
+    claimed_by = serializers.HyperlinkedRelatedField(
+        view_name="volunteer-detail",
+        read_only=True
+    )
+    completed_by = serializers.HyperlinkedRelatedField(
+        view_name="volunteer-detail",
+        read_only=True
+    )
 
     class Meta:
         model = Submission
         fields = (
             "id",
             "submission_id",
+            "submission_time",
             "claimed_by",
             "completed_by",
             "claim_time",
@@ -45,7 +52,10 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
-    author = serializers.HyperlinkedIdentityField(view_name="volunteer-detail")
+    author = serializers.HyperlinkedRelatedField(
+        view_name="volunteer-detail",
+        read_only=True
+    )
     class Meta:
         model = Transcription
         fields = (

@@ -69,3 +69,6 @@ class BlossomAPI(object):
         if 'csrftoken' in self.s.cookies:
             data.update({'csrfmiddlewaretoken': self.s.cookies.get('csrftoken')})
         return self._call('POST', path, data, json, params)
+
+    def patch(self, path, data=None, json=None, params=None):
+        return self._call('PATCH', path, data, json, params)

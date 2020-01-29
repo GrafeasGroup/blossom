@@ -189,3 +189,8 @@ USE_TZ = True
 SITE_ID = 1
 
 OVERRIDE_API_AUTH = False
+
+# number of hours to allow a post to stay up
+ARCHIVIST_DELAY_TIME = 18
+# how long to allow a completed post to stay up
+ARCHIVIST_COMPLETED_DELAY_TIME = 0.5
