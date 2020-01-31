@@ -4,18 +4,21 @@ import pytz
 import uuid
 from datetime import datetime
 
-from blossom.api.models import Volunteer, Transcription, Submission
+from blossom.api.models import Transcription, Submission
+from blossom.authentication.models import BlossomUser
 
 logger = logging.getLogger(__name__)
 
 
 def get_or_create_user(username):
     try:
-        v = Volunteer.objects.get(username=username)
+        v = BlossomUser.objects.get(username=username)
         logger.info("Volunteer already exists! Pulled existing record.")
-    except Volunteer.DoesNotExist:
+    except BlossomUser.DoesNotExist:
         # we'll set a random password; if they need it, we can reset it.
-        v = Volunteer.objects.create(username=username, accepted_coc=True)
+        v = BlossomUser.objects.create(
+            username=username, accepted_coc=True, is_volunteer=True
+        )
         v.set_unusable_password()
         v.save()
     return v
