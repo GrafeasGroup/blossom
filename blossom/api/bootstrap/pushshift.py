@@ -3,7 +3,7 @@ import re
 
 from psaw import PushshiftAPI
 
-from blossom.api.bootstrap.helpers import get_transcribot_text
+from blossom.api.bootstrap.helpers import get_transcribot_text, get_transcribot_comment
 from blossom.api.bootstrap.reddit_comment_tree import RedditCommentTree
 
 api = PushshiftAPI()
@@ -91,6 +91,7 @@ def get_tor_claim_and_done_from_pushshift(post):
 
     c_results = list(api.search_comments(link_id=post.id))
     transcribot_text = get_transcribot_text(c_results, post.id)
+    transcribot_comment = get_transcribot_comment(c_results, post.id)
     for c in c_results:
         # this is more complicated than it needs to be because of people
         # who posted one comment for claim and done (_cough_ @captcoe) and
@@ -108,7 +109,7 @@ def get_tor_claim_and_done_from_pushshift(post):
         if "claim" not in c.body and "done" in c.body:
             done = c
 
-    return claim, done, transcribot_text
+    return claim, done, transcribot_text, transcribot_comment
 
 
 def get_extended_transcript_body(comment, post_id, all_comments):

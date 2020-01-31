@@ -110,6 +110,21 @@ def get_transcribot_text(comments: List, post_id: str):
     return trancribot_text
 
 
+def get_transcribot_comment(comments: List, post_id: str):
+    # search through for the first comment that contains a transcription
+    try:
+        top_level_comment = [
+            i for i in comments if i.parent_id == post_id and i.author == "transcribot"
+        ][0]
+        transcribot_c = [
+            i for i in comments if i.parent_id == top_level_comment.id and i.author == "transcribot"
+        ][0]
+    except Exception:
+        transcribot_c = None
+
+    return transcribot_c
+
+
 class graceful_interrupt_handler(object):
     """
     Usage:

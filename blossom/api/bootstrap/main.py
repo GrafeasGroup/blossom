@@ -79,7 +79,7 @@ def process_user(redis_user_obj: Dict):
                 post_id,
                 all_comments,
             ) = get_transcription_data_from_pushshift(t)
-            claim, done, transcribot_text = get_tor_claim_and_done_from_pushshift(
+            claim, done, transcribot_text, transcribot_comment = get_tor_claim_and_done_from_pushshift(
                 tor_post
             )
             if tor_post is not None:
@@ -95,7 +95,7 @@ def process_user(redis_user_obj: Dict):
                         t_comment, post_id, all_comments
                     )
                     get_or_create_transcription(
-                        p, v, t_comment, t_comment_body, transcribot_text
+                        p, v, t_comment, t_comment_body, transcribot_text, transcribot_comment
                     )
                 except (MemoryError, StopIteration):
                     # this happens too often. Maybe we can control it?
