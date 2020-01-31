@@ -84,7 +84,7 @@ def get_tor_claim_and_done_from_pushshift(post):
     #     return None, None
     if post is None:
         logger.info("Received None for post! There's nothing to look for.")
-        return None, None, None
+        return None, None, None, None
 
     claim = None
     done = None
@@ -101,7 +101,7 @@ def get_tor_claim_and_done_from_pushshift(post):
         # that these still end up being None.
 
         if "claim" in c.body and "done" in c.body:
-            return c, c, transcribot_text
+            return c, c, transcribot_text, transcribot_comment
 
         if "claim" in c.body and "done" not in c.body:
             claim = c
