@@ -25,7 +25,12 @@ def get_or_create_user(username):
 
 
 def get_or_create_transcription(
-    post, volunteer, t_comment, comment_body, transcribot_text=None
+        post,
+        volunteer,
+        t_comment,
+        comment_body,
+        transcribot_text=None,
+        transcribot_comment=None
 ):
     try:
         Transcription.objects.get(submission=post)
@@ -42,9 +47,24 @@ def get_or_create_transcription(
             completion_method="reddit",
             url=f"https://reddit.com{t_comment.permalink}",
             text=comment_body,
-            ocr_text=transcribot_text,
+            ocr_text=None,
             removed_from_reddit=False,
         )
+        if transcribot_comment:
+            logger.info(f"creating OCR transcription on {post.id}")
+            Transcription.objects.create(
+                submission=post,
+                author="transcribot",
+                post_time=datetime.utcfromtimestamp(transcribot_comment.created_utc).replace(
+                    tzinfo=pytz.UTC
+                ),
+                transcription_id=transcribot_comment.id,
+                completion_method="reddit",
+                url=f"https://reddit.com{transcribot_comment.permalink}",
+                text=None,
+                ocr_text=transcribot_text,
+                removed_from_reddit=False,
+            )
 
 
 def get_or_create_post(tor_post, v, claim, done, redis_id):
