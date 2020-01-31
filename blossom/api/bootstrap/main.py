@@ -24,7 +24,8 @@ from blossom.api.bootstrap.pushshift import (
     get_extended_transcript_body,
     get_transcription_data_from_pushshift,
 )
-from blossom.api.models import Transcription, Volunteer
+from blossom.api.models import Transcription
+from blossom.authentication.models import BlossomUser
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -139,7 +140,7 @@ def BOOTSTRAP_THAT_MOFO():
 
     logger.info(f"Creating at least {len(user_objects)*2 + total_count} models...")
     get_anon_user()  # just make sure it exists
-    v_count = Volunteer.objects.count()
+    v_count = BlossomUser.objects.count()
     logger.info(
         f'{v_count} volunteers processed so far - {int((v_count / rconn.scard("accepted_CoC"))*100)}% of total.'
     )
