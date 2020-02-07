@@ -29,6 +29,7 @@ drf-yasg = "^1.17"
 toml = "^0.10.0"
 bugsnag = "^3.6"
 slackclient = "^2.5"
+pyyaml = "^5.3"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"

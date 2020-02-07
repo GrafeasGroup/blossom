@@ -1,84 +1,9 @@
 import json
-import logging
-import os
-from pprint import pprint as pp
 
-import slack
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
-from typing import Dict
-from django.utils import timezone
-import pytz
 
-from blossom.slack_conn.helpers import fire_and_forget
-from blossom.authentication.models import BlossomUser
-from blossom.api.models import Transcription
-
-client = slack.WebClient(token=os.environ['SLACK_API_KEY'])
-
-help_message = """
-Help is on the way!\n\n
-Get information about a user: `@blossom info {username}`\n
-Get general server information: `@blossom info` | `@blossom summary`\n
-Render this message: `@blossom help`
-"""
-
-
-def get_days():
-    # the autoformatter thinks this is evil if it's all on one line.
-    # Breaking it up a little for my own sanity.
-    start_date = pytz.timezone("UTC").localize(
-        timezone.datetime(day=1, month=4, year=2017), is_dst=None
-    )
-
-    return divmod((timezone.now() - start_date).days, 365)
-
-
-summary_message = """
-Volunteer count: {0}\n
-Transcription count: {1}\n
-
-How long we've been doing this: {2} years, {3} {4}!
-""".format(
-    BlossomUser.objects.filter(is_volunteer=True).count(),
-    Transcription.objects.count(),
-    get_days()[0],
-    get_days()[1],
-    "days" if get_days()[1] != 1 else "day"
-)
-
-
-@fire_and_forget
-def process_message(data: Dict) -> None:
-    event = data.get('event')
-
-    try:
-        # What comes in: "<@UTPFNCQS2> hello!"
-        # Strip out the beginning section and see what's left.
-        message = event['text'][event['text'].index('>') + 2:].lower()
-    except IndexError:
-        client.chat_postMessage(
-            channel=event.get('channel'),
-            text="Sorry, something went wrong and I couldn't parse your message."
-        )
-        return
-
-    if not message:
-        client.chat_postMessage(
-            channel=event.get('channel'),
-            text="Sorry, I wasn't able to get text out of that. Try again."
-        )
-
-    elif "help" in message:
-        client.chat_postMessage(
-            channel=event.get('channel'),
-            text=f"{help_message}"
-        )
-    elif "summary" in message:
-        client.chat_postMessage(
-            channel=event.get('channel'),
-            text=f"{summary_message}"
-        )
+from blossom.slack_conn.helpers import process_message
 
 
 @csrf_exempt
