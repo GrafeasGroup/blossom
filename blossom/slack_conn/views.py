@@ -53,6 +53,8 @@ def process_message(data: Dict) -> None:
     event = data.get('event')
 
     try:
+        # What comes in: "<@UTPFNCQS2> hello!"
+        # Strip out the beginning section and see what's left.
         message = event['text'][event['text'].index('>') + 2:].lower()
     except IndexError:
         client.chat_postMessage(
