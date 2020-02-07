@@ -1,8 +1,8 @@
-import asyncio
+import threading
 
-# https://stackoverflow.com/a/53255955
-def fire_and_forget(f):
+# https://stackoverflow.com/a/59043636
+def fire_and_forget(f, *args, **kwargs):
     def wrapped(*args, **kwargs):
-        return asyncio.get_event_loop().run_in_executor(None, f, *args, *kwargs)
+        threading.Thread(target=f, args=(args), kwargs=kwargs).start()
 
     return wrapped
