@@ -13,7 +13,7 @@ load_dotenv()
 
 gringotts_name = "Gringotts Bank"
 gringotts_img = "https://vignette.wikia.nocookie.net/harrypotter/images/0/07/GringottsLogo.gif/revision/latest?cb=20131206014841"
-slack_hook_url = os.environ.get("SLACK_PAYMENT_HOOK")
+slack_hook_url = os.environ.get("SLACK_HOOK")
 
 
 @csrf_exempt
