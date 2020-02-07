@@ -165,6 +165,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             SUCCESS,
             f"Volunteer created with username `{v.username}`",
             status.HTTP_200_OK,
+            data={'id': v.id}
         )
 
 

@@ -84,6 +84,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "blossom.BlossomUser"
 
 MIDDLEWARE = [
+    "bugsnag.django.middleware.BugsnagMiddleware",
     "django_hosts.middleware.HostsRequestMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
