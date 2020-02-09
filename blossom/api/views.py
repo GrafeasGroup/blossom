@@ -24,6 +24,7 @@ from blossom.api.serializers import (
     TranscriptionSerializer,
 )
 from blossom.authentication.models import BlossomUser
+from blossom.slack_conn.helpers import client as slack
 
 
 class VolunteerViewSet(viewsets.ModelViewSet):
@@ -328,6 +329,11 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         p.completed_by = v
         p.complete_time = timezone.now()
         p.save()
+
+        # TODO: send information to Slack if this is something we should randomly
+        # check
+        # Example slack call:
+        # slack.chat_postMessage(channel="#transcription_check", text="")
 
         return build_response(
             SUCCESS,

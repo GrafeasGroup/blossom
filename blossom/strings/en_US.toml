@@ -1,4 +1,4 @@
-[data]
+[footer]
 messages = [
     "Building the tools for a better tomorrow!",
     # haddaway
@@ -30,3 +30,40 @@ messages = [
     # ocarina of time
     "Hey! Listen!",
 ]
+
+[slack]
+help_message="""
+Help is on the way!
+
+Get information about a user: `@blossom info {username}`
+Get general server information: `@blossom info` | `@blossom summary`
+Blacklist / unblacklist user: `@blossom blacklist {username}`
+Render this message: `@blossom help`
+"""
+
+summary_message="""
+Volunteer count: {0}
+Transcription count: {1}
+
+How long we've been doing this: {2} years, {3} {4}!
+"""
+
+no_user_by_that_name="""
+Sorry, I wasn't able to find a user with that name.
+"""
+
+user_info="""
+User info for {0}:
+
+```
+{1}
+```
+"""
+
+too_many_params="Too many parameters; please try again."
+
+    [slack.blacklist]
+    missing_username="I don't see a username in your request. Try again."
+    unknown_username="No username like that on file; please check your spelling."
+    success="User '{0}' blacklisted."
+    success_undo="User '{0}' unblacklisted."

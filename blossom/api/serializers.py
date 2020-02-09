@@ -21,6 +21,7 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
             "date_joined",
             "last_login",
             "accepted_coc",
+            "blacklisted"
         )
 
 
