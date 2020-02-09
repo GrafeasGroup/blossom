@@ -8,9 +8,11 @@ from django.utils import timezone
 
 from blossom.api.models import Transcription
 from blossom.authentication.models import BlossomUser
-from blossom.slack_conn.strings import help_message, summary_message
+from blossom.api.serializers import VolunteerSerializer
+from blossom.strings import translation
 
 client = slack.WebClient(token=os.environ['SLACK_API_KEY'])
+i18n = translation()
 
 
 # https://stackoverflow.com/a/59043636
@@ -19,6 +21,32 @@ def fire_and_forget(f, *args, **kwargs):
         threading.Thread(target=f, args=(args), kwargs=kwargs).start()
 
     return wrapped
+
+
+# adapted from
+# https://github.com/varadchoudhari/Neat-Dictionary/blob/master
+# /src/Python%203/neat-dictionary-fixed-column-width.py
+def neat_printer(dictionary, titles, width):
+    return_dict = []
+    formatting = ""
+    for i in range(0, len(titles)):
+        formatting += "{:<" + str(width) + "}"
+        formatting += " | "
+    # trim off that last separator
+    formatting = formatting[:-3]
+    return_dict.append(formatting.format(*titles))
+    return_dict.append(f"{'-' * width * len(titles)}")
+    for key, value in dictionary.items():
+        sv = []
+        if isinstance(value, list):
+            for subvalue in value:
+                sv.append(str(subvalue))
+        else:
+            if value is None:
+                value = "None"
+            sv = [str(value)]
+        return_dict.append(formatting.format(key, *sv))
+    return return_dict
 
 
 def get_days():
@@ -34,22 +62,89 @@ def get_days():
 def send_help_message(event):
     client.chat_postMessage(
         channel=event.get('channel'),
-        text=f"{help_message}"
+        text=i18n['slack']['help_message']
     )
 
 
 def send_summary_message(event):
     client.chat_postMessage(
         channel=event.get('channel'),
-        text=summary_message.format(
+        text=i18n['slack']['summary_message'].format(
             BlossomUser.objects.filter(is_volunteer=True).count(),
             Transcription.objects.count(),
             get_days()[0],
             get_days()[1],
             "days" if get_days()[1] != 1 else "day"
         )
-
     )
+
+
+def send_info(event, message):
+    parsed_message = message.split()
+    if len(parsed_message) == 1:
+        # they just sent an empty info message
+        return send_summary_message(event)
+
+    if len(parsed_message) == 2:
+        if u := BlossomUser.objects.filter(username__iexact=parsed_message[1]).first():
+            v_s = VolunteerSerializer(u, many=False).data
+            return client.chat_postMessage(
+                channel=event.get('channel'),
+                text=i18n['slack']['user_info'].format(
+                    u.username,
+                    "\n".join(
+                        neat_printer(
+                            v_s, ["Key", "Value"], len(max(v_s.keys(), key=len)) + 2
+                        )
+                    )
+                )
+            )
+        else:
+            return client.chat_postMessage(
+                channel=event.get('channel'),
+                text=i18n['slack']['no_user_by_that_name']
+            )
+
+    client.chat_postMessage(
+        channel=event.get('channel'), text=i18n['slack']['too_many_params']
+    )
+
+
+def process_blacklist(event, message):
+    parsed_message = message.split()
+    if len(parsed_message) == 1:
+        # they didn't give a username
+        return client.chat_postMessage(
+            channel=event.get('channel'),
+            text=i18n['slack']['blacklist']['missing_username']
+        )
+    elif len(parsed_message) == 2:
+        if u := BlossomUser.objects.filter(username__iexact=parsed_message[1]).first():
+            if u.blacklisted:
+                u.blacklisted = False
+                u.save()
+                return client.chat_postMessage(
+                    channel=event.get('channel'),
+                    text=i18n['slack']['blacklist']['success_undo'].format(
+                        parsed_message[1]
+                    )
+                )
+            else:
+                u.blacklisted = True
+                u.save()
+                return client.chat_postMessage(
+                    channel=event.get('channel'),
+                    text=i18n['slack']['blacklist']['success'].format(parsed_message[1])
+                )
+        else:
+            return client.chat_postMessage(
+                channel=event.get('channel'),
+                text=i18n['slack']['blacklist']['unknown_username']
+            )
+    else:
+        return client.chat_postMessage(
+            channel=event.get('channel'), text=i18n['slack']['too_many_params']
+        )
 
 
 @fire_and_forget
@@ -78,3 +173,15 @@ def process_message(data: Dict) -> None:
 
     elif "summary" in message:
         send_summary_message(e)
+
+    elif "info" in message:
+        send_info(e, message)
+
+    elif "blacklist" in message:
+        process_blacklist(e, message)
+
+    else:
+        client.chat_postMessage(
+            channel=e.get('channel'),
+            text="Sorry, I'm not sure what you're asking for."
+        )
