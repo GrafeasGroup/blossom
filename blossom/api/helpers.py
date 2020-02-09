@@ -58,3 +58,6 @@ class RequestDataMixin(object):
                 return v.id
 
         return None
+
+
+# def send_to_modchat(username: str=None, icon_url: str=None, text: str=None, channel: str=None)

@@ -14,6 +14,7 @@ class BlossomUser(AbstractUser):
     )
     is_volunteer = models.BooleanField(default=True)
     accepted_coc = models.BooleanField(default=False)
+    blacklisted = models.BooleanField(default=False)
 
     @property
     def gamma(self):

@@ -1,6 +1,7 @@
 from django.urls import path
 
 from blossom.authentication.urls import urlpatterns as auth_urls
+from blossom.slack_conn.urls import urlpatterns as slack_urls
 from blossom.website import views
 from blossom.website.helpers import grafeas_staff_required
 
@@ -20,3 +21,4 @@ urlpatterns = [
 ]
 
 urlpatterns += auth_urls
+urlpatterns += slack_urls
