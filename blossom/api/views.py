@@ -325,7 +325,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         probabilities = [(50, 0.8), (100, 0.7), (250, 0.6), (500, 0.5),
                          (1000, 0.3), (5000, 0.1)]
         for (gamma, probability) in probabilities:
-            if v.gamma() <= gamma:
+            if v.gamma <= gamma:
                 if random.random() < probability:
                     return True
                 else:

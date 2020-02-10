@@ -1,4 +1,6 @@
 import json
+import pytest
+from unittest.mock import patch, PropertyMock
 
 from django_hosts.resolvers import reverse
 
@@ -224,6 +226,7 @@ class TestSubmissionClaimProcess:
 
 
 class TestSubmissionDone:
+
     def test_done_process(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
         s = create_test_submission()
@@ -298,3 +301,42 @@ class TestSubmissionDone:
         assert result.json().get("message") == (
             "Submission ID AAA has already been completed by janeeyre!"
         )
+
+    @pytest.mark.parametrize("probability,gamma",
+                             [(0.8, 0),
+                              (0.7999, 50),
+                              (0.7, 51),
+                              (0.6999, 100),
+                              (0.6, 101),
+                              (0.5999, 250),
+                              (0.5, 251),
+                              (0.4999, 500),
+                              (0.3, 501),
+                              (0.2999, 1000),
+                              (0.1, 1001),
+                              (0.0999, 5000),
+                              (0.05, 5001),
+                              (0.0499, 10000)])
+    def test_done_random_checks(self, client, probability, gamma):
+        with patch(
+                "blossom.authentication.models.BlossomUser.gamma",
+                new_callable=PropertyMock) as mock,\
+                patch('random.random', lambda: probability):
+            mock.return_value = gamma
+
+            client, headers = create_staff_volunteer_with_keys(client)
+            s = create_test_submission()
+            user = BlossomUser.objects.get(id=1)
+
+            s.claimed_by = user
+            s.save()
+
+            result = client.post(
+                reverse("submission-done", host="api", args=[1]),
+                json.dumps({"v_username": user.username}),
+                HTTP_HOST="api",
+                content_type="application/json",
+                **headers,
+            )
+            assert result.status_code == 200
+            assert result.json().get("message") == "Submission ID AAA completed by janeeyre"
