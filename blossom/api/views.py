@@ -303,6 +303,34 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             status.HTTP_200_OK,
         )
 
+    @staticmethod
+    def _check_transcription(v):
+        """
+        Return whether a transcription from the provided volunteer should be checked.
+
+        This is based on the gamma of the user. Given this gamma, a probability for the check is
+        provided. The following probabilities are in use:
+
+        - gamma <= 50:              0.8
+        - 50 < gamma <= 100:        0.7
+        - 100 < gamma <= 250:       0.6
+        - 250 < gamma <= 500:       0.5
+        - 500 < gamma <= 1000:      0.3
+        - 1000 <= gamma <= 5000:    0.1
+        - 5000 < gamma:             0.05
+
+        :param v:   the volunteer for which the post should be checked
+        :return:    whether the post has to be checked
+        """
+        probabilities = [(50, 0.8), (100, 0.7), (250, 0.6), (500, 0.5), (1000, 0.3), (5000, 0.1)]
+        for (gamma, probability) in probabilities:
+            if v.gamma() <= gamma:
+                if random.random() < probability:
+                    return True
+                else:
+                    return False
+        return random.random() < 0.05
+
     @action(detail=True, methods=["post"])
     def done(self, request: Request, pk: int) -> Response:
         resp = self._get_possible_claim_done_errors(request, pk)
@@ -330,10 +358,12 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         p.complete_time = timezone.now()
         p.save()
 
-        # TODO: send information to Slack if this is something we should randomly
-        # check
-        # Example slack call:
-        # slack.chat_postMessage(channel="#transcription_check", text="")
+        if self._check_transcription(v):
+            transcription = Transcription.objects.filter(submission__submission_id=pk)
+            slack.chat_postMessage(channel="#transcription_check",
+                                   text="Please check the following transcription of "
+                                   f"u/{v.username}: "
+                                   f"{transcription.first().url if transcription else p.tor_url}!")
 
         return build_response(
             SUCCESS,
