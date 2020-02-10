@@ -303,23 +303,27 @@ class TestSubmissionDone:
             "Submission ID AAA has already been completed by janeeyre!"
         )
 
-    @pytest.mark.parametrize("probability,gamma,message,tor_url,trans_url",
-                             [(0.8, 0, False, None, None),
-                              (0.7999, 50, True, None, None),
-                              (0.7, 51, False, None, None),
-                              (0.6999, 100, True, None, None),
-                              (0.6, 101, False, None, None),
-                              (0.5999, 250, True, None, None),
-                              (0.5, 251, False, None, None),
-                              (0.4999, 500, True, None, None),
-                              (0.3, 501, False, None, None),
-                              (0.2999, 1000, True, None, None),
-                              (0.1, 1001, False, None, None),
-                              (0.0999, 5000, True, None, None),
-                              (0.05, 5001, False, None, None),
-                              (0.0499, 10000, True, None, None),
-                              (0, 0, True, "url", None),
-                              (0, 0, True, "tor_url", "trans_url")])
+    @pytest.mark.parametrize(
+        "probability,gamma,message,tor_url,trans_url",
+        [
+            (0.8, 0, False, None, None),
+            (0.7999, 50, True, None, None),
+            (0.7, 51, False, None, None),
+            (0.6999, 100, True, None, None),
+            (0.6, 101, False, None, None),
+            (0.5999, 250, True, None, None),
+            (0.5, 251, False, None, None),
+            (0.4999, 500, True, None, None),
+            (0.3, 501, False, None, None),
+            (0.2999, 1000, True, None, None),
+            (0.1, 1001, False, None, None),
+            (0.0999, 5000, True, None, None),
+            (0.05, 5001, False, None, None),
+            (0.0499, 10000, True, None, None),
+            (0, 0, True, "url", None),
+            (0, 0, True, "tor_url", "trans_url")
+        ]
+    )
     def test_done_random_checks(self, client, probability, gamma, message, tor_url, trans_url):
         # Mock both the gamma property and the random.random function.
         with patch(
