@@ -360,7 +360,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         p.save()
 
         if self._check_transcription(v):
-            trans = Transcription.objects.filter(submission__submission_id=pk)
+            trans = Transcription.objects.filter(submission_id=pk)
             url = trans.first().url if trans else p.tor_url
             slack.chat_postMessage(
                 channel="#transcription_check",
