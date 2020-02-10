@@ -304,7 +304,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         )
 
     @staticmethod
-    def _check_transcription(v):
+    def _should_check_transcription(volunteer: BlossomUser) -> bool:
         """
         Return whether a transcription should be checked based on user gamma.
 
@@ -319,13 +319,19 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         - 1000 <= gamma <= 5000:    0.1
         - 5000 < gamma:             0.05
 
-        :param v:   the volunteer for which the post should be checked
-        :return:    whether the post has to be checked
+        :param volunteer:   the volunteer for which the post should be checked
+        :return:            whether the post has to be checked
         """
-        probabilities = [(50, 0.8), (100, 0.7), (250, 0.6), (500, 0.5),
-                         (1000, 0.3), (5000, 0.1)]
+        probabilities = [
+            (50, 0.8),
+            (100, 0.7),
+            (250, 0.6),
+            (500, 0.5),
+            (1000, 0.3),
+            (5000, 0.1)
+        ]
         for (gamma, probability) in probabilities:
-            if v.gamma <= gamma:
+            if volunteer.gamma <= gamma:
                 if random.random() < probability:
                     return True
                 else:
@@ -359,8 +365,8 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         p.complete_time = timezone.now()
         p.save()
 
-        if self._check_transcription(v):
-            trans = Transcription.objects.filter(submission_id=pk)
+        if self._should_check_transcription(v):
+            trans = Transcription.objects.filter(submission=p)
             url = trans.first().url if trans else p.tor_url
             slack.chat_postMessage(
                 channel="#transcription_check",
