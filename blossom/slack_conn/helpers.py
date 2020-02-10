@@ -1,9 +1,11 @@
 import os
 import threading
 from typing import Dict
+from unittest import mock
 
 import pytz
 import slack
+from django.conf import settings
 from django.utils import timezone
 
 from blossom.api.models import Transcription
@@ -11,7 +13,11 @@ from blossom.authentication.models import BlossomUser
 from blossom.api.serializers import VolunteerSerializer
 from blossom.strings import translation
 
-client = slack.WebClient(token=os.environ['SLACK_API_KEY'])
+if settings.ENABLE_SLACK == True:
+    client = slack.WebClient(token=os.environ['SLACK_API_KEY'])
+else:
+    client = mock.Mock()
+
 i18n = translation()
 
 
