@@ -11,11 +11,13 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
+import logging
 
 import dotenv
 from django_hosts.resolvers import reverse_lazy
 
 dotenv.load_dotenv()
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,8 +26,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+default_secret_key = "v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx"
 SECRET_KEY = os.environ.get(
-    "BLOSSOM_SECRET_KEY", "v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx"
+    "BLOSSOM_SECRET_KEY", default_secret_key
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -126,13 +129,14 @@ WSGI_APPLICATION = "blossom.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
+default_db_password = "Pink fluffy unicorns dancing on rainbows"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "blossom",
         "USER": "blossom_app",
         "PASSWORD": os.getenv(
-            "DJANGO_BLOSSOM_DB_PASSWORD", "Pink fluffy unicorns dancing on rainbows"
+            "BLOSSOM_DB_PASSWORD", default_db_password
         ),
         "HOST": "localhost",
         "PORT": "",
@@ -193,3 +197,19 @@ OVERRIDE_API_AUTH = False
 ARCHIVIST_DELAY_TIME = 18
 # how long to allow a completed post to stay up
 ARCHIVIST_COMPLETED_DELAY_TIME = 0.5
+
+
+##############################################
+# simple validation -- add new keys above this
+##############################################
+
+def settings_err(msg):
+    logger.warning("*" * 39)
+    logger.warning(msg)
+    logger.warning("*" * 39)
+
+if SECRET_KEY == default_secret_key:
+    settings_err("Using default secret key!")
+
+if DATABASES['default']['PASSWORD'] == default_db_password:
+    settings_err("Using default database password!")
