@@ -47,7 +47,8 @@ def charge(request, *args, **kwargs):
         if settings.DEBUG:
             json_data.update({"channel": "#bottest"})
 
-        requests.post(slack_hook_url, json=json_data)
+        if settings.ENABLE_SLACK:
+            requests.post(slack_hook_url, json=json_data)
         thanks = Post.objects.get(slug="thank-you")
         return HttpResponseRedirect(f"{thanks.get_absolute_url()}")
     else:
@@ -59,5 +60,7 @@ def charge(request, *args, **kwargs):
         }
         if settings.DEBUG:
             json_data.update({"channel": "#bottest"})
-        requests.post(slack_hook_url, json=json_data)
+
+        if settings.ENABLE_SLACK:
+            requests.post(slack_hook_url, json=json_data)
         # todo: make an actual error page that they can land at

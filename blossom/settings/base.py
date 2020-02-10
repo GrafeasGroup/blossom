@@ -200,6 +200,7 @@ ARCHIVIST_DELAY_TIME = 18
 # how long to allow a completed post to stay up
 ARCHIVIST_COMPLETED_DELAY_TIME = 0.5
 
+ENABLE_SLACK = True
 
 ##############################################
 # simple validation -- add new keys above this
