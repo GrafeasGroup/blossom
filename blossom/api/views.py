@@ -362,10 +362,11 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         if self._check_transcription(v):
             trans = Transcription.objects.filter(submission__submission_id=pk)
             url = trans.first().url if trans else p.tor_url
-            slack.chat_postMessage(channel="#transcription_check",
-                                   text="Please check the following "
-                                        f"transcription of u/{v.username}: "
-                                        f"{url}.")
+            slack.chat_postMessage(
+                channel="#transcription_check",
+                text=f"Please check the following transcription of u/{v.username}: "
+                     f"{url}."
+            )
 
         return build_response(
             SUCCESS,
