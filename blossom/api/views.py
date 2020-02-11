@@ -303,6 +303,41 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             status.HTTP_200_OK,
         )
 
+    @staticmethod
+    def _should_check_transcription(volunteer: BlossomUser) -> bool:
+        """
+        Return whether a transcription should be checked based on user gamma.
+
+        This is based on the gamma of the user. Given this gamma, a probability
+        for the check is provided. The following probabilities are in use:
+
+        - gamma <= 50:              0.8
+        - 50 < gamma <= 100:        0.7
+        - 100 < gamma <= 250:       0.6
+        - 250 < gamma <= 500:       0.5
+        - 500 < gamma <= 1000:      0.3
+        - 1000 <= gamma <= 5000:    0.1
+        - 5000 < gamma:             0.05
+
+        :param volunteer:   the volunteer for which the post should be checked
+        :return:            whether the post has to be checked
+        """
+        probabilities = [
+            (50, 0.8),
+            (100, 0.7),
+            (250, 0.6),
+            (500, 0.5),
+            (1000, 0.3),
+            (5000, 0.1)
+        ]
+        for (gamma, probability) in probabilities:
+            if volunteer.gamma <= gamma:
+                if random.random() < probability:
+                    return True
+                else:
+                    return False
+        return random.random() < 0.05
+
     @action(detail=True, methods=["post"])
     def done(self, request: Request, pk: int) -> Response:
         resp = self._get_possible_claim_done_errors(request, pk)
@@ -330,10 +365,14 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         p.complete_time = timezone.now()
         p.save()
 
-        # TODO: send information to Slack if this is something we should randomly
-        # check
-        # Example slack call:
-        # slack.chat_postMessage(channel="#transcription_check", text="")
+        if self._should_check_transcription(v):
+            trans = Transcription.objects.filter(submission=p)
+            url = trans.first().url if trans else p.tor_url
+            slack.chat_postMessage(
+                channel="#transcription_check",
+                text=f"Please check the following transcription of u/{v.username}: "
+                     f"{url}."
+            )
 
         return build_response(
             SUCCESS,
