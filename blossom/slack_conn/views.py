@@ -32,7 +32,7 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
     our day.
 
     :param request: HttpRequest
-    :return: JsonResponse, HttpRequest
+    :return: HttpRequest
     """
     json_data = json.loads(request.body)
     if json_data.get('challenge'):
