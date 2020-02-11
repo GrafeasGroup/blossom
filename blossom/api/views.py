@@ -326,6 +326,14 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
                 f"Submission ID {p.submission_id} has not yet been claimed!",
                 status.HTTP_412_PRECONDITION_FAILED,
             )
+
+        if p.claimed_by != v:
+            return build_response(
+                ERROR,
+                f"Submission ID {p.submission_id} is claimed by {p.claimed_by}!",
+                status.HTTP_412_PRECONDITION_FAILED
+            )
+
         p.completed_by = v
         p.complete_time = timezone.now()
         p.save()

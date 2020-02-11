@@ -262,6 +262,28 @@ class TestSubmissionDone:
             "Submission ID AAA has not yet been claimed!"
         )
 
+    def test_done_different_claim(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        claiming_user = create_test_user()
+        submission = create_test_submission()
+        user = BlossomUser.objects.get(id=1)
+        submission.claimed_by = claiming_user
+        submission.save()
+
+        data = {"v_id": user.id}
+
+        result = client.post(
+            reverse("submission-done", host="api", args=[1]),
+            json.dumps(data),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == 412
+        assert result.json().get("message") == (
+            f"Submission ID AAA is claimed by {claiming_user.username}!"
+        )
+
     def test_done_without_user_info(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
         create_test_submission()
