@@ -14,6 +14,7 @@ OSX does not route .localhost domains correctly, so in order to work with the AP
 
 ```
 127.0.0.1	api.grafeas.localhost
+127.0.0.1	wiki.grafeas.localhost
 ```
 
 Flush the DNS cache with `sudo dscacheutil -flushcache`; then requests to the local version of the api (for example, "http://api.grafeas.localhost:8000/submissions/", should work.)
