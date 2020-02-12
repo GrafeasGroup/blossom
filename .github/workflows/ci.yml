@@ -22,7 +22,7 @@ jobs:
         create_virtualenvs: true
     - name: Install Dependencies
       run: |
-        sudo apt-get install libjpeg62-turbo-dev libpng-dev libpq-dev -y
+        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev -y
         poetry install
     - name: Run Tests
       run: |
