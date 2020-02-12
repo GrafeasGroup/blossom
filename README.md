@@ -1,3 +1,6 @@
+[![Actions Status](https://github.com/grafeasgroup/blossom/workflows/Django%20CI/badge.svg)](https://github.com/grafeasgroup/blossom/actions)
+
+
 # blossom
 
 ![Image of Blossom, from 1998's Powerpuff Girls](https://vignette.wikia.nocookie.net/powerpuff/images/2/23/Blossom-pic.png/revision/latest?cb=20190329151816)
