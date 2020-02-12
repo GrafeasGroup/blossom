@@ -6,6 +6,13 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 SESSION_COOKIE_DOMAIN = "grafeas.localhost"
 PARENT_HOST = "grafeas.localhost:8000"
+# Cave Johnson, Portal 2.
+SECRET_KEY = (
+    "There's a thousand tests performed every day here in our enrichment spheres."
+    " I can't personally oversee every one of them, so these pre-recorded messages'll"
+    " cover any questions you might have, and respond to any incidents that may"
+    " occur in the course of your science adventure."
+)
 
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache",}}
 
@@ -31,3 +38,5 @@ LOGGING = {
         },
     },
 }
+
+ENABLE_SLACK = False
