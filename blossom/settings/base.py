@@ -214,5 +214,5 @@ def settings_err(msg):
 if SECRET_KEY == default_secret_key:
     settings_err("Using default secret key!")
 
-if DATABASES['default']['PASSWORD'] == default_db_password:
+if DATABASES['default'].get('PASSWORD') == default_db_password:
     settings_err("Using default database password!")
