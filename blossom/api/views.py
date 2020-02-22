@@ -277,6 +277,38 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             )
 
     @action(detail=True, methods=["post"])
+    def unclaim(self, request: Request, pk: int) -> Response:
+        resp = self._get_possible_claim_done_errors(request, pk)
+        if isinstance(resp, Response):
+            # Something went wrong, return the error
+            return resp
+        else:
+            p, v = resp
+
+        if p.claimed_by is None:
+            return build_response(
+                ERROR,
+                "Post has not been claimed!",
+                status.HTTP_412_PRECONDITION_FAILED
+            )
+
+        if p.completed_by is not None:
+            return build_response(
+                ERROR,
+                "Post has already been completed!",
+                status.HTTP_409_CONFLICT
+            )
+
+        p.claimed_by = None
+        p.claim_time = None
+        p.save()
+        return build_response(
+            SUCCESS,
+            "Unclaim successful!",
+            status.HTTP_200_OK
+        )
+    
+    @action(detail=True, methods=["post"])
     def claim(self, request: Request, pk: int) -> Response:
 
         resp = self._get_possible_claim_done_errors(request, pk)
