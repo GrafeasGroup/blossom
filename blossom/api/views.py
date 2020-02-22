@@ -363,12 +363,18 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
                 status.HTTP_412_PRECONDITION_FAILED,
             )
 
-        if p.claimed_by != v:
-            return build_response(
-                ERROR,
-                f"Submission ID {p.submission_id} is claimed by {p.claimed_by}!",
-                status.HTTP_412_PRECONDITION_FAILED
-            )
+        mod_override = False
+        if request.data.get("mod_override"):
+            if request.user.is_grafeas_staff:
+                mod_override = True
+
+        if not mod_override:
+            if p.claimed_by != v:
+                return build_response(
+                    ERROR,
+                    f"Submission ID {p.submission_id} is claimed by {p.claimed_by}!",
+                    status.HTTP_412_PRECONDITION_FAILED
+                )
 
         p.completed_by = v
         p.complete_time = timezone.now()
