@@ -6,6 +6,12 @@ import requests
 import stripe
 import pytest
 
+# NOTE: In order to test slack, you must add the `settings` hook and set
+# `settings.ENABLE_SLACK = True`. MAKE SURE that if you're writing a new
+# test that uses ENABLE_SLACK that you patch `requests.post` or it will
+# try and ping modchat (if you're running locally) or explode if this is
+# running in the github actions pipeline.
+
 
 def test_payment_endpoint_with_get_request(client):
     result = client.get(reverse("charge", host="payments"), HTTP_HOST="payments")
@@ -13,7 +19,8 @@ def test_payment_endpoint_with_get_request(client):
     assert result.content == b"go away"
 
 
-def test_payment_endpoint(client, mocker, setup_site):
+def test_payment_endpoint(client, mocker, setup_site, settings):
+    settings.ENABLE_SLACK = True
     mocker.patch("requests.post")
     mocker.patch("stripe.Charge")
     stripe.Charge.create.return_value = {"status": "succeeded"}
@@ -32,6 +39,7 @@ def test_payment_endpoint(client, mocker, setup_site):
 
 def test_payment_endpoint_debug_mode(client, mocker, setup_site, settings):
     settings.DEBUG = True
+    settings.ENABLE_SLACK = True
     mocker.patch("requests.post")
     mocker.patch("stripe.Charge")
     stripe.Charge.create.return_value = {"status": "succeeded"}
@@ -47,7 +55,8 @@ def test_payment_endpoint_debug_mode(client, mocker, setup_site, settings):
     assert "channel" in requests.post.call_args.kwargs.get("json")
 
 
-def test_failed_charge(client, mocker):
+def test_failed_charge(client, mocker, settings):
+    settings.ENABLE_SLACK = True
     mocker.patch("requests.post")
     mocker.patch("stripe.Charge")
     stripe.Charge.create.return_value = {"status": "failed"}
@@ -65,6 +74,7 @@ def test_failed_charge(client, mocker):
 
 def test_failed_charge_in_debug_mode(client, mocker, settings):
     settings.DEBUG = True
+    settings.ENABLE_SLACK = True
     mocker.patch("requests.post")
     mocker.patch("stripe.Charge")
     stripe.Charge.create.return_value = {"status": "failed"}

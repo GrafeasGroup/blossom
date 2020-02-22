@@ -1,3 +1,6 @@
+[![Actions Status](https://github.com/grafeasgroup/blossom/workflows/Django%20CI/badge.svg)](https://github.com/grafeasgroup/blossom/actions)
+
+
 # blossom
 
 ![Image of Blossom, from 1998's Powerpuff Girls](https://vignette.wikia.nocookie.net/powerpuff/images/2/23/Blossom-pic.png/revision/latest?cb=20190329151816)
@@ -14,6 +17,7 @@ OSX does not route .localhost domains correctly, so in order to work with the AP
 
 ```
 127.0.0.1	api.grafeas.localhost
+127.0.0.1	wiki.grafeas.localhost
 ```
 
 Flush the DNS cache with `sudo dscacheutil -flushcache`; then requests to the local version of the api (for example, "http://api.grafeas.localhost:8000/submissions/", should work.)
