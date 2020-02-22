@@ -47,6 +47,7 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
             "complete_time",
             "source",
             "url",
+            "tor_url",
             "has_ocr_transcription",
             "archived"
         )
