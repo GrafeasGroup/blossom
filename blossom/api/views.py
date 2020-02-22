@@ -292,6 +292,13 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
                 status.HTTP_412_PRECONDITION_FAILED
             )
 
+        if p.claimed_by != v:
+            return build_response(
+                ERROR,
+                "Cannot unclaim post you didn't claim!",
+                status.HTTP_406_NOT_ACCEPTABLE
+            )
+
         if p.completed_by is not None:
             return build_response(
                 ERROR,
@@ -307,7 +314,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             "Unclaim successful!",
             status.HTTP_200_OK
         )
-    
+
     @action(detail=True, methods=["post"])
     def claim(self, request: Request, pk: int) -> Response:
 
