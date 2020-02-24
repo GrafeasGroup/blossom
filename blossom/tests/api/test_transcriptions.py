@@ -292,6 +292,62 @@ class TestTranscriptionCreation:
             "Received both t_text and ocr_text -- must be one or the other."
         )
 
+
+class TestTranscriptionSearch(object):
+    def test_transcription_search(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        v = BlossomUser.objects.first()
+        t = Transcription.objects.create(
+            submission=s,
+            author=v,
+            transcription_id='ABC',
+            completion_method='tests'
+        )
+
+        result = client.get(
+            reverse("transcription-search", host="api") + "?submission_id=AAA",
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == 200
+        assert (
+                result.json().get("message")
+                == "Found the folowing transcriptions for requested ID AAA."
+        )
+
+    def test_transcription_search_wrong_id(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        v = BlossomUser.objects.first()
+
+        result = client.get(
+            reverse("transcription-search", host="api") + "?submission_id=ZZZ",
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 200
+        assert result.json().get('message').startswith("Did not find any transcriptions")
+
+    def test_transcription_search_no_submission_id(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        v = BlossomUser.objects.first()
+
+        result = client.get(
+            reverse("transcription-search", host="api"),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 400
+        assert result.json().get('message').startswith("This endpoint only supports")
+
+
 def test_random_transcription_for_review(client):
     client, headers = create_staff_volunteer_with_keys(client)
     s = create_test_submission()
