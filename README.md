@@ -1,11 +1,11 @@
+![Image of Blossom, from 1998's Powerpuff Girls](https://vignette.wikia.nocookie.net/powerpuff/images/2/23/Blossom-pic.png/revision/latest?cb=20190329151816)
+
 <h2 align="center">blossom</h2>
 
 <p align="center">
 <a href="https://github.com/grafeasgroup/blossom/actions"><img alt="Actions Status" src="https://github.com/grafeasgroup/blossom/workflows/Django%20CI/badge.svg"></a>
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
-
-![Image of Blossom, from 1998's Powerpuff Girls](https://vignette.wikia.nocookie.net/powerpuff/images/2/23/Blossom-pic.png/revision/latest?cb=20190329151816)
 
 The website. The app. The everything. MUST REMAIN PRIVATE.
 
