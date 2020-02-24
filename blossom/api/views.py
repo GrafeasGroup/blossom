@@ -286,6 +286,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         else:
             p, v = resp
 
+
         if p.claimed_by is not None:
             return build_response(
                 ERROR,
