@@ -3,6 +3,7 @@ import pytest
 from unittest.mock import call, patch, PropertyMock, MagicMock
 
 from django_hosts.resolvers import reverse
+from django.utils import timezone
 
 from blossom.authentication.models import BlossomUser
 from blossom.models import Submission
@@ -139,6 +140,111 @@ class TestSubmissionMiscEndpoints:
 
         assert result.status_code == 200
         assert len(result.json()["results"]) == 2
+
+    def test_expired_endpoint(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+
+        submission = create_test_submission()
+        submission.submission_time = timezone.now() - timezone.timedelta(days=3)
+        submission.save()
+
+        result = client.get(
+            reverse("submission-expired", host="api"),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 200
+        assert result.json().get('message').startswith("Found the following posts to remove")
+
+    def test_expired_endpoint_with_invalid_post(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+
+        create_test_submission()
+
+        result = client.get(
+            reverse("submission-expired", host="api"),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 200
+        assert result.json().get('message') == "No available transcriptions to remove."
+
+    def test_expired_endpoint_with_ctq_mode(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+
+        create_test_submission()
+
+        result = client.get(
+            reverse("submission-expired", host="api") + "?ctq=1",
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 200
+        assert result.json().get('message').startswith(
+            "Found the following posts to remove"
+        )
+
+    def test_unarchived_endpoint_no_submissions(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+
+        result = client.get(
+            reverse("submission-unarchived", host="api"),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 200
+        assert result.json().get('message') == "No available transcriptions to archive."
+
+    def test_unarchived_endpoint_with_submissions_too_young(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        v = BlossomUser.objects.first()
+
+        submission = create_test_submission()
+        submission.completed_by = v
+        # we won't serve this one because it's brand new
+        submission.complete_time = timezone.now()
+        submission.archived = False
+        submission.save()
+
+        result = client.get(
+            reverse("submission-unarchived", host="api"),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 200
+        assert result.json().get('message') == "No available transcriptions to archive."
+
+    def test_unarchived_endpoint_with_submissions(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        v = BlossomUser.objects.first()
+
+        submission = create_test_submission()
+        submission.completed_by = v
+        submission.complete_time = timezone.now() - timezone.timedelta(hours=1)
+        submission.archived = False
+        submission.save()
+
+        result = client.get(
+            reverse("submission-unarchived", host="api"),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == 200
+        assert result.json().get('message').startswith(
+            "Found the following posts to archive."
+        )
+        assert len(result.json()['data']) == 1
 
 
 class TestSubmissionClaimProcess:
