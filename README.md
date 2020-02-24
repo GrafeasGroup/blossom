@@ -1,4 +1,4 @@
-![Image of Blossom, from 1998's Powerpuff Girls](https://raw.githubusercontent.com/GrafeasGroup/blossom/readme-additions/blossom/docs/blossom_header_img.png?token=ABHQRIMHLUMZNX4GYYPK2XC6LVO3M)
+![Image of Blossom, from 1998's Powerpuff Girls](https://i.imgur.com/Rao8pA9.png)
 
 <h1 align="center">blossom</h1>
 
