@@ -502,3 +502,105 @@ class TestSubmissionDone:
                        == slack_client.chat_postMessage.call_args_list[-1]
             else:
                 assert slack_client.chat_postMessage.call_count == 0
+
+
+class TestSubmissionUnclaim:
+    def test_unclaim_with_valid_submission(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        user = BlossomUser.objects.get(id=1)
+        s.claimed_by = user
+        s.save()
+
+        result = client.post(
+            reverse("submission-unclaim", host="api", args=[1]),
+            json.dumps({"username": user.username}),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 200
+        assert result.json().get("message") == "Unclaim successful!"
+
+        s.refresh_from_db()
+
+        assert s.claimed_by == None
+        assert s.claim_time == None
+
+    def test_unclaim_with_unclaimed_submission(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        user = BlossomUser.objects.get(id=1)
+
+        result = client.post(
+            reverse("submission-unclaim", host="api", args=[1]),
+            json.dumps({"username": user.username}),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 412
+        assert result.json().get("message") == "Post has not been claimed!"
+
+    def test_unclaim_with_no_username(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+
+        result = client.post(
+            reverse("submission-unclaim", host="api", args=[1]),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == 400
+        assert result.json().get("message").startswith("Must give either `v_id`")
+
+    def test_unclaim_with_completed_post(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        user = BlossomUser.objects.get(id=1)
+
+        s.claimed_by = user
+        s.completed_by = user
+        s.save()
+
+        result = client.post(
+            reverse("submission-unclaim", host="api", args=[1]),
+            json.dumps({"username": user.username}),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 409
+        assert result.json().get("message") == "Post has already been completed!"
+
+        s.refresh_from_db()
+        # verify we didn't modify the data
+        assert s.claimed_by == user
+        assert s.completed_by == user
+
+    def test_unclaim_for_different_user(self, client):
+        client, headers = create_staff_volunteer_with_keys(client)
+        s = create_test_submission()
+        user = BlossomUser.objects.get(id=1)
+        guy = create_test_user()
+
+        s.claimed_by = guy
+        s.save()
+
+        result = client.post(
+            reverse("submission-unclaim", host="api", args=[1]),
+            json.dumps({"username": user.username}),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == 406
+        assert result.json().get("message") == "Cannot unclaim post you didn't claim!"
+
+        s.refresh_from_db()
+        assert s.claimed_by == guy

@@ -41,7 +41,7 @@ class RequestDataMixin(object):
         self, request, error_out_if_bad_data=False
     ) -> [None, int, Response]:
         v_id = request.data.get("v_id")
-        v_username = request.data.get("v_username")
+        v_username = request.data.get("v_username") or request.data.get("username")
         if not v_id and not v_username and error_out_if_bad_data is True:
             return build_response(
                 ERROR,
