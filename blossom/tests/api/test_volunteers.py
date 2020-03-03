@@ -103,7 +103,7 @@ class TestVolunteerGammaPlusOne:
         jane = BlossomUser.objects.get(id=1)
         assert jane.gamma == 0
 
-        result = client.post(
+        result = client.patch(
             reverse("volunteer-gamma-plusone", args=[1], host="api"),
             HTTP_HOST="api",
             **headers,
@@ -125,7 +125,7 @@ class TestVolunteerGammaPlusOne:
         assert Transcription.objects.count() == 0
         assert Submission.objects.count() == 0
 
-        result = client.post(
+        result = client.patch(
             reverse("volunteer-gamma-plusone", args=[99], host="api"),
             HTTP_HOST="api",
             **headers,
