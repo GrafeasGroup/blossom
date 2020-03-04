@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 from django.utils import timezone
+from drf_yasg.openapi import Response as YASGResponse, Schema
 
 from blossom.authentication.models import BlossomUser
 
@@ -17,6 +18,29 @@ def build_response(
     if data:
         resp.update({"data": data})
     return Response(resp, status=status_code)
+
+
+def build_response_doc(
+        description: str,
+        data_schema: Dict[str, Schema] = None
+) -> YASGResponse:
+    properties = {
+        "result": Schema(type="string"),
+        "message": Schema(type="string"),
+        "server_time": Schema(type="string")
+    }
+    if data_schema:
+        properties["data"] = Schema(
+            type="object",
+            properties=data_schema
+        )
+    return YASGResponse(
+        description,
+        schema=Schema(
+            type="object",
+            properties=properties
+        )
+    )
 
 
 class VolunteerMixin(object):

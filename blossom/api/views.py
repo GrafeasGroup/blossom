@@ -4,6 +4,8 @@ from datetime import timedelta
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_yasg.openapi import Parameter, Schema
 from drf_yasg.utils import swagger_auto_schema, no_body
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -16,7 +18,7 @@ from typing import Tuple
 from blossom.api import Summary
 from blossom.api.authentication import AdminApiKeyCustomCheck
 from blossom.api.helpers import (
-    VolunteerMixin, RequestDataMixin, ERROR, SUCCESS, build_response
+    VolunteerMixin, RequestDataMixin, ERROR, SUCCESS, build_response, build_response_doc
 )
 from blossom.api.models import Submission, Transcription
 from blossom.api.serializers import (
@@ -28,6 +30,21 @@ from blossom.authentication.models import BlossomUser
 from blossom.slack_conn.helpers import client as slack
 
 
+@method_decorator(
+    name='list',
+    decorator=swagger_auto_schema(
+        operation_summary="Get information on all volunteers or a specific"
+                          " volunteer if specified.",
+        operation_description="Include the username as a query to filter"
+                              " the volunteers on the specified username.",
+        manual_parameters=[
+            Parameter(
+                "username",
+                "query",
+                type="string"
+            )
+        ]
+))
 class VolunteerViewSet(viewsets.ModelViewSet):
     queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
     serializer_class = VolunteerSerializer
@@ -36,10 +53,10 @@ class VolunteerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Uses a `username` query string parameter to filter for a
-        specific volunteer. For example:
+        Get information on all volunteers or a specific volunteer if specified.
 
-        GET http://api.grafeas.localhost:8000/volunteer/?username=asdfasdfasdf
+        Including a username as a query parameter filters the volunteers on the
+        specified username.
         """
         queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
         username = self.request.query_params.get("username", None)
@@ -89,8 +106,8 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         request_body= no_body,
         responses={
-            200: "Returned when the gamma of the volunteer is successfully updated.",
-            404: "Returned when the specified volunteer is not found."
+            200: build_response_doc("The gamma is successfully updated"),
+            404: build_response_doc("The specified volunteer is not found.")
         }
     )
     @action(detail=True, methods=["patch"])
@@ -128,18 +145,25 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             status.HTTP_200_OK,
         )
 
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object",
+            properties={"username": Schema(type="string")}
+        ),
+        responses={
+            200: build_response_doc(
+                "Successful creation",
+                data_schema={"id": Schema(type="integer")}
+            ),
+            400: build_response_doc("No \"username\" key in the data body"),
+            422: build_response_doc(
+                "There already exists a volunteer with the specified username"
+            )
+        }
+    )
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
-        If this is hit, we assume that there is no user object to link to.
-
-        Example URL:
-
-        POST http://api.grafeas.localhost:8000/volunteer
-
-        :param request: the rest framework request object
-        :param args: *
-        :param kwargs: **
-        :return: Response
+        Create a new user with the specified username.
         """
         username = request.data.get("username")
 
