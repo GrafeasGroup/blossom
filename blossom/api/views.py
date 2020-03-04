@@ -86,7 +86,6 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             },
         )
 
-
     @swagger_auto_schema(
         request_body= no_body,
         responses={
@@ -113,14 +112,14 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             )
 
         dummy_post = Submission.objects.create(
-            source="blossom_gamma_plus_one",
+            source="gamma_plus_one",
             completed_by=volunteer
         )
         Transcription.objects.create(
             submission=dummy_post,
             author=volunteer,
             transcription_id=str(uuid.uuid4()),
-            completion_method="blossom_gamma_plusone",
+            completion_method="gamma_plus_one",
             text="dummy transcription"
         )
         return build_response(
