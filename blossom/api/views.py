@@ -4,6 +4,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
+from drf_yasg.utils import swagger_auto_schema, no_body
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -85,48 +86,46 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             },
         )
 
-    @action(detail=True, methods=["post"])
+    @swagger_auto_schema(
+        request_body= no_body,
+        responses={
+            200: "Returned when the gamma of the volunteer is successfully updated.",
+            404: "Returned when the specified volunteer is not found."
+        }
+    )
+    @action(detail=True, methods=["patch"])
     def gamma_plusone(self, request: Request, pk: int) -> Response:
-        def _generate_dummy_post(request):
-            return Submission.objects.create(
-                source="blossom_gamma_plusone", completed_by=request.user
-            )
-
-        def _generate_dummy_transcription(request, post=None):
-            if post is None:
-                post = _generate_dummy_post(request)
-            Transcription.objects.create(
-                submission=post,
-                author=request.user,
-                transcription_id=str(uuid.uuid4()),
-                completion_method="blossom_gamma_plusone",
-                text="dummy transcription",
-            )
-
         """
-        This endpoint updates the given score of a user by one by forcing a
-        fake transcription in their name; this should only be used in times
-        where the proper methods do not work.
+        Add one gamma through creating a fake completed transcription in the
+        respective volunteer's name.
 
-        Example URL:
-
-        POST http://localhost:8000/api/volunteer/1/gamma_plusone
-
-        :param request: the incoming API request.
-        :param pk: the primary key of the volunteer we're updating.
-        :return: json, an error or success message.
+        This method should only be called in the case of erroneous behavior of
+        the proper procedure of awarding gamma.
         """
         try:
-            v = BlossomUser.objects.get(id=pk)
+            volunteer = BlossomUser.objects.get(id=pk)
         except BlossomUser.DoesNotExist:
             return build_response(
-                ERROR, "No volunteer with that ID.", status.HTTP_404_NOT_FOUND
+                ERROR,
+                "No volunteer with that ID.",
+                status.HTTP_404_NOT_FOUND
             )
 
-        _generate_dummy_transcription(request)
-
+        dummy_post = Submission.objects.create(
+            source="gamma_plus_one",
+            completed_by=volunteer
+        )
+        Transcription.objects.create(
+            submission=dummy_post,
+            author=volunteer,
+            transcription_id=str(uuid.uuid4()),
+            completion_method="gamma_plus_one",
+            text="dummy transcription"
+        )
         return build_response(
-            SUCCESS, f"Updated gamma for {v.username} to {v.gamma}.", status.HTTP_200_OK
+            SUCCESS,
+            f"Updated gamma for {volunteer.username} to {volunteer.gamma}.",
+            status.HTTP_200_OK,
         )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
