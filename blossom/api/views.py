@@ -100,12 +100,8 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         Add one gamma through creating a fake completed transcription in the
         respective volunteer's name.
 
-        This method should only be used in the case of erroneous behavior of
-        the proper methods.
-
-        :param request: the incoming API request.
-        :param pk: the primary key of the volunteer we're updating.
-        :return: Response with either a success or an error message.
+        This method should only be called in the case of erroneous behavior of
+        the proper procedure of awarding gamma.
         """
         try:
             volunteer = BlossomUser.objects.get(id=pk)
