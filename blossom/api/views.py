@@ -165,7 +165,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             SUCCESS,
             f"Volunteer created with username `{v.username}`",
             status.HTTP_200_OK,
-            data={'id': v.id}
+            data={"id": v.id}
         )
 
 
@@ -469,7 +469,8 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             submission_id=submission_id, source=source, url=url, tor_url=tor_url
         )
         return build_response(
-            SUCCESS, f"Post object {p.id} created!", status.HTTP_200_OK
+            SUCCESS, f"Post object {p.id} created!", status.HTTP_200_OK,
+            data={"id": p.id}
         )
 
 
@@ -598,6 +599,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             f"Transcription ID {t.id} created on post"
             f" {p.submission_id}, written by {v.username}",
             status.HTTP_200_OK,
+            data={"id": t.id}
         )
 
     @action(detail=False, methods=["get"])
