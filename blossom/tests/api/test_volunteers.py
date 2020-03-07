@@ -154,6 +154,9 @@ class TestVolunteerCreation:
         assert result.json().get("message") == (
             "Volunteer created with username `SPAAAACE`"
         )
+        # we had to create a volunteer in the beginning of the test, so this
+        # one is volunteer ID 2.
+        assert result.json()['data']['id'] == 2
         assert BlossomUser.objects.filter(username="SPAAAACE").count() == 1
 
     def test_volunteer_create_duplicate_username(self, client):
