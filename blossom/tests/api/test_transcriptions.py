@@ -37,6 +37,7 @@ class TestTranscriptionCreation:
             result.json().get("message")
             == "Transcription ID 1 created on post AAA, written by janeeyre"
         )
+        assert result.json()['data']['id'] == 1
 
         obj = Transcription.objects.get(id=1)
         assert obj.submission == s
