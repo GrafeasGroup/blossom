@@ -265,7 +265,8 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             return build_response(
                 SUCCESS,
                 "No available transcriptions to archive.",
-                status_code=status.HTTP_200_OK
+                status_code=status.HTTP_200_OK,
+                data={}
             )
         else:
             serializer = self.get_serializer(queryset, many=True)
