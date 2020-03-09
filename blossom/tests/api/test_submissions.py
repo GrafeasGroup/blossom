@@ -27,6 +27,7 @@ class TestSubmissionCreation:
         )
         assert result.status_code == 200
         assert result.json().get("message") == "Post object 1 created!"
+        assert result.json()['data']['id'] == 1
 
         obj = Submission.objects.get(id=1)
         assert obj.submission_id == "spaaaaace"
