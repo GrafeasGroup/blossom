@@ -361,7 +361,7 @@ def test_random_transcription_for_review(client):
 
     assert result.json().get('message') == 'No available transcriptions to review.'
     assert result.status_code == 200
-    assert result.json().get('data') is None
+    assert result.json().get('data') == {}
 
     t = Transcription.objects.create(
         submission=s,

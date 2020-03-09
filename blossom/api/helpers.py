@@ -14,8 +14,7 @@ def build_response(
     result: str, message: str, status_code: int, data: Dict = None
 ) -> Response:
     resp = {"result": result, "message": message, "server_time": timezone.now()}
-    if data:
-        resp.update({"data": data})
+    resp.update({"data": data if data else {}})
     return Response(resp, status=status_code)
 
 

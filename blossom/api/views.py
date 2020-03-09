@@ -239,8 +239,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             return build_response(
                 SUCCESS,
                 "No available transcriptions to remove.",
-                status_code=status.HTTP_200_OK,
-                data={}
+                status_code=status.HTTP_200_OK
             )
         else:
             serializer = self.get_serializer(queryset, many=True)
@@ -265,8 +264,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             return build_response(
                 SUCCESS,
                 "No available transcriptions to archive.",
-                status_code=status.HTTP_200_OK,
-                data={}
+                status_code=status.HTTP_200_OK
             )
         else:
             serializer = self.get_serializer(queryset, many=True)
