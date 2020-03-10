@@ -44,7 +44,8 @@ from blossom.slack_conn.helpers import client as slack
                 type="string"
             )
         ]
-))
+    )
+)
 class VolunteerViewSet(viewsets.ModelViewSet):
     queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
     serializer_class = VolunteerSerializer
