@@ -4,6 +4,8 @@ from datetime import timedelta
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_yasg.openapi import Parameter, Response as DocResponse, Schema
 from drf_yasg.utils import swagger_auto_schema, no_body
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -28,6 +30,22 @@ from blossom.authentication.models import BlossomUser
 from blossom.slack_conn.helpers import client as slack
 
 
+@method_decorator(
+    name='list',
+    decorator=swagger_auto_schema(
+        operation_summary="Get information on all volunteers or a specific"
+                          " volunteer if specified.",
+        operation_description="Include the username as a query to filter"
+                              " the volunteers on the specified username.",
+        manual_parameters=[
+            Parameter(
+                "username",
+                "query",
+                type="string"
+            )
+        ]
+    )
+)
 class VolunteerViewSet(viewsets.ModelViewSet):
     queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
     serializer_class = VolunteerSerializer
@@ -36,10 +54,10 @@ class VolunteerViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Uses a `username` query string parameter to filter for a
-        specific volunteer. For example:
+        Get information on all volunteers or a specific volunteer if specified.
 
-        GET http://api.grafeas.localhost:8000/volunteer/?username=asdfasdfasdf
+        Including a username as a query parameter filters the volunteers on the
+        specified username.
         """
         queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
         username = self.request.query_params.get("username", None)
@@ -47,50 +65,38 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(username=username)
         return queryset
 
+    @swagger_auto_schema(
+        manual_parameters=[
+            Parameter(
+                "username",
+                "query",
+                type="string"
+            )
+        ],
+        responses={
+            400: "No \"username\" as a query parameter.",
+            404: "No volunteer with the specified username."
+        }
+    )
     @action(detail=False, methods=["get"])
     def summary(self, request: Request) -> Response:
         """
-        Effectively a helper function, just get info on someone and format
-        it into a nice little package. Requires the use of ?username= to
-        find the appropriate user.
-
-        :param request: Request
-        :return: json, a dict that gives relevant information about
-            the volunteer.
+        Get information on the volunteer with the provided username.
         """
         username = request.query_params.get("username", None)
         if not username:
-            return build_response(
-                ERROR,
-                "No username received. Use ?username= in your request.",
-                status.HTTP_400_BAD_REQUEST,
-            )
-        v = BlossomUser.objects.filter(
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        volunteer = BlossomUser.objects.filter(
             Q(username=username) & Q(is_volunteer=True)
         ).first()
-        if not v:
-            return build_response(
-                ERROR,
-                "No volunteer found with that username.",
-                status.HTTP_404_NOT_FOUND,
-            )
-        return build_response(
-            SUCCESS,
-            f"User {username} was found. See 'data' key for summary.",
-            status.HTTP_200_OK,
-            data={
-                "username": v.username,
-                "gamma": v.gamma,
-                "join_date": v.date_joined,
-                "accepted_coc": v.accepted_coc,
-            },
-        )
+        if not volunteer:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(self.serializer_class(volunteer).data)
 
     @swagger_auto_schema(
-        request_body= no_body,
+        request_body=no_body,
         responses={
-            200: "Returned when the gamma of the volunteer is successfully updated.",
-            404: "Returned when the specified volunteer is not found."
+            404: "No volunteer with the specified ID."
         }
     )
     @action(detail=True, methods=["patch"])
@@ -105,11 +111,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         try:
             volunteer = BlossomUser.objects.get(id=pk)
         except BlossomUser.DoesNotExist:
-            return build_response(
-                ERROR,
-                "No volunteer with that ID.",
-                status.HTTP_404_NOT_FOUND
-            )
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         dummy_post = Submission.objects.create(
             source="gamma_plus_one",
@@ -122,50 +124,39 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             completion_method="gamma_plus_one",
             text="dummy transcription"
         )
-        return build_response(
-            SUCCESS,
-            f"Updated gamma for {volunteer.username} to {volunteer.gamma}.",
-            status.HTTP_200_OK,
-        )
+        return Response(self.serializer_class(volunteer).data)
 
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object",
+            properties={"username": Schema(type="string")}
+        ),
+        responses={
+            201: DocResponse(
+                "Successful creation",
+                schema=serializer_class),
+            400: "No \"username\" key in the data body",
+            422: "There already exists a volunteer with the specified username"
+        }
+    )
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
-        If this is hit, we assume that there is no user object to link to.
-
-        Example URL:
-
-        POST http://api.grafeas.localhost:8000/volunteer
-
-        :param request: the rest framework request object
-        :param args: *
-        :param kwargs: **
-        :return: Response
+        Create a new user with the specified username.
         """
         username = request.data.get("username")
 
         if not username:
-            return build_response(
-                ERROR,
-                "Must have the `username` key in data body.",
-                status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if existing_user := BlossomUser.objects.filter(username=username).first():
-            return build_response(
-                ERROR,
-                f"There is already a user with the username of"
-                f" `{existing_user.username}`.",
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
+        if BlossomUser.objects.filter(username=username).first():
+            return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-        v = BlossomUser.objects.create(username=username)
-        v.set_unusable_password()
+        volunteer = BlossomUser.objects.create(username=username)
+        volunteer.set_unusable_password()
 
-        return build_response(
-            SUCCESS,
-            f"Volunteer created with username `{v.username}`",
-            status.HTTP_200_OK,
-            data={"id": v.id}
+        return Response(
+            self.serializer_class(volunteer).data,
+            status=status.HTTP_201_CREATED
         )
 
 
