@@ -1,6 +1,7 @@
 import json
 
 from django_hosts.resolvers import reverse
+from rest_framework import status
 
 from blossom.authentication.models import BlossomUser
 from blossom.models import Transcription, Submission
@@ -15,6 +16,8 @@ class TestVolunteerSummary:
             HTTP_HOST="api",
             **headers,
         )
+
+        assert result.status_code == status.HTTP_200_OK
         assert result.json().get("username") == "janeeyre"
 
     def test_volunteer_summary_wrong_key(self, client):
@@ -25,6 +28,8 @@ class TestVolunteerSummary:
             HTTP_HOST="api",
             **headers,
         )
+
+        assert result.status_code == status.HTTP_403_FORBIDDEN
         assert result.json() == {
             "detail": "Sorry, this resource can only be accessed by an admin API key."
         }
@@ -38,6 +43,7 @@ class TestVolunteerSummary:
             **headers,
         )
 
+        assert result.status_code == status.HTTP_403_FORBIDDEN
         assert result.json() == {
             "detail": "Sorry, this resource can only be accessed by an admin API key."
         }
@@ -47,7 +53,7 @@ class TestVolunteerSummary:
         result = client.get(
             reverse("volunteer-summary", host="api"), HTTP_HOST="api", **headers
         )
-        assert result.status_code == 400
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_volunteer_summary_nonexistent_username(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -56,14 +62,14 @@ class TestVolunteerSummary:
             HTTP_HOST="api",
             **headers,
         )
-        assert result.status_code == 404
+        assert result.status_code == status.HTTP_404_NOT_FOUND
 
     def test_volunteer_summary_no_key(self, client):
         result = client.get(
             reverse("volunteer-summary", host="api") + "?username=asdfasdfasdf",
             HTTP_HOST="api",
         )
-        assert result.status_code == 403
+        assert result.status_code == status.HTTP_403_FORBIDDEN
 
 
 class TestVolunteerAssortedFunctions:
@@ -71,13 +77,16 @@ class TestVolunteerAssortedFunctions:
         client, headers = create_staff_volunteer_with_keys(client)
         data = {"username": "naaaarf"}
         assert BlossomUser.objects.get(id=1).username == "janeeyre"
-        client.put(
+        result = client.put(
             reverse("volunteer-detail", args=[1], host="api"),
             json.dumps(data),
             HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()["username"] == data["username"]
         assert BlossomUser.objects.get(id=1).username == "naaaarf"
 
     def test_volunteer_viewset_with_qsp(self, client):
@@ -87,8 +96,9 @@ class TestVolunteerAssortedFunctions:
             HTTP_HOST="api",
             **headers,
         )
-        r = result.json().get("results")
-        assert r[0]["username"] == "janeeyre"
+
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()["results"][0]["username"] == "janeeyre"
 
 
 class TestVolunteerGammaPlusOne:
@@ -107,7 +117,8 @@ class TestVolunteerGammaPlusOne:
             **headers,
         )
 
-        assert result.status_code == 200
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()["gamma"] == 1
         assert jane.gamma == 1
         assert Transcription.objects.count() == 1
         assert Submission.objects.count() == 1
@@ -129,7 +140,7 @@ class TestVolunteerGammaPlusOne:
             **headers,
         )
 
-        assert result.status_code == 404
+        assert result.status_code == status.HTTP_404_NOT_FOUND
         # shouldn't have created anything
         assert Transcription.objects.count() == 0
         assert Submission.objects.count() == 0
@@ -147,7 +158,7 @@ class TestVolunteerCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 201
+        assert result.status_code == status.HTTP_201_CREATED
         # we had to create a volunteer in the beginning of the test, so this
         # one is volunteer ID 2.
         assert result.json()['id'] == 2
@@ -165,7 +176,7 @@ class TestVolunteerCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 422
+        assert result.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert BlossomUser.objects.filter(username="janeeyre").count() == 1
 
     def test_volunteer_create_no_username(self, client):
@@ -178,5 +189,5 @@ class TestVolunteerCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
         assert BlossomUser.objects.count() == 1
