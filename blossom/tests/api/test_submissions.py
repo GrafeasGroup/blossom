@@ -4,6 +4,7 @@ from unittest.mock import call, patch, PropertyMock, MagicMock
 
 from django_hosts.resolvers import reverse
 from django.utils import timezone
+from rest_framework import status
 
 from blossom.authentication.models import BlossomUser
 from blossom.models import Submission
@@ -25,9 +26,8 @@ class TestSubmissionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
-        assert result.json().get("message") == "Post object 1 created!"
-        assert result.json()['data']['id'] == 1
+        assert result.status_code == status.HTTP_201_CREATED
+        assert result.json()['id'] == 1
 
         obj = Submission.objects.get(id=1)
         assert obj.submission_id == "spaaaaace"
@@ -49,7 +49,8 @@ class TestSubmissionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
+        assert result.status_code == status.HTTP_201_CREATED
+        assert result.json()["id"] == 1
         obj = Submission.objects.get(id=1)
         assert obj.submission_id == "spaaaaace"
         assert obj.source == "the_tests"
@@ -70,12 +71,7 @@ class TestSubmissionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("result") == "error"
-        assert result.json().get("message") == (
-            "Must contain the keys `submission_id` (str, 20char max)"
-            " and `source` (str 20char max)"
-        )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_incomplete_submission_create_2(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -91,12 +87,7 @@ class TestSubmissionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("result") == "error"
-        assert result.json().get("message") == (
-            "Must contain the keys `submission_id` (str, 20char max)"
-            " and `source` (str 20char max)"
-        )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
 
 class TestSubmissionMiscEndpoints:
@@ -111,7 +102,7 @@ class TestSubmissionMiscEndpoints:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
+        assert result.status_code == status.HTTP_200_OK
         assert result.json()["results"][0]["submission_id"] == "AAA"
 
     def test_get_submissions_with_specific_id(self, client):
@@ -127,7 +118,7 @@ class TestSubmissionMiscEndpoints:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
+        assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == 1
         assert result.json()["results"][0]["id"] == 2
 
@@ -139,7 +130,7 @@ class TestSubmissionMiscEndpoints:
             **headers,
         )
 
-        assert result.status_code == 200
+        assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == 2
 
     def test_expired_endpoint(self, client):
@@ -156,8 +147,8 @@ class TestSubmissionMiscEndpoints:
             **headers,
         )
 
-        assert result.status_code == 200
-        assert result.json().get('message').startswith("Found the following posts to remove")
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()[0]["id"] == 1
 
     def test_expired_endpoint_with_invalid_post(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -171,8 +162,8 @@ class TestSubmissionMiscEndpoints:
             **headers,
         )
 
-        assert result.status_code == 200
-        assert result.json().get('message') == "No available transcriptions to remove."
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()) == 0
 
     def test_expired_endpoint_with_ctq_mode(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -186,10 +177,8 @@ class TestSubmissionMiscEndpoints:
             **headers,
         )
 
-        assert result.status_code == 200
-        assert result.json().get('message').startswith(
-            "Found the following posts to remove"
-        )
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()[0]["id"] == 1
 
     def test_unarchived_endpoint_no_submissions(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -201,8 +190,8 @@ class TestSubmissionMiscEndpoints:
             **headers,
         )
 
-        assert result.status_code == 200
-        assert result.json().get('message') == "No available transcriptions to archive."
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()) == 0
 
     def test_unarchived_endpoint_with_submissions_too_young(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -222,8 +211,8 @@ class TestSubmissionMiscEndpoints:
             **headers,
         )
 
-        assert result.status_code == 200
-        assert result.json().get('message') == "No available transcriptions to archive."
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()) == 0
 
     def test_unarchived_endpoint_with_submissions(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -241,11 +230,8 @@ class TestSubmissionMiscEndpoints:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
-        assert result.json().get('message').startswith(
-            "Found the following posts to archive."
-        )
-        assert len(result.json()['data']) == 1
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()) == 1
 
 
 class TestSubmissionClaimProcess:
@@ -262,9 +248,8 @@ class TestSubmissionClaimProcess:
         )
         v = BlossomUser.objects.first()
         s = Submission.objects.first()
-        assert result.status_code == 200
-        assert result.json().get("result") == "success"
-        assert result.json().get("message") == "Post AAA claimed by janeeyre"
+        assert result.status_code == status.HTTP_201_CREATED
+        assert result.json()["id"] == s.id
         assert s.claimed_by == v
 
     def test_claim_wrong_post_id(self, client):
@@ -277,8 +262,7 @@ class TestSubmissionClaimProcess:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 404
-        assert result.json().get("message") == "No post with that ID."
+        assert result.status_code == status.HTTP_404_NOT_FOUND
 
     def test_claim_wrong_volunteer_username(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -291,8 +275,7 @@ class TestSubmissionClaimProcess:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 404
-        assert result.json().get("message") == "No volunteer with that ID / username."
+        assert result.status_code == status.HTTP_404_NOT_FOUND
 
     def test_claim_no_volunteer_info(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -303,12 +286,7 @@ class TestSubmissionClaimProcess:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("message") == (
-            "Must give either `v_id` (int, volunteer ID number) or"
-            " `v_username` (str, the username of the person you're"
-            " looking for) in request json."
-    )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_claim_already_claimed(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -327,10 +305,7 @@ class TestSubmissionClaimProcess:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 409
-        assert result.json().get("message") == (
-            "Post ID 1 has been claimed already by janeeyre!"
-        )
+        assert result.status_code == status.HTTP_409_CONFLICT
 
 
 class TestSubmissionDone:
@@ -351,8 +326,9 @@ class TestSubmissionDone:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
-        assert result.json().get("message") == "Submission ID AAA completed by janeeyre"
+        assert result.status_code == status.HTTP_201_CREATED
+        assert s.claimed_by == user
+        assert result.json()["submission_id"] == s.submission_id
 
     def test_done_without_claim(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -368,10 +344,7 @@ class TestSubmissionDone:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 412
-        assert result.json().get("message") == (
-            "Submission ID AAA has not yet been claimed!"
-        )
+        assert result.status_code == status.HTTP_412_PRECONDITION_FAILED
 
     def test_done_different_claim(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -390,10 +363,7 @@ class TestSubmissionDone:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 412
-        assert result.json().get("message") == (
-            f"Submission ID AAA is claimed by {claiming_user.username}!"
-        )
+        assert result.status_code == status.HTTP_412_PRECONDITION_FAILED
 
     def test_done_without_user_info(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -405,8 +375,7 @@ class TestSubmissionDone:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("message").startswith("Must give either `v_id`")
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_done_already_completed(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -427,10 +396,7 @@ class TestSubmissionDone:
             **headers,
         )
 
-        assert result.status_code == 409
-        assert result.json().get("message") == (
-            "Submission ID AAA has already been completed by janeeyre!"
-        )
+        assert result.status_code == status.HTTP_409_CONFLICT
 
     @pytest.mark.parametrize(
         "probability,gamma,message,tor_url,trans_url",
@@ -496,8 +462,7 @@ class TestSubmissionDone:
             )
             slack_message = "Please check the following transcription of u/janeeyre: " \
                             f"{trans_url if trans_url else tor_url}."
-            assert result.status_code == 200
-            assert result.json().get("message") == "Submission ID AAA completed by janeeyre"
+            assert result.status_code == status.HTTP_201_CREATED
             if message:
                 assert call(channel="#transcription_check", text=slack_message)\
                        == slack_client.chat_postMessage.call_args_list[-1]
@@ -521,13 +486,12 @@ class TestSubmissionUnclaim:
             **headers,
         )
 
-        assert result.status_code == 200
-        assert result.json().get("message") == "Unclaim successful!"
+        assert result.status_code == status.HTTP_201_CREATED
 
         s.refresh_from_db()
 
-        assert s.claimed_by == None
-        assert s.claim_time == None
+        assert s.claimed_by is None
+        assert s.claim_time is None
 
     def test_unclaim_with_unclaimed_submission(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -542,8 +506,7 @@ class TestSubmissionUnclaim:
             **headers,
         )
 
-        assert result.status_code == 412
-        assert result.json().get("message") == "Post has not been claimed!"
+        assert result.status_code == status.HTTP_412_PRECONDITION_FAILED
 
     def test_unclaim_with_no_username(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -555,8 +518,7 @@ class TestSubmissionUnclaim:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("message").startswith("Must give either `v_id`")
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_unclaim_with_completed_post(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -575,8 +537,7 @@ class TestSubmissionUnclaim:
             **headers,
         )
 
-        assert result.status_code == 409
-        assert result.json().get("message") == "Post has already been completed!"
+        assert result.status_code == status.HTTP_409_CONFLICT
 
         s.refresh_from_db()
         # verify we didn't modify the data
@@ -600,8 +561,7 @@ class TestSubmissionUnclaim:
             **headers,
         )
 
-        assert result.status_code == 406
-        assert result.json().get("message") == "Cannot unclaim post you didn't claim!"
+        assert result.status_code == status.HTTP_406_NOT_ACCEPTABLE
 
         s.refresh_from_db()
         assert s.claimed_by == guy

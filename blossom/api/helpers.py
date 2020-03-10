@@ -37,19 +37,34 @@ class VolunteerMixin(object):
 
 
 class RequestDataMixin(object):
-    def get_user_info_from_json(
-        self, request, error_out_if_bad_data=False
+    def get_volunteer_info_from_json(
+            self,
+            request: Request,
+            error_out_if_bad_data=False
     ) -> [None, int, Response]:
+        """
+        Retrieve the volunteer ID from the information provided in the HTTP
+        body of the provided request.
+
+        Note that this method returns either the ID of the corresponding
+        volunteer or an error Response when this is not possible.
+
+        Returned error responses are the following:
+        - 400: There is none of the following fields in the HTTP body:
+            - v_id
+            - v_username
+            - username
+
+        :param request: the request to extract the information from
+        :param error_out_if_bad_data: whether to throw an error response or None
+        :return: either an int if the volunteer is found, or None or Response
+                 depending on the provided boolean
+
+        """
         v_id = request.data.get("v_id")
         v_username = request.data.get("v_username") or request.data.get("username")
         if not v_id and not v_username and error_out_if_bad_data is True:
-            return build_response(
-                ERROR,
-                "Must give either `v_id` (int, volunteer ID number)"
-                " or `v_username` (str, the username of the person"
-                " you're looking for) in request json.",
-                status.HTTP_400_BAD_REQUEST
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if v_id:
             return v_id
