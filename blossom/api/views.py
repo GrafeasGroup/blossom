@@ -733,18 +733,48 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
 
 
 class SummaryView(APIView):
-    """
-    send an unauthenticated request to /api/summary
-    """
-
     permission_classes = (AdminApiKeyCustomCheck,)
 
+    @swagger_auto_schema(
+        responses={
+            200: DocResponse(
+                "Successful summary provision",
+                schema=Schema(
+                    type="object",
+                    properties={
+                        "volunteer_count": Schema(type="int"),
+                        "transcription_count": Schema(type="int"),
+                        "days_since_inception": Schema(type="int")
+                    }
+                )
+            )
+        }
+    )
     def get(self, request, *args, **kw):
-        return Response(Summary().generate_summary(), status=status.HTTP_200_OK)
+        """
+        Get a summary of statistics of Grafeas.
+        """
+        return Response(
+            data=Summary().generate_summary(),
+            status=status.HTTP_200_OK)
 
 
 class PingView(APIView):
     permission_classes = (AllowAny,)
 
+    @swagger_auto_schema(
+        responses={
+            200: DocResponse(
+                "Successful pong",
+                schema=Schema(
+                    type="object",
+                    properties={"ping!": Schema(type="string")}
+                )
+            )
+        }
+    )
     def get(self, request, *args, **kw):
+        """
+        Ping the server.
+        """
         return Response({"ping?!": "PONG"}, status=status.HTTP_200_OK)
