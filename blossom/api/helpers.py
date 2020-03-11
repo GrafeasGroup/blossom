@@ -23,6 +23,15 @@ class VolunteerMixin(object):
     def get_volunteer(
         self, id: int = None, username: str = None
     ) -> [BlossomUser, None]:
+        """
+        Get the volunteer using the id or username supplied.
+
+        If both are supplied, the id is used for the lookup.
+
+        :param id: the id of the specific volunteer
+        :param username: the username of the specific volunteer
+        :return: the volunteer, or None if the volunteer is not found
+        """
         if id:
             return BlossomUser.objects.filter(id=id).first()
         if username:
@@ -30,6 +39,14 @@ class VolunteerMixin(object):
         return None
 
     def get_volunteer_from_request(self, request: Request) -> [None, BlossomUser]:
+        """
+        Retrieve a volunteer from a request.
+
+        The id and username are extracted from the request data for the lookup.
+
+        :param request: the HTTP Request
+        :return: the volunteer which is specified in the request data.
+        """
         v_id = request.data.get("v_id")
         username = request.data.get("username")
 
