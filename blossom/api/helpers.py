@@ -40,7 +40,7 @@ class RequestDataMixin(object):
     def get_volunteer_info_from_json(
             self,
             request: Request,
-            error_out_if_bad_data=False
+            error_out_if_bad_data: bool = False
     ) -> [None, int, Response]:
         """
         Retrieve the volunteer ID from the information provided in the HTTP
