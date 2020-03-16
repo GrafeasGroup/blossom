@@ -17,9 +17,7 @@ from typing import Tuple
 
 from blossom.api import Summary
 from blossom.api.authentication import AdminApiKeyCustomCheck
-from blossom.api.helpers import (
-    VolunteerMixin, RequestDataMixin, ERROR, SUCCESS, build_response
-)
+from blossom.api.helpers import VolunteerMixin, RequestDataMixin
 from blossom.api.models import Submission, Transcription
 from blossom.api.serializers import (
     VolunteerSerializer,
@@ -537,13 +535,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         tor_url = request.data.get("tor_url")
 
         if not submission_id or not source:
-            Response(status=status.HTTP_400_BAD_REQUEST)
-            return build_response(
-                ERROR,
-                "Must contain the keys `submission_id` (str, 20char max) and "
-                "`source` (str 20char max)",
-                status.HTTP_400_BAD_REQUEST,
-            )
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         submission = Submission.objects.create(
             submission_id=submission_id, source=source, url=url, tor_url=tor_url
