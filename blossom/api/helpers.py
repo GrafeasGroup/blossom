@@ -7,17 +7,6 @@ from django.utils import timezone
 
 from blossom.authentication.models import BlossomUser
 
-ERROR = "error"
-SUCCESS = "success"
-
-def build_response(
-    result: str, message: str, status_code: int, data: Dict = None
-) -> Response:
-    resp = {"result": result, "message": message, "server_time": timezone.now()}
-    if data:
-        resp.update({"data": data})
-    return Response(resp, status=status_code)
-
 
 class VolunteerMixin(object):
     def get_volunteer(
