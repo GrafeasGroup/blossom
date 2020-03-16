@@ -61,6 +61,7 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Transcription
         fields = (
+            "id",
             "submission",
             "author",
             "transcription_id",
