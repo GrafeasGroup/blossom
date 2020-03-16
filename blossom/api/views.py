@@ -752,7 +752,7 @@ class SummaryView(APIView):
     )
     def get(self, request, *args, **kw):
         """
-        Get a summary of statistics of Grafeas.
+        Get a summary of statistics on volunteers and transcriptions.
         """
         return Response(
             data=Summary().generate_summary(),
