@@ -160,6 +160,22 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         )
 
 
+@method_decorator(
+    name='list',
+    decorator=swagger_auto_schema(
+        operation_summary="Get information on all submissions or a specific"
+                          " submission if specified.",
+        operation_description="Include the submission_id as a query to filter"
+                              " the submissions on the specified ID.",
+        manual_parameters=[
+            Parameter(
+                "submission_id",
+                "query",
+                type="string"
+            )
+        ]
+    )
+)
 class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin):
     queryset = Submission.objects.all().order_by("-post_time")
     serializer_class = SubmissionSerializer
@@ -167,10 +183,10 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
 
     def get_queryset(self):
         """
-        Uses a `submission_id` query string parameter to filter for a
-        specific post. For example:
+        Get information on all submissions or a specific submission if specified.
 
-        GET http://api.grafeas.localhost:8000/submission/?submission_id=t3_asdfgh
+        When a submission_id is provided as a query parameter, filter the
+        queryset on that submission.
         """
         queryset = Submission.objects.all().order_by("id")
         submission_id = self.request.query_params.get("submission_id", None)
@@ -181,28 +197,55 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
     def _get_possible_claim_done_errors(
         self, request: Request, pk: int
     ) -> [Tuple[Submission, BlossomUser], Response]:
+        """
+        Get both the submission and the volunteer from the provided parameters.
+
+        Note that this method either returns a tuple of the specific submission
+        and volunteer, or an error Response if an error has been encountered
+        during lookup.
+
+        Returned error responses are the following:
+        - 400: the volunteer id or username is not provided
+        - 404: either the submission or volunteer is not found with the provided IDs
+
+        :param request: the request done to the API
+        :param pk: the primary key of the submission, i.e. the submission id
+        :return: either a tuple of the submission and volunteer, or an error response
+        """
         try:
-            p = Submission.objects.get(id=pk)
+            submission = Submission.objects.get(id=pk)
         except Submission.DoesNotExist:
-            return build_response(
-                ERROR, "No post with that ID.", status.HTTP_404_NOT_FOUND
-            )
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        resp = self.get_user_info_from_json(request, error_out_if_bad_data=True)
-        if isinstance(resp, Response):
-            return resp  # it exploded, return the error
+        response = self.get_volunteer_info_from_json(
+            request,
+            error_out_if_bad_data=True
+        )
+        if isinstance(response, Response):
+            return response  # it exploded, return the error
         else:
-            v_id = resp
+            volunteer_id = response
 
-        v = self.get_volunteer(id=v_id)
-        if not v:
-            return build_response(
-                ERROR,
-                "No volunteer with that ID / username.",
-                status.HTTP_404_NOT_FOUND,
+        volunteer = self.get_volunteer(id=volunteer_id)
+        if not volunteer:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return submission, volunteer
+
+    @swagger_auto_schema(
+        manual_parameters=[
+            Parameter(
+                "ctq",
+                "query",
+                type="boolean"
             )
-        return p, v
-
+        ],
+        responses={
+            200: DocResponse(
+                "Successful operation",
+                schema=serializer_class
+            )
+        }
+    )
     @action(detail=False, methods=["get"])
     def expired(self, request: Request) -> Response:
         """
@@ -212,11 +255,10 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         If the query string of ctq is passed in with a value of True then
         return all posts that have not been completed or claimed.
 
-        :param request:
-        :return:
+        When no posts are found, an empty array is returned in the body.
         """
-        CTQ = request.query_params.get("ctq", False)
-        if CTQ:
+        ctq = request.query_params.get("ctq", False)
+        if ctq:
             delay_time = timezone.now()
         else:
             delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
@@ -226,23 +268,29 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             & Q(submission_time__lt=delay_time)
             & Q(archived=False)
         )
-        if not queryset:
-            return build_response(
-                SUCCESS,
-                "No available transcriptions to remove.",
-                status_code=status.HTTP_200_OK
-            )
-        else:
-            serializer = self.get_serializer(queryset, many=True)
-            return build_response(
-                SUCCESS,
-                "Found the following posts to remove. More in the `data` key!",
-                status_code=status.HTTP_200_OK,
-                data=serializer.data
-            )
+        return Response(
+            self.get_serializer(
+                queryset,
+                many=True,
+                context={"request", request}).data
+        )
 
+    @swagger_auto_schema(
+        responses={
+            200: DocResponse(
+                "Successful operation",
+                schema=serializer_class
+            )
+        }
+    )
     @action(detail=False, methods=["get"])
     def unarchived(self, request: Request) -> Response:
+        """
+        Return all submissions that are older than a set number of hours,
+        have been completed by someone, and are not yet archived.
+
+        When no posts are found, an empty array is returned in the body.
+        """
         delay_time = timezone.now() - timedelta(
             hours=settings.ARCHIVIST_COMPLETED_DELAY_TIME
         )
@@ -251,86 +299,102 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             & Q(complete_time__lt=delay_time)
             & Q(archived=False)
         )
-        if not queryset:
-            return build_response(
-                SUCCESS,
-                "No available transcriptions to archive.",
-                status_code=status.HTTP_200_OK
-            )
-        else:
-            serializer = self.get_serializer(queryset, many=True)
-            return build_response(
-                SUCCESS,
-                "Found the following posts to archive. More in the `data` key!",
-                status_code=status.HTTP_200_OK,
-                data=serializer.data
-            )
+        return Response(data=self.get_serializer(queryset, many=True).data)
 
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object",
+            properties={"username": Schema(type="string")}
+        ),
+        responses={
+            201: DocResponse(
+                "Successful unclaim operation",
+                schema=serializer_class
+            ),
+            400: "The volunteer username is not provided",
+            404: "The specified volunteer or submission is not found",
+            406: "The specified volunteer has not claimed the specified submission",
+            409: "The submission has already been completed",
+            412: "The submission has not yet been claimed"
+        }
+    )
     @action(detail=True, methods=["post"])
     def unclaim(self, request: Request, pk: int) -> Response:
-        resp = self._get_possible_claim_done_errors(request, pk)
-        if isinstance(resp, Response):
+        """
+        Unclaim the specified submission, from the specified volunteer.
+
+        The volunteer is specified in the HTTP body.
+        """
+        response = self._get_possible_claim_done_errors(request, pk)
+        if isinstance(response, Response):
             # Something went wrong, return the error
-            return resp
+            return response
         else:
-            p, v = resp
+            submission, volunteer = response
 
-        if p.claimed_by is None:
-            return build_response(
-                ERROR,
-                "Post has not been claimed!",
-                status.HTTP_412_PRECONDITION_FAILED
-            )
+        if submission.claimed_by is None:
+            return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-        if p.claimed_by != v:
-            return build_response(
-                ERROR,
-                "Cannot unclaim post you didn't claim!",
-                status.HTTP_406_NOT_ACCEPTABLE
-            )
+        if submission.claimed_by != volunteer:
+            return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
-        if p.completed_by is not None:
-            return build_response(
-                ERROR,
-                "Post has already been completed!",
-                status.HTTP_409_CONFLICT
-            )
+        if submission.completed_by is not None:
+            return Response(status=status.HTTP_409_CONFLICT)
 
-        p.claimed_by = None
-        p.claim_time = None
-        p.save()
-        return build_response(
-            SUCCESS,
-            "Unclaim successful!",
-            status.HTTP_200_OK
+        submission.claimed_by = None
+        submission.claim_time = None
+        submission.save()
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data=self.serializer_class(
+                submission,
+                context={"request": request}
+            ).data
         )
 
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object",
+            properties={"username": Schema(type="string")}
+        ),
+        responses={
+            201: DocResponse(
+                "Successful claim operation",
+                schema=serializer_class
+            ),
+            400: "The volunteer username is not provided",
+            404: "The specified volunteer or submission is not found",
+            409: "The submission is already claimed"
+        }
+    )
     @action(detail=True, methods=["post"])
     def claim(self, request: Request, pk: int) -> Response:
+        """
+        Claim the specified submission from the specified volunteer.
 
-        resp = self._get_possible_claim_done_errors(request, pk)
-        if isinstance(resp, Response):
+        The volunteer is specified in the HTTP body.
+        """
+
+        response = self._get_possible_claim_done_errors(request, pk)
+        if isinstance(response, Response):
             # Something went wrong, return the error
-            return resp
+            return response
         else:
-            p, v = resp
+            submission, volunteer = response
 
+        if submission.claimed_by is not None:
+            return Response(status=status.HTTP_409_CONFLICT)
 
-        if p.claimed_by is not None:
-            return build_response(
-                ERROR,
-                f"Post ID {p.id} has been claimed already by {p.claimed_by}!",
-                status.HTTP_409_CONFLICT,
-            )
+        submission.claimed_by = volunteer
+        submission.claim_time = timezone.now()
+        submission.save()
 
-        p.claimed_by = v
-        p.claim_time = timezone.now()
-        p.save()
-
-        return build_response(
-            SUCCESS,
-            f"Post {p.submission_id} claimed by {v.username}",
-            status.HTTP_200_OK,
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data=self.serializer_class(
+                submission,
+                context={"request": request}
+            ).data
         )
 
     @staticmethod
@@ -368,79 +432,103 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
                     return False
         return random.random() < 0.05
 
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object",
+            required=["username"],
+            properties={
+                "username": Schema(type="string"),
+                "mod_override": Schema(type="boolean")
+            }
+        ),
+        responses={
+            201: DocResponse(
+                "Successful done operation",
+                schema=serializer_class
+            ),
+            400: "The volunteer username is not provided",
+            404: "The specified volunteer or submission is not found",
+            409: "The submission is already completed",
+            412: "The submission is not claimed or claimed by someone else"
+        }
+    )
     @action(detail=True, methods=["post"])
     def done(self, request: Request, pk: int) -> Response:
-        resp = self._get_possible_claim_done_errors(request, pk)
-        if isinstance(resp, Response):
+        """
+        Mark the submission as done from the specified volunteer.
+
+        When "mod_override" is provided as a field in the HTTP body and is true,
+        and the requesting user is a mod, then the check of whether the
+        completing volunteer is the volunteer that claimed the submission is
+        skipped.
+
+        Note that this API call has a certain chance to send a message to
+        Slack for the random check of this transcription.
+        """
+        response = self._get_possible_claim_done_errors(request, pk)
+        if isinstance(response, Response):
             # Something went wrong, return the error
-            return resp
+            return response
         else:
-            p, v = resp
+            submission, volunteer = response
 
-        if p.completed_by is not None:
-            return build_response(
-                ERROR,
-                f"Submission ID {p.submission_id} has already been completed"
-                f" by {p.completed_by}!",
-                status.HTTP_409_CONFLICT,
-            )
+        if submission.completed_by is not None:
+            return Response(status=status.HTTP_409_CONFLICT)
 
-        if p.claimed_by is None:
-            return build_response(
-                ERROR,
-                f"Submission ID {p.submission_id} has not yet been claimed!",
-                status.HTTP_412_PRECONDITION_FAILED,
-            )
+        if submission.claimed_by is None:
+            return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-        mod_override = False
-        if request.data.get("mod_override"):
-            if request.user.is_grafeas_staff:
-                mod_override = True
+        mod_override = request.data.get("mod_override", False) \
+                       and request.user.is_grafeas_staff
 
         if not mod_override:
-            if p.claimed_by != v:
-                return build_response(
-                    ERROR,
-                    f"Submission ID {p.submission_id} is claimed by {p.claimed_by}!",
-                    status.HTTP_412_PRECONDITION_FAILED
-                )
+            if submission.claimed_by != volunteer:
+                return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-        p.completed_by = v
-        p.complete_time = timezone.now()
-        p.save()
+        submission.completed_by = volunteer
+        submission.complete_time = timezone.now()
+        submission.save()
 
-        if self._should_check_transcription(v):
-            trans = Transcription.objects.filter(submission=p)
-            url = trans.first().url if trans else p.tor_url
+        if self._should_check_transcription(volunteer):
+            transcription = Transcription.objects.filter(submission=submission)
+            url = transcription.first().url if transcription else submission.tor_url
             slack.chat_postMessage(
                 channel="#transcription_check",
-                text=f"Please check the following transcription of u/{v.username}: "
-                     f"{url}."
+                text="Please check the following transcription of "
+                     f"u/{volunteer.username}: {url}."
             )
 
-        return build_response(
-            SUCCESS,
-            f"Submission ID {p.submission_id} completed by {v.username}",
-            status.HTTP_200_OK,
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data=self.serializer_class(
+                submission,
+                context={"request": request}
+            ).data
         )
 
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object",
+            properties={
+                "submission_id": Schema(type="string"),
+                "source": Schema(type="string"),
+                "url": Schema(type="string"),
+                "tor_url": Schema(type="string")
+            }
+        ),
+        responses={
+            201: DocResponse(
+                "Successful creation",
+                schema=serializer_class
+            ),
+            400: "Required parameters not provided"
+        }
+    )
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
-        Called by making a POST request against /submission/. Must contain
-        the following fields in data body:
+        Create a new submission.
 
-            submission_id: str
-            source: str
-
-        May optionally contain the following params in data body:
-
-            url: str
-            tor_url: str
-
-        :param request: the Django request object.
-        :param args:
-        :param kwargs:
-        :return: Response object.
+        Note that both the submission id and the source should be supplied.
         """
         submission_id = request.data.get("submission_id")
         source = request.data.get("source")
@@ -449,6 +537,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         tor_url = request.data.get("tor_url")
 
         if not submission_id or not source:
+            Response(status=status.HTTP_400_BAD_REQUEST)
             return build_response(
                 ERROR,
                 "Must contain the keys `submission_id` (str, 20char max) and "
@@ -456,12 +545,16 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        p = Submission.objects.create(
+        submission = Submission.objects.create(
             submission_id=submission_id, source=source, url=url, tor_url=tor_url
         )
-        return build_response(
-            SUCCESS, f"Post object {p.id} created!", status.HTTP_200_OK,
-            data={"id": p.id}
+
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data=self.serializer_class(
+                submission,
+                context={"request": request}
+            ).data
         )
 
 
