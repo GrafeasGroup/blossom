@@ -1,6 +1,7 @@
 import json
 
 from django_hosts.resolvers import reverse
+from rest_framework import status
 
 from blossom.authentication.models import BlossomUser
 from blossom.models import Submission, Transcription
@@ -32,12 +33,8 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
-        assert (
-            result.json().get("message")
-            == "Transcription ID 1 created on post AAA, written by janeeyre"
-        )
-        assert result.json()['data']['id'] == 1
+        assert result.status_code == status.HTTP_201_CREATED
+        assert result.json()['id'] == 1
 
         obj = Transcription.objects.get(id=1)
         assert obj.submission == s
@@ -68,15 +65,11 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
-        assert (
-            result.json().get("message")
-            == "Transcription ID 1 created on post AAA, written by janeeyre"
-        )
+        assert result.status_code == status.HTTP_201_CREATED
 
         obj = Transcription.objects.get(id=1)
         assert obj.submission == s
-        assert obj.text == None
+        assert obj.text is None
         assert obj.ocr_text == "test content"
 
     def test_transcription_create_alt_submission_id(self, client):
@@ -98,11 +91,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
-        assert (
-            result.json().get("message")
-            == "Transcription ID 1 created on post AAA, written by janeeyre"
-        )
+        assert result.status_code == status.HTTP_201_CREATED
 
     def test_transcription_no_submission_id(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -122,11 +111,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("message") == (
-            "Missing data body key `submission_id`, str; the ID of the post"
-            " the transcription is on."
-        )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_transcription_with_invalid_submission_id(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -147,8 +132,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 404
-        assert result.json().get("message") == "No post found with ID 999!"
+        assert result.status_code == status.HTTP_404_NOT_FOUND
 
     def test_transcription_with_invalid_volunteer_id(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -168,10 +152,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 404
-        assert (
-            result.json().get("message") == "No volunteer found with that ID / username."
-        )
+        assert result.status_code == status.HTTP_404_NOT_FOUND
 
     def test_transcription_with_missing_transcription_id(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -191,11 +172,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert (
-            result.json().get("message")
-            == "Missing data body key `t_id`, str; the ID of the transcription."
-        )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_transcription_with_missing_completion_method(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -215,11 +192,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("message") == (
-            "Missing data body key `completion_method`, str; the service this"
-            " transcription was completed through. `app`, `ToR`, etc. 20char max."
-        )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_transcription_with_missing_transcription_url(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -239,11 +212,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("message") == (
-            "Missing data body key `t_url`, str; the direct URL for the"
-            " transcription. Use string `None` if no URL is available."
-        )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_transcription_with_missing_transcription_text(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -263,10 +232,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("message") == (
-            "Missing data body key `t_text`, str; the content of the transcription."
-        )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_transcription_with_t_text_and_ocr_text(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -288,10 +254,7 @@ class TestTranscriptionCreation:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 400
-        assert result.json().get("message") == (
-            "Received both t_text and ocr_text -- must be one or the other."
-        )
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
 
 class TestTranscriptionSearch(object):
@@ -312,11 +275,7 @@ class TestTranscriptionSearch(object):
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == 200
-        assert (
-                result.json().get("message")
-                == "Found the folowing transcriptions for requested ID AAA."
-        )
+        assert result.status_code == status.HTTP_200_OK
 
     def test_transcription_search_wrong_id(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -330,8 +289,8 @@ class TestTranscriptionSearch(object):
             **headers,
         )
 
-        assert result.status_code == 200
-        assert result.json().get('message').startswith("Did not find any transcriptions")
+        assert result.status_code == status.HTTP_200_OK
+        assert not result.json()
 
     def test_transcription_search_no_submission_id(self, client):
         client, headers = create_staff_volunteer_with_keys(client)
@@ -345,8 +304,7 @@ class TestTranscriptionSearch(object):
             **headers,
         )
 
-        assert result.status_code == 400
-        assert result.json().get('message').startswith("This endpoint only supports")
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
 
 def test_random_transcription_for_review(client):
@@ -360,9 +318,8 @@ def test_random_transcription_for_review(client):
         **headers,
     )
 
-    assert result.json().get('message') == 'No available transcriptions to review.'
-    assert result.status_code == 200
-    assert result.json().get('data') is None
+    assert not result.content
+    assert result.status_code == status.HTTP_200_OK
 
     t = Transcription.objects.create(
         submission=s,
@@ -377,6 +334,5 @@ def test_random_transcription_for_review(client):
         **headers,
     )
 
-    assert result.json().get('data') is not None
-    assert result.json().get('data').get('submission') is not None
-    assert result.status_code == 200
+    assert result.json().get('submission') is not None
+    assert result.status_code == status.HTTP_200_OK
