@@ -1,4 +1,4 @@
-name: Django CI
+name: Static Code Analysis
 
 on: [push, pull_request]
 
@@ -12,7 +12,8 @@ jobs:
         python-version: [3.8]
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout current branch
+      uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -22,8 +23,12 @@ jobs:
         create_virtualenvs: true
     - name: Install Dependencies
       run: |
-        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev -y
+        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git -y
         poetry install
-    - name: Run Tests
+    - name: Install latest pyflakes version
       run: |
-        poetry run pytest
+        git clone git@github.com:PyCQA/pyflakes.git pyflakes
+        pip install -e pyflakes
+    - name: Run Static Analysis
+      run: |
+        poetry run flake8 blossom
