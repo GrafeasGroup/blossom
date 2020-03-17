@@ -25,9 +25,13 @@ jobs:
       run: |
         sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git -y
         poetry install
+    - name: Clone pyflakes repository
+      uses: actions/checkout@v2
+      with:
+        repository: PyCQA/pyflakes
+        path: pyflakes
     - name: Install latest pyflakes version
       run: |
-        git clone git@github.com:PyCQA/pyflakes.git pyflakes
         pip install -e pyflakes
     - name: Run Static Analysis
       run: |
