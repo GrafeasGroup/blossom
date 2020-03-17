@@ -34,9 +34,7 @@ jobs:
       run: |
         python --version
         pip --version
-        flake8 --version
-        pip install -e pyflakes
-        pip3 install -e pyflakes
+        poetry run pip install -e pyflakes
     - name: Run Static Analysis
       run: |
         poetry run flake8 blossom
