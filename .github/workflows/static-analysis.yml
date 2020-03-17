@@ -22,7 +22,7 @@ jobs:
       with:
         create_virtualenvs: true
     - name: Install Dependencies
-      run: |
+      run:|
         sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git -y
         poetry install
     - name: Clone pyflakes repository
@@ -30,9 +30,15 @@ jobs:
       with:
         repository: PyCQA/pyflakes
         path: pyflakes
-    - name: Install latest pyflakes version
+    - name: Clone pycodestyle repository
+      uses: actions/checkout@v2
+      with:
+        repository: PyCQA/pycodestyle
+        path: pycodestyle
+    - name: Install latest pyflakes and pycodestyle version
       run: |
         poetry run pip install -e pyflakes
+        poetry run pip install -e pycodestyle
     - name: Run Static Analysis
       run: |
         /usr/bin/git diff -u | poetry run flake8 --diff blossom
