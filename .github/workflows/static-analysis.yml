@@ -1,0 +1,38 @@
+name: Static Code Analysis
+
+on: [pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.8]
+
+    steps:
+    - name: Checkout current branch
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - uses: dschep/install-poetry-action@v1.3
+      with:
+        create_virtualenvs: true
+    - name: Install Dependencies
+      run: |
+        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git -y
+        poetry install
+    - name: Clone pyflakes repository
+      uses: actions/checkout@v2
+      with:
+        repository: PyCQA/pyflakes
+        path: pyflakes
+    - name: Install latest pyflakes version
+      run: |
+        poetry run pip install -e pyflakes
+    - name: Run Static Analysis
+      run: |
+        /usr/bin/git diff -u | poetry run flake8 --diff blossom

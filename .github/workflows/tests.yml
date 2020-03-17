@@ -1,6 +1,6 @@
-name: Django CI
+name: Tests
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   build:
@@ -12,7 +12,8 @@ jobs:
         python-version: [3.8]
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout current branch
+      uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
