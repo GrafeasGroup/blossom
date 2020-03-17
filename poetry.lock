@@ -382,6 +382,17 @@ pyflakes = ">=2.1.0,<2.2.0"
 
 [[package]]
 category = "dev"
+description = "Flake8 Type Annotation Checks"
+name = "flake8-annotations"
+optional = false
+python-versions = ">=3.6,<4.0"
+version = "2.0.1"
+
+[package.dependencies]
+flake8 = ">=3.7.9,<4.0.0"
+
+[[package]]
+category = "dev"
 description = "Extension for flake8 which uses pydocstyle to check docstrings"
 name = "flake8-docstrings"
 optional = false
@@ -402,6 +413,28 @@ version = "0.18.1"
 
 [package.dependencies]
 pycodestyle = "*"
+setuptools = "*"
+
+[[package]]
+category = "dev"
+description = "Polyfill package for Flake8 plugins"
+name = "flake8-polyfill"
+optional = false
+python-versions = "*"
+version = "1.0.2"
+
+[package.dependencies]
+flake8 = "*"
+
+[[package]]
+category = "dev"
+description = "A flake8 extension that helps to make more readable variables names"
+name = "flake8-variables-names"
+optional = false
+python-versions = "*"
+version = "0.0.3"
+
+[package.dependencies]
 setuptools = "*"
 
 [[package]]
@@ -539,6 +572,17 @@ name = "pathspec"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 version = "0.7.0"
+
+[[package]]
+category = "dev"
+description = "Check PEP-8 naming conventions, plugin for flake8"
+name = "pep8-naming"
+optional = false
+python-versions = "*"
+version = "0.9.1"
+
+[package.dependencies]
+flake8-polyfill = ">=1.0.2,<2"
 
 [[package]]
 category = "main"
@@ -1058,7 +1102,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "491bb0e2b34c93e7c3051e0a06ef77bc10e969594c724d29afd8a0c5b50f95cf"
+content-hash = "82642eae289225eaea3250459d848be80292614592f1246aea7f6c6c93f8e7e7"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -1275,6 +1319,10 @@ flake8 = [
     {file = "flake8-3.7.9-py2.py3-none-any.whl", hash = "sha256:49356e766643ad15072a789a20915d3c91dc89fd313ccd71802303fd67e4deca"},
     {file = "flake8-3.7.9.tar.gz", hash = "sha256:45681a117ecc81e870cbf1262835ae4af5e7a8b08e40b944a8a6e6b895914cfb"},
 ]
+flake8-annotations = [
+    {file = "flake8-annotations-2.0.1.tar.gz", hash = "sha256:a38b44d01abd480586a92a02a2b0a36231ec42dcc5e114de78fa5db016d8d3f9"},
+    {file = "flake8_annotations-2.0.1-py3-none-any.whl", hash = "sha256:d5b0e8704e4e7728b352fa1464e23539ff2341ba11cc153b536fa2cf921ee659"},
+]
 flake8-docstrings = [
     {file = "flake8-docstrings-1.5.0.tar.gz", hash = "sha256:3d5a31c7ec6b7367ea6506a87ec293b94a0a46c0bce2bb4975b7f1d09b6f3717"},
     {file = "flake8_docstrings-1.5.0-py2.py3-none-any.whl", hash = "sha256:a256ba91bc52307bef1de59e2a009c3cf61c3d0952dbe035d6ff7208940c2edc"},
@@ -1282,6 +1330,13 @@ flake8-docstrings = [
 flake8-import-order = [
     {file = "flake8-import-order-0.18.1.tar.gz", hash = "sha256:a28dc39545ea4606c1ac3c24e9d05c849c6e5444a50fb7e9cdd430fc94de6e92"},
     {file = "flake8_import_order-0.18.1-py2.py3-none-any.whl", hash = "sha256:90a80e46886259b9c396b578d75c749801a41ee969a235e163cfe1be7afd2543"},
+]
+flake8-polyfill = [
+    {file = "flake8-polyfill-1.0.2.tar.gz", hash = "sha256:e44b087597f6da52ec6393a709e7108b2905317d0c0b744cdca6208e670d8eda"},
+    {file = "flake8_polyfill-1.0.2-py2.py3-none-any.whl", hash = "sha256:12be6a34ee3ab795b19ca73505e7b55826d5f6ad7230d31b18e106400169b9e9"},
+]
+flake8-variables-names = [
+    {file = "flake8_variables_names-0.0.3.tar.gz", hash = "sha256:d109f5a8fe8c20d64e165287330f1b0160b442d7f96e1527124ba1b63c438347"},
 ]
 html5lib = [
     {file = "html5lib-1.0.1-py2.py3-none-any.whl", hash = "sha256:20b159aa3badc9d5ee8f5c647e5efd02ed2a66ab8d354930bd9ff139fc1dc0a3"},
@@ -1378,6 +1433,10 @@ packaging = [
 pathspec = [
     {file = "pathspec-0.7.0-py2.py3-none-any.whl", hash = "sha256:163b0632d4e31cef212976cf57b43d9fd6b0bac6e67c26015d611a647d5e7424"},
     {file = "pathspec-0.7.0.tar.gz", hash = "sha256:562aa70af2e0d434367d9790ad37aed893de47f1693e4201fd1d3dca15d19b96"},
+]
+pep8-naming = [
+    {file = "pep8-naming-0.9.1.tar.gz", hash = "sha256:a33d38177056321a167decd6ba70b890856ba5025f0a8eca6a3eda607da93caf"},
+    {file = "pep8_naming-0.9.1-py2.py3-none-any.whl", hash = "sha256:45f330db8fcfb0fba57458c77385e288e7a3be1d01e8ea4268263ef677ceea5f"},
 ]
 pillow = [
     {file = "Pillow-7.0.0-cp35-cp35m-macosx_10_6_intel.whl", hash = "sha256:5f3546ceb08089cedb9e8ff7e3f6a7042bb5b37c2a95d392fb027c3e53a2da00"},
