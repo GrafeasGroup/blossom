@@ -1,6 +1,6 @@
 name: Static Code Analysis
 
-on: [push, pull_request]
+on: [pull_request]
 
 jobs:
   build:
@@ -32,8 +32,6 @@ jobs:
         path: pyflakes
     - name: Install latest pyflakes version
       run: |
-        python --version
-        pip --version
         poetry run pip install -e pyflakes
     - name: Run Static Analysis
       run: |
