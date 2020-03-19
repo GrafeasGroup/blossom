@@ -1,9 +1,13 @@
 """Module which manages the authentication within the API."""
+from typing import TYPE_CHECKING
+
 import rest_framework.permissions as rfperms
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from rest_framework.request import Request
-from rest_framework.views import View
+
+if TYPE_CHECKING:
+    from rest_framework.views import View
 
 
 class AdminApiKeyCustomCheck(rfperms.BasePermission):
@@ -11,7 +15,7 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
 
     message = "Sorry, this resource can only be accessed by an admin API key."
 
-    def has_permission(self, request: Request, view: View) -> bool:
+    def has_permission(self, request: Request, view: "View") -> bool:
         """
         Check whether the user is a valid admin.
 
@@ -24,11 +28,12 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
 
         if not isinstance(request.user, AnonymousUser):
             if request.user.api_key:
+                # Retrieve the contents of the "Authorization" key from either
+                # the META or the headers of the request.
                 request_key = request.META.get(
-                    "Authorization", request.headers.get("Authorization", None)
+                    "Authorization", request.headers.get("Authorization", "").split()
                 )
-                if request_key:
-                    request_key = request_key.split()
+                if len(request_key) >= 2:
                     return all(
                         [
                             request_key[0] == "Api-Key",
@@ -50,7 +55,7 @@ class BlossomApiPermission(rfperms.BasePermission):
 
     message = "Sorry, this resource can only be accessed by an admin."
 
-    def has_permission(self, request: Request, view: View) -> bool:
+    def has_permission(self, request: Request, view: "View") -> bool:
         """
         Check whether the user is an admin through either of the two definitions.
 

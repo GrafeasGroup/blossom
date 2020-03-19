@@ -8,7 +8,7 @@ from django.utils import timezone
 
 
 class Summary:
-    """A summary view of the current state of the system.."""
+    """A summary view of the current state of the system."""
 
     @staticmethod
     def generate_summary() -> Dict:
@@ -18,7 +18,7 @@ class Summary:
         The following is returned:
         - "volunteer_count":        the total number of volunteers
         - "transcription_count":    the total number of transcriptions
-        - "days_since_inception":   number of days since Grafeas was founded
+        - "days_since_inception":   number of days since the subreddit was founded
 
         :return: dictionary with the items described above
         """
