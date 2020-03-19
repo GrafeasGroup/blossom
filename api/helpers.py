@@ -23,7 +23,7 @@ class VolunteerMixin:
         :param username: the username of the specific volunteer
         :return: the volunteer, or None if the volunteer is not found
         """
-        if id:
+        if volunteer_id:
             return BlossomUser.objects.filter(id=volunteer_id).first()
         if username:
             return BlossomUser.objects.filter(username=username).first()
@@ -38,10 +38,10 @@ class VolunteerMixin:
         :param request: the HTTP Request
         :return: the volunteer which is specified in the request data.
         """
-        v_id = request.data.get("v_id")
+        volunteer_id = request.data.get("v_id")
         username = request.data.get("username")
 
-        return self.get_volunteer(id=v_id, username=username)
+        return self.get_volunteer(volunteer_id=volunteer_id, username=username)
 
 
 class RequestDataMixin:
