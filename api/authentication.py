@@ -70,7 +70,7 @@ class BlossomApiPermission(rfperms.BasePermission):
         Check whether the user is an admin through either of the two definitions.
 
         These definitions are determined either through our custom admin check,
-        or the default check supplied Django REST.
+        or the default check supplied by Django REST.
 
         :param request: the request which is evaluated
         :param view: the view to which the request is sent
