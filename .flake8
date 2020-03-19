@@ -1,5 +1,6 @@
 [flake8]
 max-line-length = 90
 max-complexity = 10
-select = E,W,F,C,D
-
+import-order-style = pycharm
+use-varnames-strict-mode = true
+ignore = ANN101, W503
