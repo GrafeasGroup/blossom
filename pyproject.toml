@@ -36,7 +36,12 @@ coveralls = "^1.11.1"
 better-exceptions = "^0.2.2"
 black = "^19.10b0"
 flake8 = "^3.7.9"
+flake8-annotations = "^2.0.1"
+flake8-black = "^0.1.1"
 flake8-docstrings = "^1.5.0"
+flake8-import-order = "^0.18.1"
+flake8-variables-names = "^0.0.3"
+pep8-naming = "^0.9.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
