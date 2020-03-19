@@ -26,5 +26,8 @@ jobs:
         sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev -y
         poetry install
     - name: Run Tests
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_SECRET }}
       run: |
         poetry run pytest
+        poetry run coveralls

@@ -5,6 +5,7 @@
 <p align="center">
 <a href="https://github.com/grafeasgroup/blossom/actions"><img alt="Actions Status" src="https://github.com/grafeasgroup/blossom/workflows/Django%20CI/badge.svg"></a>
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+<a href='https://coveralls.io/github/GrafeasGroup/blossom?branch=master'><img src='https://coveralls.io/repos/github/GrafeasGroup/blossom/badge.svg?branch=master&amp;t=X9mgMK' alt='Coverage Status' /></a>
 </p>
 
 The website. The app. The everything. MUST REMAIN PRIVATE.
