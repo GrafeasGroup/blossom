@@ -69,15 +69,15 @@ class RequestDataMixin:
                  depending on the provided boolean
 
         """
-        v_id = request.data.get("v_id")
-        v_username = request.data.get("v_username") or request.data.get("username")
-        if not v_id and not v_username and error_out_if_bad_data is True:
+        volunteer_id = request.data.get("v_id")
+        username = request.data.get("v_username") or request.data.get("username")
+        if not volunteer_id and not username and error_out_if_bad_data is True:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if v_id:
-            return v_id
-        if v_username:
-            if v := BlossomUser.objects.filter(username=v_username).first():
-                return v.id
+        if volunteer_id:
+            return volunteer_id
+        if username:
+            if volunteer := BlossomUser.objects.filter(username=username).first():
+                return volunteer.id
 
         return None
