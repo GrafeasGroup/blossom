@@ -3,4 +3,4 @@ max-line-length = 90
 max-complexity = 10
 import-order-style = pycharm
 use-varnames-strict-mode = true
-ignore = ANN101
+ignore = ANN101, W503
