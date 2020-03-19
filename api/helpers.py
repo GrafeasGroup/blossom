@@ -1,3 +1,5 @@
+"""Helper classes which assist with retrieving volunteer info from requests."""
+from blossom.authentication.models import BlossomUser
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -5,21 +7,24 @@ from rest_framework.response import Response
 from authentication.models import BlossomUser
 
 
-class VolunteerMixin(object):
+class VolunteerMixin:
+    """Mixin to retrieve volunteers based on information passed in a request."""
+
+    @staticmethod
     def get_volunteer(
-        self, id: int = None, username: str = None
+        volunteer_id: int = None, username: str = None
     ) -> [BlossomUser, None]:
         """
         Get the volunteer using the id or username supplied.
 
         If both are supplied, the id is used for the lookup.
 
-        :param id: the id of the specific volunteer
+        :param volunteer_id: the id of the specific volunteer
         :param username: the username of the specific volunteer
         :return: the volunteer, or None if the volunteer is not found
         """
         if id:
-            return BlossomUser.objects.filter(id=id).first()
+            return BlossomUser.objects.filter(id=volunteer_id).first()
         if username:
             return BlossomUser.objects.filter(username=username).first()
         return None
@@ -39,15 +44,15 @@ class VolunteerMixin(object):
         return self.get_volunteer(id=v_id, username=username)
 
 
-class RequestDataMixin(object):
+class RequestDataMixin:
+    """Mixin to retrieve data from a request."""
+
+    @staticmethod
     def get_volunteer_info_from_json(
-            self,
-            request: Request,
-            error_out_if_bad_data: bool = False
+        request: Request, error_out_if_bad_data: bool = False
     ) -> [None, int, Response]:
         """
-        Retrieve the volunteer ID from the information provided in the HTTP
-        body of the provided request.
+        Retrieve the volunteer ID from the information provided in the request.
 
         Note that this method returns either the ID of the corresponding
         volunteer or an error Response when this is not possible.
@@ -76,6 +81,3 @@ class RequestDataMixin(object):
                 return v.id
 
         return None
-
-
-# def send_to_modchat(username: str=None, icon_url: str=None, text: str=None, channel: str=None)
