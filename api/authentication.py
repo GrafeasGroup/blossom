@@ -1,4 +1,5 @@
 """Module which manages the authentication within the API."""
+from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import rest_framework.permissions as rfperms
@@ -7,6 +8,15 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework.request import Request
 
 if TYPE_CHECKING:
+    # Python doesn't have great handling of circular imports for type checking
+    # purposes. Because View is only required for type checking, we can lock
+    # it behind the above statement. TYPE_CHECKING will always evaluate to False
+    # at runtime and will evaluate to True when run with an external checker.
+    # For more information on this, see the following:
+    # - https://stackoverflow.com/a/39757388
+    # - https://www.python.org/dev/peps/pep-0563/
+
+    # noinspection PyUnresolvedReferences
     from rest_framework.views import View
 
 
@@ -15,7 +25,7 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
 
     message = "Sorry, this resource can only be accessed by an admin API key."
 
-    def has_permission(self, request: Request, view: "View") -> bool:
+    def has_permission(self, request: Request, view: View) -> bool:
         """
         Check whether the user is a valid admin.
 
@@ -55,12 +65,12 @@ class BlossomApiPermission(rfperms.BasePermission):
 
     message = "Sorry, this resource can only be accessed by an admin."
 
-    def has_permission(self, request: Request, view: "View") -> bool:
+    def has_permission(self, request: Request, view: View) -> bool:
         """
         Check whether the user is an admin through either of the two definitions.
 
         These definitions are determined either through our custom admin check,
-        or the default check supplied by Django REST.
+        or the default check supplied Django REST.
 
         :param request: the request which is evaluated
         :param view: the view to which the request is sent
