@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from blossom.api.bootstrap.main import BOOTSTRAP_THAT_MOFO
+from api.bootstrap.main import BOOTSTRAP_THAT_MOFO
 
 
 class Command(BaseCommand):

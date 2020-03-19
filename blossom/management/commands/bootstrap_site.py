@@ -4,8 +4,8 @@ import os
 from django.core.management.base import BaseCommand
 import dotenv
 
-from blossom.website.models import Post
-from blossom.authentication.models import BlossomUser
+from website.models import Post
+from authentication.models import BlossomUser
 
 dotenv.load_dotenv()
 
