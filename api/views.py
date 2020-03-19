@@ -225,7 +225,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         else:
             volunteer_id = response
 
-        volunteer = self.get_volunteer(id=volunteer_id)
+        volunteer = self.get_volunteer(volunteer_id=volunteer_id)
         if not volunteer:
             return Response(status=status.HTTP_404_NOT_FOUND)
         return submission, volunteer
