@@ -41,4 +41,4 @@ jobs:
         poetry run pip install -e pycodestyle
     - name: Run Static Analysis
       run: |
-        /usr/bin/git diff -u | poetry run flake8 --diff blossom
+        /usr/bin/git diff -u master | poetry run flake8 --diff
