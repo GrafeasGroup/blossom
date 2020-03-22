@@ -43,7 +43,7 @@ jobs:
         poetry run pip install -e pycodestyle
     - name: Show
       run: |
-        ${{ github.events }}
+        ${{ github.event }}
     - name: Run Static Analysis
       run: |
-        /usr/bin/git diff -u ${{ github.events.pull_request.base.sha }} | poetry run flake8 --diff
+        /usr/bin/git diff -u ${{ github.event.base.sha }} | poetry run flake8 --diff
