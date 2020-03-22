@@ -25,7 +25,7 @@ jobs:
         create_virtualenvs: true
     - name: Install Dependencies
       run: |
-        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git -y
+        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git jq -y
         poetry install
     - name: Clone pyflakes repository
       uses: actions/checkout@v2
@@ -43,7 +43,7 @@ jobs:
         poetry run pip install -e pycodestyle
     - name: Check
       run: |
-        echo ${{ github.event }}
+        echo ${{ github }} | jq
     - name: Run Static Analysis
       run: |
         /usr/bin/git diff -u ${{ github.event.base }} | poetry run flake8 --diff
