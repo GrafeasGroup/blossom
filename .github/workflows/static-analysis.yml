@@ -12,12 +12,10 @@ jobs:
         python-version: [3.8]
 
     steps:
-    - name: Retrieve base branch
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ github.base_ref }}
     - name: Checkout current branch
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -45,4 +43,4 @@ jobs:
         poetry run pip install -e pycodestyle
     - name: Run Static Analysis
       run: |
-        /usr/bin/git diff -u ${{ github.base_ref }} | poetry run flake8 --diff
+        git/usr/bin/git diff -u ${{ github.base_ref }} | poetry run flake8 --diff
