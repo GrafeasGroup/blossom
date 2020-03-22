@@ -41,9 +41,6 @@ jobs:
       run: |
         poetry run pip install -e pyflakes
         poetry run pip install -e pycodestyle
-    - name: Show
-      run: |
-        ${{ github.event }}
     - name: Run Static Analysis
       run: |
         /usr/bin/git diff -u ${{ github.event.base.sha }} | poetry run flake8 --diff
