@@ -25,7 +25,7 @@ jobs:
         create_virtualenvs: true
     - name: Install Dependencies
       run: |
-        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git jq -y
+        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git -y
         poetry install
     - name: Clone pyflakes repository
       uses: actions/checkout@v2
