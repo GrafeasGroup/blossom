@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # additional functionality
     "django_hosts",
     "widget_tweaks",
     # wiki
@@ -77,14 +78,23 @@ INSTALLED_APPS = [
     # 'wiki.plugins.notifications.apps.NotificationsConfig',
     "wiki.plugins.images.apps.ImagesConfig",
     "wiki.plugins.macros.apps.MacrosConfig",
+    # blossom internal apps
     "blossom",
+    "api.apps.ApiConfig",
+    "authentication.apps.AuthenticationConfig",
+    "blossom_wiki.apps.BlossomWikiConfig",
+    "engineeringblog.apps.EngineeringblogConfig",
+    "payments.apps.PaymentsConfig",
+    "website.apps.WebsiteConfig",
+    # API
     "rest_framework",
     "rest_framework_api_key",
     "drf_yasg",
+    # Social authentication
     "social_django",
 ]
 
-AUTH_USER_MODEL = "blossom.BlossomUser"
+AUTH_USER_MODEL = "authentication.BlossomUser"
 
 MIDDLEWARE = [
     "bugsnag.django.middleware.BugsnagMiddleware",
@@ -96,7 +106,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "blossom.wiki.middleware.wiki_media_url_rewrite",
+    "blossom_wiki.middleware.wiki_media_url_rewrite",
     "django_hosts.middleware.HostsResponseMiddleware",
 ]
 
@@ -146,7 +156,7 @@ DATABASES = {
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 25,
-    "DEFAULT_PERMISSION_CLASSES": ("blossom.api.authentication.BlossomApiPermission",),
+    "DEFAULT_PERMISSION_CLASSES": ("api.authentication.BlossomApiPermission",),
 }
 API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
 
@@ -163,7 +173,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "blossom.authentication.backends.EmailBackend",
+    "authentication.backends.EmailBackend",
     "blossom.social_auth.reddit.RedditOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 ]

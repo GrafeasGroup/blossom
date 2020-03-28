@@ -8,9 +8,9 @@ import slack
 from django.conf import settings
 from django.utils import timezone
 
-from blossom.api.models import Transcription
-from blossom.authentication.models import BlossomUser
-from blossom.api.serializers import VolunteerSerializer
+from api.models import Transcription
+from authentication.models import BlossomUser
+from api.serializers import VolunteerSerializer
 from blossom.strings import translation
 
 if settings.ENABLE_SLACK == True:
