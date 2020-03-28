@@ -1,6 +1,10 @@
 from social_core.backends.oauth import BaseOAuth2
 from urllib.parse import urlencode
 
+# This is able to start the oauth process but then fails with a 422 error
+# from Reddit after authorizing from the user's account. More debugging
+# is needed and this should not be considered complete.
+
 
 class RedditOAuth2(BaseOAuth2):
     """

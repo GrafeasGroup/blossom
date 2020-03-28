@@ -13,7 +13,7 @@ omit =
   blossom/management/commands/*,
   blossom/middleware.py,
   blossom/settings/*,
-  blossom/api/bootstrap/*
+  api/bootstrap/*
   blossom/social_auth/*
   blossom/conftest.py,
   blossom/docs/*

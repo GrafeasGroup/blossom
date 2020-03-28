@@ -1,8 +1,8 @@
 from types import SimpleNamespace
 from typing import Tuple, Dict, Union
 
-from blossom.api.models import Submission
-from blossom.authentication.models import BlossomUser, APIKey
+from api.models import Submission
+from authentication.models import BlossomUser, APIKey
 
 guy = SimpleNamespace(
     username="guymontag",
