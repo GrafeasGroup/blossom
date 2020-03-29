@@ -1,6 +1,7 @@
 [flake8]
-max-line-length = 90
-max-complexity = 10
-import-order-style = pycharm
-use-varnames-strict-mode = true
+application-import-names = api,authentication,blossom,blossom_wiki,engineeringblog,payments,website
 ignore = ANN101, W503
+import-order-style = pycharm
+max-complexity = 10
+max-line-length = 90
+use-varnames-strict-mode = true
