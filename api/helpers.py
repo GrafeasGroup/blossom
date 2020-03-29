@@ -1,5 +1,4 @@
 """Helper classes which assist with retrieving volunteer info from requests."""
-from blossom.authentication.models import BlossomUser
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
