@@ -1,3 +1,4 @@
+"""URL configuration for the API application."""
 from django.conf.urls import include
 from django.conf.urls import url
 from drf_yasg import openapi
@@ -18,7 +19,7 @@ schema_view = get_schema_view(
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
-    urlconf="blossom.api.urls",
+    urlconf="api.urls",
 )
 
 # automatically build URLs, as recommended by django-rest-framework docs
