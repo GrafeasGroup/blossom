@@ -1,18 +1,27 @@
-from rest_framework import serializers
+"""Serializers for the model classes used within the API."""
 from django.contrib.auth.models import User
+from rest_framework import serializers
 
 from api.models import Submission, Transcription
 from authentication.models import BlossomUser
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
+    """The Serializer for the User class."""
+
     class Meta:
+        """The Meta class to describe the class and fields to serialize."""
+
         model = User
         fields = ("username",)
 
 
 class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
+    """The Serializer for the BlossomUser class."""
+
     class Meta:
+        """The Meta class to describe the class and fields to serialize."""
+
         model = BlossomUser
         fields = (
             "id",
@@ -21,21 +30,23 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
             "date_joined",
             "last_login",
             "accepted_coc",
-            "blacklisted"
+            "blacklisted",
         )
 
 
 class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
+    """The Serializer for the Submission class."""
+
     claimed_by = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail",
-        read_only=True
+        view_name="volunteer-detail", read_only=True
     )
     completed_by = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail",
-        read_only=True
+        view_name="volunteer-detail", read_only=True
     )
 
     class Meta:
+        """The Meta class to describe the class and fields to serialize."""
+
         model = Submission
         fields = (
             "id",
@@ -49,16 +60,20 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "tor_url",
             "has_ocr_transcription",
-            "archived"
+            "archived",
         )
 
 
 class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
+    """The Serializer for the Transcription class."""
+
     author = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail",
-        read_only=True
+        view_name="volunteer-detail", read_only=True
     )
+
     class Meta:
+        """The Meta class to describe the class and fields to serialize."""
+
         model = Transcription
         fields = (
             "id",
@@ -69,5 +84,5 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "text",
             "ocr_text",
-            "removed_from_reddit"
+            "removed_from_reddit",
         )
