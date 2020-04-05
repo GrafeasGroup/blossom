@@ -1,15 +1,16 @@
+"""The views of the API, providing the possible API requests."""
 import random
 import uuid
 from datetime import timedelta
-from typing import Tuple
+from typing import Dict, Tuple
 
 import pytz
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_yasg.openapi import Parameter, Response as DocResponse, Schema
-from drf_yasg.utils import swagger_auto_schema, no_body
+from drf_yasg.utils import no_body, swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -18,40 +19,36 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.authentication import AdminApiKeyCustomCheck
-from api.helpers import VolunteerMixin, RequestDataMixin
+from api.helpers import RequestDataMixin, VolunteerMixin
 from api.models import Submission, Transcription
 from api.serializers import (
-    VolunteerSerializer,
     SubmissionSerializer,
     TranscriptionSerializer,
+    VolunteerSerializer,
 )
 from authentication.models import BlossomUser
 from blossom.slack_conn.helpers import client as slack
 
 
 @method_decorator(
-    name='list',
+    name="list",
     decorator=swagger_auto_schema(
         operation_summary="Get information on all volunteers or a specific"
-                          " volunteer if specified.",
+        " volunteer if specified.",
         operation_description="Include the username as a query to filter"
-                              " the volunteers on the specified username.",
-        manual_parameters=[
-            Parameter(
-                "username",
-                "query",
-                type="string"
-            )
-        ]
-    )
+        " the volunteers on the specified username.",
+        manual_parameters=[Parameter("username", "query", type="string")],
+    ),
 )
 class VolunteerViewSet(viewsets.ModelViewSet):
+    """The API view to view and edit information regarding Volunteers."""
+
     queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
     serializer_class = VolunteerSerializer
     basename = "volunteer"
     permission_classes = (AdminApiKeyCustomCheck,)
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         """
         Get information on all volunteers or a specific volunteer if specified.
 
@@ -65,23 +62,15 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         return queryset
 
     @swagger_auto_schema(
-        manual_parameters=[
-            Parameter(
-                "username",
-                "query",
-                type="string"
-            )
-        ],
+        manual_parameters=[Parameter("username", "query", type="string")],
         responses={
-            400: "No \"username\" as a query parameter.",
-            404: "No volunteer with the specified username."
-        }
+            400: 'No "username" as a query parameter.',
+            404: "No volunteer with the specified username.",
+        },
     )
     @action(detail=False, methods=["get"])
     def summary(self, request: Request) -> Response:
-        """
-        Get information on the volunteer with the provided username.
-        """
+        """Get information on the volunteer with the provided username."""
         username = request.query_params.get("username", None)
         if not username:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -93,16 +82,12 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         return Response(self.serializer_class(volunteer).data)
 
     @swagger_auto_schema(
-        request_body=no_body,
-        responses={
-            404: "No volunteer with the specified ID."
-        }
+        request_body=no_body, responses={404: "No volunteer with the specified ID."}
     )
     @action(detail=True, methods=["patch"])
     def gamma_plusone(self, request: Request, pk: int) -> Response:
         """
-        Add one gamma through creating a fake completed transcription in the
-        respective volunteer's name.
+        Add one gamme through a fake completed transcription by the volunteer.
 
         This method should only be called in the case of erroneous behavior of
         the proper procedure of awarding gamma.
@@ -113,35 +98,29 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         dummy_post = Submission.objects.create(
-            source="gamma_plus_one",
-            completed_by=volunteer
+            source="gamma_plus_one", completed_by=volunteer
         )
         Transcription.objects.create(
             submission=dummy_post,
             author=volunteer,
             transcription_id=str(uuid.uuid4()),
             completion_method="gamma_plus_one",
-            text="dummy transcription"
+            text="dummy transcription",
         )
         return Response(self.serializer_class(volunteer).data)
 
     @swagger_auto_schema(
         request_body=Schema(
-            type="object",
-            properties={"username": Schema(type="string")}
+            type="object", properties={"username": Schema(type="string")}
         ),
         responses={
-            201: DocResponse(
-                "Successful creation",
-                schema=serializer_class),
-            400: "No \"username\" key in the data body",
-            422: "There already exists a volunteer with the specified username"
-        }
+            201: DocResponse("Successful creation", schema=serializer_class),
+            400: 'No "username" key in the data body',
+            422: "There already exists a volunteer with the specified username",
+        },
     )
-    def create(self, request: Request, *args, **kwargs) -> Response:
-        """
-        Create a new user with the specified username.
-        """
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Create a new user with the specified username."""
         username = request.data.get("username")
 
         if not username:
@@ -154,33 +133,28 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         volunteer.set_unusable_password()
 
         return Response(
-            self.serializer_class(volunteer).data,
-            status=status.HTTP_201_CREATED
+            self.serializer_class(volunteer).data, status=status.HTTP_201_CREATED
         )
 
 
 @method_decorator(
-    name='list',
+    name="list",
     decorator=swagger_auto_schema(
         operation_summary="Get information on all submissions or a specific"
-                          " submission if specified.",
+        " submission if specified.",
         operation_description="Include the submission_id as a query to filter"
-                              " the submissions on the specified ID.",
-        manual_parameters=[
-            Parameter(
-                "submission_id",
-                "query",
-                type="string"
-            )
-        ]
-    )
+        " the submissions on the specified ID.",
+        manual_parameters=[Parameter("submission_id", "query", type="string")],
+    ),
 )
 class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin):
+    """The API view to view and edit information regarding Submissions."""
+
     queryset = Submission.objects.all().order_by("-post_time")
     serializer_class = SubmissionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
 
-    def get_queryset(self):
+    def get_queryset(self) -> QuerySet:
         """
         Get information on all submissions or a specific submission if specified.
 
@@ -217,8 +191,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         response = self.get_volunteer_info_from_json(
-            request,
-            error_out_if_bad_data=True
+            request, error_out_if_bad_data=True
         )
         if isinstance(response, Response):
             return response  # it exploded, return the error
@@ -231,28 +204,18 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         return submission, volunteer
 
     @swagger_auto_schema(
-        manual_parameters=[
-            Parameter(
-                "ctq",
-                "query",
-                type="boolean"
-            )
-        ],
-        responses={
-            200: DocResponse(
-                "Successful operation",
-                schema=serializer_class
-            )
-        }
+        manual_parameters=[Parameter("ctq", "query", type="boolean")],
+        responses={200: DocResponse("Successful operation", schema=serializer_class)},
     )
     @action(detail=False, methods=["get"])
     def expired(self, request: Request) -> Response:
         """
-        Return all submissions that are older than 18 hours and have not
-        been claimed or completed yet.
+        Return all old submissions that have not been claimed or completed yet.
 
-        If the query string of ctq is passed in with a value of True then
-        return all posts that have not been completed or claimed.
+        A set definition for old is when a Submission has been submitted 18
+        hours or longer ago. If the query string of ctq is passed in with a
+        value of True then return all posts that have not been completed or
+        claimed.
 
         When no posts are found, an empty array is returned in the body.
         """
@@ -268,54 +231,40 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             & Q(archived=False)
         )
         return Response(
-            self.get_serializer(
-                queryset,
-                many=True,
-                context={"request", request}).data
+            self.get_serializer(queryset, many=True, context={"request", request}).data
         )
 
     @swagger_auto_schema(
-        responses={
-            200: DocResponse(
-                "Successful operation",
-                schema=serializer_class
-            )
-        }
+        responses={200: DocResponse("Successful operation", schema=serializer_class)}
     )
     @action(detail=False, methods=["get"])
     def unarchived(self, request: Request) -> Response:
         """
-        Return all submissions that are older than a set number of hours,
-        have been completed by someone, and are not yet archived.
+        Return all completed old submissions which are not archived.
 
-        When no posts are found, an empty array is returned in the body.
+        The definition of old in this method is half an hour. When no posts are
+        found, an empty array is returned in the body.
         """
         delay_time = timezone.now() - timedelta(
             hours=settings.ARCHIVIST_COMPLETED_DELAY_TIME
         )
         queryset = Submission.objects.filter(
-            ~Q(completed_by=None)
-            & Q(complete_time__lt=delay_time)
-            & Q(archived=False)
+            ~Q(completed_by=None) & Q(complete_time__lt=delay_time) & Q(archived=False)
         )
         return Response(data=self.get_serializer(queryset, many=True).data)
 
     @swagger_auto_schema(
         request_body=Schema(
-            type="object",
-            properties={"username": Schema(type="string")}
+            type="object", properties={"username": Schema(type="string")}
         ),
         responses={
-            201: DocResponse(
-                "Successful unclaim operation",
-                schema=serializer_class
-            ),
+            201: DocResponse("Successful unclaim operation", schema=serializer_class),
             400: "The volunteer username is not provided",
             404: "The specified volunteer or submission is not found",
             406: "The specified volunteer has not claimed the specified submission",
             409: "The submission has already been completed",
-            412: "The submission has not yet been claimed"
-        }
+            412: "The submission has not yet been claimed",
+        },
     )
     @action(detail=True, methods=["post"])
     def unclaim(self, request: Request, pk: int) -> Response:
@@ -345,26 +294,19 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         submission.save()
         return Response(
             status=status.HTTP_201_CREATED,
-            data=self.serializer_class(
-                submission,
-                context={"request": request}
-            ).data
+            data=self.serializer_class(submission, context={"request": request}).data,
         )
 
     @swagger_auto_schema(
         request_body=Schema(
-            type="object",
-            properties={"username": Schema(type="string")}
+            type="object", properties={"username": Schema(type="string")}
         ),
         responses={
-            201: DocResponse(
-                "Successful claim operation",
-                schema=serializer_class
-            ),
+            201: DocResponse("Successful claim operation", schema=serializer_class),
             400: "The volunteer username is not provided",
             404: "The specified volunteer or submission is not found",
-            409: "The submission is already claimed"
-        }
+            409: "The submission is already claimed",
+        },
     )
     @action(detail=True, methods=["post"])
     def claim(self, request: Request, pk: int) -> Response:
@@ -373,7 +315,6 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
 
         The volunteer is specified in the HTTP body.
         """
-
         response = self._get_possible_claim_done_errors(request, pk)
         if isinstance(response, Response):
             # Something went wrong, return the error
@@ -390,10 +331,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
 
         return Response(
             status=status.HTTP_201_CREATED,
-            data=self.serializer_class(
-                submission,
-                context={"request": request}
-            ).data
+            data=self.serializer_class(submission, context={"request": request}).data,
         )
 
     @staticmethod
@@ -421,7 +359,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             (250, 0.6),
             (500, 0.5),
             (1000, 0.3),
-            (5000, 0.1)
+            (5000, 0.1),
         ]
         for (gamma, probability) in probabilities:
             if volunteer.gamma <= gamma:
@@ -437,19 +375,16 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             required=["username"],
             properties={
                 "username": Schema(type="string"),
-                "mod_override": Schema(type="boolean")
-            }
+                "mod_override": Schema(type="boolean"),
+            },
         ),
         responses={
-            201: DocResponse(
-                "Successful done operation",
-                schema=serializer_class
-            ),
+            201: DocResponse("Successful done operation", schema=serializer_class),
             400: "The volunteer username is not provided",
             404: "The specified volunteer or submission is not found",
             409: "The submission is already completed",
-            412: "The submission is not claimed or claimed by someone else"
-        }
+            412: "The submission is not claimed or claimed by someone else",
+        },
     )
     @action(detail=True, methods=["post"])
     def done(self, request: Request, pk: int) -> Response:
@@ -477,8 +412,9 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         if submission.claimed_by is None:
             return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-        mod_override = request.data.get("mod_override", False) \
-                       and request.user.is_grafeas_staff
+        mod_override = (
+            request.data.get("mod_override", False) and request.user.is_grafeas_staff
+        )
 
         if not mod_override:
             if submission.claimed_by != volunteer:
@@ -494,15 +430,12 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             slack.chat_postMessage(
                 channel="#transcription_check",
                 text="Please check the following transcription of "
-                     f"u/{volunteer.username}: {url}."
+                f"u/{volunteer.username}: {url}.",
             )
 
         return Response(
             status=status.HTTP_201_CREATED,
-            data=self.serializer_class(
-                submission,
-                context={"request": request}
-            ).data
+            data=self.serializer_class(submission, context={"request": request}).data,
         )
 
     @swagger_auto_schema(
@@ -512,18 +445,15 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
                 "submission_id": Schema(type="string"),
                 "source": Schema(type="string"),
                 "url": Schema(type="string"),
-                "tor_url": Schema(type="string")
-            }
+                "tor_url": Schema(type="string"),
+            },
         ),
         responses={
-            201: DocResponse(
-                "Successful creation",
-                schema=serializer_class
-            ),
-            400: "Required parameters not provided"
-        }
+            201: DocResponse("Successful creation", schema=serializer_class),
+            400: "Required parameters not provided",
+        },
     )
-    def create(self, request: Request, *args, **kwargs) -> Response:
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Create a new submission.
 
@@ -544,14 +474,13 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
 
         return Response(
             status=status.HTTP_201_CREATED,
-            data=self.serializer_class(
-                submission,
-                context={"request": request}
-            ).data
+            data=self.serializer_class(submission, context={"request": request}).data,
         )
 
 
 class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
+    """The API view to view and edit information regarding Transcribers."""
+
     queryset = Transcription.objects.all().order_by("-post_time")
     serializer_class = TranscriptionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
@@ -566,7 +495,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
                 "completion_method",
                 "t_url",
                 "t_text",
-                "ocr_text"
+                "ocr_text",
             ],
             properties={
                 "submission_id": Schema(type="string"),
@@ -575,19 +504,18 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
                 "completion_method": Schema(type="string"),
                 "t_url": Schema(type="string"),
                 "t_text": Schema(type="string"),
-                "ocr_text": Schema(type="String")
-            }
+                "ocr_text": Schema(type="String"),
+            },
         ),
         responses={
             201: DocResponse(
-                "Successful transcription creation",
-                schema=serializer_class
+                "Successful transcription creation", schema=serializer_class
             ),
             400: "The request does not adhere to the specified HTTP body",
-            404: "Either the specified submission or volunteer is not found"
-        }
+            404: "Either the specified submission or volunteer is not found",
+        },
     )
-    def create(self, request: Request, *args, **kwargs) -> Response:
+    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Create a new transcription.
 
@@ -656,54 +584,46 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         )
         return Response(
             data=self.serializer_class(
-                transcription,
-                context={"request": request}
+                transcription, context={"request": request}
             ).data,
-            status=status.HTTP_201_CREATED
+            status=status.HTTP_201_CREATED,
         )
 
     @swagger_auto_schema(
-        manual_parameters=[
-            Parameter(
-                "submission_id",
-                "query",
-                type="string"
-            )
-        ],
-        responses={
-            400: "Query parameter \"submission_id\" not present"
-        }
+        manual_parameters=[Parameter("submission_id", "query", type="string")],
+        responses={400: 'Query parameter "submission_id" not present'},
     )
     @action(detail=False, methods=["get"])
-    def search(self, request: Request, *args, **kwargs) -> Response:
+    def search(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Search for the transcriptions of a specific submission.
 
         Note that providing a submission_id as a query parameter is mandatory.
         """
-
         s_id = request.query_params.get("submission_id", None)
 
         if not s_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         queryset = Transcription.objects.filter(submission__submission_id=s_id)
-        return Response(data=self.serializer_class(
-            queryset,
-            many=True,
-            context={"request": request}
-        ).data)
+        return Response(
+            data=self.serializer_class(
+                queryset, many=True, context={"request": request}
+            ).data
+        )
 
     @swagger_auto_schema(
         responses={
             200: DocResponse(
                 "Successful retrieval of a random transcription",
-                schema=serializer_class
+                schema=serializer_class,
             )
         }
     )
     @action(detail=False, methods=["get"])
-    def review_random(self, request: Request, *args, **kwargs) -> Response:
+    def review_random(
+        self, request: Request, *args: object, **kwargs: object
+    ) -> Response:
         """
         Pull a random transcription that was completed in the last hour and return it.
 
@@ -719,18 +639,28 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         if not queryset:
             return Response()
         else:
-            return Response(data=self.serializer_class(
-                random.choice(queryset),
-                context={"request": request}
-            ).data)
+            return Response(
+                data=self.serializer_class(
+                    random.choice(queryset), context={"request": request}
+                ).data
+            )
 
 
 class Summary(object):
-    """
-    A basic object that just generates a summary view that's easy to access.
-    """
+    """A basic object that just generates a summary view that's easy to access."""
 
-    def generate_summary(self):
+    @staticmethod
+    def generate_summary() -> Dict:
+        """
+        Generate a summary based on the current state of the system.
+
+        The summary is a dictionary consisting of the following elements:
+        - volunteer_count: the number of volunteers
+        - transcription_count: the number of transcriptions
+        - days_since_inception: the number of days since the first of April 2017
+
+        :return: A dictionary containing the three key-value pairs as described
+        """
         # subtract 2 from volunteer count for anon volunteer and u/ToR
         return {
             "volunteer_count": BlossomUser.objects.filter(is_volunteer=True).count()
@@ -745,8 +675,9 @@ class Summary(object):
         }
 
 
-
 class SummaryView(APIView):
+    """A view to request the summary of statistics."""
+
     permission_classes = (AdminApiKeyCustomCheck,)
 
     @swagger_auto_schema(
@@ -758,22 +689,20 @@ class SummaryView(APIView):
                     properties={
                         "volunteer_count": Schema(type="int"),
                         "transcription_count": Schema(type="int"),
-                        "days_since_inception": Schema(type="int")
-                    }
-                )
+                        "days_since_inception": Schema(type="int"),
+                    },
+                ),
             )
         }
     )
-    def get(self, request, *args, **kw):
-        """
-        Get a summary of statistics on volunteers and transcriptions.
-        """
-        return Response(
-            data=Summary().generate_summary(),
-            status=status.HTTP_200_OK)
+    def get(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Get a summary of statistics on volunteers and transcriptions."""
+        return Response(data=Summary().generate_summary(), status=status.HTTP_200_OK)
 
 
 class PingView(APIView):
+    """View to check whether the service is responsive."""
+
     permission_classes = (AllowAny,)
 
     @swagger_auto_schema(
@@ -781,14 +710,11 @@ class PingView(APIView):
             200: DocResponse(
                 "Successful pong",
                 schema=Schema(
-                    type="object",
-                    properties={"ping!": Schema(type="string")}
-                )
+                    type="object", properties={"ping!": Schema(type="string")}
+                ),
             )
         }
     )
-    def get(self, request, *args, **kw):
-        """
-        Ping the server.
-        """
+    def get(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Ping the server."""
         return Response({"ping?!": "PONG"}, status=status.HTTP_200_OK)
