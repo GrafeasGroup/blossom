@@ -15,7 +15,7 @@ BASE_TRANSCRIPTION_INFO = {
     "completion_method": "base_completion_method",
     "url": "base_url",
     "text": "base_text",
-    "removed_from_reddit": False
+    "removed_from_reddit": False,
 }
 BASE_USER_INFO = {
     "username": "base_username",
@@ -90,7 +90,7 @@ def create_transcription(
         **BASE_TRANSCRIPTION_INFO,
         **{key: kwargs[key] for key in kwargs if key in dir(Transcription)},
         "submission": submission,
-        "author": user
+        "author": user,
     }
     return Transcription.objects.create(**transcription_info)
 
