@@ -3,10 +3,20 @@ from typing import Dict, Tuple
 
 from django.test import Client
 
-from api.models import Submission
+from api.models import Submission, Transcription
 from authentication.models import APIKey, BlossomUser
 
-BASE_SUBMISSION_INFO = {"submission_id": "base_submission_id", "source": "base_source"}
+BASE_SUBMISSION_INFO = {
+    "submission_id": "base_submission_id",
+    "source": "base_source",
+}
+BASE_TRANSCRIPTION_INFO = {
+    "transcription_id": "base_transcription_id",
+    "completion_method": "base_completion_method",
+    "url": "base_url",
+    "text": "base_text",
+    "removed_from_reddit": False
+}
 BASE_USER_INFO = {
     "username": "base_username",
     "email": "base_email",
@@ -31,7 +41,8 @@ def create_user(**kwargs: object) -> BlossomUser:
     :returns: The created user
     """
     user_info = {
-        key: kwargs.get(key, BASE_USER_INFO[key]) for key in BASE_USER_INFO.keys()
+        **BASE_USER_INFO,
+        **{key: kwargs[key] for key in kwargs if key in dir(BlossomUser)},
     }
     user, _ = BlossomUser.objects.get_or_create(**user_info)
     return user
@@ -52,10 +63,36 @@ def create_submission(**kwargs: object) -> Submission:
     :returns: The created submission
     """
     submission_info = {
-        key: kwargs.get(key, BASE_SUBMISSION_INFO[key])
-        for key in BASE_SUBMISSION_INFO.keys()
+        **BASE_SUBMISSION_INFO,
+        **{key: kwargs[key] for key in kwargs if key in dir(Submission)},
     }
     return Submission.objects.create(**submission_info)
+
+
+def create_transcription(
+    submission: Submission, user: BlossomUser, **kwargs: object
+) -> Transcription:
+    """
+    Create a new submission or get the submission with the corresponding information.
+
+    The submission which is created has default fields corresponding to the
+    "BASE_SUBMISSION_INFO" constant. Any attribute of this constant can be
+    overwritten by providing the attribute with its desired value as a keyword
+    argument (e.g. providing source="test" will result in the returned
+    submission to have the source "test").
+
+    :param submission: The Submission to which the transcription belongs
+    :param user: The BlossomUser that authored this Transcription
+    :param kwargs: The desired change of fields of the submission compared to the default
+    :returns: The created transcription
+    """
+    transcription_info = {
+        **BASE_TRANSCRIPTION_INFO,
+        **{key: kwargs[key] for key in kwargs if key in dir(Transcription)},
+        "submission": submission,
+        "author": user
+    }
+    return Transcription.objects.create(**transcription_info)
 
 
 def setup_user_client(
