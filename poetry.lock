@@ -562,6 +562,14 @@ version = "0.6.1"
 
 [[package]]
 category = "main"
+description = "Mimesis: fake data generator."
+name = "mimesis"
+optional = false
+python-versions = "*"
+version = "4.0.0"
+
+[[package]]
+category = "main"
 description = "More routines for operating on iterables, beyond itertools"
 name = "more-itertools"
 optional = false
@@ -1138,7 +1146,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "0af8542d7d3357eb747a64b298ec32a7158f8a61fbe34ccf373021cc422c7866"
+content-hash = "46a806478a572077bdffad18c183066a2e0d544c9787eb03afbb3f92f5e67366"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -1439,6 +1447,10 @@ markupsafe = [
 mccabe = [
     {file = "mccabe-0.6.1-py2.py3-none-any.whl", hash = "sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42"},
     {file = "mccabe-0.6.1.tar.gz", hash = "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"},
+]
+mimesis = [
+    {file = "mimesis-4.0.0-py3-none-any.whl", hash = "sha256:9a4f001f95b9cceb419266e28b422e67fae71995e16a6ab641ff14dd139f5fa3"},
+    {file = "mimesis-4.0.0.tar.gz", hash = "sha256:d59ca48d4118d391704a525cef4e33fa219f3d9c4f9a95b7ec2a0e0c88e048a4"},
 ]
 more-itertools = [
     {file = "more-itertools-8.2.0.tar.gz", hash = "sha256:b1ddb932186d8a6ac451e1d95844b382f55e12686d51ca0c68b6f61f2ab7a507"},

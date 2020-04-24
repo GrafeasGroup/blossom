@@ -1,11 +1,12 @@
 import gc
 import logging
 import sys
-
 from datetime import datetime
 from typing import Dict
 
-from api.bootstrap import (
+from django.db import reset_queries
+
+from api.bootstrap.db import (
     get_or_create_user,
     get_anon_user,
     get_or_create_post,
@@ -13,13 +14,13 @@ from api.bootstrap import (
     generate_dummy_transcription,
     generate_dummy_post,
 )
-from api.bootstrap import (
+from api.bootstrap.helpers import (
     get_user_list_from_redis,
     pull_user_data_from_redis,
     redis,
     graceful_interrupt_handler,
 )
-from api.bootstrap import (
+from api.bootstrap.pushshift import (
     get_tor_claim_and_done_from_pushshift,
     get_extended_transcript_body,
     get_transcription_data_from_pushshift,
@@ -106,6 +107,7 @@ def process_user(redis_user_obj: Dict):
                 # Nonetheless, let's create a dummy transcription
                 generate_dummy_transcription(v, p)
         end_time = datetime.now()
+        reset_queries()
         logger.info(f"Completed operation in {(end_time - start_time).seconds} seconds")
 
     logged_transcription_count = Transcription.objects.filter(author=v).count()
