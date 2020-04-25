@@ -1,4 +1,3 @@
-"""Helper classes which assist with retrieving volunteer info from requests."""
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -44,8 +43,6 @@ class VolunteerMixin:
 
 
 class RequestDataMixin:
-    """Mixin to retrieve data from a request."""
-
     @staticmethod
     def get_volunteer_info_from_json(
         request: Request, error_out_if_bad_data: bool = False

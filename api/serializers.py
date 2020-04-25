@@ -1,4 +1,10 @@
-"""Serializers for the model classes used within the API."""
+"""
+Serializers for the model classes used within the API.
+
+These serializers are used to generate a JSON object from a specific model. The
+fields and model used per serializer are specified in the Meta class included
+within the serializer.
+"""
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
@@ -7,21 +13,13 @@ from authentication.models import BlossomUser
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
-    """The Serializer for the User class."""
-
     class Meta:
-        """The Meta class to describe the class and fields to serialize."""
-
         model = User
         fields = ("username",)
 
 
 class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
-    """The Serializer for the BlossomUser class."""
-
     class Meta:
-        """The Meta class to describe the class and fields to serialize."""
-
         model = BlossomUser
         fields = (
             "id",
@@ -35,8 +33,6 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
-    """The Serializer for the Submission class."""
-
     claimed_by = serializers.HyperlinkedRelatedField(
         view_name="volunteer-detail", read_only=True
     )
@@ -45,8 +41,6 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
     )
 
     class Meta:
-        """The Meta class to describe the class and fields to serialize."""
-
         model = Submission
         fields = (
             "id",
@@ -65,15 +59,11 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
-    """The Serializer for the Transcription class."""
-
     author = serializers.HyperlinkedRelatedField(
         view_name="volunteer-detail", read_only=True
     )
 
     class Meta:
-        """The Meta class to describe the class and fields to serialize."""
-
         model = Transcription
         fields = (
             "id",

@@ -1,4 +1,3 @@
-"""Module which manages the authentication within the API."""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
