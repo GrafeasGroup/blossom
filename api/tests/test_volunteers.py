@@ -1,82 +1,57 @@
+"""Tests to validate the behavior of the VolunteerViewSet."""
 import json
 
+from django.test import Client
 from django_hosts.resolvers import reverse
 from rest_framework import status
 
-from api.models import Transcription, Submission
+from api.models import Submission, Transcription
+from api.tests.helpers import create_user, setup_user_client
 from authentication.models import BlossomUser
-from blossom.tests.helpers import create_volunteer, create_staff_volunteer_with_keys
 
 
 class TestVolunteerSummary:
-    def test_volunteer_summary_proper_request(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    """Tests to validate the behavior of the summary process."""
+
+    def test_summary(self, client: Client) -> None:
+        """Test whether the process functions correctly when invoked correctly."""
+        client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("volunteer-summary", host="api") + "?username=janeeyre",
+            reverse("volunteer-summary", host="api") + f"?username={user.username}",
             HTTP_HOST="api",
             **headers,
         )
 
         assert result.status_code == status.HTTP_200_OK
-        assert result.json().get("username") == "janeeyre"
+        assert result.json().get("username") == user.username
+        assert result.json()["id"] == user.id
 
-    def test_volunteer_summary_wrong_key(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
-        headers["Authorization"] = "obviously broken key"
-        result = client.get(
-            reverse("volunteer-summary", host="api") + "?username=janeeyre",
-            HTTP_HOST="api",
-            **headers,
-        )
-
-        assert result.status_code == status.HTTP_403_FORBIDDEN
-        assert result.json() == {
-            "detail": "Sorry, this resource can only be accessed by an admin API key."
-        }
-
-    def test_volunteer_summary_not_staff(self, client):
-        volunteer, headers = create_volunteer(with_api_key=True)
-        client.force_login(volunteer)
-        result = client.get(
-            reverse("volunteer-summary", host="api") + "?username=janeeyre",
-            HTTP_HOST="api",
-            **headers,
-        )
-
-        assert result.status_code == status.HTTP_403_FORBIDDEN
-        assert result.json() == {
-            "detail": "Sorry, this resource can only be accessed by an admin API key."
-        }
-
-    def test_volunteer_summary_no_username(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    def test_summary_no_username(self, client: Client) -> None:
+        """Test whether the summary is not provided when no username is queried."""
+        client, headers, _ = setup_user_client(client)
         result = client.get(
             reverse("volunteer-summary", host="api"), HTTP_HOST="api", **headers
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_volunteer_summary_nonexistent_username(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    def test_summary_nonexistent_username(self, client: Client) -> None:
+        """Test whether the summary is not given when a nonexistent user is provided."""
+        client, headers, _ = setup_user_client(client)
         result = client.get(
-            reverse("volunteer-summary", host="api") + "?username=asdfasdfasdf",
+            reverse("volunteer-summary", host="api") + "?username=404",
             HTTP_HOST="api",
             **headers,
         )
         assert result.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_volunteer_summary_no_key(self, client):
-        result = client.get(
-            reverse("volunteer-summary", host="api") + "?username=asdfasdfasdf",
-            HTTP_HOST="api",
-        )
-        assert result.status_code == status.HTTP_403_FORBIDDEN
-
 
 class TestVolunteerAssortedFunctions:
-    def test_edit_volunteer(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    """Tests to validate the behavior of miscellaneous functions."""
+
+    def test_edit_volunteer(self, client: Client) -> None:
+        """Test whether an edit of a user is propagated correctly."""
+        client, headers, user = setup_user_client(client)
         data = {"username": "naaaarf"}
-        assert BlossomUser.objects.get(id=1).username == "janeeyre"
         result = client.put(
             reverse("volunteer-detail", args=[1], host="api"),
             json.dumps(data),
@@ -85,57 +60,57 @@ class TestVolunteerAssortedFunctions:
             **headers,
         )
 
+        user.refresh_from_db()
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["username"] == data["username"]
-        assert BlossomUser.objects.get(id=1).username == "naaaarf"
+        assert user.username == data["username"]
 
-    def test_volunteer_viewset_with_qsp(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    def test_volunteer_viewset_with_qsp(self, client: Client) -> None:
+        """Test whether querying with a username provides the specific user."""
+        client, headers, user = setup_user_client(client)
+        create_user(username="another_user")
         result = client.get(
-            reverse("volunteer-list", host="api") + "?username=janeeyre",
+            reverse("volunteer-list", host="api") + f"?username={user.username}",
             HTTP_HOST="api",
             **headers,
         )
 
         assert result.status_code == status.HTTP_200_OK
-        assert result.json()["results"][0]["username"] == "janeeyre"
+        assert len(result.json()["results"]) == 1
+        assert result.json()["results"][0]["username"] == user.username
 
 
 class TestVolunteerGammaPlusOne:
-    def test_plusone(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    """Tests to validate the behavior of the plus one process."""
 
-        assert Transcription.objects.count() == 0
-        assert Submission.objects.count() == 0
-
-        jane = BlossomUser.objects.get(id=1)
-        assert jane.gamma == 0
+    def test_plus_one(self, client: Client) -> None:
+        """Test whether an artificial gamma is provided when invoked correctly."""
+        client, headers, user = setup_user_client(client)
 
         result = client.patch(
-            reverse("volunteer-gamma-plusone", args=[1], host="api"),
+            reverse("volunteer-gamma-plusone", args=[user.id], host="api"),
             HTTP_HOST="api",
             **headers,
         )
 
+        user.refresh_from_db()
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["gamma"] == 1
-        assert jane.gamma == 1
+        assert user.gamma == 1
         assert Transcription.objects.count() == 1
         assert Submission.objects.count() == 1
         assert (
             Transcription.objects.get(id=1).author
             == Submission.objects.get(id=1).completed_by
-            == jane
+            == user
         )
 
-    def test_plusone_with_bad_id(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
-
-        assert Transcription.objects.count() == 0
-        assert Submission.objects.count() == 0
+    def test_plus_one_nonexistent_id(self, client: Client) -> None:
+        """Test whether a plus one with a nonexistent ID is caught correctly."""
+        client, headers, _ = setup_user_client(client)
 
         result = client.patch(
-            reverse("volunteer-gamma-plusone", args=[99], host="api"),
+            reverse("volunteer-gamma-plusone", args=[404], host="api"),
             HTTP_HOST="api",
             **headers,
         )
@@ -147,10 +122,12 @@ class TestVolunteerGammaPlusOne:
 
 
 class TestVolunteerCreation:
-    def test_volunteer_create(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    """Tests to validate the behavior of the user creation."""
+
+    def test_create(self, client: Client) -> None:
+        """Test whether a user is successfully created when invoked correctly."""
+        client, headers, _ = setup_user_client(client)
         data = {"username": "SPAAAACE"}
-        assert BlossomUser.objects.filter(username="SPAAAACE").count() == 0
         result = client.post(
             reverse("volunteer-list", host="api"),
             json.dumps(data),
@@ -159,16 +136,15 @@ class TestVolunteerCreation:
             **headers,
         )
         assert result.status_code == status.HTTP_201_CREATED
-        # we had to create a volunteer in the beginning of the test, so this
-        # one is volunteer ID 2.
-        assert result.json()['id'] == 2
-        assert result.json()['username'] == "SPAAAACE"
-        assert BlossomUser.objects.filter(username="SPAAAACE").count() == 1
+        created = BlossomUser.objects.get(id=result.json()["id"])
+        assert created.username == data["username"]
 
-    def test_volunteer_create_duplicate_username(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    def test_create_duplicate_username(self, client: Client) -> None:
+        """Test that no user is created when an user with the username already exists."""
+        client, headers, _ = setup_user_client(client)
         data = {"username": "janeeyre"}
-        assert BlossomUser.objects.filter(username="janeeyre").count() == 1
+        create_user(username=data["username"])
+
         result = client.post(
             reverse("volunteer-list", host="api"),
             json.dumps(data),
@@ -177,12 +153,12 @@ class TestVolunteerCreation:
             **headers,
         )
         assert result.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        assert BlossomUser.objects.filter(username="janeeyre").count() == 1
+        assert BlossomUser.objects.filter(username=data["username"]).count() == 1
 
-    def test_volunteer_create_no_username(self, client):
-        client, headers = create_staff_volunteer_with_keys(client)
+    def test_create_no_username(self, client: Client) -> None:
+        """Test that no user is created when no username is provided."""
+        client, headers, _ = setup_user_client(client)
 
-        assert BlossomUser.objects.count() == 1
         result = client.post(
             reverse("volunteer-list", host="api"),
             HTTP_HOST="api",
