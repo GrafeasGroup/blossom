@@ -14,8 +14,9 @@ class Submission(models.Model):
     # It is rare, but possible, for a post to have more than one transcription.
     # Therefore, posts are separate from transcriptions, but there will almost
     # always be one transcription per post.
-    submission_id = models.CharField(max_length=36, default=create_id)
-    submission_time = models.DateTimeField(default=timezone.now)
+    source_id = models.CharField(max_length=36, default=create_id)
+    create_time = models.DateTimeField(default=timezone.now)
+    # last_update_time = models.DateTimeField(default=timezone.now)
 
     # This is only for handling the redis changeover
     redis_id = models.CharField(max_length=12, blank=True, null=True)
@@ -49,7 +50,7 @@ class Submission(models.Model):
     archived = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.submission_id}"
+        return f"{self.source_id}"
 
     @property
     def has_ocr_transcription(self):
@@ -64,16 +65,20 @@ class Submission(models.Model):
 class Transcription(models.Model):
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
     author = models.ForeignKey("authentication.BlossomUser", on_delete=models.CASCADE)
-    post_time = models.DateTimeField(default=timezone.now)
+
+    # create_time = models.DateTimeField(default=timezone.now)
+    # last_update_time = models.DateTimeField(default=timezone.now)
+
     # reddit comment ID or similar
-    transcription_id = models.CharField(max_length=36)
-    # "reddit", "api", "blossom". Leaving extra characters in case we want
-    # to expand the options.
-    completion_method = models.CharField(max_length=20)
+    source_id = models.CharField(max_length=36)
+
     url = models.CharField(max_length=2083, null=True, blank=True)
     # force SQL longtext type, per https://stackoverflow.com/a/23169977
     text = models.TextField(max_length=4_294_000_000, null=True, blank=True)
+
+    # TODO: Move all ocr_text fields to the `text` field, then remove ocr_text
     ocr_text = models.TextField(max_length=4_294_000_000, null=True, blank=True)
+
     # sometimes posts get stuck in the spam filter. We can still validate those,
     # but it takes some effort. It is good to store the fact that it was
     # removed, even if we can still access it through workarounds, just so we
@@ -84,3 +89,10 @@ class Transcription(models.Model):
 
     def __str__(self):
         return f"{self.submission} by {self.author.username}"
+
+
+class Source(models.Model):
+    # This is used for both submissions (where did the submission come from?) and
+    # for transcriptions (e.g. how was the transcription completed?)
+    # TODO: set foreign keys for Transcription and Submission -- default to "reddit"
+    name = models.CharField(max_length=20)

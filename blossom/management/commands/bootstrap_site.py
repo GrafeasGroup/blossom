@@ -4,6 +4,7 @@ import os
 from django.core.management.base import BaseCommand
 import dotenv
 
+from api.models import Source
 from website.models import Post
 from authentication.models import BlossomUser
 
@@ -170,6 +171,12 @@ class Command(BaseCommand):
                 password="asdf",  # change me
             )
             logger.debug(self.style.SUCCESS("Admin user created!"))
+
+        if not Source.objects.filter(name="gamma_plus_one").first():
+            Source.objects.create(name="gamma_plus_one")
+
+        if not Source.objects.filter(name="reddit").first():
+            Source.objects.create(name="reddit")
 
         admin = BlossomUser.objects.get(username="admin")
 
