@@ -161,7 +161,7 @@ class Transcription(models.Model):
     """
     Whether the Transcription is removed from Reddit.
 
-    This is mostly to keep track of the behavior of the Reddit spam filter, 
+    This is mostly to keep track of the behavior of the Reddit spam filter,
     as this filter sometimes marks the transcriptions falsely as spam. This
     does not affect our validation as we can still access the transcription
     through workarounds.
