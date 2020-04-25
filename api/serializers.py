@@ -1,5 +1,13 @@
-from rest_framework import serializers
+"""
+Serializers for the model classes used within the API.
+
+These serializers are used to generate a dictionary from a specific model. The
+fields and model used per serializer are specified in the Meta class included
+within the serializer. This serialized object can in turn be used for serving
+objects through the API.
+"""
 from django.contrib.auth.models import User
+from rest_framework import serializers
 
 from api.models import Submission, Transcription
 from authentication.models import BlossomUser
@@ -21,18 +29,16 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
             "date_joined",
             "last_login",
             "accepted_coc",
-            "blacklisted"
+            "blacklisted",
         )
 
 
 class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
     claimed_by = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail",
-        read_only=True
+        view_name="volunteer-detail", read_only=True
     )
     completed_by = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail",
-        read_only=True
+        view_name="volunteer-detail", read_only=True
     )
 
     class Meta:
@@ -49,15 +55,15 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "tor_url",
             "has_ocr_transcription",
-            "archived"
+            "archived",
         )
 
 
 class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
     author = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail",
-        read_only=True
+        view_name="volunteer-detail", read_only=True
     )
+
     class Meta:
         model = Transcription
         fields = (
@@ -69,5 +75,5 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "text",
             "ocr_text",
-            "removed_from_reddit"
+            "removed_from_reddit",
         )
