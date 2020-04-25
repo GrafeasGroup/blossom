@@ -5,75 +5,46 @@ from rest_framework.response import Response
 from authentication.models import BlossomUser
 
 
-class VolunteerMixin:
-    """Mixin to retrieve volunteers based on information passed in a request."""
+class BlossomUserMixin:
+    REQUEST_FIELDS = {"v_id": "id", "v_username": "username", "username": "username"}
 
-    @staticmethod
-    def get_volunteer(
-        volunteer_id: int = None, username: str = None
-    ) -> [BlossomUser, None]:
+    def get_user_from_request(
+        self, request: Request, errors: bool = False
+    ) -> [BlossomUser, Response, None]:
         """
-        Get the volunteer using the id or username supplied.
+        Retrieve the BlossomUser based on information provided within the request data.
 
-        If both are supplied, the id is used for the lookup.
+        The user can be retrieved based on either its ID and/or its username. To do this,
+        any combination of the following keys:
+            - username:   The username
+            - v_id:       The user ID
+            - v_username: The username
 
-        :param volunteer_id: the id of the specific volunteer
-        :param username: the username of the specific volunteer
-        :return: the volunteer, or None if the volunteer is not found
+        Note that when multiple values are present within the request, the user with
+        the combination of these values is found.
+
+        When either none of the above keys is provided or no user with the provided
+        combination is found, there are two options of what is returned by this method:
+            - errors = True: For these two situations a Response with a 400 and 404 status
+                             is returned respectively.
+            - errors = False: None is returned in both situations.
+
+        :param request: the request from which data is used to retrieve the user
+        :param errors: whether to throw an error response or None
+        :return: the requested user, None or an error Response based on errors
         """
-        if volunteer_id:
-            return BlossomUser.objects.filter(id=volunteer_id).first()
-        if username:
-            return BlossomUser.objects.filter(username=username).first()
-        return None
+        if not any(key in request.data for key in self.REQUEST_FIELDS.keys()):
+            return Response(status=status.HTTP_400_BAD_REQUEST) if errors else None
 
-    def get_volunteer_from_request(self, request: Request) -> [None, BlossomUser]:
-        """
-        Retrieve a volunteer from a request.
-
-        The id and username are extracted from the request data for the lookup.
-
-        :param request: the HTTP Request
-        :return: the volunteer which is specified in the request data.
-        """
-        volunteer_id = request.data.get("v_id")
-        username = request.data.get("username")
-
-        return self.get_volunteer(volunteer_id=volunteer_id, username=username)
-
-
-class RequestDataMixin:
-    @staticmethod
-    def get_volunteer_info_from_json(
-        request: Request, error_out_if_bad_data: bool = False
-    ) -> [None, int, Response]:
-        """
-        Retrieve the volunteer ID from the information provided in the request.
-
-        Note that this method returns either the ID of the corresponding
-        volunteer or an error Response when this is not possible.
-
-        Returned error responses are the following:
-        - 400: There is none of the following fields in the HTTP body:
-            - v_id
-            - v_username
-            - username
-
-        :param request: the request to extract the information from
-        :param error_out_if_bad_data: whether to throw an error response or None
-        :return: either an int if the volunteer is found, or None or Response
-                 depending on the provided boolean
-
-        """
-        volunteer_id = request.data.get("v_id")
-        username = request.data.get("v_username") or request.data.get("username")
-        if not volunteer_id and not username and error_out_if_bad_data is True:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if volunteer_id:
-            return volunteer_id
-        if username:
-            if volunteer := BlossomUser.objects.filter(username=username).first():
-                return volunteer.id
-
-        return None
+        # Filter the BlossomUsers on fields present in the request data according to the
+        # mapping in the REQUEST_FIELDS constant.
+        user = BlossomUser.objects.filter(
+            **{
+                self.REQUEST_FIELDS[key]: value
+                for key, value in request.data.items()
+                if key in self.REQUEST_FIELDS.keys()
+            }
+        ).first()
+        return (
+            user if user or not errors else Response(status=status.HTTP_404_NOT_FOUND)
+        )

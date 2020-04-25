@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.authentication import AdminApiKeyCustomCheck
-from api.helpers import RequestDataMixin, VolunteerMixin
+from api.helpers import BlossomUserMixin
 from api.models import Submission, Transcription
 from api.serializers import (
     SubmissionSerializer,
@@ -147,10 +147,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         manual_parameters=[Parameter("submission_id", "query", type="string")],
     ),
 )
-class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin):
-    """The API view to view and edit information regarding Submissions."""
-
-    queryset = Submission.objects.all().order_by("-post_time")
+class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
     serializer_class = SubmissionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
 
@@ -189,19 +186,11 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             submission = Submission.objects.get(id=pk)
         except Submission.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-        response = self.get_volunteer_info_from_json(
-            request, error_out_if_bad_data=True
-        )
+        response = self.get_user_from_request(request, errors=True)
         if isinstance(response, Response):
-            return response  # it exploded, return the error
+            return response
         else:
-            volunteer_id = response
-
-        volunteer = self.get_volunteer(volunteer_id=volunteer_id)
-        if not volunteer:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        return submission, volunteer
+            return submission, response
 
     @swagger_auto_schema(
         manual_parameters=[Parameter("ctq", "query", type="boolean")],
@@ -478,7 +467,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         )
 
 
-class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
+class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
     """The API view to view and edit information regarding Transcribers."""
 
     queryset = Transcription.objects.all().order_by("-post_time")
@@ -546,9 +535,9 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             if not submission:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-        volunteer = self.get_volunteer_from_request(request)
-        if not volunteer:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        volunteer = self.get_user_from_request(request, errors=True)
+        if isinstance(volunteer, Response):
+            return volunteer
 
         transcription_id = request.data.get("t_id")
         if not transcription_id:
