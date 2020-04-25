@@ -20,10 +20,9 @@ class Submission(models.Model):
     Submission which is to be transcribed.
 
     Note that it is possible that multiple Transcriptions link to the same
-    Submission due to the transcription exceeding the maximum length of the
-    Transcription's completion method (e.g. the transcription is bigger than
-    9000 characters on Reddit. Hence the complete transcription is spread over
-    multiple Reddit comments, which are saved in the API as Transcriptions).
+    Submission due to multiple users possibly transcribing the same Submission.
+    An OCR transcription as well as a human transcription can be seen as a
+    common example of this phenomenon.
     """
 
     """
@@ -117,16 +116,7 @@ class Submission(models.Model):
 
 
 class Transcription(models.Model):
-    """
-    The transcription of a Submission.
-
-    Note that one instance of the Transcription can possibly be a partial
-    transcription of a Submission, where the complete transcription can be
-    aggregated by combining the multiple Transcription instances with the same
-    "submission". As explained in the Submission class, this can be due to the
-    complete transcription exceeding the maximum allowed length of the
-    "completion_method".
-    """
+    """The transcription of a Submission."""
 
     """The Submission for which the Transcription is made."""
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
@@ -171,9 +161,10 @@ class Transcription(models.Model):
     """
     Whether the Transcription is removed from Reddit.
 
-    This is mostly to keep track of the Reddit spam filter, as sometimes it
-    filters the posts as spam. Gladly this does not impact our validation,
-    as we can still access it through workarounds.
+    This is mostly to keep track of the behavior of the Reddit spam filter, 
+    as this filter sometimes marks the transcriptions falsely as spam. This
+    does not affect our validation as we can still access the transcription
+    through workarounds.
     """
     removed_from_reddit = models.BooleanField(default=False)
 

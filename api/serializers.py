@@ -1,9 +1,10 @@
 """
 Serializers for the model classes used within the API.
 
-These serializers are used to generate a JSON object from a specific model. The
+These serializers are used to generate a dictionary from a specific model. The
 fields and model used per serializer are specified in the Meta class included
-within the serializer.
+within the serializer. This serialized object can in turn be used for serving
+objects through the API.
 """
 from django.contrib.auth.models import User
 from rest_framework import serializers
