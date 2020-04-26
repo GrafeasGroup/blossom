@@ -1,5 +1,6 @@
+from typing import Dict
+
 from rest_framework import status
-from rest_framework.request import Request
 from rest_framework.response import Response
 
 from authentication.models import BlossomUser
@@ -9,7 +10,7 @@ class BlossomUserMixin:
     REQUEST_FIELDS = {"v_id": "id", "v_username": "username", "username": "username"}
 
     def get_user_from_request(
-        self, request: Request, errors: bool = False
+        self, data: Dict, errors: bool = False
     ) -> [BlossomUser, Response, None]:
         """
         Retrieve the BlossomUser based on information provided within the request data.
@@ -29,11 +30,11 @@ class BlossomUserMixin:
                              is returned respectively.
             - errors = False: None is returned in both situations.
 
-        :param request: the request from which data is used to retrieve the user
+        :param data: the dictionary from which data is used to retrieve the user
         :param errors: whether to throw an error response or None
         :return: the requested user, None or an error Response based on errors
         """
-        if not any(key in request.data for key in self.REQUEST_FIELDS.keys()):
+        if not any(key in data for key in self.REQUEST_FIELDS.keys()):
             return Response(status=status.HTTP_400_BAD_REQUEST) if errors else None
 
         # Filter the BlossomUsers on fields present in the request data according to the
@@ -41,7 +42,7 @@ class BlossomUserMixin:
         user = BlossomUser.objects.filter(
             **{
                 self.REQUEST_FIELDS[key]: value
-                for key, value in request.data.items()
+                for key, value in data.items()
                 if key in self.REQUEST_FIELDS.keys()
             }
         ).first()
