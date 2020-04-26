@@ -41,6 +41,4 @@ class BlossomUserMixin:
                 if key in self.REQUEST_FIELDS.keys()
             }
         ).first()
-        return (
-            user if user else Response(status=status.HTTP_404_NOT_FOUND)
-        )
+        return user if user else Response(status=status.HTTP_404_NOT_FOUND)
