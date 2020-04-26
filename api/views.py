@@ -186,7 +186,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             submission = Submission.objects.get(id=pk)
         except Submission.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        response = self.get_user_from_request(request.data, errors=True)
+        response = self.get_user_from_request(request.data)
         if isinstance(response, Response):
             return response
         else:
@@ -535,7 +535,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             if not submission:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
-        volunteer = self.get_user_from_request(request.data, errors=True)
+        volunteer = self.get_user_from_request(request.data)
         if isinstance(volunteer, Response):
             return volunteer
 

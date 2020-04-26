@@ -9,9 +9,7 @@ from authentication.models import BlossomUser
 class BlossomUserMixin:
     REQUEST_FIELDS = {"v_id": "id", "v_username": "username", "username": "username"}
 
-    def get_user_from_request(
-        self, data: Dict, errors: bool = False
-    ) -> [BlossomUser, Response, None]:
+    def get_user_from_request(self, data: Dict) -> [BlossomUser, Response]:
         """
         Retrieve the BlossomUser based on information provided within the request data.
 
@@ -25,17 +23,14 @@ class BlossomUserMixin:
         the combination of these values is found.
 
         When either none of the above keys is provided or no user with the provided
-        combination is found, there are two options of what is returned by this method:
-            - errors = True: For these two situations a Response with a 400 and 404 status
-                             is returned respectively.
-            - errors = False: None is returned in both situations.
+        combination is found, a Response with a 400 and 404 status is returned
+        respectively.
 
         :param data: the dictionary from which data is used to retrieve the user
-        :param errors: whether to throw an error response or None
-        :return: the requested user, None or an error Response based on errors
+        :return: the requested user or an error Response based on errors
         """
         if not any(key in data for key in self.REQUEST_FIELDS.keys()):
-            return Response(status=status.HTTP_400_BAD_REQUEST) if errors else None
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # Filter the BlossomUsers on fields present in the request data according to the
         # mapping in the REQUEST_FIELDS constant.
@@ -47,5 +42,5 @@ class BlossomUserMixin:
             }
         ).first()
         return (
-            user if user or not errors else Response(status=status.HTTP_404_NOT_FOUND)
+            user if user else Response(status=status.HTTP_404_NOT_FOUND)
         )
