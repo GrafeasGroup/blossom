@@ -5,3 +5,4 @@ import-order-style = pycharm
 max-complexity = 10
 max-line-length = 90
 use-varnames-strict-mode = true
+exclude =  .git,__pycache__,build,dist,.venv,api/bootstrap/,*/migrations/

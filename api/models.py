@@ -15,6 +15,33 @@ def create_id() -> uuid.UUID:
     return uuid.uuid4()
 
 
+class Source(models.Model):
+    # This is used for both submissions (where did the submission come from?) and
+    # for transcriptions (e.g. how was the transcription completed?)
+    # TODO: set foreign keys for Transcription and Submission -- default to "reddit"
+    name = models.CharField(max_length=20)
+
+    def __str__(self) -> str:
+        """
+        Create the string version of the source name.
+
+        :return: the name of the source.
+        """
+        return self.name
+
+
+def get_reddit_source() -> int:
+    """
+    Grabs the proper default ID for submissions and transcriptions.
+
+    Django cannot serialize lambda functions, so we need to have a helper
+    function to handle the default action of the `source` foreign keys.
+
+    :return: the ID of the Source record for reddit
+    """
+    return Source.objects.get(name="reddit").id
+
+
 class Submission(models.Model):
     """
     Submission which is to be transcribed.
@@ -25,27 +52,22 @@ class Submission(models.Model):
     common example of this phenomenon.
     """
 
-    """
-    The ID of the Submission on the "source" platform.
+    # The ID of the Submission on the "source" platform.
+    # Note that this field is not used as a primary key; an underlying
+    # "id" field is the primary key. Note: this is not named "source_id"
+    # because of internal conflicts with the `source` FK.
+    original_id = models.CharField(max_length=36, default=create_id)
 
-    Note that this field is not used as a primary key; an underlying
-    "id" field is the primary key.
-    """
-    source_id = models.CharField(max_length=36, default=create_id)
-
-    """The time the Submission is submitted."""
+    # The time the Submission is submitted.
     create_time = models.DateTimeField(default=timezone.now)
-    # last_update_time = models.DateTimeField(default=timezone.now)
+    last_update_time = models.DateTimeField(default=timezone.now)
 
-    """
-    The ID of the Submission in the old Redis database.
-
-    Note that this field is only used for handling the redis changeover and
-    can be removed afterwards.
-    """
+    # The ID of the Submission in the old Redis database.
+    # Note that this field is only used for handling the redis changeover and
+    # can be removed afterwards.
     redis_id = models.CharField(max_length=12, blank=True, null=True)
 
-    """The BlossomUser who has claimed the Submission."""
+    # The BlossomUser who has claimed the Submission.
     claimed_by = models.ForeignKey(
         "authentication.BlossomUser",
         on_delete=models.CASCADE,
@@ -54,7 +76,7 @@ class Submission(models.Model):
         blank=True,
     )
 
-    """The BlossomUser who has completed the Submission."""
+    # The BlossomUser who has completed the Submission.
     completed_by = models.ForeignKey(
         "authentication.BlossomUser",
         on_delete=models.CASCADE,
@@ -63,36 +85,30 @@ class Submission(models.Model):
         blank=True,
     )
 
-    """The time at which the Submission is claimed."""
+    # The time at which the Submission is claimed.
     claim_time = models.DateTimeField(default=None, null=True, blank=True)
 
-    """The time at which the Submission is claimed."""
+    # The time at which the Submission is completed.
     complete_time = models.DateTimeField(default=None, null=True, blank=True)
 
-    """
-    The source platform from which the Submission originates.
+    # The source platform from which the Submission originates
+    source = models.ForeignKey(
+        Source, default=get_reddit_source, on_delete=models.CASCADE
+    )
 
-    Note that the "submission_id" is related to this field as described in its
-    documentation.
-    """
-    source = models.CharField(max_length=20)
-
-    """
-    The URL to the Submission directly on its source.
-
-    Max length is derived from https://stackoverflow.com/a/219664
-    """
+    # The URL to the Submission directly on its source.
+    # Max length is derived from https://stackoverflow.com/a/219664
     url = models.CharField(max_length=2083, null=True, blank=True)
 
-    """The URL to the Submission on /r/TranscribersOfReddit."""
+    # The URL to the Submission on /r/TranscribersOfReddit.
     tor_url = models.CharField(max_length=2083, null=True, blank=True)
 
-    """Whether the post has been archived, for example by /u/tor_archivist."""
+    # Whether the post has been archived, for example by /u/tor_archivist
     archived = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         """
-        Retrieve the String representation of the Submission object.
+        Generate the string representation used for the admin panel.
 
         :return: the String representation of the Submission
         """
@@ -108,7 +124,6 @@ class Submission(models.Model):
 
         :return: whether the Submission has an OCR transcription
         """
-        # lazy load transcription model
         return bool(
             Transcription.objects.filter(
                 Q(submission=self) & Q(author__username="transcribot")
@@ -117,66 +132,45 @@ class Submission(models.Model):
 
 
 class Transcription(models.Model):
-    """The transcription of a Submission."""
-
-    """The Submission for which the Transcription is made."""
+    # The Submission for which the Transcription is made
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
 
-    """The BlossomUser who has authored of the Transcription."""
+    # The BlossomUser who has authored the Transcription
     author = models.ForeignKey("authentication.BlossomUser", on_delete=models.CASCADE)
 
-    """The time the Transcription has been created."""
-    # create_time = models.DateTimeField(default=timezone.now)
-    # last_update_time = models.DateTimeField(default=timezone.now)
-    # reddit comment ID or similar
+    # The time the Transcription has been created
+    create_time = models.DateTimeField(default=timezone.now)
+    last_update_time = models.DateTimeField(default=timezone.now)
 
-    """
-    The ID of the Transcription on the "completion_method" platform.
+    # The ID of the Transcription on the "source" platform.
+    # Note that this field is not used as a primary key; an underlying
+    # "id" field is the primary key. Note: this is not named "source_id"
+    # because of internal conflicts with the `source` FK.
+    original_id = models.CharField(max_length=36)
 
-    Note that this field is not used as a primary key; an underlying
-    "id" field is the primary key.
-    """
-    source_id = models.CharField(max_length=36)
+    # The platform from which the Transcription originates.
+    source = models.ForeignKey(
+        Source, default=get_reddit_source, on_delete=models.CASCADE
+    )
 
-    # "reddit", "api", "blossom". Leaving extra characters in case we want
-    # to expand the options.
-    # TODO: FOREIGN KEY
-    # """The platform from which the Transcription originates."""
-    # completion_method = models.CharField(max_length=20)
-
-    """The URL to the Transcription on the source platform."""
+    # The URL to the Transcription on the source platform.
     url = models.CharField(max_length=2083, null=True, blank=True)
 
-    """
-    The text of the transcription. We force the SQL longtext type, per
-    https://stackoverflow.com/a/23169977.
-    """
+    # The text of the transcription. We force the SQL longtext type, per
+    # https://stackoverflow.com/a/23169977.
     text = models.TextField(max_length=4_294_000_000, null=True, blank=True)
 
-    # TODO: Move all ocr_text fields to the `text` field, then remove ocr_text
-    ocr_text = models.TextField(max_length=4_294_000_000, null=True, blank=True)
-
-    """
-    Whether the Transcription is removed from Reddit.
-
-    This is mostly to keep track of the behavior of the Reddit spam filter,
-    as this filter sometimes marks the transcriptions falsely as spam. This
-    does not affect our validation as we can still access the transcription
-    through workarounds.
-    """
+    # Whether the Transcription is removed from Reddit.
+    # This is mostly to keep track of the behavior of the Reddit spam filter,
+    # as this filter sometimes marks the transcriptions falsely as spam. This
+    # does not affect our validation as we can still access the transcription
+    # through workarounds.
     removed_from_reddit = models.BooleanField(default=False)
 
     def __str__(self) -> str:
         """
-        Retrieve the String representation of the Transcription object.
+        Generate the string representation used for the admin panel.
 
         :return: the String representation of the Transcription
         """
         return f"{self.submission} by {self.author.username}"
-
-
-class Source(models.Model):
-    # This is used for both submissions (where did the submission come from?) and
-    # for transcriptions (e.g. how was the transcription completed?)
-    # TODO: set foreign keys for Transcription and Submission -- default to "reddit"
-    name = models.CharField(max_length=20)
