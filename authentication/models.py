@@ -14,24 +14,24 @@ class BlossomUser(AbstractUser):
     status of the user and the roles they fulfill.
     """
 
-    """The backend class which is used to authenticate the BlossomUser."""
+    # The backend class which is used to authenticate the BlossomUser.
     backend = "authentication.backends.EmailBackend"
 
-    """Whether the user is a staff member of Grafeas."""
+    # Whether the user is a staff member of Grafeas.
     is_grafeas_staff = models.BooleanField(default=False)
 
-    """The API key which the user can use when posting requests to the API."""
+    # The API key which the user can use when posting requests to the API.
     api_key = models.OneToOneField(
         APIKey, on_delete=models.CASCADE, null=True, blank=True
     )
 
-    """Whether the user is a volunteer of Grafeas."""
+    # Whether the user is a volunteer of Grafeas.
     is_volunteer = models.BooleanField(default=True)
 
-    """Whether the user has accepted the Code of Conduct."""
+    # Whether the user has accepted the Code of Conduct.
     accepted_coc = models.BooleanField(default=False)
 
-    """Whether the user is blacklisted."""
+    # Whether the user is blacklisted.
     blacklisted = models.BooleanField(default=False)
 
     @property
