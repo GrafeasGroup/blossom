@@ -1,6 +1,6 @@
 [flake8]
 application-import-names = api,authentication,blossom,blossom_wiki,engineeringblog,payments,website
-ignore = ANN101, D100, D101, D106, W503,
+ignore = ANN101, D100, D101, D105, D106, W503,
 import-order-style = pycharm
 max-complexity = 10
 max-line-length = 90
