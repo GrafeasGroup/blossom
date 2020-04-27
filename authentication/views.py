@@ -35,7 +35,7 @@ class LoginView(TemplateView):
         :returns: the URL to where the request should be redirected
         :raise Resolver404: if the URL cannot be resolved in any available host
         """
-        next_path = f'//{request.GET["next"].split("//")[-1]}'
+        next_path = request.GET["next"].split("http:")[-1]
         try:
             # Check whether the requested URL DOES resolve in the base host.
             match = resolve(next_path)
