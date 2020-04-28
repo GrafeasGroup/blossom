@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 
 from django.test import Client
 
-from api.models import Submission, Transcription
+from api.models import Submission, Transcription, Source
 from authentication.models import APIKey, BlossomUser
 
 BASE_SUBMISSION_INFO = {
@@ -93,6 +93,10 @@ def create_transcription(
         "author": user,
     }
     return Transcription.objects.create(**transcription_info)
+
+
+def create_source(name: str=None) -> Source:
+    return Source.objects.create(name=name if name else "unittests")
 
 
 def setup_user_client(

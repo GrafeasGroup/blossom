@@ -12,6 +12,7 @@ from api.models import Submission
 from api.tests.helpers import (
     create_submission,
     create_transcription,
+    create_source,
     create_user,
     setup_user_client,
 )
@@ -24,7 +25,8 @@ class TestSubmissionCreation:
     def test_create_minimum_args(self, client: Client) -> None:
         """Test whether creation with minimum arguments is successful."""
         client, headers, _ = setup_user_client(client)
-        data = {"submission_id": "spaaaaace", "source": "the_tests"}
+        source = create_source()
+        data = {"original_id": "spaaaaace", "source_id": source.id}
         result = client.post(
             reverse("submission-list", host="api"),
             data,
@@ -34,15 +36,16 @@ class TestSubmissionCreation:
         )
         assert result.status_code == status.HTTP_201_CREATED
         submission = Submission.objects.get(id=result.json()["id"])
-        assert submission.submission_id == data["submission_id"]
-        assert submission.source == data["source"]
+        assert submission.original_id == data["original_id"]
+        assert submission.source == source
 
     def test_submission_create_with_full_args(self, client: Client) -> None:
         """Test whether creation with all arguments is successful."""
         client, headers, _ = setup_user_client(client)
+        source = create_source()
         data = {
-            "submission_id": "spaaaaace",
-            "source": "the_tests",
+            "original_id": "spaaaaace",
+            "source_id": source.id,
             "url": "http://example.com",
             "tor_url": "http://example.com/tor",
         }
@@ -55,15 +58,15 @@ class TestSubmissionCreation:
         )
         assert result.status_code == status.HTTP_201_CREATED
         submission = Submission.objects.get(id=result.json()["id"])
-        assert submission.submission_id == data["submission_id"]
-        assert submission.source == data["source"]
+        assert submission.original_id == data["original_id"]
+        assert submission.source == source
         assert submission.url == data["url"]
         assert submission.tor_url == data["tor_url"]
 
     def test_create_no_source(self, client: Client) -> None:
         """Test whether a request without source is considered a bad request."""
         client, headers, _ = setup_user_client(client)
-        data = {"submission_id": "spaaaaace"}
+        data = {"original_id": "spaaaaace"}
         result = client.post(
             reverse("submission-list", host="api"),
             json.dumps(data),
@@ -73,10 +76,24 @@ class TestSubmissionCreation:
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_create_with_invalid_source(self, client: Client) -> None:
+        """Test whether a request with an invalid source returns a 404."""
+        client, headers, _ = setup_user_client(client)
+        data = {"original_id": "spaaaaace", "source_id": 99}
+        result = client.post(
+            reverse("submission-list", host="api"),
+            json.dumps(data),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_404_NOT_FOUND
+
     def test_create_no_id(self, client: Client) -> None:
         """Test whether a request without submission ID is considered a bad request."""
         client, headers, _ = setup_user_client(client)
-        data = {"source": "the_tests"}
+        source = create_source()
+        data = {"source_id": source.id}
 
         result = client.post(
             reverse("submission-list", host="api"),
@@ -117,7 +134,7 @@ class TestSubmissionGet:
 
         result = client.get(
             reverse("submission-list", host="api")
-            + f"?submission_id={first.submission_id}",
+            + f"?submission_id={first.original_id}",
             HTTP_HOST="api",
             content_type="application/json",
             **headers,
@@ -333,7 +350,7 @@ class TestSubmissionDone:
         assert result.status_code == status.HTTP_201_CREATED
         assert submission.claimed_by == user
         assert submission.completed_by == user
-        assert result.json()["submission_id"] == submission.submission_id
+        assert result.json()["original_id"] == submission.submission_id
 
     def test_done_without_claim(self, client: Client) -> None:
         """Test whether a done without the submission claimed is caught correctly."""

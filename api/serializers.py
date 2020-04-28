@@ -9,7 +9,7 @@ objects through the API.
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from api.models import Submission, Transcription
+from api.models import Submission, Transcription, Source
 from authentication.models import BlossomUser
 
 
@@ -28,9 +28,16 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
             "gamma",
             "date_joined",
             "last_login",
+            "last_update_time",
             "accepted_coc",
             "blacklisted",
         )
+
+
+class SourceSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Source
+        fields = ("name",)
 
 
 class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
@@ -45,8 +52,9 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
         model = Submission
         fields = (
             "id",
-            "submission_id",
-            "submission_time",
+            "original_id",
+            "create_time",
+            "last_update_time",
             "claimed_by",
             "completed_by",
             "claim_time",
@@ -70,10 +78,10 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
             "id",
             "submission",
             "author",
-            "transcription_id",
-            "completion_method",
+            "create_time",
+            "last_update_time",
+            "original_id",
             "url",
             "text",
-            "ocr_text",
             "removed_from_reddit",
         )

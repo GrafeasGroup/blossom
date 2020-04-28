@@ -8,7 +8,9 @@ from django.utils import timezone
 
 def create_id() -> uuid.UUID:
     """
-    Create a random UUID through using the uuid library.
+    Create a random UUID through using the uuid library so that we can fake
+    source IDs if needed; for example, when creating dummy transcriptions or
+    submissions due to incomplete data from the Redis transition over 2019-20.
 
     :return: the random UUID
     """
@@ -16,17 +18,16 @@ def create_id() -> uuid.UUID:
 
 
 class Source(models.Model):
-    # This is used for both submissions (where did the submission come from?) and
-    # for transcriptions (e.g. how was the transcription completed?)
-    # TODO: set foreign keys for Transcription and Submission -- default to "reddit"
+    """
+    The source that the particular Submission or Transcription came from. The
+    majority of these will be "reddit", but to save on space and more easily
+    standardize we have the option of including other sources as we grow.
+    """
+
+    # Where did our content come from?
     name = models.CharField(max_length=20)
 
     def __str__(self) -> str:
-        """
-        Create the string version of the source name.
-
-        :return: the name of the source.
-        """
         return self.name
 
 
@@ -107,11 +108,6 @@ class Submission(models.Model):
     archived = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        """
-        Generate the string representation used for the admin panel.
-
-        :return: the String representation of the Submission
-        """
         return f"{self.source_id}"
 
     @property
@@ -168,9 +164,4 @@ class Transcription(models.Model):
     removed_from_reddit = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        """
-        Generate the string representation used for the admin panel.
-
-        :return: the String representation of the Transcription
-        """
         return f"{self.submission} by {self.author.username}"

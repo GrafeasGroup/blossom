@@ -20,11 +20,12 @@ from rest_framework.views import APIView
 
 from api.authentication import AdminApiKeyCustomCheck
 from api.helpers import RequestDataMixin, VolunteerMixin
-from api.models import Submission, Transcription
+from api.models import Submission, Transcription, Source
 from api.serializers import (
     SubmissionSerializer,
     TranscriptionSerializer,
     VolunteerSerializer,
+    SourceSerializer
 )
 from authentication.models import BlossomUser
 from blossom.slack_conn.helpers import client as slack
@@ -135,6 +136,18 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         return Response(
             self.serializer_class(volunteer).data, status=status.HTTP_201_CREATED
         )
+
+
+class SourceViewSet(viewsets.ModelViewSet):
+    """
+    The API view to view and edit information regarding Sources.
+
+    This information is required for both Submissions and Transcriptions.
+    """
+
+    queryset = Source.objects.all().order_by("id")
+    serializer_class = SourceSerializer
+    permission_classes = (AdminApiKeyCustomCheck,)
 
 
 @method_decorator(
@@ -443,7 +456,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             type="object",
             properties={
                 "submission_id": Schema(type="string"),
-                "source": Schema(type="string"),
+                "source_id": Schema(type="integer"),
                 "url": Schema(type="string"),
                 "tor_url": Schema(type="string"),
             },
@@ -451,25 +464,29 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         responses={
             201: DocResponse("Successful creation", schema=serializer_class),
             400: "Required parameters not provided",
+            404: "Source requested was not found."
         },
     )
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Create a new submission.
 
-        Note that both the submission id and the source should be supplied.
+        Note that both the original id and the source id should be supplied.
         """
-        submission_id = request.data.get("submission_id")
-        source = request.data.get("source")
+        original_id = request.data.get("original_id")
+        source_id = request.data.get("source_id")
+
+        if not original_id or not source_id:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if (source_obj := Source.objects.filter(id=source_id).first()) is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         url = request.data.get("url")
         tor_url = request.data.get("tor_url")
 
-        if not submission_id or not source:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         submission = Submission.objects.create(
-            submission_id=submission_id, source=source, url=url, tor_url=tor_url
+            original_id=original_id, source=source_obj, url=url, tor_url=tor_url
         )
 
         return Response(
