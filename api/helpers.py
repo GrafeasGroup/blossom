@@ -12,9 +12,9 @@ class BlossomUserMixin:
     def get_user_from_request(self, data: Dict) -> [BlossomUser, Response]:
         """
         Retrieve the BlossomUser based on information provided within the request data.
-
-        The user can be retrieved based on either its ID and/or its username. To do this,
-        any combination of the following keys:
+        
+        The user can be retrieved by its ID and / or its username using a combination of
+        any of the following keys:
             - username:   The username
             - v_id:       The user ID
             - v_username: The username
