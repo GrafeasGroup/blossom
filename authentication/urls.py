@@ -1,8 +1,9 @@
+"""URL configuration for the Authentication application."""
 from django.urls import path
 
-from authentication.views import LoginView, LogoutView
+from authentication.views import LoginView, logout_view
 
 urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
-    path("logout/", LogoutView, name="logout"),
+    path("logout/", logout_view, name="logout"),
 ]
