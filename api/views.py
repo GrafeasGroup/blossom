@@ -7,6 +7,7 @@ from typing import Dict, Tuple
 import pytz
 from django.conf import settings
 from django.db.models import Q, QuerySet
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_yasg.openapi import Parameter, Response as DocResponse, Schema
@@ -19,9 +20,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.authentication import AdminApiKeyCustomCheck
-from api.helpers import BlossomUserMixin
-from api.models import Source
-from api.models import Submission, Transcription
+from api.helpers import BlossomUserMixin, validate_request
+from api.models import Source, Submission, Transcription
 from api.serializers import (
     SourceSerializer,
     SubmissionSerializer,
@@ -50,19 +50,6 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     basename = "volunteer"
     permission_classes = (AdminApiKeyCustomCheck,)
 
-    def get_queryset(self) -> QuerySet:
-        """
-        Get information on all volunteers or a specific volunteer if specified.
-
-        Including a username as a query parameter filters the volunteers on the
-        specified username.
-        """
-        queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
-        username = self.request.query_params.get("username", None)
-        if username is not None:
-            queryset = queryset.filter(username=username)
-        return queryset
-
     @swagger_auto_schema(
         manual_parameters=[Parameter("username", "query", type="string")],
         responses={
@@ -71,17 +58,23 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         },
     )
     @action(detail=False, methods=["get"])
-    def summary(self, request: Request) -> Response:
+    @validate_request(query_params={"username"})
+    def summary(self, request: Request, username: str = None) -> Response:
         """Get information on the volunteer with the provided username."""
-        username = request.query_params.get("username", None)
-        if not username:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        volunteer = BlossomUser.objects.filter(
-            Q(username=username) & Q(is_volunteer=True)
-        ).first()
-        if not volunteer:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(self.serializer_class(volunteer).data)
+        user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
+        return Response(self.serializer_class(user).data)
+
+    def get_queryset(self) -> QuerySet:
+        """
+        Get information on all volunteers or a specific volunteer if specified.
+
+        Including a username as a query parameter filters the volunteers on the
+        specified username.
+        """
+        queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
+        if "username" in self.request.query_params:
+            queryset = queryset.filter(username=self.request.query_params["username"])
+        return queryset
 
     @swagger_auto_schema(
         request_body=no_body, responses={404: "No volunteer with the specified ID."}
@@ -94,14 +87,12 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         This method should only be called in the case of erroneous behavior of
         the proper procedure of awarding gamma.
         """
-        try:
-            volunteer = BlossomUser.objects.get(id=pk)
-        except BlossomUser.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        user = get_object_or_404(BlossomUser, id=pk)
 
         gamma_plus_one, _ = Source.objects.get_or_create(name="gamma_plus_one")
 
         dummy_post = Submission.objects.create(
+<<<<<<< HEAD
             source=gamma_plus_one, completed_by=volunteer
         )
         Transcription.objects.create(
@@ -109,9 +100,18 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             author=volunteer,
             original_id=str(uuid.uuid4()),
             source=gamma_plus_one,
+=======
+            source="gamma_plus_one", completed_by=user
+        )
+        Transcription.objects.create(
+            submission=dummy_post,
+            author=user,
+            transcription_id=str(uuid.uuid4()),
+            completion_method="gamma_plus_one",
+>>>>>>> Add validation decorator and example usage
             text="dummy transcription",
         )
-        return Response(self.serializer_class(volunteer).data)
+        return Response(self.serializer_class(user).data)
 
     @swagger_auto_schema(
         request_body=Schema(
@@ -123,21 +123,19 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             422: "There already exists a volunteer with the specified username",
         },
     )
-    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+    @validate_request(data_params={"username"})
+    def create(
+        self, request: Request, username: str = None, *args: object, **kwargs: object
+    ) -> Response:
         """Create a new user with the specified username."""
-        username = request.data.get("username")
-
-        if not username:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if BlossomUser.objects.filter(username=username).first():
+        if BlossomUser.objects.filter(username=username).exists():
             return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-        volunteer = BlossomUser.objects.create(username=username)
-        volunteer.set_unusable_password()
+        user = BlossomUser.objects.create(username=username)
+        user.set_unusable_password()
 
         return Response(
-            self.serializer_class(volunteer).data, status=status.HTTP_201_CREATED
+            self.serializer_class(user).data, status=status.HTTP_201_CREATED
         )
 
 
