@@ -50,6 +50,18 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     basename = "volunteer"
     permission_classes = (AdminApiKeyCustomCheck,)
 
+    def get_queryset(self) -> QuerySet:
+        """
+        Get information on all volunteers or a specific volunteer if specified.
+
+        Including a username as a query parameter filters the volunteers on the
+        specified username.
+        """
+        queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
+        if "username" in self.request.query_params:
+            queryset = queryset.filter(username=self.request.query_params["username"])
+        return queryset
+
     @swagger_auto_schema(
         manual_parameters=[Parameter("username", "query", type="string")],
         responses={
@@ -63,18 +75,6 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         """Get information on the volunteer with the provided username."""
         user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
         return Response(self.serializer_class(user).data)
-
-    def get_queryset(self) -> QuerySet:
-        """
-        Get information on all volunteers or a specific volunteer if specified.
-
-        Including a username as a query parameter filters the volunteers on the
-        specified username.
-        """
-        queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
-        if "username" in self.request.query_params:
-            queryset = queryset.filter(username=self.request.query_params["username"])
-        return queryset
 
     @swagger_auto_schema(
         request_body=no_body, responses={404: "No volunteer with the specified ID."}
