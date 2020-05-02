@@ -6,7 +6,9 @@ from django_hosts.resolvers import reverse
 from rest_framework import status
 
 from api.models import Transcription
-from api.tests.helpers import create_submission, create_transcription, setup_user_client
+from api.tests.helpers import (
+    create_submission, create_transcription, setup_user_client, create_source
+)
 
 
 class TestTranscriptionCreation:
@@ -16,11 +18,12 @@ class TestTranscriptionCreation:
         """Test whether the creation functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
         submission = create_submission()
+        source = create_source()
         data = {
-            "submission_id": submission.submission_id,
-            "v_id": user.id,
+            "original_id": submission.original_id,
+            "username": user.username,
             "t_id": "ABC",
-            "completion_method": "automated tests",
+            "completion_method": source,
             "t_url": "https://example.com",
             "t_text": "test content",
         }
@@ -36,7 +39,7 @@ class TestTranscriptionCreation:
         transcription = Transcription.objects.get(id=result.json()["id"])
         assert result.status_code == status.HTTP_201_CREATED
         assert transcription.submission == submission
-        assert transcription.completion_method == data["completion_method"]
+        assert transcription.source == data["source"]
         assert transcription.author == user
         assert transcription.transcription_id == data["t_id"]
         assert transcription.url == data["t_url"]
@@ -48,7 +51,7 @@ class TestTranscriptionCreation:
         submission = create_submission()
         # this data comes from tor_ocr and does not have the t_text key
         data = {
-            "submission_id": submission.submission_id,
+            "original_id": submission.original_id,
             "v_id": user.id,
             "t_id": "ABC",
             "completion_method": "automated tests",
@@ -69,13 +72,13 @@ class TestTranscriptionCreation:
         assert transcription.text is None
         assert transcription.ocr_text == data["ocr_text"]
 
-    def test_create_no_submission_id(self, client: Client) -> None:
+    def test_create_no_original_id(self, client: Client) -> None:
         """Test whether a creation without submission ID is caught correctly."""
         client, headers, user = setup_user_client(client)
         data = {
             "v_id": user.id,
             "t_id": "ABC",
-            "completion_method": "automated tests",
+            "source": 'aaa',
             "t_url": "https://example.com",
             "t_text": "test content",
         }
@@ -88,11 +91,11 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_create_invalid_submission_id(self, client: Client) -> None:
+    def test_create_invalid_original_id(self, client: Client) -> None:
         """Test whether a creation with an invalid submission ID is caught correctly."""
         client, headers, user = setup_user_client(client)
         data = {
-            "submission_id": 404,
+            "original_id": 404,
             "v_id": user.id,
             "t_id": "ABC",
             "completion_method": "automated tests",
@@ -113,7 +116,7 @@ class TestTranscriptionCreation:
         client, headers, _ = setup_user_client(client)
         submission = create_submission()
         data = {
-            "submission_id": submission.submission_id,
+            "original_id": submission.original_id,
             "v_id": 404,
             "t_id": "ABC",
             "completion_method": "automated tests",
@@ -134,7 +137,7 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "submission_id": submission.submission_id,
+            "original_id": submission.original_id,
             "v_id": user.id,
             "completion_method": "automated tests",
             "t_url": "https://example.com",
@@ -154,7 +157,7 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "submission_id": submission.submission_id,
+            "original_id": submission.original_id,
             "v_id": user.id,
             "t_id": "ABC",
             "t_url": "https://example.com",
@@ -174,7 +177,7 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "submission_id": submission.submission_id,
+            "original_id": submission.original_id,
             "v_id": user.id,
             "t_id": "ABC",
             "completion_method": "automated tests",
@@ -194,7 +197,7 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "submission_id": submission.submission_id,
+            "original_id": submission.original_id,
             "v_id": user.id,
             "t_id": "ABC",
             "completion_method": "automated tests",
@@ -214,7 +217,7 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "submission_id": submission.submission_id,
+            "original_id": submission.original_id,
             "v_id": user.id,
             "t_id": "ABC",
             "completion_method": "automated tests",
@@ -239,12 +242,12 @@ class TestTranscriptionSearch:
         """Test whether only transcriptions of the provided Submission are returned."""
         client, headers, user = setup_user_client(client)
         first_sub = create_submission()
-        second_sub = create_submission(submission_id="second_submission")
+        second_sub = create_submission(original_id="second_submission")
         transcription = create_transcription(first_sub, user)
         create_transcription(second_sub, user)
         result = client.get(
             reverse("transcription-search", host="api")
-            + f"?submission_id={first_sub.submission_id}",
+            + f"?original_id={first_sub.original_id}",
             HTTP_HOST="api",
             content_type="application/json",
             **headers,
@@ -257,7 +260,7 @@ class TestTranscriptionSearch:
         """Test whether no items are returned when a search on a nonexistent ID done."""
         client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("transcription-search", host="api") + "?submission_id=404",
+            reverse("transcription-search", host="api") + "?original_id=404",
             HTTP_HOST="api",
             content_type="application/json",
             **headers,
@@ -266,7 +269,7 @@ class TestTranscriptionSearch:
         assert result.status_code == status.HTTP_200_OK
         assert not result.json()
 
-    def test_search_no_submission_id(self, client: Client) -> None:
+    def test_search_no_original_id(self, client: Client) -> None:
         """Check whether a search without ID is caught correctly."""
         client, headers, user = setup_user_client(client)
         result = client.get(

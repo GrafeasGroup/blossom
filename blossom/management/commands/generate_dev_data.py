@@ -131,8 +131,8 @@ def create_dummy_submissions(no_urls: bool) -> None:
 
         submission_date = gen_datetime()
         submission = Submission.objects.create(
-            submission_id=uuid.uuid4(),
-            submission_time=submission_date,
+            original_id=uuid.uuid4(),
+            create_time=submission_date,
             claimed_by=volunteer,
             completed_by=volunteer,
             claim_time=submission_date + timedelta(hours=2),
@@ -171,7 +171,7 @@ def create_dummy_transcriptions() -> None:
             Transcription.objects.create(
                 submission=submission,
                 author=submission.claimed_by,
-                post_time=submission.submission_time + timedelta(minutes=1),
+                post_time=submission.create_time + timedelta(minutes=1),
                 transcription_id=uuid.uuid4(),
                 completion_method='bootstrap script',
                 url=None,

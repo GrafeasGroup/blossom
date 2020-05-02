@@ -7,13 +7,13 @@ from api.models import Submission, Transcription, Source
 from authentication.models import APIKey, BlossomUser
 
 BASE_SUBMISSION_INFO = {
-    "submission_id": "base_submission_id",
-    "source": "base_source",
+    "original_id": "base_original_id",
+    "source": None,
 }
 BASE_TRANSCRIPTION_INFO = {
-    "transcription_id": "base_transcription_id",
-    "completion_method": "base_completion_method",
-    "url": "base_url",
+    "original_id": "base_original_id",
+    "source": None,
+    "url": "https://baseurl.org",
     "text": "base_text",
     "removed_from_reddit": False,
 }
@@ -48,6 +48,11 @@ def create_user(**kwargs: object) -> BlossomUser:
     return user
 
 
+def get_default_test_source() -> Source:
+    source, _ = Source.objects.get_or_create(name='unittests')
+    return source
+
+
 def create_submission(**kwargs: object) -> Submission:
     """
     Create a new submission or get the submission with the corresponding information.
@@ -66,11 +71,13 @@ def create_submission(**kwargs: object) -> Submission:
         **BASE_SUBMISSION_INFO,
         **{key: kwargs[key] for key in kwargs if key in dir(Submission)},
     }
+    if submission_info['source'] is None:
+        submission_info['source'] = get_default_test_source()
     return Submission.objects.create(**submission_info)
 
 
 def create_transcription(
-    submission: Submission, user: BlossomUser, **kwargs: object
+        submission: Submission, user: BlossomUser, **kwargs: object
 ) -> Transcription:
     """
     Create a new submission or get the submission with the corresponding information.
@@ -92,15 +99,17 @@ def create_transcription(
         "submission": submission,
         "author": user,
     }
+    if transcription_info['source'] is None:
+        transcription_info['source'] = get_default_test_source()
     return Transcription.objects.create(**transcription_info)
 
 
-def create_source(name: str=None) -> Source:
+def create_source(name: str = None) -> Source:
     return Source.objects.create(name=name if name else "unittests")
 
 
 def setup_user_client(
-    client: Client, login: bool = True, **kwargs: object
+        client: Client, login: bool = True, **kwargs: object
 ) -> Tuple[Client, Dict, BlossomUser]:
     """
     Set the client up with a new user, forcing login on the client as a default.

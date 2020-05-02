@@ -113,7 +113,7 @@ class TestSubmissionGet:
         """Test whether all current submissions are provided when no args are provided."""
         client, headers, _ = setup_user_client(client)
         first = create_submission()
-        second = create_submission(submission_id="second")
+        second = create_submission(original_id="second")
 
         result = client.get(
             reverse("submission-list", host="api"),
@@ -130,11 +130,11 @@ class TestSubmissionGet:
         """Test whether the specific submission is provided when an ID is supplied."""
         client, headers, _ = setup_user_client(client)
         first = create_submission()
-        create_submission(submission_id="second")
+        create_submission(original_id="second")
 
         result = client.get(
             reverse("submission-list", host="api")
-            + f"?submission_id={first.original_id}",
+            + f"?original_id={first.original_id}",
             HTTP_HOST="api",
             content_type="application/json",
             **headers,
@@ -151,7 +151,7 @@ class TestSubmissionExpired:
         """Test whether only the expired submission is returned."""
         client, headers, _ = setup_user_client(client)
         first = create_submission(
-            submission_time=timezone.now() - timezone.timedelta(days=3)
+            create_time=timezone.now() - timezone.timedelta(days=3)
         )
         create_submission()
 
@@ -274,7 +274,7 @@ class TestSubmissionClaim:
         assert result.json()["id"] == submission.id
         assert submission.claimed_by == user
 
-    def test_claim_invalid_submission_id(self, client: Client) -> None:
+    def test_claim_invalid_original_id(self, client: Client) -> None:
         """Test whether a claim with an invalid submission id is successfully caught."""
         client, headers, user = setup_user_client(client)
         data = {"username": user.username}
@@ -350,7 +350,7 @@ class TestSubmissionDone:
         assert result.status_code == status.HTTP_201_CREATED
         assert submission.claimed_by == user
         assert submission.completed_by == user
-        assert result.json()["original_id"] == submission.submission_id
+        assert result.json()["original_id"] == submission.original_id
 
     def test_done_without_claim(self, client: Client) -> None:
         """Test whether a done without the submission claimed is caught correctly."""

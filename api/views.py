@@ -155,9 +155,9 @@ class SourceViewSet(viewsets.ModelViewSet):
     decorator=swagger_auto_schema(
         operation_summary="Get information on all submissions or a specific"
         " submission if specified.",
-        operation_description="Include the submission_id as a query to filter"
+        operation_description="Include the original_id as a query to filter"
         " the submissions on the specified ID.",
-        manual_parameters=[Parameter("submission_id", "query", type="string")],
+        manual_parameters=[Parameter("original_id", "query", type="string")],
     ),
 )
 class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin):
@@ -171,13 +171,13 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         """
         Get information on all submissions or a specific submission if specified.
 
-        When a submission_id is provided as a query parameter, filter the
+        When a original_id is provided as a query parameter, filter the
         queryset on that submission.
         """
         queryset = Submission.objects.all().order_by("id")
-        submission_id = self.request.query_params.get("submission_id", None)
-        if submission_id is not None:
-            queryset = queryset.filter(submission_id=submission_id)
+        original_id = self.request.query_params.get("original_id", None)
+        if original_id is not None:
+            queryset = queryset.filter(original_id=original_id)
         return queryset
 
     def _get_possible_claim_done_errors(
@@ -240,7 +240,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         queryset = Submission.objects.filter(
             Q(completed_by=None)
             & Q(claimed_by=None)
-            & Q(submission_time__lt=delay_time)
+            & Q(create_time__lt=delay_time)
             & Q(archived=False)
         )
         return Response(
@@ -455,7 +455,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         request_body=Schema(
             type="object",
             properties={
-                "submission_id": Schema(type="string"),
+                "original_id": Schema(type="string"),
                 "source_id": Schema(type="integer"),
                 "url": Schema(type="string"),
                 "tor_url": Schema(type="string"),
@@ -506,7 +506,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         request_body=Schema(
             type="object",
             required=[
-                "submission_id",
+                "original_id",
                 "username",
                 "t_id",
                 "completion_method",
@@ -515,7 +515,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
                 "ocr_text",
             ],
             properties={
-                "submission_id": Schema(type="string"),
+                "original_id": Schema(type="string"),
                 "username": Schema(type="string"),
                 "t_id": Schema(type="string"),
                 "completion_method": Schema(type="string"),
@@ -537,7 +537,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         Create a new transcription.
 
         The following fields are passed in the HTTP Body:
-            - submission_id         the ID of the corresponding submission
+            - original_id         the ID of the corresponding submission
             - v_id (or username)    the ID or username of the authoring volunteer
             - t_id                  the base36 ID of the comment
             - completion_method     the system which has submitted this request
@@ -551,15 +551,15 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         Moreover, note that either t_text or ocr_text should be provided, not
         both.
         """
-        submission_id = request.data.get("submission_id")
-        if submission_id is None:
+        original_id = request.data.get("original_id")
+        if original_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # did they give us an actual submission id?
-        submission = Submission.objects.filter(submission_id=submission_id).first()
+        submission = Submission.objects.filter(original_id=original_id).first()
         if not submission:
             # ...or did they give us the database ID of a submission?
-            submission = Submission.objects.filter(id=submission_id).first()
+            submission = Submission.objects.filter(id=original_id).first()
             if not submission:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -607,22 +607,22 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         )
 
     @swagger_auto_schema(
-        manual_parameters=[Parameter("submission_id", "query", type="string")],
-        responses={400: 'Query parameter "submission_id" not present'},
+        manual_parameters=[Parameter("original_id", "query", type="string")],
+        responses={400: 'Query parameter "original_id" not present'},
     )
     @action(detail=False, methods=["get"])
     def search(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Search for the transcriptions of a specific submission.
 
-        Note that providing a submission_id as a query parameter is mandatory.
+        Note that providing a original_id as a query parameter is mandatory.
         """
-        s_id = request.query_params.get("submission_id", None)
+        s_id = request.query_params.get("original_id", None)
 
         if not s_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        queryset = Transcription.objects.filter(submission__submission_id=s_id)
+        queryset = Transcription.objects.filter(submission__original_id=s_id)
         return Response(
             data=self.serializer_class(
                 queryset, many=True, context={"request": request}
