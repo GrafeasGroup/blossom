@@ -71,7 +71,7 @@ def validate_request(query_params: Set = None, data_params: Set = None) -> Calla
 class BlossomUserMixin:
     REQUEST_FIELDS = {"v_id": "id", "v_username": "username", "username": "username"}
 
-    def get_user_from_request(self, data: Dict) -> [BlossomUser, Response]:
+    def get_user_from_request(self, data: Dict) -> BlossomUser:
         """
         Retrieve the BlossomUser based on information provided within the request data.
 
@@ -85,11 +85,12 @@ class BlossomUserMixin:
         the combination of these values is found.
 
         When either none of the above keys is provided or no user with the provided
-        combination is found, a Response with a 400 and 404 status is returned
-        respectively.
+        combination is found, an exception is raised.
 
         :param data: the dictionary from which data is used to retrieve the user
-        :return: the requested user or an error Response based on errors
+        :return: the requested user
+        :raise ValidationError: when none of the descibed keys are present within the data
+        :raise HTTP404: when the user with the described keys cannot be found
         """
         if not any(key in data for key in self.REQUEST_FIELDS.keys()):
             raise serializers.ValidationError(
