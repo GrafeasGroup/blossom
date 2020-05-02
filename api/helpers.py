@@ -1,7 +1,8 @@
 from functools import wraps
-from typing import Dict, Set
+from typing import Callable, Dict, Set
 
-from rest_framework import serializers, status
+from django.shortcuts import get_object_or_404
+from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -26,7 +27,7 @@ def _retrieve_keys(data: Dict, keys: Set, name: str) -> Dict[str, str]:
     return {key: data[key] for key in keys}
 
 
-def validate_request(query_params: Set = None, data_params: Set = None):
+def validate_request(query_params: Set = None, data_params: Set = None) -> Callable:
     """
     Validate arguments of the Request within inner method.
 
@@ -40,6 +41,10 @@ def validate_request(query_params: Set = None, data_params: Set = None):
     Note that as of now only the existence of a key within these two
     dictionaries is checked; no further validation is yet done.
 
+    Only the values from the required keys are passed as keyword arguments with the
+    respective keys. Note that it is assumed that the query and data parameters
+    do not contain equal named parameters, the behavior is undefined otherwise.
+
     :param query_params: the set of query parameters which should exist in the Request.
     :param data_params: the set of data parameters which should exist in the Request.
     :return: the decorator which wraps this function.
@@ -47,22 +52,16 @@ def validate_request(query_params: Set = None, data_params: Set = None):
     query_params = set() if query_params is None else query_params
     data_params = set() if data_params is None else data_params
 
-    def decorator(function):
+    def decorator(function: Callable) -> Callable:
         @wraps(function)
         def wrapper(
             self: object, request: Request, *args: object, **kwargs: object
         ) -> Response:
             query_values = _retrieve_keys(request.query_params, query_params, "query")
             data_values = _retrieve_keys(request.data, data_params, "data")
-            combined = {**query_values, **data_values}
-            combined.update(
-                {
-                    key: (query_values[key], data_values[key])
-                    for key in query_values
-                    if key in data_values
-                }
+            return function(
+                self, request, *args, **kwargs, **query_values, **data_values
             )
-            return function(self, request, *args, **kwargs, **combined)
 
         return wrapper
 
@@ -93,15 +92,17 @@ class BlossomUserMixin:
         :return: the requested user or an error Response based on errors
         """
         if not any(key in data for key in self.REQUEST_FIELDS.keys()):
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            raise serializers.ValidationError(
+                f"No key in {self.REQUEST_FIELDS.keys()} present."
+            )
 
-        # Filter the BlossomUsers on fields present in the request data according to the
-        # mapping in the REQUEST_FIELDS constant.
-        user = BlossomUser.objects.filter(
+        # Get the BlossomUser corresponding to the fields present in the request data
+        # and the mapping in the REQUEST_FIELDS constant.
+        return get_object_or_404(
+            BlossomUser,
             **{
                 self.REQUEST_FIELDS[key]: value
                 for key, value in data.items()
                 if key in self.REQUEST_FIELDS.keys()
-            }
-        ).first()
-        return user if user else Response(status=status.HTTP_404_NOT_FOUND)
+            },
+        )

@@ -2,7 +2,7 @@
 import random
 import uuid
 from datetime import timedelta
-from typing import Dict, Tuple
+from typing import Dict
 
 import pytz
 from django.conf import settings
@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_yasg.openapi import Parameter, Response as DocResponse, Schema
 from drf_yasg.utils import no_body, swagger_auto_schema
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -82,7 +82,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["patch"])
     def gamma_plusone(self, request: Request, pk: int) -> Response:
         """
-        Add one gamme through a fake completed transcription by the volunteer.
+        Add one gamma through a fake completed transcription by the volunteer.
 
         This method should only be called in the case of erroneous behavior of
         the proper procedure of awarding gamma.
@@ -92,23 +92,13 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         gamma_plus_one, _ = Source.objects.get_or_create(name="gamma_plus_one")
 
         dummy_post = Submission.objects.create(
-<<<<<<< HEAD
-            source=gamma_plus_one, completed_by=volunteer
-        )
-        Transcription.objects.create(
-            submission=dummy_post,
-            author=volunteer,
-            original_id=str(uuid.uuid4()),
-            source=gamma_plus_one,
-=======
-            source="gamma_plus_one", completed_by=user
+            source=gamma_plus_one, completed_by=user
         )
         Transcription.objects.create(
             submission=dummy_post,
             author=user,
-            transcription_id=str(uuid.uuid4()),
-            completion_method="gamma_plus_one",
->>>>>>> Add validation decorator and example usage
+            original_id=str(uuid.uuid4()),
+            source=gamma_plus_one,
             text="dummy transcription",
         )
         return Response(self.serializer_class(user).data)
@@ -173,38 +163,11 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         queryset on that submission.
         """
         queryset = Submission.objects.all().order_by("id")
-        original_id = self.request.query_params.get("original_id", None)
-        if original_id is not None:
-            queryset = queryset.filter(original_id=original_id)
+        if "original_id" in self.request.query_params:
+            queryset = queryset.filter(
+                original_id=self.request.query_prams["original_id"]
+            )
         return queryset
-
-    def _get_possible_claim_done_errors(
-        self, request: Request, pk: int
-    ) -> [Tuple[Submission, BlossomUser], Response]:
-        """
-        Get both the submission and the volunteer from the provided parameters.
-
-        Note that this method either returns a tuple of the specific submission
-        and volunteer, or an error Response if an error has been encountered
-        during lookup.
-
-        Returned error responses are the following:
-        - 400: the volunteer id or username is not provided
-        - 404: either the submission or volunteer is not found with the provided IDs
-
-        :param request: the request done to the API
-        :param pk: the primary key of the submission, i.e. the submission id
-        :return: either a tuple of the submission and volunteer, or an error response
-        """
-        try:
-            submission = Submission.objects.get(id=pk)
-        except Submission.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        response = self.get_user_from_request(request.data)
-        if isinstance(response, Response):
-            return response
-        else:
-            return submission, response
 
     @swagger_auto_schema(
         manual_parameters=[Parameter("ctq", "query", type="boolean")],
@@ -222,16 +185,15 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
 
         When no posts are found, an empty array is returned in the body.
         """
-        ctq = request.query_params.get("ctq", False)
-        if ctq:
+        if request.query_params.get("ctq", False):
             delay_time = timezone.now()
         else:
             delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
         queryset = Submission.objects.filter(
-            Q(completed_by=None)
-            & Q(claimed_by=None)
-            & Q(create_time__lt=delay_time)
-            & Q(archived=False)
+            completed_by=None,
+            claimed_by=None,
+            create_time__lt=delay_time,
+            archived=False,
         )
         return Response(
             self.get_serializer(queryset, many=True, context={"request", request}).data
@@ -269,24 +231,21 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             412: "The submission has not yet been claimed",
         },
     )
+    @validate_request(data_params={"username"})
     @action(detail=True, methods=["post"])
-    def unclaim(self, request: Request, pk: int) -> Response:
+    def unclaim(self, request: Request, pk: int, username: str = None) -> Response:
         """
         Unclaim the specified submission, from the specified volunteer.
 
         The volunteer is specified in the HTTP body.
         """
-        response = self._get_possible_claim_done_errors(request, pk)
-        if isinstance(response, Response):
-            # Something went wrong, return the error
-            return response
-        else:
-            submission, volunteer = response
+        submission = get_object_or_404(Submission, id=pk)
+        user = get_object_or_404(BlossomUser, username=username)
 
         if submission.claimed_by is None:
             return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-        if submission.claimed_by != volunteer:
+        if submission.claimed_by != user:
             return Response(status=status.HTTP_406_NOT_ACCEPTABLE)
 
         if submission.completed_by is not None:
@@ -311,24 +270,21 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             409: "The submission is already claimed",
         },
     )
+    @validate_request(data_params={"username"})
     @action(detail=True, methods=["post"])
-    def claim(self, request: Request, pk: int) -> Response:
+    def claim(self, request: Request, pk: int, username: str = None) -> Response:
         """
         Claim the specified submission from the specified volunteer.
 
         The volunteer is specified in the HTTP body.
         """
-        response = self._get_possible_claim_done_errors(request, pk)
-        if isinstance(response, Response):
-            # Something went wrong, return the error
-            return response
-        else:
-            submission, volunteer = response
+        submission = get_object_or_404(Submission, id=pk)
+        user = get_object_or_404(BlossomUser, username=username)
 
         if submission.claimed_by is not None:
             return Response(status=status.HTTP_409_CONFLICT)
 
-        submission.claimed_by = volunteer
+        submission.claimed_by = user
         submission.claim_time = timezone.now()
         submission.save()
 
@@ -389,8 +345,9 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             412: "The submission is not claimed or claimed by someone else",
         },
     )
+    @validate_request(data_params={"username"})
     @action(detail=True, methods=["post"])
-    def done(self, request: Request, pk: int) -> Response:
+    def done(self, request: Request, pk: int, username: str = None) -> Response:
         """
         Mark the submission as done from the specified volunteer.
 
@@ -402,12 +359,8 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         Note that this API call has a certain chance to send a message to
         Slack for the random check of this transcription.
         """
-        response = self._get_possible_claim_done_errors(request, pk)
-        if isinstance(response, Response):
-            # Something went wrong, return the error
-            return response
-        else:
-            submission, volunteer = response
+        submission = get_object_or_404(Submission, id=pk)
+        user = get_object_or_404(BlossomUser, username=username)
 
         if submission.completed_by is not None:
             return Response(status=status.HTTP_409_CONFLICT)
@@ -420,20 +373,20 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         )
 
         if not mod_override:
-            if submission.claimed_by != volunteer:
+            if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-        submission.completed_by = volunteer
+        submission.completed_by = user
         submission.complete_time = timezone.now()
         submission.save()
 
-        if self._should_check_transcription(volunteer):
+        if self._should_check_transcription(user):
             transcription = Transcription.objects.filter(submission=submission)
             url = transcription.first().url if transcription else submission.tor_url
             slack.chat_postMessage(
                 channel="#transcription_check",
                 text="Please check the following transcription of "
-                f"u/{volunteer.username}: {url}.",
+                f"u/{user.username}: {url}.",
             )
 
         return Response(
@@ -444,6 +397,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
+            required=["submission_id", "source"],
             properties={
                 "original_id": Schema(type="string"),
                 "source": Schema(type="string"),
@@ -457,6 +411,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             404: "Source requested was not found",
         },
     )
+    @validate_request(data_params={"submission_id", "source"})
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Create a new submission.
@@ -519,7 +474,22 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             404: "Either the specified submission or volunteer is not found",
         },
     )
-    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+    @validate_request(
+        data_params={"completion_method", "original_id", "submission_id", "source", "t_id", "t_url", "t_text"}
+    )
+    def create(
+        self,
+        request: Request,
+        completion_method: str = None,
+        submission_id: str = None,
+        original_id: str = None,
+        source: str = None,
+        t_id: str = None,
+        t_url: str = None,
+        t_text: str = None,
+        *args: object,
+        **kwargs: object,
+    ) -> Response:
         """
         Create a new transcription.
 
@@ -535,49 +505,18 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         Note that instead of the username, the "v_id" property to supply the
         volunteer can also be used to create a transcription.
         """
-        original_id = request.data.get("submission_id")
-        if original_id is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        # did they give us an actual submission id?
-        submission = Submission.objects.filter(original_id=original_id).first()
-        if not submission:
-            # ...or did they give us the database ID of a submission?
-            submission = Submission.objects.filter(id=original_id).first()
-            if not submission:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-
-        volunteer = self.get_user_from_request(request.data)
-        if isinstance(volunteer, Response):
-            return volunteer
-
-        original_id = request.data.get("original_id")
-        if not original_id:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        source = request.data.get("source")
-        if not source:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        source = Source.objects.get(name=source)
-
-        url = request.data.get("t_url")
-        if not url:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        transcription_text = request.data.get("t_text")
-        if not transcription_text:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
+        submission = get_object_or_404(Submission, id=submission_id)
+        user = self.get_user_from_request(request.data)
+        source = get_object_or_404(Source, name=source)
         removed_from_reddit = request.data.get("removed_from_reddit", False)
-
         transcription = Transcription.objects.create(
             submission=submission,
-            author=volunteer,
+            author=user,
             original_id=original_id,
-            url=url,
+            url=t_url,
             source=source,
-            text=transcription_text,
-            removed_from_reddit=removed_from_reddit,
+            text=t_text,
+            removed_from_reddit=removed_from_reddit
         )
         return Response(
             data=self.serializer_class(
@@ -590,18 +529,20 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         manual_parameters=[Parameter("original_id", "query", type="string")],
         responses={400: 'Query parameter "original_id" not present'},
     )
+    @validate_request(query_params={"original_id"})
     @action(detail=False, methods=["get"])
-    def search(self, request: Request, *args: object, **kwargs: object) -> Response:
+    def search(
+        self,
+        request: Request,
+        original_id: str = None,
+        *args: object,
+        **kwargs: object,
+    ) -> Response:
         """
         Search for the transcriptions of a specific submission.
 
         Note that providing a original_id as a query parameter is mandatory.
         """
-        original_id = request.query_params.get("original_id", None)
-
-        if not original_id:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         queryset = Transcription.objects.filter(submission__original_id=original_id)
         return Response(
             data=self.serializer_class(
