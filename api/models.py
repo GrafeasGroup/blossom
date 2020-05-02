@@ -98,11 +98,10 @@ class Submission(models.Model):
     )
 
     # The URL to the Submission directly on its source.
-    # Max length is derived from https://stackoverflow.com/a/219664
-    url = models.CharField(max_length=2083, null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
 
     # The URL to the Submission on /r/TranscribersOfReddit.
-    tor_url = models.CharField(max_length=2083, null=True, blank=True)
+    tor_url = models.URLField(null=True, blank=True)
 
     # Whether the post has been archived, for example by /u/tor_archivist
     archived = models.BooleanField(default=False)
@@ -150,7 +149,7 @@ class Transcription(models.Model):
     )
 
     # The URL to the Transcription on the source platform.
-    url = models.CharField(max_length=2083, null=True, blank=True)
+    url = models.URLField(null=True, blank=True)
 
     # The text of the transcription. We force the SQL longtext type, per
     # https://stackoverflow.com/a/23169977.
