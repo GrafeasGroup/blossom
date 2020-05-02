@@ -90,7 +90,7 @@ class BlossomUserMixin:
         :param data: the dictionary from which data is used to retrieve the user
         :return: the requested user
         :raise ValidationError: when none of the descibed keys are present within the data
-        :raise HTTP404: when the user with the described keys cannot be found
+        :raise Http404: when the user with the described keys cannot be found
         """
         if not any(key in data for key in self.REQUEST_FIELDS.keys()):
             raise serializers.ValidationError(
