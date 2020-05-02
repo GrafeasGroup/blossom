@@ -25,7 +25,7 @@ class Source(models.Model):
     """
 
     # Where did our content come from?
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=20, primary_key=True)
 
     def __str__(self) -> str:
         return self.name
@@ -40,7 +40,7 @@ def get_reddit_source() -> int:
 
     :return: the ID of the Source record for reddit
     """
-    return Source.objects.get(name="reddit").id
+    return Source.objects.get(name="reddit").pk
 
 
 class Submission(models.Model):
@@ -94,7 +94,10 @@ class Submission(models.Model):
 
     # The source platform from which the Submission originates
     source = models.ForeignKey(
-        Source, default=get_reddit_source, on_delete=models.CASCADE
+        Source,
+        default=get_reddit_source,
+        on_delete=models.CASCADE,
+        related_name="%(app_label)s_%(class)s_related"
     )
 
     # The URL to the Submission directly on its source.
@@ -145,7 +148,10 @@ class Transcription(models.Model):
 
     # The platform from which the Transcription originates.
     source = models.ForeignKey(
-        Source, default=get_reddit_source, on_delete=models.CASCADE
+        Source,
+        default=get_reddit_source,
+        on_delete=models.CASCADE,
+        related_name="%(app_label)s_%(class)s_related"
     )
 
     # The URL to the Transcription on the source platform.

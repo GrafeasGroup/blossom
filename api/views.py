@@ -145,7 +145,7 @@ class SourceViewSet(viewsets.ModelViewSet):
     This information is required for both Submissions and Transcriptions.
     """
 
-    queryset = Source.objects.all().order_by("id")
+    queryset = Source.objects.all().order_by("pk")
     serializer_class = SourceSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
 
@@ -479,7 +479,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         if not original_id or not source_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        if (source_obj := Source.objects.filter(id=source_id).first()) is None:
+        if (source_obj := Source.objects.filter(pk=source_id).first()) is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         url = request.data.get("url")
