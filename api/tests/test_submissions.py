@@ -26,7 +26,7 @@ class TestSubmissionCreation:
         """Test whether creation with minimum arguments is successful."""
         client, headers, _ = setup_user_client(client)
         source = create_source()
-        data = {"original_id": "spaaaaace", "source_id": source.pk}
+        data = {"original_id": "spaaaaace", "source": source.pk}
         result = client.post(
             reverse("submission-list", host="api"),
             data,
@@ -45,7 +45,7 @@ class TestSubmissionCreation:
         source = create_source()
         data = {
             "original_id": "spaaaaace",
-            "source_id": source.pk,
+            "source": source.pk,
             "url": "http://example.com",
             "tor_url": "http://example.com/tor",
         }
@@ -79,7 +79,7 @@ class TestSubmissionCreation:
     def test_create_with_invalid_source(self, client: Client) -> None:
         """Test whether a request with an invalid source returns a 404."""
         client, headers, _ = setup_user_client(client)
-        data = {"original_id": "spaaaaace", "source_id": 99}
+        data = {"original_id": "spaaaaace", "source": "asdf"}
         result = client.post(
             reverse("submission-list", host="api"),
             json.dumps(data),
@@ -93,7 +93,7 @@ class TestSubmissionCreation:
         """Test whether a request without submission ID is considered a bad request."""
         client, headers, _ = setup_user_client(client)
         source = create_source()
-        data = {"source_id": source.pk}
+        data = {"source": source.pk}
 
         result = client.post(
             reverse("submission-list", host="api"),

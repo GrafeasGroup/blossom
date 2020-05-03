@@ -151,20 +151,20 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         slugs = ["about-us", "giving-to-grafeas", "terms-of-service", "thank-you"]
 
-        if not BlossomUser.objects.filter(username="transcribersofreddit").first():
+        if not BlossomUser.objects.filter(username="transcribersofreddit").exists():
             BlossomUser.objects.create_user(username="transcribersofreddit", email="transcribersofreddit@grafeas.org")
             logger.debug(self.style.SUCCESS("Created user transcribersofreddit"))
 
-        if not BlossomUser.objects.filter(username="transcribot").first():
+        if not BlossomUser.objects.filter(username="transcribot").exists():
             BlossomUser.objects.create_user(username="transcribot", email="transcribot@grafeas.org")
             logger.debug(self.style.SUCCESS("Created user transcribot"))
 
-        if not BlossomUser.objects.filter(username="tor_archivist").first():
+        if not BlossomUser.objects.filter(username="tor_archivist").exists():
             BlossomUser.objects.create_user(username="tor_archivist", email="archivist@grafeas.org")
             logger.debug(self.style.SUCCESS("Created user tor_archivist"))
 
         # First we gotta create a new author, otherwise this whole thing will be for naught
-        if not BlossomUser.objects.filter(username="admin").first():
+        if not BlossomUser.objects.filter(username="admin").exists():
             BlossomUser.objects.create_superuser(
                 username="admin",
                 email="blossom@grafeas.org",
@@ -172,10 +172,10 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Admin user created!"))
 
-        if not Source.objects.filter(name="gamma_plus_one").first():
+        if not Source.objects.filter(name="gamma_plus_one").exists():
             Source.objects.create(name="gamma_plus_one")
 
-        if not Source.objects.filter(name="reddit").first():
+        if not Source.objects.filter(name="reddit").exists():
             Source.objects.create(name="reddit")
 
         admin = BlossomUser.objects.get(username="admin")
@@ -194,7 +194,7 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Wrote about page!"))
 
-        if not Post.objects.filter(slug=slugs[1]).first():
+        if not Post.objects.filter(slug=slugs[1]).exists():
             p = Post.objects.create(
                 title="Giving to Grafeas",
                 body=GIVING_PAGE,
@@ -207,7 +207,7 @@ class Command(BaseCommand):
             p.save()
             logger.debug(self.style.SUCCESS("Wrote donation page!"))
 
-        if not Post.objects.filter(slug=slugs[2]).first():
+        if not Post.objects.filter(slug=slugs[2]).exists():
             Post.objects.create(
                 title="Terms of Service",
                 body=TOS_PAGE,
@@ -218,7 +218,7 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Wrote TOS page!"))
 
-        if not Post.objects.filter(slug=slugs[3]).first():
+        if not Post.objects.filter(slug=slugs[3]).exists():
             Post.objects.create(
                 title="Thank You",
                 body=THANKS_PAGE,

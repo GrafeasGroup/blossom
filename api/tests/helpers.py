@@ -49,7 +49,7 @@ def create_user(**kwargs: object) -> BlossomUser:
 
 
 def get_default_test_source() -> Source:
-    source, _ = Source.objects.get_or_create(name='unittests')
+    source, _ = Source.objects.get_or_create(name='unit_tests')
     return source
 
 
@@ -105,7 +105,7 @@ def create_transcription(
 
 
 def create_source(name: str = None) -> Source:
-    return Source.objects.create(name=name if name else "unittests")
+    return Source.objects.create(name=name if name else "unit_tests")
 
 
 def setup_user_client(

@@ -31,7 +31,7 @@ class Source(models.Model):
         return self.name
 
 
-def get_reddit_source() -> int:
+def get_reddit_source() -> Source:
     """
     Grabs the proper default ID for submissions and transcriptions.
 
@@ -40,7 +40,7 @@ def get_reddit_source() -> int:
 
     :return: the ID of the Source record for reddit
     """
-    return Source.objects.get(name="reddit").pk
+    return Source.objects.get(name="reddit")
 
 
 class Submission(models.Model):
@@ -110,7 +110,7 @@ class Submission(models.Model):
     archived = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        return f"{self.source_id}"
+        return f"{self.original_id}"
 
     @property
     def has_ocr_transcription(self) -> bool:

@@ -81,6 +81,7 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
             "create_time",
             "last_update_time",
             "original_id",
+            "source",
             "url",
             "text",
             "removed_from_reddit",
