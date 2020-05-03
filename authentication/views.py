@@ -1,61 +1,70 @@
+from typing import List
+
 from django.contrib.auth import login, logout
-from django.shortcuts import render, HttpResponseRedirect
+from django.http.response import HttpResponse
+from django.shortcuts import HttpResponseRedirect, render
 from django.urls import resolve
-from django.urls.exceptions import Resolver404, NoReverseMatch
+from django.urls.exceptions import NoReverseMatch, Resolver404
 from django.urls.resolvers import get_resolver
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
+from django_hosts import host
 from django_hosts.resolvers import get_host_patterns, reverse
+from rest_framework.request import Request
 
 from authentication.backends import EmailBackend
 from website.forms import LoginForm
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class LoginView(TemplateView):
-    def get_redirect(self, request, hosts):
-        # work around a super obnoxious problem with django-hosts where if it
-        # doesn't find the url that you're looking for in the default host,
-        # it just gives up. This will allow us to cycle through the hosts and
-        # try to find one that returns a ResolverMatch.
+    @staticmethod
+    def get_redirect(request: Request, hosts: List[host]) -> str:
+        """
+        Get redirect URL from the available hosts.
 
-        # first let's see if the requested url DOES resolve in the base host.
-        nextpath = request.GET["next"]
+        This method is used to work around the problem with django-hosts, where
+        it only looks for the URLs in the default host rather than in all
+        available hosts. This method first checks whether the base host can
+        resolve the request next. If this is not the case, the other hosts are
+        checked in similar fashion.
 
-        if nextpath.startswith("http"):
-            nextpath = nextpath[nextpath.index("//") :]
-
+        :param request: the HTTP request
+        :param hosts: the available Django Hosts
+        :returns: the URL to where the request should be redirected
+        :raise Resolver404: if the URL cannot be resolved in any available host
+        """
+        next_path = request.GET["next"].split("http:")[-1]
         try:
-            match = resolve(nextpath)
+            # Check whether the requested URL DOES resolve in the base host.
+            match = resolve(next_path)
             return reverse(match.view_name)
         except Resolver404:
-            pass
-
-        for h in hosts:
-            try:
-                match = get_resolver(h.urlconf).resolve(nextpath)
+            # If this is not the case, check whether it resolves in another host.
+            for host_instance in hosts:
                 try:
+                    match = get_resolver(host_instance.urlconf).resolve(next_path)
                     return reverse(match.view_name, host=match.namespace)
-                except NoReverseMatch:
+                except (NoReverseMatch, Resolver404):
                     continue
-            except Resolver404:
-                continue
 
-        # still haven't found a match? The only thing left is that it's really
-        # borked or it's a full url to something like the wiki.
-        if nextpath.endswith(request.get_host()) or nextpath.endswith(
-            request.get_host() + "/"
-        ):
-            return nextpath
+        # If no match is found, either it's a full URL or the redirect cannot be made.
+        request_host = request.get_host()
+        if next_path.endswith((request_host, f"{request_host}/")):
+            return next_path
+        else:
+            raise Resolver404
 
-        raise Resolver404
-
-    def get(self, request, *args, **kwargs):
+    def get(self, request: Request, *args: object, **kwargs: object) -> HttpResponse:
+        """Retrieve the rendered login form."""
         form = LoginForm()
         return render(request, "website/generic_form.html", {"form": form})
 
-    def post(self, request, *args, **kwargs):
+    def post(
+        self, request: Request, *args: object, **kwargs: object
+    ) -> HttpResponseRedirect:
+        """Post the response to the login form."""
         form = LoginForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
@@ -74,6 +83,7 @@ class LoginView(TemplateView):
             return HttpResponseRedirect(request.build_absolute_uri())
 
 
-def LogoutView(request):
+def logout_view(request: Request) -> HttpResponseRedirect:
+    """Log out the user who has sent the request."""
     logout(request)
     return HttpResponseRedirect("/")
