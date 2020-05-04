@@ -18,12 +18,11 @@ class TestTranscriptionCreation:
         """Test whether the creation functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
         submission = create_submission()
-        source = get_default_test_source()
         data = {
             "submission_id": submission.original_id,
             "username": user.username,
             "original_id": "ABC",
-            "source": source.name,
+            "source": submission.source.name,
             "t_url": "https://example.com",
             "t_text": "test content",
         }
@@ -39,19 +38,22 @@ class TestTranscriptionCreation:
         transcription = Transcription.objects.get(id=result.json()["id"])
         assert result.status_code == status.HTTP_201_CREATED
         assert transcription.submission == submission
-        assert transcription.source == source
+        assert transcription.source == submission.source
         assert transcription.author == user
         assert transcription.original_id == data["original_id"]
         assert transcription.url == data["t_url"]
         assert transcription.text == data["t_text"]
 
     def test_create_no_submission_id(self, client: Client) -> None:
-        """Test whether a creation without submission ID is caught correctly."""
+        """
+        Test whether a creation without passing `submission_id` is caught correctly.
+        """
         client, headers, user = setup_user_client(client)
+        submission = create_submission()
         data = {
-            "v_id": user.id,
-            "t_id": "ABC",
-            "source": 'aaa',
+            "username": user.username,
+            "original_id": "ABC",
+            "source": submission.source.name,
             "t_url": "https://example.com",
             "t_text": "test content",
         }
@@ -67,11 +69,12 @@ class TestTranscriptionCreation:
     def test_create_invalid_submission_id(self, client: Client) -> None:
         """Test whether a creation with an invalid submission ID is caught correctly."""
         client, headers, user = setup_user_client(client)
+        source = get_default_test_source()
         data = {
             "submission_id": 404,
             "v_id": user.id,
             "t_id": "ABC",
-            "completion_method": "automated tests",
+            "source": source.name,
             "t_url": "https://example.com",
             "t_text": "test content",
         }
@@ -92,7 +95,7 @@ class TestTranscriptionCreation:
             "submission_id": submission.original_id,
             "v_id": 404,
             "t_id": "ABC",
-            "completion_method": "automated tests",
+            "source": submission.source.name,
             "t_url": "https://example.com",
             "t_text": "test content",
         }
@@ -112,7 +115,7 @@ class TestTranscriptionCreation:
         data = {
             "original_id": submission.original_id,
             "v_id": user.id,
-            "completion_method": "automated tests",
+            "source": submission.source.name,
             "t_url": "https://example.com",
             "t_text": "test content",
         }
@@ -126,7 +129,7 @@ class TestTranscriptionCreation:
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_no_source(self, client: Client) -> None:
-        """Test whether a creation without a completion method is caught correctly."""
+        """Test whether a creation without a source is caught correctly."""
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
@@ -153,7 +156,7 @@ class TestTranscriptionCreation:
             "original_id": submission.original_id,
             "v_id": user.id,
             "t_id": "ABC",
-            "completion_method": "automated tests",
+            "source": submission.source.name,
             "t_text": "test content",
         }
         result = client.post(
@@ -173,7 +176,7 @@ class TestTranscriptionCreation:
             "original_id": submission.original_id,
             "v_id": user.id,
             "t_id": "ABC",
-            "completion_method": "automated tests",
+            "source": submission.source.name,
             "t_url": "https://example.com",
         }
         result = client.post(
@@ -208,7 +211,9 @@ class TestTranscriptionSearch:
         assert result.json()[0]["id"] == transcription.id
 
     def test_search_nonexistent_id(self, client: Client) -> None:
-        """Test whether no items are returned when a search on a nonexistent ID done."""
+        """
+        Test whether no items are returned when a search on a nonexistent ID is done.
+        """
         client, headers, user = setup_user_client(client)
         result = client.get(
             reverse("transcription-search", host="api") + "?original_id=404",

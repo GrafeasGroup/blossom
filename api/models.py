@@ -24,7 +24,7 @@ class Source(models.Model):
     standardize we have the option of including other sources as we grow.
     """
 
-    # Where did our content come from?
+    # Name of the origin of the content. For example: reddit, blossom, etc.
     name = models.CharField(max_length=20, primary_key=True)
 
     def __str__(self) -> str:
@@ -93,7 +93,7 @@ class Submission(models.Model):
     # The time at which the Submission is completed.
     complete_time = models.DateTimeField(default=None, null=True, blank=True)
 
-    # The source platform from which the Submission originates
+    # The source platform from which the Submission originates.
     source = models.ForeignKey(
         Source,
         default=get_reddit_source,
@@ -107,7 +107,7 @@ class Submission(models.Model):
     # The URL to the Submission on /r/TranscribersOfReddit.
     tor_url = models.URLField(null=True, blank=True)
 
-    # Whether the post has been archived, for example by /u/tor_archivist
+    # Whether the post has been archived, for example by /u/tor_archivist.
     archived = models.BooleanField(default=False)
 
     def __str__(self) -> str:
@@ -131,14 +131,15 @@ class Submission(models.Model):
 
 
 class Transcription(models.Model):
-    # The Submission for which the Transcription is made
+    # The Submission for which the Transcription is made.
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
 
-    # The BlossomUser who has authored the Transcription
+    # The BlossomUser who has authored the Transcription.
     author = models.ForeignKey("authentication.BlossomUser", on_delete=models.CASCADE)
 
-    # The time the Transcription has been created
+    # The time the Transcription has been created.
     create_time = models.DateTimeField(default=timezone.now)
+    # The time the Transcription was last updated.
     last_update_time = models.DateTimeField(default=timezone.now)
 
     # The ID of the Transcription on the "source" platform.

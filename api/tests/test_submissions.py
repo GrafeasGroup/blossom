@@ -12,7 +12,7 @@ from api.models import Submission
 from api.tests.helpers import (
     create_submission,
     create_transcription,
-    create_source,
+    get_default_test_source,
     create_user,
     setup_user_client,
 )
@@ -25,7 +25,7 @@ class TestSubmissionCreation:
     def test_create_minimum_args(self, client: Client) -> None:
         """Test whether creation with minimum arguments is successful."""
         client, headers, _ = setup_user_client(client)
-        source = create_source()
+        source = get_default_test_source()
         data = {"original_id": "spaaaaace", "source": source.pk}
         result = client.post(
             reverse("submission-list", host="api"),
@@ -42,7 +42,7 @@ class TestSubmissionCreation:
     def test_submission_create_with_full_args(self, client: Client) -> None:
         """Test whether creation with all arguments is successful."""
         client, headers, _ = setup_user_client(client)
-        source = create_source()
+        source = get_default_test_source()
         data = {
             "original_id": "spaaaaace",
             "source": source.pk,
@@ -92,7 +92,7 @@ class TestSubmissionCreation:
     def test_create_no_id(self, client: Client) -> None:
         """Test whether a request without submission ID is considered a bad request."""
         client, headers, _ = setup_user_client(client)
-        source = create_source()
+        source = get_default_test_source()
         data = {"source": source.pk}
 
         result = client.post(

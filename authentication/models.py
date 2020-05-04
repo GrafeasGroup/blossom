@@ -18,8 +18,11 @@ class BlossomUser(AbstractUser):
     # The backend class which is used to authenticate the BlossomUser.
     backend = "authentication.backends.EmailBackend"
 
-    # TODO: abstract out to role / permission / group
+    # TODO: abstract out to role / permission / groupn
+    # A boolean that denotes whether a user account belongs to a volunteer or not.
     is_volunteer = models.BooleanField(default=True)
+    # A boolean that denotes whether a user account is a staff account with Grafeas.
+    # (not to be confused with the base Django staff account.)
     is_grafeas_staff = models.BooleanField(default=False)
 
     # Each person is allowed one API key, but advanced security around this
