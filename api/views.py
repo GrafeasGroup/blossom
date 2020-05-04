@@ -456,14 +456,14 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         responses={
             201: DocResponse("Successful creation", schema=serializer_class),
             400: "Required parameters not provided",
-            404: "Source requested was not found."
+            404: "Source requested was not found"
         },
     )
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Create a new submission.
 
-        Note that both the original id and the source id should be supplied.
+        Note that both the original id and the source should be supplied.
         """
         original_id = request.data.get("original_id")
         source = request.data.get("source")

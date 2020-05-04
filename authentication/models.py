@@ -18,18 +18,24 @@ class BlossomUser(AbstractUser):
     # The backend class which is used to authenticate the BlossomUser.
     backend = "authentication.backends.EmailBackend"
 
-    # abstract out to role / permission / group
+    # TODO: abstract out to role / permission / group
     is_volunteer = models.BooleanField(default=True)
     is_grafeas_staff = models.BooleanField(default=False)
 
+    # Each person is allowed one API key, but advanced security around this
+    # means that it is not fully implemented at this time. It is used by
+    # u/transcribersofreddit and the other bots, though.
     api_key = models.OneToOneField(
         APIKey, on_delete=models.CASCADE, null=True, blank=True
     )
 
+    # The time that this record was last updated.
     last_update_time = models.DateTimeField(default=timezone.now)
+    # Whether this particular user has accepted our Code of Conduct.
     accepted_coc = models.BooleanField(default=False)
 
-    # Whether the user is blacklisted.
+    # Whether the user is blacklisted; if so, all bots will refuse to interact
+    # with this user.
     blacklisted = models.BooleanField(default=False)
 
     @property

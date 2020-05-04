@@ -38,7 +38,7 @@ def get_reddit_source() -> Source:
     Django cannot serialize lambda functions, so we need to have a helper
     function to handle the default action of the `source` foreign keys.
 
-    :return: the ID of the Source record for reddit
+    :return: the Source record for reddit
     """
     return Source.objects.get(name="reddit")
 
@@ -59,8 +59,9 @@ class Submission(models.Model):
     # because of internal conflicts with the `source` FK.
     original_id = models.CharField(max_length=36, default=create_id)
 
-    # The time the Submission is submitted.
+    # The time the Submission was created.
     create_time = models.DateTimeField(default=timezone.now)
+    # The time the Submission was last updated.
     last_update_time = models.DateTimeField(default=timezone.now)
 
     # The ID of the Submission in the old Redis database.
