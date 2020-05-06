@@ -31,16 +31,21 @@ class Source(models.Model):
         return self.name
 
 
-def get_reddit_source() -> Source:
+def get_default_source() -> Source:
     """
     Grabs the proper default ID for submissions and transcriptions.
 
     Django cannot serialize lambda functions, so we need to have a helper
     function to handle the default action of the `source` foreign keys.
 
-    :return: the Source record for reddit
+    Right now, all of our content comes from Reddit, so we have that set
+    as the default source. Should this ever change, we can simply update
+    this function and be good to go.
+
+    :return: the ID of Source record for reddit
     """
-    return Source.objects.get(name="reddit")
+    obj, _ = Source.objects.get_or_create(name="reddit")
+    return obj.name
 
 
 class Submission(models.Model):
@@ -96,7 +101,7 @@ class Submission(models.Model):
     # The source platform from which the Submission originates.
     source = models.ForeignKey(
         Source,
-        default=get_reddit_source,
+        default=get_default_source,
         on_delete=models.CASCADE,
         related_name="%(app_label)s_%(class)s_related"
     )
@@ -151,7 +156,7 @@ class Transcription(models.Model):
     # The platform from which the Transcription originates.
     source = models.ForeignKey(
         Source,
-        default=get_reddit_source,
+        default=get_default_source,
         on_delete=models.CASCADE,
         related_name="%(app_label)s_%(class)s_related"
     )
