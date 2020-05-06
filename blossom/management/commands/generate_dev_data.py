@@ -23,7 +23,7 @@ from django.db.backends.utils import CursorWrapper
 from django.db.models import Max
 from mimesis import Person, Text, locales
 
-from api.models import Transcription, Submission
+from api.models import Transcription, Submission, Source
 from blossom.management.commands import bootstrap_site
 
 if settings.DEBUG:
@@ -110,6 +110,7 @@ def create_dummy_volunteers(num: int) -> None:
 def create_dummy_submissions(no_urls: bool) -> None:
     users = get_user_model()
     transcribot = users.objects.get(username="transcribot")
+    dummy_source = Source.objects.create(name='bootstrap script')
     # adapted from
     # https://books.agiliq.com/projects/django-orm-cookbook/en/latest/random.html
     max_id = users.objects.all().aggregate(max_id=Max("id"))['max_id']
@@ -139,23 +140,23 @@ def create_dummy_submissions(no_urls: bool) -> None:
             complete_time=submission_date + timedelta(
                 hours=2, minutes=random.choice(range(40))
             ),
-            source="bootstrap script",
+            source=dummy_source,
             url=random.choice(urls),
             archived=random.choice([True, False])
         )
         Transcription.objects.create(
             submission=submission,
             author=transcribot,
-            post_time=submission.complete_time - timedelta(minutes=1),
-            transcription_id=uuid.uuid4(),
-            completion_method='bootstrap script',
+            create_time=submission.complete_time - timedelta(minutes=1),
+            source=dummy_source,
             url=None,
-            ocr_text=transcribot_template.format(generate_text())
+            text=transcribot_template.format(generate_text())
         )
 
 
 def create_dummy_transcriptions() -> None:
     users = get_user_model()
+    dummy_source = Source.objects.get(name='bootstrap script')
     # adapted from
     # https://books.agiliq.com/projects/django-orm-cookbook/en/latest/random.html
     max_id = Submission.objects.all().aggregate(max_id=Max("id"))['max_id']
@@ -171,9 +172,9 @@ def create_dummy_transcriptions() -> None:
             Transcription.objects.create(
                 submission=submission,
                 author=submission.claimed_by,
-                post_time=submission.create_time + timedelta(minutes=1),
-                transcription_id=uuid.uuid4(),
-                completion_method='bootstrap script',
+                create_time=submission.create_time + timedelta(minutes=1),
+                original_id=uuid.uuid4(),
+                source=dummy_source,
                 url=None,
                 text=transcription_template.format(generate_text())
             )
