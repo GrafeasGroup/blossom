@@ -12,8 +12,8 @@ from api.models import Submission
 from api.tests.helpers import (
     create_submission,
     create_transcription,
-    get_default_test_source,
     create_user,
+    get_default_test_source,
     setup_user_client,
 )
 from blossom.slack_conn.helpers import client as slack_client
