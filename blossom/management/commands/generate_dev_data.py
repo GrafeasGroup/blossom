@@ -29,7 +29,9 @@ from blossom.management.commands import bootstrap_site
 if settings.DEBUG:
     # adapted from https://stackoverflow.com/a/7769117
     # if we don't do this, you _will_ run out of memory
-    BaseDatabaseWrapper.make_debug_cursor = lambda self, cursor: CursorWrapper(cursor, self)
+    BaseDatabaseWrapper.make_debug_cursor = lambda self, cursor: CursorWrapper(
+        cursor, self
+    )
 
 logger = logging.getLogger("blossom.management.generate_dev_data")
 transcription_template = (
@@ -58,7 +60,7 @@ def generate_text() -> str:
     if random.random() > 0.49:
         return obj.text()
     else:
-        return ' '.join(obj.words(random.randrange(16, 40)))
+        return " ".join(obj.words(random.randrange(16, 40)))
 
 
 def get_image_urls(num: int) -> List[str]:
@@ -72,21 +74,29 @@ def get_image_urls(num: int) -> List[str]:
 
     for _ in range(number_of_calls):
         # the maximum the api will accept in a single call is 50, so we batch them
-        results = results + requests.get(
-            "https://dog.ceo/api/breeds/image/random/50"
-        ).json()["message"]
+        results = (
+            results
+            + requests.get("https://dog.ceo/api/breeds/image/random/50").json()[
+                "message"
+            ]
+        )
         # be nice
         sleep(0.5)
 
     if remainder > 0:
-        results = results + requests.get(
-            f"https://dog.ceo/api/breeds/image/random/{remainder}"
-        ).json()["message"]
+        results = (
+            results
+            + requests.get(
+                f"https://dog.ceo/api/breeds/image/random/{remainder}"
+            ).json()["message"]
+        )
 
     return results
 
 
-def gen_datetime(min_year: int=2017, max_year: datetime=datetime.now().year) -> datetime:
+def gen_datetime(
+    min_year: int = 2017, max_year: datetime = datetime.now().year
+) -> datetime:
     # Adapted from https://gist.github.com/rg3915/db907d7455a4949dbe69
     start = datetime(min_year, 1, 1, 00, 00, 00)
     years = max_year - min_year + 1
@@ -103,17 +113,17 @@ def create_dummy_volunteers(num: int) -> None:
             # there shouldn't be a need to log in as a volunteer, but if we
             # need to test something, then let's set every dummy account
             # password to the same value.
-            volunteer.set_password('asdf')
+            volunteer.set_password("asdf")
             volunteer.save()
 
 
 def create_dummy_submissions(no_urls: bool) -> None:
     users = get_user_model()
     transcribot = users.objects.get(username="transcribot")
-    dummy_source = Source.objects.create(name='bootstrap script')
+    dummy_source = Source.objects.create(name="bootstrap script")
     # adapted from
     # https://books.agiliq.com/projects/django-orm-cookbook/en/latest/random.html
-    max_id = users.objects.all().aggregate(max_id=Max("id"))['max_id']
+    max_id = users.objects.all().aggregate(max_id=Max("id"))["max_id"]
     if no_urls == True:
         logger.warning("SKIPPING IMAGES")
         urls = [None]
@@ -137,12 +147,11 @@ def create_dummy_submissions(no_urls: bool) -> None:
             claimed_by=volunteer,
             completed_by=volunteer,
             claim_time=submission_date + timedelta(hours=2),
-            complete_time=submission_date + timedelta(
-                hours=2, minutes=random.choice(range(40))
-            ),
+            complete_time=submission_date
+            + timedelta(hours=2, minutes=random.choice(range(40))),
             source=dummy_source,
             url=random.choice(urls),
-            archived=random.choice([True, False])
+            archived=random.choice([True, False]),
         )
         Transcription.objects.create(
             submission=submission,
@@ -150,16 +159,16 @@ def create_dummy_submissions(no_urls: bool) -> None:
             create_time=submission.complete_time - timedelta(minutes=1),
             source=dummy_source,
             url=None,
-            text=transcribot_template.format(generate_text())
+            text=transcribot_template.format(generate_text()),
         )
 
 
 def create_dummy_transcriptions() -> None:
     users = get_user_model()
-    dummy_source = Source.objects.get(name='bootstrap script')
+    dummy_source = Source.objects.get(name="bootstrap script")
     # adapted from
     # https://books.agiliq.com/projects/django-orm-cookbook/en/latest/random.html
-    max_id = Submission.objects.all().aggregate(max_id=Max("id"))['max_id']
+    max_id = Submission.objects.all().aggregate(max_id=Max("id"))["max_id"]
     # every volunteer has transcriptions, it's just a question of how many
     for _ in users.objects.all():
         for __ in range(1, 5):
@@ -176,7 +185,7 @@ def create_dummy_transcriptions() -> None:
                 original_id=uuid.uuid4(),
                 source=dummy_source,
                 url=None,
-                text=transcription_template.format(generate_text())
+                text=transcription_template.format(generate_text()),
             )
 
 
@@ -186,35 +195,41 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
-            '--no_urls',
-            action='store_true',
-            help='Do not fetch URLs for submission objects.',
+            "--no_urls",
+            action="store_true",
+            help="Do not fetch URLs for submission objects.",
         )
 
     def handle(self, *args, **options) -> None:
         # make it so that a person only has to run one bootstrap command if they want to
         bootstrap_site.Command().handle()
 
-        if Transcription.objects.count() > 0 \
-                or Submission.objects.count() > 0 \
-                or get_user_model().objects.count() > 5:
-            answer = input(self.style.WARNING(
-                "WAIT! There is already data in the db. Are you sure you want to run"
-                " this? [y/N] ")
+        if (
+            Transcription.objects.count() > 0
+            or Submission.objects.count() > 0
+            or get_user_model().objects.count() > 5
+        ):
+            answer = input(
+                self.style.WARNING(
+                    "WAIT! There is already data in the db. Are you sure you want to run"
+                    " this? [y/N] "
+                )
             )
-            if not answer.lower().startswith('y'):
-                logger.info(self.style.ERROR('Exiting!'))
+            if not answer.lower().startswith("y"):
+                logger.info(self.style.ERROR("Exiting!"))
                 sys.exit(0)
 
         logger.info(
-            self.style.WARNING("This process will take a few minutes. Please be patient.")
+            self.style.WARNING(
+                "This process will take a few minutes. Please be patient."
+            )
         )
         logger.info(self.style.NOTICE("Creating volunteers..."))
         create_dummy_volunteers(1000)
         logger.info(self.style.SUCCESS("OK!\n"))
 
         logger.info(self.style.NOTICE("Creating submissions..."))
-        create_dummy_submissions(no_urls=options['no_urls'])
+        create_dummy_submissions(no_urls=options["no_urls"])
         logger.info(self.style.SUCCESS("OK!\n"))
 
         logger.info(self.style.NOTICE("Creating transcriptions..."))
