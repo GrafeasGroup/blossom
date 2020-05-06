@@ -1,8 +1,9 @@
 """
-CPU heat generator.
+Generate fake data for development purposes.
 
 When doing development on Blossom, it is useful to have data to work on, even if it's
-not real. This bootstrap command creates a bunch of fake data just for you!
+not real. This bootstrap command creates a bunch of fake data just for you! As an added
+bonus, also tests your CPU cooling. Sorry.
 
 Usage: python manage.py generate_dev_data
 """
@@ -36,7 +37,7 @@ if settings.DEBUG:
     )
 
 logger = logging.getLogger("blossom.management.generate_dev_data")
-transcription_template = (
+TRANSCRIPTION_TEMPLATE = (
     "*Image Transcription:*\n\n---\n\n{0}\n\n---\n\n^^I'm&#32;a&#32;human&#32;"
     "volunteer&#32;content&#32;transcriber&#32;for&#32;Reddit&#32;and&#32;you&"
     "#32;could&#32;be&#32;too!&#32;[If&#32;you'd&#32;like&#32;more&#32;informa"
@@ -44,7 +45,7 @@ transcription_template = (
     "#32;click&#32;here!](https://www.reddit.com/r/TranscribersOfReddit/wiki/i"
     "ndex)"
 )
-transcribot_template = (
+TRANSCRIBOT_TEMPLATE = (
     "{0}\n\n---\n\nv0.6.0 | This message was posted by a bot. | [FAQ](https://"
     "www.reddit.com/r/TranscribersOfReddit/wiki/index) | [Source](https://gith"
     "ub.com/GrafeasGroup/tor) | Questions? [Message the mods!](https://www.red"
@@ -62,11 +63,11 @@ def generate_text() -> str:
     mashes up some of the data that's included in mimesis to make something a
     little more random than 10 sentences' worth.
     """
-    obj = Text(random.choice(locales.LIST_OF_LOCALES))
+    more_descriptive_variable_name = Text(random.choice(locales.LIST_OF_LOCALES))
     if random.random() > 0.49:
-        return obj.text()
+        return more_descriptive_variable_name.text()
     else:
-        return " ".join(obj.words(random.randrange(16, 40)))
+        return " ".join(more_descriptive_variable_name.words(random.randrange(16, 40)))
 
 
 def get_image_urls(num: int) -> List[str]:
@@ -88,7 +89,7 @@ def get_image_urls(num: int) -> List[str]:
                 "message"
             ]
         )
-        # be nice
+        # be nice to their API so we don't overload it with requests
         sleep(0.5)
 
     if remainder > 0:
@@ -147,16 +148,16 @@ def create_dummy_submissions(no_urls: bool) -> None:
     for _ in range(users.objects.count() * 5):
         while True:
             pk = random.randint(1, max_id)
-            volunteer = users.objects.filter(pk=pk).first()
-            if volunteer:
+            user = users.objects.filter(pk=pk).first()
+            if user:
                 break
 
         submission_date = gen_datetime()
         submission = Submission.objects.create(
             original_id=uuid.uuid4(),
             create_time=submission_date,
-            claimed_by=volunteer,
-            completed_by=volunteer,
+            claimed_by=user,
+            completed_by=user,
             claim_time=submission_date + timedelta(hours=2),
             complete_time=submission_date
             + timedelta(hours=2, minutes=random.choice(range(40))),
@@ -170,7 +171,7 @@ def create_dummy_submissions(no_urls: bool) -> None:
             create_time=submission.complete_time - timedelta(minutes=1),
             source=dummy_source,
             url=None,
-            text=transcribot_template.format(generate_text()),
+            text=TRANSCRIBOT_TEMPLATE.format(generate_text()),
         )
 
 
@@ -197,7 +198,7 @@ def create_dummy_transcriptions() -> None:
                 original_id=uuid.uuid4(),
                 source=dummy_source,
                 url=None,
-                text=transcription_template.format(generate_text()),
+                text=TRANSCRIPTION_TEMPLATE.format(generate_text()),
             )
 
 

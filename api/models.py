@@ -70,6 +70,7 @@ class Submission(models.Model):
 
     # The time the Submission was created.
     create_time = models.DateTimeField(default=timezone.now)
+
     # The time the Submission was last updated.
     last_update_time = models.DateTimeField(default=timezone.now)
 
