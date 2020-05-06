@@ -107,8 +107,7 @@ class Submission(models.Model):
     source = models.ForeignKey(
         Source,
         default=get_default_source,
-        on_delete=models.CASCADE,
-        related_name="%(app_label)s_%(class)s_related",
+        on_delete=models.CASCADE
     )
 
     # The URL to the Submission directly on its source.
