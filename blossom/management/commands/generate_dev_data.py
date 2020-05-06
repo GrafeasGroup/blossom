@@ -1,4 +1,6 @@
 """
+CPU heat generator.
+
 When doing development on Blossom, it is useful to have data to work on, even if it's
 not real. This bootstrap command creates a bunch of fake data just for you!
 
@@ -11,7 +13,7 @@ import sys
 import uuid
 from datetime import datetime, timedelta
 from time import sleep
-from typing import List
+from typing import Any, List
 
 import pytz
 import requests
@@ -23,7 +25,7 @@ from django.db.backends.utils import CursorWrapper
 from django.db.models import Max
 from mimesis import Person, Text, locales
 
-from api.models import Transcription, Submission, Source
+from api.models import Source, Submission, Transcription
 from blossom.management.commands import bootstrap_site
 
 if settings.DEBUG:
@@ -52,10 +54,14 @@ transcribot_template = (
 
 
 def generate_text() -> str:
-    # the mimesis text package is actually only a handful of sentences for the
-    # default English, and there's no reason to add more dependencies. This just
-    # mashes up some of the data that's included in mimesis to make something a
-    # little more random than 10 sentences' worth.
+    """
+    Generate random transcription bodies.
+
+    The mimesis text package is actually only a handful of sentences for the
+    default English, and there's no reason to add more dependencies. This just
+    mashes up some of the data that's included in mimesis to make something a
+    little more random than 10 sentences' worth.
+    """
     obj = Text(random.choice(locales.LIST_OF_LOCALES))
     if random.random() > 0.49:
         return obj.text()
@@ -65,9 +71,11 @@ def generate_text() -> str:
 
 def get_image_urls(num: int) -> List[str]:
     """
-    Retrieve the requested number of URLs from https://dog.ceo's API. This is
-    used so that submission objects have actual URLs with content attached to
-    them in case you're working on something that needs that information.
+    Retrieve the requested number of URLs from https://dog.ceo's API.
+
+    This is used so that submission objects have actual URLs with content
+    attached to them in case you're working on something that needs that
+    information.
     """
     number_of_calls, remainder = divmod(num, 50)
     results = list()
@@ -97,6 +105,7 @@ def get_image_urls(num: int) -> List[str]:
 def gen_datetime(
     min_year: int = 2017, max_year: datetime = datetime.now().year
 ) -> datetime:
+    """Create a random tz-aware datetime for submissions / transcriptions."""
     # Adapted from https://gist.github.com/rg3915/db907d7455a4949dbe69
     start = datetime(min_year, 1, 1, 00, 00, 00)
     years = max_year - min_year + 1
@@ -105,6 +114,7 @@ def gen_datetime(
 
 
 def create_dummy_volunteers(num: int) -> None:
+    """Build a bunch of fake volunteers."""
     users = get_user_model()
     for _ in range(num):
         username = Person().username()
@@ -118,13 +128,14 @@ def create_dummy_volunteers(num: int) -> None:
 
 
 def create_dummy_submissions(no_urls: bool) -> None:
+    """Build a bunch of fake submissions."""
     users = get_user_model()
     transcribot = users.objects.get(username="transcribot")
     dummy_source = Source.objects.create(name="bootstrap script")
     # adapted from
     # https://books.agiliq.com/projects/django-orm-cookbook/en/latest/random.html
     max_id = users.objects.all().aggregate(max_id=Max("id"))["max_id"]
-    if no_urls == True:
+    if no_urls:
         logger.warning("SKIPPING IMAGES")
         urls = [None]
     else:
@@ -164,6 +175,7 @@ def create_dummy_submissions(no_urls: bool) -> None:
 
 
 def create_dummy_transcriptions() -> None:
+    """Build a bunch of fake transcriptions."""
     users = get_user_model()
     dummy_source = Source.objects.get(name="bootstrap script")
     # adapted from
@@ -190,17 +202,19 @@ def create_dummy_transcriptions() -> None:
 
 
 class Command(BaseCommand):
-    help = "Creates dummy data for development purposes."
+    help = "Creates dummy data for development purposes."  # noqa: VNE003
     include_urls = True
 
     def add_arguments(self, parser: CommandParser) -> None:
+        """Allow passing a flag to turn off image fetching."""
         parser.add_argument(
             "--no_urls",
             action="store_true",
             help="Do not fetch URLs for submission objects.",
         )
 
-    def handle(self, *args, **options) -> None:
+    def handle(self, *args: Any, **options: Any) -> None:
+        """Your computer was running too cool, and you decided to fix that."""
         # make it so that a person only has to run one bootstrap command if they want to
         bootstrap_site.Command().handle()
 

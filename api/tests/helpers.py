@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 
 from django.test import Client
 
-from api.models import Submission, Transcription, Source
+from api.models import Source, Submission, Transcription
 from authentication.models import APIKey, BlossomUser
 
 BASE_SUBMISSION_INFO = {
@@ -49,7 +49,7 @@ def create_user(**kwargs: object) -> BlossomUser:
 
 
 def get_default_test_source() -> Source:
-    source, _ = Source.objects.get_or_create(name='unit_tests')
+    source, _ = Source.objects.get_or_create(name="unit_tests")
     return source
 
 
@@ -71,13 +71,13 @@ def create_submission(**kwargs: object) -> Submission:
         **BASE_SUBMISSION_INFO,
         **{key: kwargs[key] for key in kwargs if key in dir(Submission)},
     }
-    if submission_info['source'] is None:
-        submission_info['source'] = get_default_test_source()
+    if submission_info["source"] is None:
+        submission_info["source"] = get_default_test_source()
     return Submission.objects.create(**submission_info)
 
 
 def create_transcription(
-        submission: Submission, user: BlossomUser, **kwargs: object
+    submission: Submission, user: BlossomUser, **kwargs: object
 ) -> Transcription:
     """
     Create a new submission or get the submission with the corresponding information.
@@ -99,8 +99,8 @@ def create_transcription(
         "submission": submission,
         "author": user,
     }
-    if transcription_info['source'] is None:
-        transcription_info['source'] = get_default_test_source()
+    if transcription_info["source"] is None:
+        transcription_info["source"] = get_default_test_source()
     return Transcription.objects.create(**transcription_info)
 
 
@@ -109,7 +109,7 @@ def create_source(name: str = None) -> Source:
 
 
 def setup_user_client(
-        client: Client, login: bool = True, **kwargs: object
+    client: Client, login: bool = True, **kwargs: object
 ) -> Tuple[Client, Dict, BlossomUser]:
     """
     Set the client up with a new user, forcing login on the client as a default.

@@ -8,9 +8,12 @@ from django.utils import timezone
 
 def create_id() -> uuid.UUID:
     """
-    Create a random UUID through using the uuid library so that we can fake
-    source IDs if needed; for example, when creating dummy transcriptions or
-    submissions due to incomplete data from the Redis transition over 2019-20.
+    Create a random UUID for elements as needed.
+
+    Sometimes we won't have the original ID of transcriptions or submissions,
+    so instead we fake them using UUIDs. For example, this is used when
+    creating dummy transcriptions or submissions due to incomplete data from
+    the Redis transition over 2019-20.
 
     :return: the random UUID
     """
@@ -19,8 +22,9 @@ def create_id() -> uuid.UUID:
 
 class Source(models.Model):
     """
-    The source that the particular Submission or Transcription came from. The
-    majority of these will be "reddit", but to save on space and more easily
+    The source that the particular Submission or Transcription came from.
+
+    The majority of these will be "reddit", but to save on space and more easily
     standardize we have the option of including other sources as we grow.
     """
 
@@ -103,7 +107,7 @@ class Submission(models.Model):
         Source,
         default=get_default_source,
         on_delete=models.CASCADE,
-        related_name="%(app_label)s_%(class)s_related"
+        related_name="%(app_label)s_%(class)s_related",
     )
 
     # The URL to the Submission directly on its source.
@@ -158,7 +162,7 @@ class Transcription(models.Model):
         Source,
         default=get_default_source,
         on_delete=models.CASCADE,
-        related_name="%(app_label)s_%(class)s_related"
+        related_name="%(app_label)s_%(class)s_related",
     )
 
     # The URL to the Transcription on the source platform.

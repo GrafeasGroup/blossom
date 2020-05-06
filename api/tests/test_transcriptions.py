@@ -7,7 +7,10 @@ from rest_framework import status
 
 from api.models import Transcription
 from api.tests.helpers import (
-    create_submission, create_transcription, setup_user_client, get_default_test_source
+    create_submission,
+    create_transcription,
+    get_default_test_source,
+    setup_user_client,
 )
 
 
@@ -45,9 +48,7 @@ class TestTranscriptionCreation:
         assert transcription.text == data["t_text"]
 
     def test_create_no_submission_id(self, client: Client) -> None:
-        """
-        Test whether a creation without passing `submission_id` is caught correctly.
-        """
+        """Test whether a creation without passing `submission_id` is caught correctly."""
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
@@ -211,9 +212,7 @@ class TestTranscriptionSearch:
         assert result.json()[0]["id"] == transcription.id
 
     def test_search_nonexistent_id(self, client: Client) -> None:
-        """
-        Test whether no items are returned when a search on a nonexistent ID is done.
-        """
+        """Test whether no items are returned when a search on a nonexistent ID is run."""
         client, headers, user = setup_user_client(client)
         result = client.get(
             reverse("transcription-search", host="api") + "?original_id=404",

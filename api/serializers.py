@@ -9,7 +9,7 @@ objects through the API.
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from api.models import Submission, Transcription, Source
+from api.models import Source, Submission, Transcription
 from authentication.models import BlossomUser
 
 

@@ -23,10 +23,10 @@ from api.helpers import BlossomUserMixin
 from api.models import Source
 from api.models import Submission, Transcription
 from api.serializers import (
+    SourceSerializer,
     SubmissionSerializer,
     TranscriptionSerializer,
     VolunteerSerializer,
-    SourceSerializer
 )
 from authentication.models import BlossomUser
 from blossom.slack_conn.helpers import client as slack
@@ -456,7 +456,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         responses={
             201: DocResponse("Successful creation", schema=serializer_class),
             400: "Required parameters not provided",
-            404: "Source requested was not found"
+            404: "Source requested was not found",
         },
     )
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
@@ -498,8 +498,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         request_body=Schema(
             type="object",
             required=[
-                "submission_id"
-                "original_id",
+                "submission_id" "original_id",
                 "username",
                 "source",
                 "t_url",
