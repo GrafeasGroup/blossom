@@ -63,11 +63,11 @@ def generate_text() -> str:
     mashes up some of the data that's included in mimesis to make something a
     little more random than 10 sentences' worth.
     """
-    more_descriptive_variable_name = Text(random.choice(locales.LIST_OF_LOCALES))
+    text_obj = Text(random.choice(locales.LIST_OF_LOCALES))
     if random.random() > 0.49:
-        return more_descriptive_variable_name.text()
+        return text_obj.text()
     else:
-        return " ".join(more_descriptive_variable_name.words(random.randrange(16, 40)))
+        return " ".join(text_obj.words(random.randrange(16, 40)))
 
 
 def get_image_urls(num: int) -> List[str]:
@@ -132,10 +132,7 @@ def create_dummy_submissions(no_urls: bool) -> None:
     """Build a bunch of fake submissions."""
     users = get_user_model()
     transcribot = users.objects.get(username="transcribot")
-    dummy_source = Source.objects.create(name="bootstrap script")
-    # adapted from
-    # https://books.agiliq.com/projects/django-orm-cookbook/en/latest/random.html
-    max_id = users.objects.all().aggregate(max_id=Max("id"))["max_id"]
+    dummy_source, _ = Source.objects.get_or_create(name="bootstrap script")
     if no_urls:
         logger.warning("SKIPPING IMAGES")
         urls = [None]
@@ -143,24 +140,13 @@ def create_dummy_submissions(no_urls: bool) -> None:
         logger.warning("GETTING IMAGES")
         urls = get_image_urls(int(users.objects.count() / 2))
 
-    # quintuple the submission objects than volunteers so we've got plenty to
-    # play with
-    for _ in range(users.objects.count() * 5):
-        while True:
-            pk = random.randint(1, max_id)
-            user = users.objects.filter(pk=pk).first()
-            if user:
-                break
-
+    for _ in range(users.objects.count() * 8):
         submission_date = gen_datetime()
         submission = Submission.objects.create(
             original_id=uuid.uuid4(),
             create_time=submission_date,
-            claimed_by=user,
-            completed_by=user,
-            claim_time=submission_date + timedelta(hours=2),
-            complete_time=submission_date
-            + timedelta(hours=2, minutes=random.choice(range(40))),
+            claimed_by=None,
+            completed_by=None,
             source=dummy_source,
             url=random.choice(urls),
             archived=random.choice([True, False]),
@@ -168,7 +154,7 @@ def create_dummy_submissions(no_urls: bool) -> None:
         Transcription.objects.create(
             submission=submission,
             author=transcribot,
-            create_time=submission.complete_time - timedelta(minutes=1),
+            create_time=submission.create_time + timedelta(minutes=2),
             source=dummy_source,
             url=None,
             text=TRANSCRIBOT_TEMPLATE.format(generate_text()),
@@ -179,18 +165,24 @@ def create_dummy_transcriptions() -> None:
     """Build a bunch of fake transcriptions."""
     users = get_user_model()
     dummy_source = Source.objects.get(name="bootstrap script")
-    # adapted from
-    # https://books.agiliq.com/projects/django-orm-cookbook/en/latest/random.html
-    max_id = Submission.objects.all().aggregate(max_id=Max("id"))["max_id"]
-    # every volunteer has transcriptions, it's just a question of how many
-    for _ in users.objects.all():
-        for __ in range(1, 5):
-            while True:
-                pk = random.randint(1, max_id)
-                submission = Submission.objects.filter(pk=pk).first()
-                if submission:
-                    break
+    # have a ~83% chance that any given submission will have a transcription
+    chance_for_transcription = [False] + ([True] * 5)
+    max_id = users.objects.all().aggregate(max_id=Max("id"))["max_id"]
 
+    for submission in Submission.objects.all():
+        while True:
+            pk = random.randint(1, max_id)
+            user = users.objects.filter(pk=pk).first()
+            if user:
+                break
+
+        if random.choice(chance_for_transcription) is True:
+            submission.claimed_by = user
+            submission.completed_by = user
+            submission.claim_time = submission.create_time + timedelta(hours=2)
+            submission.complete_time = submission.create_time + timedelta(
+                hours=2, minutes=random.choice(range(40))
+            )
             Transcription.objects.create(
                 submission=submission,
                 author=submission.claimed_by,
