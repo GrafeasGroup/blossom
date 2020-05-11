@@ -27,6 +27,7 @@ router = routers.DefaultRouter()
 router.register(r"volunteer", views.VolunteerViewSet, basename="volunteer")
 router.register(r"submission", views.SubmissionViewSet, basename="submission")
 router.register(r"transcription", views.TranscriptionViewSet, basename="transcription")
+router.register(r"source", views.SourceViewSet, basename="source")
 
 urlpatterns = [
     url(r"", include(router.urls)),

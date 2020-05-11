@@ -1,6 +1,7 @@
 """Models used within the Authentication application."""
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils import timezone
 from rest_framework_api_key.models import APIKey
 
 from api.models import Transcription
@@ -17,21 +18,27 @@ class BlossomUser(AbstractUser):
     # The backend class which is used to authenticate the BlossomUser.
     backend = "authentication.backends.EmailBackend"
 
-    # Whether the user is a staff member of Grafeas.
+    # TODO: abstract out to role / permission / group
+    # A boolean that denotes whether a user account belongs to a volunteer or not.
+    is_volunteer = models.BooleanField(default=True)
+    # A boolean that denotes whether a user account is a staff account with Grafeas.
+    # (not to be confused with the base Django staff account.)
     is_grafeas_staff = models.BooleanField(default=False)
 
-    # The API key which the user can use when posting requests to the API.
+    # Each person is allowed one API key, but advanced security around this
+    # means that it is not fully implemented at this time. It is used by
+    # u/transcribersofreddit and the other bots, though.
     api_key = models.OneToOneField(
         APIKey, on_delete=models.CASCADE, null=True, blank=True
     )
 
-    # Whether the user is a volunteer of Grafeas.
-    is_volunteer = models.BooleanField(default=True)
-
-    # Whether the user has accepted the Code of Conduct.
+    # The time that this record was last updated.
+    last_update_time = models.DateTimeField(default=timezone.now)
+    # Whether this particular user has accepted our Code of Conduct.
     accepted_coc = models.BooleanField(default=False)
 
-    # Whether the user is blacklisted.
+    # Whether the user is blacklisted; if so, all bots will refuse to interact
+    # with this user.
     blacklisted = models.BooleanField(default=False)
 
     @property

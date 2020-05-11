@@ -1,11 +1,13 @@
 import logging
 import os
+from typing import Any
 
-from django.core.management.base import BaseCommand
 import dotenv
+from django.core.management.base import BaseCommand
 
-from website.models import Post
+from api.models import Source
 from authentication.models import BlossomUser
+from website.models import Post
 
 dotenv.load_dotenv()
 
@@ -25,7 +27,7 @@ ABOUT_PAGE = """
 <p>Our work with <a href="https://reddit.com/r/TranscribersOfReddit" class="real-link" target="_blank" rel="noreferrer">r/TranscribersOfReddit</a> has shown that there is a need for this kind of volunteerism and assistance, so we have elected to form a 501(c)(3) to better organize and serve those in need. The name <em>Grafeas Group, Ltd.</em>, as <em>graf&eacute;as</em>, translated from Greek, means "scribe". We see ourselves as the facilitators of the digital scribes and, as such, will do our best to usher in this new avenue of accessibility.</p>
 
 <p>We bring a global presence to this problem, with board members located in the USA, the UK, and the Netherlands. With our explosive growth since inception, we look forward to truly making a mark on today's digital world.</p>
-"""
+"""  # noqa: E501
 
 GIVING_PAGE = """
 <p>We at Grafeas are passionate about making the world a better place, but we can't do it without your help. Our volunteers work diligently around the clock to help us get closer to this goal, but we still have operating costs that hard work cannot cover.</p>
@@ -85,15 +87,15 @@ var handler = StripeCheckout.configure({
     key: '',
     token: function(token) {
         // append your token id and email, submit your form
-    	$("#stripeToken").val(token.id);
+        $("#stripeToken").val(token.id);
         $("#stripeEmail").val(token.email);
         $("#donations").submit();
     }
   });
 
   $('#ten').on('click', function(e) {
-	$("#donationAmount").val("1000");
-	openCheckout("Donation ($10)", 1000);
+    $("#donationAmount").val("1000");
+    openCheckout("Donation ($10)", 1000);
     e.preventDefault();
   });
   $('#twentyFive').on('click', function(e) {
@@ -121,13 +123,13 @@ var handler = StripeCheckout.configure({
     handler.close();
   });
 </script>
-"""
+"""  # noqa: E501
 
 TOS_PAGE = """
 <p>Let's keep this really simple: Usage of content ("Content") produced by or associated with Grafeas Group, Ltd. or any of its projects, including but not limited to Transcribers Of Reddit, indicates acceptance of these terms of service ("Terms").</p>
 
 <p>Content is provided under the <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="nofollow noopener">Creative Commons v3.0 by Attribution license</a> on an as-is basis, without any warranty, to the fullest extent allowable by law.</p>
-"""
+"""  # noqa: E501
 
 THANKS_PAGE = """
 <p>We know that everyone works hard for their money, and we deeply appreciate your decision to help.</p>
@@ -141,29 +143,36 @@ THANKS_PAGE = """
 <p>Cheers,</p>
 
 <p>~ The Staff and Board of Grafeas Group, Ltd.</p>
-"""
+"""  # noqa: E501
 
 
 class Command(BaseCommand):
-    help = "Creates the default entries required for the site."
+    help = "Creates the default entries required for the site."  # noqa: VNE003
 
-    def handle(self, *args, **options):
-        slugs = ["about-us", "giving-to-grafeas", "terms-of-service", "thank-you"]
-
-        if not BlossomUser.objects.filter(username="transcribersofreddit").first():
-            BlossomUser.objects.create_user(username="transcribersofreddit", email="transcribersofreddit@grafeas.org")
+    def create_users(self) -> None:
+        """Install all of the default user accounts into the database."""
+        if not BlossomUser.objects.filter(username="transcribersofreddit").exists():
+            BlossomUser.objects.create_user(
+                username="transcribersofreddit",
+                email="transcribersofreddit@grafeas.org",
+            )
             logger.debug(self.style.SUCCESS("Created user transcribersofreddit"))
 
-        if not BlossomUser.objects.filter(username="transcribot").first():
-            BlossomUser.objects.create_user(username="transcribot", email="transcribot@grafeas.org")
+        if not BlossomUser.objects.filter(username="transcribot").exists():
+            BlossomUser.objects.create_user(
+                username="transcribot", email="transcribot@grafeas.org"
+            )
             logger.debug(self.style.SUCCESS("Created user transcribot"))
 
-        if not BlossomUser.objects.filter(username="tor_archivist").first():
-            BlossomUser.objects.create_user(username="tor_archivist", email="archivist@grafeas.org")
+        if not BlossomUser.objects.filter(username="tor_archivist").exists():
+            BlossomUser.objects.create_user(
+                username="tor_archivist", email="archivist@grafeas.org"
+            )
             logger.debug(self.style.SUCCESS("Created user tor_archivist"))
 
-        # First we gotta create a new author, otherwise this whole thing will be for naught
-        if not BlossomUser.objects.filter(username="admin").first():
+        # First we gotta create a new author, otherwise this whole thing will
+        # be for naught
+        if not BlossomUser.objects.filter(username="admin").exists():
             BlossomUser.objects.create_superuser(
                 username="admin",
                 email="blossom@grafeas.org",
@@ -171,6 +180,17 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Admin user created!"))
 
+    def create_sources(self) -> None:
+        """Installs the default Source objects for transcriptions and submissions."""
+        if not Source.objects.filter(name="gamma_plus_one").exists():
+            Source.objects.create(name="gamma_plus_one")
+
+        if not Source.objects.filter(name="reddit").exists():
+            Source.objects.create(name="reddit")
+
+    def create_website_posts(self) -> None:
+        """Installs the default posts for the primary grafeas.org blog."""
+        slugs = ["about-us", "giving-to-grafeas", "terms-of-service", "thank-you"]
         admin = BlossomUser.objects.get(username="admin")
 
         if Post.objects.filter(slug__in=slugs).count() == len(slugs):
@@ -187,8 +207,8 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Wrote about page!"))
 
-        if not Post.objects.filter(slug=slugs[1]).first():
-            p = Post.objects.create(
+        if not Post.objects.filter(slug=slugs[1]).exists():
+            donation_post = Post.objects.create(
                 title="Giving to Grafeas",
                 body=GIVING_PAGE,
                 author=admin,
@@ -196,11 +216,13 @@ class Command(BaseCommand):
                 standalone_section=True,
                 header_order=20,
             )
-            p.body.replace("key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'")
-            p.save()
+            donation_post.body.replace(
+                "key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'"
+            )
+            donation_post.save()
             logger.debug(self.style.SUCCESS("Wrote donation page!"))
 
-        if not Post.objects.filter(slug=slugs[2]).first():
+        if not Post.objects.filter(slug=slugs[2]).exists():
             Post.objects.create(
                 title="Terms of Service",
                 body=TOS_PAGE,
@@ -211,7 +233,7 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Wrote TOS page!"))
 
-        if not Post.objects.filter(slug=slugs[3]).first():
+        if not Post.objects.filter(slug=slugs[3]).exists():
             Post.objects.create(
                 title="Thank You",
                 body=THANKS_PAGE,
@@ -221,3 +243,9 @@ class Command(BaseCommand):
                 show_in_news_view=False,
             )
             logger.debug(self.style.SUCCESS("Wrote donation thanks page!"))
+
+    def handle(self, *args: Any, **options: Any) -> None:
+        """Set up everything needed in the database for a fresh deploy."""
+        self.create_users()
+        self.create_sources()
+        self.create_website_posts()

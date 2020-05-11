@@ -69,7 +69,7 @@ def get_or_create_transcription(
 
 def get_or_create_post(tor_post, v, claim, done, redis_id):
     try:
-        p = Submission.objects.get(submission_id=tor_post.id)
+        p = Submission.objects.get(original_id=tor_post.id)
         logger.info("Found a matching post for a transcription ID!")
     except Submission.DoesNotExist:
         p = None
@@ -90,7 +90,7 @@ def get_or_create_post(tor_post, v, claim, done, redis_id):
             )
 
         p = Submission.objects.create(
-            submission_id=tor_post.id,
+            original_id=tor_post.id,
             submission_time=datetime.utcfromtimestamp(tor_post.created_utc).replace(
                 tzinfo=pytz.UTC
             ),

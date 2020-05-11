@@ -13,6 +13,7 @@ from api.tests.helpers import (
     create_submission,
     create_transcription,
     create_user,
+    get_default_test_source,
     setup_user_client,
 )
 from blossom.slack_conn.helpers import client as slack_client
@@ -24,7 +25,8 @@ class TestSubmissionCreation:
     def test_create_minimum_args(self, client: Client) -> None:
         """Test whether creation with minimum arguments is successful."""
         client, headers, _ = setup_user_client(client)
-        data = {"submission_id": "spaaaaace", "source": "the_tests"}
+        source = get_default_test_source()
+        data = {"original_id": "spaaaaace", "source": source.pk}
         result = client.post(
             reverse("submission-list", host="api"),
             data,
@@ -34,15 +36,16 @@ class TestSubmissionCreation:
         )
         assert result.status_code == status.HTTP_201_CREATED
         submission = Submission.objects.get(id=result.json()["id"])
-        assert submission.submission_id == data["submission_id"]
-        assert submission.source == data["source"]
+        assert submission.original_id == data["original_id"]
+        assert submission.source == source
 
     def test_submission_create_with_full_args(self, client: Client) -> None:
         """Test whether creation with all arguments is successful."""
         client, headers, _ = setup_user_client(client)
+        source = get_default_test_source()
         data = {
-            "submission_id": "spaaaaace",
-            "source": "the_tests",
+            "original_id": "spaaaaace",
+            "source": source.pk,
             "url": "http://example.com",
             "tor_url": "http://example.com/tor",
         }
@@ -55,15 +58,15 @@ class TestSubmissionCreation:
         )
         assert result.status_code == status.HTTP_201_CREATED
         submission = Submission.objects.get(id=result.json()["id"])
-        assert submission.submission_id == data["submission_id"]
-        assert submission.source == data["source"]
+        assert submission.original_id == data["original_id"]
+        assert submission.source == source
         assert submission.url == data["url"]
         assert submission.tor_url == data["tor_url"]
 
     def test_create_no_source(self, client: Client) -> None:
         """Test whether a request without source is considered a bad request."""
         client, headers, _ = setup_user_client(client)
-        data = {"submission_id": "spaaaaace"}
+        data = {"original_id": "spaaaaace"}
         result = client.post(
             reverse("submission-list", host="api"),
             json.dumps(data),
@@ -73,10 +76,24 @@ class TestSubmissionCreation:
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_create_with_invalid_source(self, client: Client) -> None:
+        """Test whether a request with an invalid source returns a 404."""
+        client, headers, _ = setup_user_client(client)
+        data = {"original_id": "spaaaaace", "source": "asdf"}
+        result = client.post(
+            reverse("submission-list", host="api"),
+            json.dumps(data),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_404_NOT_FOUND
+
     def test_create_no_id(self, client: Client) -> None:
         """Test whether a request without submission ID is considered a bad request."""
         client, headers, _ = setup_user_client(client)
-        data = {"source": "the_tests"}
+        source = get_default_test_source()
+        data = {"source": source.pk}
 
         result = client.post(
             reverse("submission-list", host="api"),
@@ -96,7 +113,7 @@ class TestSubmissionGet:
         """Test whether all current submissions are provided when no args are provided."""
         client, headers, _ = setup_user_client(client)
         first = create_submission()
-        second = create_submission(submission_id="second")
+        second = create_submission(original_id="second")
 
         result = client.get(
             reverse("submission-list", host="api"),
@@ -113,11 +130,11 @@ class TestSubmissionGet:
         """Test whether the specific submission is provided when an ID is supplied."""
         client, headers, _ = setup_user_client(client)
         first = create_submission()
-        create_submission(submission_id="second")
+        create_submission(original_id="second")
 
         result = client.get(
             reverse("submission-list", host="api")
-            + f"?submission_id={first.submission_id}",
+            + f"?original_id={first.original_id}",
             HTTP_HOST="api",
             content_type="application/json",
             **headers,
@@ -134,7 +151,7 @@ class TestSubmissionExpired:
         """Test whether only the expired submission is returned."""
         client, headers, _ = setup_user_client(client)
         first = create_submission(
-            submission_time=timezone.now() - timezone.timedelta(days=3)
+            create_time=timezone.now() - timezone.timedelta(days=3)
         )
         create_submission()
 
@@ -257,7 +274,7 @@ class TestSubmissionClaim:
         assert result.json()["id"] == submission.id
         assert submission.claimed_by == user
 
-    def test_claim_invalid_submission_id(self, client: Client) -> None:
+    def test_claim_invalid_original_id(self, client: Client) -> None:
         """Test whether a claim with an invalid submission id is successfully caught."""
         client, headers, user = setup_user_client(client)
         data = {"username": user.username}
@@ -333,7 +350,7 @@ class TestSubmissionDone:
         assert result.status_code == status.HTTP_201_CREATED
         assert submission.claimed_by == user
         assert submission.completed_by == user
-        assert result.json()["submission_id"] == submission.submission_id
+        assert result.json()["original_id"] == submission.original_id
 
     def test_done_without_claim(self, client: Client) -> None:
         """Test whether a done without the submission claimed is caught correctly."""
