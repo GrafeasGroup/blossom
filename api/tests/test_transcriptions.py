@@ -22,7 +22,7 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "submission_id": submission.original_id,
+            "submission_id": submission.id,
             "username": user.username,
             "original_id": "ABC",
             "source": submission.source.name,
@@ -38,8 +38,8 @@ class TestTranscriptionCreation:
             **headers,
         )
 
-        transcription = Transcription.objects.get(id=result.json()["id"])
         assert result.status_code == status.HTTP_201_CREATED
+        transcription = Transcription.objects.get(id=result.json()["id"])
         assert transcription.submission == submission
         assert transcription.source == submission.source
         assert transcription.author == user
@@ -73,8 +73,8 @@ class TestTranscriptionCreation:
         source = get_default_test_source()
         data = {
             "submission_id": 404,
+            "original_id": "base_id",
             "v_id": user.id,
-            "t_id": "ABC",
             "source": source.name,
             "t_url": "https://example.com",
             "t_text": "test content",
@@ -93,9 +93,9 @@ class TestTranscriptionCreation:
         client, headers, _ = setup_user_client(client)
         submission = create_submission()
         data = {
-            "submission_id": submission.original_id,
+            "submission_id": submission.id,
             "v_id": 404,
-            "t_id": "ABC",
+            "original_id": "ABC",
             "source": submission.source.name,
             "t_url": "https://example.com",
             "t_text": "test content",
@@ -109,12 +109,12 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_create_no_transcription_id(self, client: Client) -> None:
-        """Test whether a creation without a Transcription ID is caught correctly."""
+    def test_create_no_original_id(self, client: Client) -> None:
+        """Test whether a creation without a original ID is caught correctly."""
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "original_id": submission.original_id,
+            "submission_id": submission.id,
             "v_id": user.id,
             "source": submission.source.name,
             "t_url": "https://example.com",
@@ -134,9 +134,9 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "original_id": submission.original_id,
+            "submission_id": submission.id,
+            "original_id": "base_id",
             "v_id": user.id,
-            "t_id": "ABC",
             "t_url": "https://example.com",
             "t_text": "test content",
         }
@@ -154,9 +154,9 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "original_id": submission.original_id,
+            "submission_id": submission.id,
             "v_id": user.id,
-            "t_id": "ABC",
+            "original_id": "ABC",
             "source": submission.source.name,
             "t_text": "test content",
         }
@@ -174,9 +174,9 @@ class TestTranscriptionCreation:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {
-            "original_id": submission.original_id,
+            "submission_id": submission.id,
+            "original_id": "ABC",
             "v_id": user.id,
-            "t_id": "ABC",
             "source": submission.source.name,
             "t_url": "https://example.com",
         }

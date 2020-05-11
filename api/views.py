@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from drf_yasg.openapi import Parameter, Response as DocResponse, Schema
 from drf_yasg.utils import no_body, swagger_auto_schema
-from rest_framework import serializers, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
@@ -91,9 +91,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
 
         gamma_plus_one, _ = Source.objects.get_or_create(name="gamma_plus_one")
 
-        dummy_post = Submission.objects.create(
-            source=gamma_plus_one, completed_by=user
-        )
+        dummy_post = Submission.objects.create(source=gamma_plus_one, completed_by=user)
         Transcription.objects.create(
             submission=dummy_post,
             author=user,
@@ -165,7 +163,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         queryset = Submission.objects.all().order_by("id")
         if "original_id" in self.request.query_params:
             queryset = queryset.filter(
-                original_id=self.request.query_prams["original_id"]
+                original_id=self.request.query_params["original_id"]
             )
         return queryset
 
@@ -397,7 +395,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
-            required=["submission_id", "source"],
+            required=["original_id", "source"],
             properties={
                 "original_id": Schema(type="string"),
                 "source": Schema(type="string"),
@@ -411,29 +409,26 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             404: "Source requested was not found",
         },
     )
-    @validate_request(data_params={"submission_id", "source"})
-    def create(self, request: Request, *args: object, **kwargs: object) -> Response:
+    @validate_request(data_params={"original_id", "source"})
+    def create(
+        self,
+        request: Request,
+        original_id: str = None,
+        source: str = None,
+        *args: object,
+        **kwargs: object,
+    ) -> Response:
         """
         Create a new submission.
 
         Note that both the original id and the source should be supplied.
         """
-        original_id = request.data.get("original_id")
-        source = request.data.get("source")
-
-        if not original_id or not source:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if (source_obj := Source.objects.filter(pk=source).first()) is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
+        source_obj = get_object_or_404(Source, pk=source)
         url = request.data.get("url")
         tor_url = request.data.get("tor_url")
-
         submission = Submission.objects.create(
             original_id=original_id, source=source_obj, url=url, tor_url=tor_url
         )
-
         return Response(
             status=status.HTTP_201_CREATED,
             data=self.serializer_class(submission, context={"request": request}).data,
@@ -451,19 +446,20 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         request_body=Schema(
             type="object",
             required=[
-                "submission_id" "original_id",
-                "username",
+                "original_id",
                 "source",
-                "t_url",
+                "submission_id",
                 "t_text",
+                "t_url",
+                "username",
             ],
             properties={
-                "submission_id": Schema(type="string"),
-                "username": Schema(type="string"),
                 "original_id": Schema(type="string"),
-                "completion_method": Schema(type="string"),
-                "t_url": Schema(type="string"),
+                "source": Schema(type="string"),
+                "submission_id": Schema(type="string"),
                 "t_text": Schema(type="string"),
+                "t_url": Schema(type="string"),
+                "username": Schema(type="string"),
             },
         ),
         responses={
@@ -475,18 +471,16 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         },
     )
     @validate_request(
-        data_params={"completion_method", "original_id", "submission_id", "source", "t_id", "t_url", "t_text"}
+        data_params={"original_id", "submission_id", "source", "t_text", "t_url"}
     )
     def create(
         self,
         request: Request,
-        completion_method: str = None,
-        submission_id: str = None,
         original_id: str = None,
         source: str = None,
-        t_id: str = None,
-        t_url: str = None,
+        submission_id: str = None,
         t_text: str = None,
+        t_url: str = None,
         *args: object,
         **kwargs: object,
     ) -> Response:
@@ -500,12 +494,12 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             - source                the system which has submitted this request
             - t_url                 the direct url to the transcription
             - t_text                the text of the transcription
-            - ocr_text              the text of tor_ocr
 
         Note that instead of the username, the "v_id" property to supply the
         volunteer can also be used to create a transcription.
         """
         submission = get_object_or_404(Submission, id=submission_id)
+        # TODO: Remove the possibility to include v_id/v_username and just allow username.
         user = self.get_user_from_request(request.data)
         source = get_object_or_404(Source, name=source)
         removed_from_reddit = request.data.get("removed_from_reddit", False)
@@ -516,7 +510,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
             url=t_url,
             source=source,
             text=t_text,
-            removed_from_reddit=removed_from_reddit
+            removed_from_reddit=removed_from_reddit,
         )
         return Response(
             data=self.serializer_class(
