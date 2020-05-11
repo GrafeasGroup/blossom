@@ -20,8 +20,10 @@ from rest_framework.views import APIView
 
 from api.authentication import AdminApiKeyCustomCheck
 from api.helpers import BlossomUserMixin
+from api.models import Source
 from api.models import Submission, Transcription
 from api.serializers import (
+    SourceSerializer,
     SubmissionSerializer,
     TranscriptionSerializer,
     VolunteerSerializer,
@@ -97,14 +99,16 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         except BlossomUser.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        gamma_plus_one, _ = Source.objects.get_or_create(name="gamma_plus_one")
+
         dummy_post = Submission.objects.create(
-            source="gamma_plus_one", completed_by=volunteer
+            source=gamma_plus_one, completed_by=volunteer
         )
         Transcription.objects.create(
             submission=dummy_post,
             author=volunteer,
-            transcription_id=str(uuid.uuid4()),
-            completion_method="gamma_plus_one",
+            original_id=str(uuid.uuid4()),
+            source=gamma_plus_one,
             text="dummy transcription",
         )
         return Response(self.serializer_class(volunteer).data)
@@ -137,14 +141,26 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         )
 
 
+class SourceViewSet(viewsets.ModelViewSet):
+    """
+    The API view to view and edit information regarding Sources.
+
+    This information is required for both Submissions and Transcriptions.
+    """
+
+    queryset = Source.objects.all().order_by("pk")
+    serializer_class = SourceSerializer
+    permission_classes = (AdminApiKeyCustomCheck,)
+
+
 @method_decorator(
     name="list",
     decorator=swagger_auto_schema(
         operation_summary="Get information on all submissions or a specific"
         " submission if specified.",
-        operation_description="Include the submission_id as a query to filter"
+        operation_description="Include the original_id as a query to filter"
         " the submissions on the specified ID.",
-        manual_parameters=[Parameter("submission_id", "query", type="string")],
+        manual_parameters=[Parameter("original_id", "query", type="string")],
     ),
 )
 class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
@@ -155,13 +171,13 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         """
         Get information on all submissions or a specific submission if specified.
 
-        When a submission_id is provided as a query parameter, filter the
+        When a original_id is provided as a query parameter, filter the
         queryset on that submission.
         """
         queryset = Submission.objects.all().order_by("id")
-        submission_id = self.request.query_params.get("submission_id", None)
-        if submission_id is not None:
-            queryset = queryset.filter(submission_id=submission_id)
+        original_id = self.request.query_params.get("original_id", None)
+        if original_id is not None:
+            queryset = queryset.filter(original_id=original_id)
         return queryset
 
     def _get_possible_claim_done_errors(
@@ -216,7 +232,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         queryset = Submission.objects.filter(
             Q(completed_by=None)
             & Q(claimed_by=None)
-            & Q(submission_time__lt=delay_time)
+            & Q(create_time__lt=delay_time)
             & Q(archived=False)
         )
         return Response(
@@ -431,7 +447,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         request_body=Schema(
             type="object",
             properties={
-                "submission_id": Schema(type="string"),
+                "original_id": Schema(type="string"),
                 "source": Schema(type="string"),
                 "url": Schema(type="string"),
                 "tor_url": Schema(type="string"),
@@ -440,25 +456,29 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         responses={
             201: DocResponse("Successful creation", schema=serializer_class),
             400: "Required parameters not provided",
+            404: "Source requested was not found",
         },
     )
     def create(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Create a new submission.
 
-        Note that both the submission id and the source should be supplied.
+        Note that both the original id and the source should be supplied.
         """
-        submission_id = request.data.get("submission_id")
+        original_id = request.data.get("original_id")
         source = request.data.get("source")
+
+        if not original_id or not source:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        if (source_obj := Source.objects.filter(pk=source).first()) is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         url = request.data.get("url")
         tor_url = request.data.get("tor_url")
 
-        if not submission_id or not source:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
         submission = Submission.objects.create(
-            submission_id=submission_id, source=source, url=url, tor_url=tor_url
+            original_id=original_id, source=source_obj, url=url, tor_url=tor_url
         )
 
         return Response(
@@ -478,22 +498,19 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         request_body=Schema(
             type="object",
             required=[
-                "submission_id",
+                "submission_id" "original_id",
                 "username",
-                "t_id",
-                "completion_method",
+                "source",
                 "t_url",
                 "t_text",
-                "ocr_text",
             ],
             properties={
                 "submission_id": Schema(type="string"),
                 "username": Schema(type="string"),
-                "t_id": Schema(type="string"),
+                "original_id": Schema(type="string"),
                 "completion_method": Schema(type="string"),
                 "t_url": Schema(type="string"),
                 "t_text": Schema(type="string"),
-                "ocr_text": Schema(type="String"),
             },
         ),
         responses={
@@ -511,27 +528,24 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         The following fields are passed in the HTTP Body:
             - submission_id         the ID of the corresponding submission
             - v_id (or username)    the ID or username of the authoring volunteer
-            - t_id                  the base36 ID of the comment
-            - completion_method     the system which has submitted this request
+            - original_id           the base36 ID of the comment
+            - source                the system which has submitted this request
             - t_url                 the direct url to the transcription
             - t_text                the text of the transcription
             - ocr_text              the text of tor_ocr
 
         Note that instead of the username, the "v_id" property to supply the
         volunteer can also be used to create a transcription.
-
-        Moreover, note that either t_text or ocr_text should be provided, not
-        both.
         """
-        submission_id = request.data.get("submission_id")
-        if submission_id is None:
+        original_id = request.data.get("submission_id")
+        if original_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         # did they give us an actual submission id?
-        submission = Submission.objects.filter(submission_id=submission_id).first()
+        submission = Submission.objects.filter(original_id=original_id).first()
         if not submission:
             # ...or did they give us the database ID of a submission?
-            submission = Submission.objects.filter(id=submission_id).first()
+            submission = Submission.objects.filter(id=original_id).first()
             if not submission:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -539,24 +553,21 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         if isinstance(volunteer, Response):
             return volunteer
 
-        transcription_id = request.data.get("t_id")
-        if not transcription_id:
+        original_id = request.data.get("original_id")
+        if not original_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        completion_method = request.data.get("completion_method")
-        if not completion_method:
+        source = request.data.get("source")
+        if not source:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        source = Source.objects.get(name=source)
+
+        url = request.data.get("t_url")
+        if not url:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        transcription_url = request.data.get("t_url")
-        if not transcription_url:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        ocr_text = request.data.get("ocr_text")
         transcription_text = request.data.get("t_text")
-        if not transcription_text and not ocr_text:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if transcription_text and ocr_text:
+        if not transcription_text:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         removed_from_reddit = request.data.get("removed_from_reddit", False)
@@ -564,11 +575,10 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         transcription = Transcription.objects.create(
             submission=submission,
             author=volunteer,
-            transcription_id=transcription_id,
-            completion_method=completion_method,
-            url=transcription_url,
+            original_id=original_id,
+            url=url,
+            source=source,
             text=transcription_text,
-            ocr_text=ocr_text,
             removed_from_reddit=removed_from_reddit,
         )
         return Response(
@@ -579,22 +589,22 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         )
 
     @swagger_auto_schema(
-        manual_parameters=[Parameter("submission_id", "query", type="string")],
-        responses={400: 'Query parameter "submission_id" not present'},
+        manual_parameters=[Parameter("original_id", "query", type="string")],
+        responses={400: 'Query parameter "original_id" not present'},
     )
     @action(detail=False, methods=["get"])
     def search(self, request: Request, *args: object, **kwargs: object) -> Response:
         """
         Search for the transcriptions of a specific submission.
 
-        Note that providing a submission_id as a query parameter is mandatory.
+        Note that providing a original_id as a query parameter is mandatory.
         """
-        s_id = request.query_params.get("submission_id", None)
+        original_id = request.query_params.get("original_id", None)
 
-        if not s_id:
+        if not original_id:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        queryset = Transcription.objects.filter(submission__submission_id=s_id)
+        queryset = Transcription.objects.filter(submission__original_id=original_id)
         return Response(
             data=self.serializer_class(
                 queryset, many=True, context={"request": request}
@@ -621,7 +631,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         """
         one_hour_ago = timezone.now() - timedelta(hours=1)
 
-        queryset = Transcription.objects.filter(post_time__gte=one_hour_ago)
+        queryset = Transcription.objects.filter(create_time__gte=one_hour_ago)
 
         # TODO: Add system so that we're not pulling the same one over and over
 

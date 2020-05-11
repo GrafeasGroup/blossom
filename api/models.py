@@ -8,11 +8,48 @@ from django.utils import timezone
 
 def create_id() -> uuid.UUID:
     """
-    Create a random UUID through using the uuid library.
+    Create a random UUID for elements as needed.
+
+    Sometimes we won't have the original ID of transcriptions or submissions,
+    so instead we fake them using UUIDs. For example, this is used when
+    creating dummy transcriptions or submissions due to incomplete data from
+    the Redis transition over 2019-20.
 
     :return: the random UUID
     """
     return uuid.uuid4()
+
+
+class Source(models.Model):
+    """
+    The source that the particular Submission or Transcription came from.
+
+    The majority of these will be "reddit", but to save on space and more easily
+    standardize we have the option of including other sources as we grow.
+    """
+
+    # Name of the origin of the content. For example: reddit, blossom, etc.
+    name = models.CharField(max_length=20, primary_key=True)
+
+    def __str__(self) -> str:
+        return self.name
+
+
+def get_default_source() -> Source:
+    """
+    Grabs the proper default ID for submissions and transcriptions.
+
+    Django cannot serialize lambda functions, so we need to have a helper
+    function to handle the default action of the `source` foreign keys.
+
+    Right now, all of our content comes from Reddit, so we have that set
+    as the default source. Should this ever change, we can simply update
+    this function and be good to go.
+
+    :return: the ID of Source record for reddit
+    """
+    obj, _ = Source.objects.get_or_create(name="reddit")
+    return obj.name
 
 
 class Submission(models.Model):
@@ -25,26 +62,24 @@ class Submission(models.Model):
     common example of this phenomenon.
     """
 
-    """
-    The ID of the Submission on the "source" platform.
+    # The ID of the Submission on the "source" platform.
+    # Note that this field is not used as a primary key; an underlying
+    # "id" field is the primary key. Note: this is not named "source_id"
+    # because of internal conflicts with the `source` FK.
+    original_id = models.CharField(max_length=36, default=create_id)
 
-    Note that this field is not used as a primary key and hence the database
-    also keeps an underlying "id" field which is the primary key.
-    """
-    submission_id = models.CharField(max_length=36, default=create_id)
+    # The time the Submission was created.
+    create_time = models.DateTimeField(default=timezone.now)
 
-    """The time the Submission is submitted."""
-    submission_time = models.DateTimeField(default=timezone.now)
+    # The time the Submission was last updated.
+    last_update_time = models.DateTimeField(default=timezone.now)
 
-    """
-    The ID of the Submission in the old Redis database.
-
-    Note that this field is only used for handling the redis changeover and
-    can be removed afterwards.
-    """
+    # The ID of the Submission in the old Redis database.
+    # Note that this field is only used for handling the redis changeover and
+    # can be removed afterwards.
     redis_id = models.CharField(max_length=12, blank=True, null=True)
 
-    """The BlossomUser who has claimed the Submission."""
+    # The BlossomUser who has claimed the Submission.
     claimed_by = models.ForeignKey(
         "authentication.BlossomUser",
         on_delete=models.CASCADE,
@@ -53,7 +88,7 @@ class Submission(models.Model):
         blank=True,
     )
 
-    """The BlossomUser who has completed the Submission."""
+    # The BlossomUser who has completed the Submission.
     completed_by = models.ForeignKey(
         "authentication.BlossomUser",
         on_delete=models.CASCADE,
@@ -62,40 +97,30 @@ class Submission(models.Model):
         blank=True,
     )
 
-    """The time at which the Submission is claimed."""
+    # The time at which the Submission is claimed.
     claim_time = models.DateTimeField(default=None, null=True, blank=True)
 
-    """The time at which the Submission is claimed."""
+    # The time at which the Submission is completed.
     complete_time = models.DateTimeField(default=None, null=True, blank=True)
 
-    """
-    The source platform from which the Submission originates.
+    # The source platform from which the Submission originates.
+    source = models.ForeignKey(
+        Source,
+        default=get_default_source,
+        on_delete=models.CASCADE
+    )
 
-    Note that the "submission_id" is related to this field as described in its
-    documentation.
-    """
-    source = models.CharField(max_length=20)
+    # The URL to the Submission directly on its source.
+    url = models.URLField(null=True, blank=True)
 
-    """
-    The URL to the Submission directly on its source.
+    # The URL to the Submission on /r/TranscribersOfReddit.
+    tor_url = models.URLField(null=True, blank=True)
 
-    Note that the maximum length is derived from https://stackoverflow.com/a/219664
-    """
-    url = models.CharField(max_length=2083, null=True, blank=True)
-
-    """The URL to the Submission on /r/TranscribersOfReddit."""
-    tor_url = models.CharField(max_length=2083, null=True, blank=True)
-
-    """Whether the post has been archived, for example by /u/tor_archivist."""
+    # Whether the post has been archived, for example by /u/tor_archivist.
     archived = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        """
-        Retrieve the String representation of the Submission object.
-
-        :return: the String representation of the Submission
-        """
-        return f"{self.submission_id}"
+        return f"{self.original_id}"
 
     @property
     def has_ocr_transcription(self) -> bool:
@@ -107,7 +132,6 @@ class Submission(models.Model):
 
         :return: whether the Submission has an OCR transcription
         """
-        # lazy load transcription model
         return bool(
             Transcription.objects.filter(
                 Q(submission=self) & Q(author__username="transcribot")
@@ -116,62 +140,44 @@ class Submission(models.Model):
 
 
 class Transcription(models.Model):
-    """The transcription of a Submission."""
-
-    """The Submission for which the Transcription is made."""
+    # The Submission for which the Transcription is made.
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
 
-    """The BlossomUser who has authored of the Transcription."""
+    # The BlossomUser who has authored the Transcription.
     author = models.ForeignKey("authentication.BlossomUser", on_delete=models.CASCADE)
 
-    """The time the Transcription has been created."""
-    post_time = models.DateTimeField(default=timezone.now)
-    # reddit comment ID or similar
+    # The time the Transcription has been created.
+    create_time = models.DateTimeField(default=timezone.now)
+    # The time the Transcription was last updated.
+    last_update_time = models.DateTimeField(default=timezone.now)
 
-    """
-    The ID of the Transcription on the "completion_method" platform.
+    # The ID of the Transcription on the "source" platform.
+    # Note that this field is not used as a primary key; an underlying
+    # "id" field is the primary key. Note: this is not named "source_id"
+    # because of internal conflicts with the `source` FK.
+    original_id = models.CharField(max_length=36)
 
-    Note that this field is not used as a primary key and hence the database
-    also keeps an underlying "id" field which is the primary key.
-    """
-    transcription_id = models.CharField(max_length=36)
-    # "reddit", "api", "blossom". Leaving extra characters in case we want
-    # to expand the options.
+    # The platform from which the Transcription originates.
+    source = models.ForeignKey(
+        Source,
+        default=get_default_source,
+        on_delete=models.CASCADE,
+        related_name="%(app_label)s_%(class)s_related",
+    )
 
-    """The platform from which the Transcription originates."""
-    completion_method = models.CharField(max_length=20)
+    # The URL to the Transcription on the source platform.
+    url = models.URLField(null=True, blank=True)
 
-    """The URL to the Transcription on the source platform."""
-    url = models.CharField(max_length=2083, null=True, blank=True)
-
-    """
-    The text of the transcription.
-
-    The SQL longtext type is forced, as per https://stackoverflow.com/a/23169977
-    """
+    # The text of the transcription. We force the SQL longtext type, per
+    # https://stackoverflow.com/a/23169977.
     text = models.TextField(max_length=4_294_000_000, null=True, blank=True)
 
-    """
-    The text of the transcription, created by OCR.
-
-    Note that either "text" or "ocr_text" is null.
-    """
-    ocr_text = models.TextField(max_length=4_294_000_000, null=True, blank=True)
-
-    """
-    Whether the Transcription is removed from Reddit.
-
-    This is mostly to keep track of the behavior of the Reddit spam filter,
-    as this filter sometimes marks the transcriptions falsely as spam. This
-    does not affect our validation as we can still access the transcription
-    through workarounds.
-    """
+    # Whether the Transcription is removed from Reddit.
+    # This is mostly to keep track of the behavior of the Reddit spam filter,
+    # as this filter sometimes marks the transcriptions falsely as spam. This
+    # does not affect our validation as we can still access the transcription
+    # through workarounds.
     removed_from_reddit = models.BooleanField(default=False)
 
     def __str__(self) -> str:
-        """
-        Retrieve the String representation of the Transcription object.
-
-        :return: the String representation of the Transcription
-        """
         return f"{self.submission} by {self.author.username}"

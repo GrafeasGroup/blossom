@@ -3,17 +3,17 @@ from typing import Dict, Tuple
 
 from django.test import Client
 
-from api.models import Submission, Transcription
+from api.models import Source, Submission, Transcription
 from authentication.models import APIKey, BlossomUser
 
 BASE_SUBMISSION_INFO = {
-    "submission_id": "base_submission_id",
-    "source": "base_source",
+    "original_id": "base_original_id",
+    "source": None,
 }
 BASE_TRANSCRIPTION_INFO = {
-    "transcription_id": "base_transcription_id",
-    "completion_method": "base_completion_method",
-    "url": "base_url",
+    "original_id": "base_original_id",
+    "source": None,
+    "url": "https://baseurl.org",
     "text": "base_text",
     "removed_from_reddit": False,
 }
@@ -48,6 +48,12 @@ def create_user(**kwargs: object) -> BlossomUser:
     return user
 
 
+def get_default_test_source() -> Source:
+    """Build or get the Source needed to create transcriptions / submissions."""
+    source, _ = Source.objects.get_or_create(name="unit_tests")
+    return source
+
+
 def create_submission(**kwargs: object) -> Submission:
     """
     Create a new submission or get the submission with the corresponding information.
@@ -66,6 +72,8 @@ def create_submission(**kwargs: object) -> Submission:
         **BASE_SUBMISSION_INFO,
         **{key: kwargs[key] for key in kwargs if key in dir(Submission)},
     }
+    if submission_info["source"] is None:
+        submission_info["source"] = get_default_test_source()
     return Submission.objects.create(**submission_info)
 
 
@@ -92,6 +100,8 @@ def create_transcription(
         "submission": submission,
         "author": user,
     }
+    if transcription_info["source"] is None:
+        transcription_info["source"] = get_default_test_source()
     return Transcription.objects.create(**transcription_info)
 
 
