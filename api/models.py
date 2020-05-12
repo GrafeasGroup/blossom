@@ -105,9 +105,7 @@ class Submission(models.Model):
 
     # The source platform from which the Submission originates.
     source = models.ForeignKey(
-        Source,
-        default=get_default_source,
-        on_delete=models.CASCADE
+        Source, default=get_default_source, on_delete=models.CASCADE
     )
 
     # The URL to the Submission directly on its source.
