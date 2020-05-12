@@ -458,7 +458,7 @@ class TestSubmissionDone:
 
             result = client.post(
                 reverse("submission-done", host="api", args=[submission.id]),
-                json.dumps({"v_username": user.username}),
+                json.dumps({"username": user.username}),
                 HTTP_HOST="api",
                 content_type="application/json",
                 **headers,
