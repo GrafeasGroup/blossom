@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.authentication import AdminApiKeyCustomCheck
-from api.helpers import BlossomUserMixin, validate_request
+from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import (
     SourceSerializer,
@@ -149,7 +149,7 @@ class SourceViewSet(viewsets.ModelViewSet):
         manual_parameters=[Parameter("original_id", "query", type="string")],
     ),
 )
-class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
+class SubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = SubmissionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
 
@@ -435,7 +435,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         )
 
 
-class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
+class TranscriptionViewSet(viewsets.ModelViewSet):
     """The API view to view and edit information regarding Transcribers."""
 
     queryset = Transcription.objects.all().order_by("-post_time")
