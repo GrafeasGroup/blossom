@@ -1,12 +1,9 @@
 from functools import wraps
 from typing import Callable, Dict, Set
 
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
-
-from authentication.models import BlossomUser
 
 
 def _retrieve_keys(data: Dict, keys: Set, name: str) -> Dict[str, str]:
@@ -66,44 +63,3 @@ def validate_request(query_params: Set = None, data_params: Set = None) -> Calla
         return wrapper
 
     return decorator
-
-
-class BlossomUserMixin:
-    REQUEST_FIELDS = {"v_id": "id", "v_username": "username", "username": "username"}
-
-    def get_user_from_request(self, data: Dict) -> BlossomUser:
-        """
-        Retrieve the BlossomUser based on information provided within the request data.
-
-        The user can be retrieved by its ID and / or its username using a combination of
-        any of the following keys:
-            - username:   The username
-            - v_id:       The user ID
-            - v_username: The username
-
-        Note that when multiple values are present within the request, the user with
-        the combination of these values is found.
-
-        When either none of the above keys is provided or no user with the provided
-        combination is found, an exception is raised.
-
-        :param data: the dictionary from which data is used to retrieve the user
-        :return: the requested user
-        :raise ValidationError: when none of the descibed keys are present within the data
-        :raise Http404: when the user with the described keys cannot be found
-        """
-        if not any(key in data for key in self.REQUEST_FIELDS.keys()):
-            raise serializers.ValidationError(
-                f"No key in {self.REQUEST_FIELDS.keys()} present."
-            )
-
-        # Get the BlossomUser corresponding to the fields present in the request data
-        # and the mapping in the REQUEST_FIELDS constant.
-        return get_object_or_404(
-            BlossomUser,
-            **{
-                self.REQUEST_FIELDS[key]: value
-                for key, value in data.items()
-                if key in self.REQUEST_FIELDS.keys()
-            },
-        )

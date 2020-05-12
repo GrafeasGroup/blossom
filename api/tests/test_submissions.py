@@ -262,7 +262,7 @@ class TestSubmissionClaim:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
         data = {"username": user.username}
-        result = client.post(
+        result = client.patch(
             reverse("submission-claim", host="api", args=[submission.id]),
             data,
             HTTP_HOST="api",
@@ -278,7 +278,7 @@ class TestSubmissionClaim:
         """Test whether a claim with an invalid submission id is successfully caught."""
         client, headers, user = setup_user_client(client)
         data = {"username": user.username}
-        result = client.post(
+        result = client.patch(
             reverse("submission-claim", host="api", args=[404]),
             data,
             HTTP_HOST="api",
@@ -292,7 +292,7 @@ class TestSubmissionClaim:
         client, headers, _ = setup_user_client(client)
         submission = create_submission()
         data = {"username": "non_existent_username"}
-        result = client.post(
+        result = client.patch(
             reverse("submission-claim", host="api", args=[submission.id]),
             json.dumps(data),
             HTTP_HOST="api",
@@ -305,7 +305,7 @@ class TestSubmissionClaim:
         """Test whether a claim without user information is successfully caught."""
         client, headers, _ = setup_user_client(client)
         submission = create_submission()
-        result = client.post(
+        result = client.patch(
             reverse("submission-claim", host="api", args=[submission.id]),
             HTTP_HOST="api",
             content_type="application/json",
@@ -319,7 +319,7 @@ class TestSubmissionClaim:
         submission = create_submission(claimed_by=user)
         data = {"username": user.username}
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-claim", host="api", args=[submission.id]),
             json.dumps(data),
             HTTP_HOST="api",
@@ -338,7 +338,7 @@ class TestSubmissionDone:
         submission = create_submission(claimed_by=user)
         data = {"username": user.username}
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-done", host="api", args=[submission.id]),
             json.dumps(data),
             HTTP_HOST="api",
@@ -358,7 +358,7 @@ class TestSubmissionDone:
         submission = create_submission()
         data = {"username": user.username}
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-done", host="api", args=[submission.id]),
             json.dumps(data),
             HTTP_HOST="api",
@@ -374,7 +374,7 @@ class TestSubmissionDone:
         submission = create_submission(claimed_by=claiming_user)
         data = {"username": user.username}
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-done", host="api", args=[submission.id]),
             json.dumps(data),
             HTTP_HOST="api",
@@ -388,7 +388,7 @@ class TestSubmissionDone:
         client, headers, _ = setup_user_client(client)
         submission = create_submission()
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-done", host="api", args=[submission.id]),
             HTTP_HOST="api",
             content_type="application/json",
@@ -402,7 +402,7 @@ class TestSubmissionDone:
         submission = create_submission(claimed_by=user, completed_by=user)
         data = {"username": user.username}
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-done", host="api", args=[submission.id]),
             json.dumps(data),
             HTTP_HOST="api",
@@ -456,7 +456,7 @@ class TestSubmissionDone:
             if trans_url:
                 create_transcription(submission, user, url=trans_url)
 
-            result = client.post(
+            result = client.patch(
                 reverse("submission-done", host="api", args=[submission.id]),
                 json.dumps({"username": user.username}),
                 HTTP_HOST="api",
@@ -485,7 +485,7 @@ class TestSubmissionUnclaim:
         client, headers, user = setup_user_client(client)
         submission = create_submission(claimed_by=user)
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-unclaim", host="api", args=[submission.id]),
             {"username": user.username},
             HTTP_HOST="api",
@@ -503,7 +503,7 @@ class TestSubmissionUnclaim:
         client, headers, user = setup_user_client(client)
         submission = create_submission()
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-unclaim", host="api", args=[submission.id]),
             {"username": user.username},
             HTTP_HOST="api",
@@ -518,7 +518,7 @@ class TestSubmissionUnclaim:
         client, headers, _ = setup_user_client(client)
         submission = create_submission()
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-unclaim", host="api", args=[submission.id]),
             HTTP_HOST="api",
             content_type="application/json",
@@ -531,7 +531,7 @@ class TestSubmissionUnclaim:
         client, headers, user = setup_user_client(client)
         submission = create_submission(claimed_by=user, completed_by=user)
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-unclaim", host="api", args=[submission.id]),
             json.dumps({"username": user.username}),
             HTTP_HOST="api",
@@ -551,7 +551,7 @@ class TestSubmissionUnclaim:
         claiming_user = create_user(username="claiming_user")
         submission = create_submission(claimed_by=claiming_user)
 
-        result = client.post(
+        result = client.patch(
             reverse("submission-unclaim", host="api", args=[submission.id]),
             json.dumps({"username": user.username}),
             HTTP_HOST="api",
