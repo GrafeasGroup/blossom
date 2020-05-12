@@ -230,7 +230,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         },
     )
     @validate_request(data_params={"username"})
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["patch"])
     def unclaim(self, request: Request, pk: int, username: str = None) -> Response:
         """
         Unclaim the specified submission, from the specified volunteer.
@@ -269,7 +269,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         },
     )
     @validate_request(data_params={"username"})
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["patch"])
     def claim(self, request: Request, pk: int, username: str = None) -> Response:
         """
         Claim the specified submission from the specified volunteer.
@@ -344,7 +344,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         },
     )
     @validate_request(data_params={"username"})
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["patch"])
     def done(self, request: Request, pk: int, username: str = None) -> Response:
         """
         Mark the submission as done from the specified volunteer.
@@ -472,7 +472,14 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         },
     )
     @validate_request(
-        data_params={"original_id", "submission_id", "source", "text", "url", "username"}
+        data_params={
+            "original_id",
+            "submission_id",
+            "source",
+            "text",
+            "url",
+            "username",
+        }
     )
     def create(
         self,
