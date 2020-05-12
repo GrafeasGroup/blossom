@@ -26,8 +26,8 @@ class TestTranscriptionCreation:
             "username": user.username,
             "original_id": "ABC",
             "source": submission.source.name,
-            "t_url": "https://example.com",
-            "t_text": "test content",
+            "url": "https://example.com",
+            "text": "test content",
         }
 
         result = client.post(
@@ -44,8 +44,8 @@ class TestTranscriptionCreation:
         assert transcription.source == submission.source
         assert transcription.author == user
         assert transcription.original_id == data["original_id"]
-        assert transcription.url == data["t_url"]
-        assert transcription.text == data["t_text"]
+        assert transcription.url == data["url"]
+        assert transcription.text == data["text"]
 
     def test_create_no_submission_id(self, client: Client) -> None:
         """Test whether a creation without passing `submission_id` is caught correctly."""
@@ -55,8 +55,8 @@ class TestTranscriptionCreation:
             "username": user.username,
             "original_id": "ABC",
             "source": submission.source.name,
-            "t_url": "https://example.com",
-            "t_text": "test content",
+            "url": "https://example.com",
+            "text": "test content",
         }
         result = client.post(
             reverse("transcription-list", host="api"),
@@ -74,10 +74,10 @@ class TestTranscriptionCreation:
         data = {
             "submission_id": 404,
             "original_id": "base_id",
-            "v_id": user.id,
+            "username": user.username,
             "source": source.name,
-            "t_url": "https://example.com",
-            "t_text": "test content",
+            "url": "https://example.com",
+            "text": "test content",
         }
         result = client.post(
             reverse("transcription-list", host="api"),
@@ -88,17 +88,17 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_create_invalid_user_id(self, client: Client) -> None:
-        """Test whether a creation with an invalid user ID is caught correctly."""
+    def test_create_invalid_username(self, client: Client) -> None:
+        """Test whether a creation with an invalid username is caught correctly."""
         client, headers, _ = setup_user_client(client)
         submission = create_submission()
         data = {
             "submission_id": submission.id,
-            "v_id": 404,
+            "username": "404",
             "original_id": "ABC",
             "source": submission.source.name,
-            "t_url": "https://example.com",
-            "t_text": "test content",
+            "url": "https://example.com",
+            "text": "test content",
         }
         result = client.post(
             reverse("transcription-list", host="api"),
@@ -115,10 +115,10 @@ class TestTranscriptionCreation:
         submission = create_submission()
         data = {
             "submission_id": submission.id,
-            "v_id": user.id,
+            "username": user.username,
             "source": submission.source.name,
-            "t_url": "https://example.com",
-            "t_text": "test content",
+            "url": "https://example.com",
+            "text": "test content",
         }
         result = client.post(
             reverse("transcription-list", host="api"),
@@ -136,9 +136,9 @@ class TestTranscriptionCreation:
         data = {
             "submission_id": submission.id,
             "original_id": "base_id",
-            "v_id": user.id,
-            "t_url": "https://example.com",
-            "t_text": "test content",
+            "username": user.username,
+            "url": "https://example.com",
+            "text": "test content",
         }
         result = client.post(
             reverse("transcription-list", host="api"),
@@ -155,10 +155,10 @@ class TestTranscriptionCreation:
         submission = create_submission()
         data = {
             "submission_id": submission.id,
-            "v_id": user.id,
+            "username": user.username,
             "original_id": "ABC",
             "source": submission.source.name,
-            "t_text": "test content",
+            "text": "test content",
         }
         result = client.post(
             reverse("transcription-list", host="api"),
@@ -176,9 +176,9 @@ class TestTranscriptionCreation:
         data = {
             "submission_id": submission.id,
             "original_id": "ABC",
-            "v_id": user.id,
+            "username": user.username,
             "source": submission.source.name,
-            "t_url": "https://example.com",
+            "url": "https://example.com",
         }
         result = client.post(
             reverse("transcription-list", host="api"),
@@ -202,7 +202,7 @@ class TestTranscriptionSearch:
         create_transcription(second_sub, user)
         result = client.get(
             reverse("transcription-search", host="api")
-            + f"?original_id={first_sub.original_id}",
+            + f"?submission_id={first_sub.id}",
             HTTP_HOST="api",
             content_type="application/json",
             **headers,
@@ -215,7 +215,7 @@ class TestTranscriptionSearch:
         """Test whether no items are returned when a search on a nonexistent ID is run."""
         client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("transcription-search", host="api") + "?original_id=404",
+            reverse("transcription-search", host="api") + "?submission_id=404",
             HTTP_HOST="api",
             content_type="application/json",
             **headers,

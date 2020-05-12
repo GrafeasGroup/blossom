@@ -449,16 +449,17 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
                 "original_id",
                 "source",
                 "submission_id",
-                "t_text",
-                "t_url",
+                "text",
+                "url",
                 "username",
             ],
             properties={
                 "original_id": Schema(type="string"),
+                "removed_from_reddit": Schema(type="string"),
                 "source": Schema(type="string"),
                 "submission_id": Schema(type="string"),
-                "t_text": Schema(type="string"),
-                "t_url": Schema(type="string"),
+                "text": Schema(type="string"),
+                "url": Schema(type="string"),
                 "username": Schema(type="string"),
             },
         ),
@@ -471,7 +472,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         },
     )
     @validate_request(
-        data_params={"original_id", "submission_id", "source", "t_text", "t_url"}
+        data_params={"original_id", "submission_id", "source", "text", "url", "username"}
     )
     def create(
         self,
@@ -479,8 +480,9 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         original_id: str = None,
         source: str = None,
         submission_id: str = None,
-        t_text: str = None,
-        t_url: str = None,
+        text: str = None,
+        url: str = None,
+        username: str = None,
         *args: object,
         **kwargs: object,
     ) -> Response:
@@ -488,28 +490,25 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         Create a new transcription.
 
         The following fields are passed in the HTTP Body:
-            - submission_id         the ID of the corresponding submission
-            - v_id (or username)    the ID or username of the authoring volunteer
             - original_id           the base36 ID of the comment
             - source                the system which has submitted this request
-            - t_url                 the direct url to the transcription
-            - t_text                the text of the transcription
-
-        Note that instead of the username, the "v_id" property to supply the
-        volunteer can also be used to create a transcription.
+            - submission_id         the ID of the corresponding submission
+            - text                  the text of the transcription
+            - url                   the direct url to the transcription
+            - username              the ID or username of the authoring volunteer
+            - removed_from_reddit   whether the transcription is removed from Reddit
         """
         submission = get_object_or_404(Submission, id=submission_id)
-        # TODO: Remove the possibility to include v_id/v_username and just allow username.
-        user = self.get_user_from_request(request.data)
+        user = get_object_or_404(BlossomUser, username=username)
         source = get_object_or_404(Source, name=source)
         removed_from_reddit = request.data.get("removed_from_reddit", False)
         transcription = Transcription.objects.create(
             submission=submission,
             author=user,
             original_id=original_id,
-            url=t_url,
+            url=url,
             source=source,
-            text=t_text,
+            text=text,
             removed_from_reddit=removed_from_reddit,
         )
         return Response(
@@ -520,24 +519,24 @@ class TranscriptionViewSet(viewsets.ModelViewSet, BlossomUserMixin):
         )
 
     @swagger_auto_schema(
-        manual_parameters=[Parameter("original_id", "query", type="string")],
-        responses={400: 'Query parameter "original_id" not present'},
+        manual_parameters=[Parameter("submission_id", "query", type="string")],
+        responses={400: 'Query parameter "submission_id" not present'},
     )
-    @validate_request(query_params={"original_id"})
+    @validate_request(query_params={"submission_id"})
     @action(detail=False, methods=["get"])
     def search(
         self,
         request: Request,
-        original_id: str = None,
+        submission_id: str = None,
         *args: object,
         **kwargs: object,
     ) -> Response:
         """
         Search for the transcriptions of a specific submission.
 
-        Note that providing a original_id as a query parameter is mandatory.
+        Note that providing the id of the submission as a query parameter is mandatory.
         """
-        queryset = Transcription.objects.filter(submission__original_id=original_id)
+        queryset = Transcription.objects.filter(submission__id=submission_id)
         return Response(
             data=self.serializer_class(
                 queryset, many=True, context={"request": request}
