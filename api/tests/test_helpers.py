@@ -3,62 +3,9 @@ from types import SimpleNamespace
 from typing import Dict, Set
 
 import pytest
-from django.shortcuts import Http404
 from rest_framework import serializers
 
-from api.helpers import BlossomUserMixin, validate_request
-from api.tests.helpers import create_user
-from authentication.models import BlossomUser
-
-
-@pytest.fixture
-def user() -> BlossomUser:
-    """Pytest fixture to create the standard user before each test."""
-    return create_user()
-
-
-@pytest.fixture
-def user_mixin() -> BlossomUserMixin:
-    """Pytest fixture to create the BlossomUserMixin before each test."""
-    return BlossomUserMixin()
-
-
-def test_id_retrieval(user: BlossomUser, user_mixin: BlossomUserMixin) -> None:
-    """Test whether the user is correctly retrieved with the user's ID."""
-    result = user_mixin.get_user_from_request({"v_id": user.id})
-    assert result == user
-
-
-def test_username_retrieval(user: BlossomUser, user_mixin: BlossomUserMixin) -> None:
-    """Test whether the user is correctly retrieved with the user's name."""
-    result = user_mixin.get_user_from_request({"username": user.username})
-    assert result == user
-
-
-def test_combined_retrieval(user: BlossomUser, user_mixin: BlossomUserMixin) -> None:
-    """Test whether the user is retrieved when both the ID and username is included."""
-    result = user_mixin.get_user_from_request(
-        {"username": user.username, "v_id": user.id}
-    )
-    assert result == user
-
-
-def test_no_parameters(user_mixin: BlossomUserMixin) -> None:
-    """Test whether a 400 Response is returned when no arguments are passed."""
-    with pytest.raises(serializers.ValidationError):
-        user_mixin.get_user_from_request(dict())
-
-
-def test_wrong_id(user: BlossomUser, user_mixin: BlossomUserMixin) -> None:
-    """Test whether a 404 Response is returned when an invalid ID is passed."""
-    with pytest.raises(Http404):
-        user_mixin.get_user_from_request({"v_id": user.id + 1})
-
-
-def test_wrong_username(user: BlossomUser, user_mixin: BlossomUserMixin) -> None:
-    """Test whether a 404 Response is returned when an invalid username is passed."""
-    with pytest.raises(Http404):
-        user_mixin.get_user_from_request({"username": f"{user.username}404"})
+from api.helpers import validate_request
 
 
 @pytest.mark.parametrize(
