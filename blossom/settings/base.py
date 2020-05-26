@@ -212,6 +212,8 @@ ARCHIVIST_COMPLETED_DELAY_TIME = 0.5
 
 ENABLE_SLACK = True
 
+GITHUB_SPONSORS_SECRET_KEY = os.environ.get('GITHUB_SPONSORS_SECRET_KEY', "")
+
 ##############################################
 # simple validation -- add new keys above this
 ##############################################
