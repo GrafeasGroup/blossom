@@ -3,7 +3,11 @@ import json
 from django.http import HttpResponse, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 
-from blossom.slack_conn.helpers import process_message, is_valid_github_request, send_github_sponsors_message
+from blossom.slack_conn.helpers import (
+    process_message,
+    is_valid_github_request,
+    send_github_sponsors_message,
+)
 
 
 @csrf_exempt
@@ -69,7 +73,6 @@ def github_sponsors_endpoint(request: HttpRequest) -> HttpResponse:
     if action := request_json.get("action"):
         send_github_sponsors_message(request_json, action)
     return HttpResponse(status=200)
-
 
 
 """

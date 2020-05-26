@@ -1,6 +1,6 @@
-import json
 import binascii
 import hmac
+import json
 
 from django_hosts.resolvers import reverse
 import pytest
