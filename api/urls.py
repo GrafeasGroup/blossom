@@ -6,7 +6,13 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from rest_framework import routers
 
-from api import views
+from api import (
+    volunteer_views,
+    submission_views,
+    transcription_views,
+    misc_views,
+    source_views,
+)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -24,15 +30,19 @@ schema_view = get_schema_view(
 
 # automatically build URLs, as recommended by django-rest-framework docs
 router = routers.DefaultRouter()
-router.register(r"volunteer", views.VolunteerViewSet, basename="volunteer")
-router.register(r"submission", views.SubmissionViewSet, basename="submission")
-router.register(r"transcription", views.TranscriptionViewSet, basename="transcription")
-router.register(r"source", views.SourceViewSet, basename="source")
+router.register(r"volunteer", volunteer_views.VolunteerViewSet, basename="volunteer")
+router.register(
+    r"submission", submission_views.SubmissionViewSet, basename="submission"
+)
+router.register(
+    r"transcription", transcription_views.TranscriptionViewSet, basename="transcription"
+)
+router.register(r"source", source_views.SourceViewSet, basename="source")
 
 urlpatterns = [
     url(r"", include(router.urls)),
     url(r"^auth/", include("rest_framework.urls")),
-    url(r"^summary/", views.SummaryView.as_view(), name="summary"),
+    url(r"^summary/", misc_views.SummaryView.as_view(), name="summary"),
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
@@ -46,5 +56,5 @@ urlpatterns = [
     url(
         r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
     ),
-    url(r"^ping/", views.PingView.as_view(), name="ping"),
+    url(r"^ping/", misc_views.PingView.as_view(), name="ping"),
 ]

@@ -25,12 +25,12 @@ def get_or_create_user(username):
 
 
 def get_or_create_transcription(
-        post,
-        volunteer,
-        t_comment,
-        comment_body,
-        transcribot_text=None,
-        transcribot_comment=None
+    post,
+    volunteer,
+    t_comment,
+    comment_body,
+    transcribot_text=None,
+    transcribot_comment=None,
 ):
     try:
         Transcription.objects.get(submission=post)
@@ -55,9 +55,9 @@ def get_or_create_transcription(
             Transcription.objects.create(
                 submission=post,
                 author="transcribot",
-                post_time=datetime.utcfromtimestamp(transcribot_comment.created_utc).replace(
-                    tzinfo=pytz.UTC
-                ),
+                post_time=datetime.utcfromtimestamp(
+                    transcribot_comment.created_utc
+                ).replace(tzinfo=pytz.UTC),
                 transcription_id=transcribot_comment.id,
                 completion_method="reddit",
                 url=f"https://reddit.com{transcribot_comment.permalink}",
