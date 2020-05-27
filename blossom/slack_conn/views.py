@@ -1,11 +1,11 @@
 import json
 
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from blossom.slack_conn.helpers import (
-    process_message,
     is_valid_github_request,
+    process_message,
     send_github_sponsors_message,
 )
 
@@ -62,7 +62,8 @@ def github_sponsors_endpoint(request: HttpRequest) -> HttpResponse:
 
     resources:
     - https://developer.github.com/webhooks/event-payloads/#sponsorship
-    - https://github.com/alexellis/sponsors-functions/blob/master/sponsors-receiver/handler.js
+    - https://github.com/alexellis/sponsors-functions/blob/master/
+        sponsors-receiver/handler.js
     """
     if not is_valid_github_request(request):
         # Don't know what it was, but it wasn't legit. Just say everything's groovy.
