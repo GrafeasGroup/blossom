@@ -1,16 +1,19 @@
 import binascii
 import hmac
 import json
+from typing import Dict
+from unittest.mock import MagicMock
 
-from django_hosts.resolvers import reverse
 import pytest
+from django.test import Client
+from django.test.client import RequestFactory
+from django_hosts.resolvers import reverse
+from pytest_django.fixtures import SettingsWrapper
 
 from blossom.slack_conn.helpers import (
-    process_message,
-    is_valid_github_request,
     client as slack_client,
+    is_valid_github_request,
 )
-from unittest.mock import MagicMock
 from blossom.slack_conn.views import github_sponsors_endpoint
 
 
@@ -18,13 +21,13 @@ from blossom.slack_conn.views import github_sponsors_endpoint
 # There's a lot of testing that needs to happen for this module, but I can't
 # get past the threading decorator and the patch calls don't seem to work.
 # Resources:
-# https://stackoverflow.com/questions/7667567/can-i-patch-a-python-decorator-before-it-wraps-a-function
+# https://stackoverflow.com/questions/7667567/can-i-patch-a-python-decorator-before-it-wraps-a-function  # noqa: E501
 # http://alexmarandon.com/articles/python_mock_gotchas/
-# https://stackoverflow.com/questions/36812830/mocking-decorators-in-python-with-mock-and-pytest
+# https://stackoverflow.com/questions/36812830/mocking-decorators-in-python-with-mock-and-pytest  # noqa: E501
 
 
-def test_challenge_request(client):
-    # If there is a challenge value in the request, immediately return it
+def test_challenge_request(client: Client) -> None:
+    """Test handling of Slack's new endpoint challenge message."""
     data = {"challenge": "asdfasdfasdf"}
     result = client.post(
         reverse("slack", host="www"),
@@ -48,7 +51,10 @@ def test_challenge_request(client):
         {"data": {"aaa": "bbb"}, "signature": None, "result": True},
     ],
 )
-def test_is_github_valid_request(rf, settings, test_data):
+def test_is_github_valid_request(
+    rf: RequestFactory, settings: SettingsWrapper, test_data: Dict
+) -> None:
+    """Test to ensure that a webhook from GitHub Sponsors is valid."""
     request = rf.post(
         "slack/github/sponsors/",
         data=test_data["data"],
@@ -100,7 +106,10 @@ def test_is_github_valid_request(rf, settings, test_data):
         },
     ],
 )
-def test_github_sponsor_slack_message(rf, settings, test_data):
+def test_github_sponsor_slack_message(
+    rf: RequestFactory, settings: SettingsWrapper, test_data: Dict
+) -> None:
+    """Test to ensure webhooks from GitHub Sponsors trigger appropriate slack pings."""
     slack_client.chat_postMessage = MagicMock()
     request = rf.post(
         "slack/github/sponsors/",
