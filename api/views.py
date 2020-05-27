@@ -386,8 +386,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission.save()
 
         if self._should_check_transcription(user):
-            transcription = Transcription.objects.filter(submission=submission)
-            url = transcription.first().url if transcription else submission.tor_url
+            transcription = Transcription.objects.filter(submission=submission).first()
+            url = None
+            # it's possible that we either won't pull a transcription object OR that
+            # a transcription object won't have a URL. If either fails, then we default
+            # to the submission's url.
+            if transcription:
+                url = transcription.url
+            if not url:
+                url = submission.tor_url
             slack.chat_postMessage(
                 channel="#transcription_check",
                 text="Please check the following transcription of "
