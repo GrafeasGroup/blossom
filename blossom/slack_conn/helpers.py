@@ -86,7 +86,7 @@ def send_summary_message(event):
     )
 
 
-def send_github_sponsors_message(msg_json: Dict, action: str) -> None:
+def send_github_sponsors_message(data: Dict, action: str) -> None:
     """
     Process the POST request from GitHub Sponsors.
 
@@ -104,8 +104,8 @@ def send_github_sponsors_message(msg_json: Dict, action: str) -> None:
             or action == "pending_tier_change"
     ):
         emote = ":rotating_light:"
-    username = msg_json['sponsorship']['sponsor']['login']
-    sponsorlevel = msg_json['sponsorship']['tier']['name']
+    username = data['sponsorship']['sponsor']['login']
+    sponsorlevel = data['sponsorship']['tier']['name']
 
     msg = f"{emote} GitHub Sponsors: [{action}] - {username} | {sponsorlevel} {emote}"
     client.chat_postMessage(channel="org_running", text=msg)

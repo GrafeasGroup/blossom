@@ -68,14 +68,8 @@ def github_sponsors_endpoint(request: HttpRequest) -> HttpResponse:
         # Don't know what it was, but it wasn't legit. Just say everything's groovy.
         return HttpResponse(status=200)
 
-    request_json = json.loads(request.body.decode())
+    data = json.loads(request.body.decode())
 
-    if action := request_json.get("action"):
-        send_github_sponsors_message(request_json, action)
+    if action := data.get("action"):
+        send_github_sponsors_message(data, action)
     return HttpResponse(status=200)
-
-
-"""
-https://a9abad4c.ngrok.io/slack/github/sponsors/
-XjbxawcG590SdwVppEZN1IFJbO6Y5yfZFiomt0Rq
-"""
