@@ -370,8 +370,7 @@ class TestSubmissionDone:
         submission.refresh_from_db()
         assert result.status_code == status.HTTP_428_PRECONDITION_REQUIRED
         assert submission.claimed_by == user
-        assert submission.completed_by == None
-
+        assert submission.completed_by is None
 
     def test_done_without_claim(self, client: Client) -> None:
         """Test whether a done without the submission claimed is caught correctly."""
