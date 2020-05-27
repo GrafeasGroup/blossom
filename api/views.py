@@ -390,7 +390,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             url = None
             # it's possible that we either won't pull a transcription object OR that
             # a transcription object won't have a URL. If either fails, then we default
-            # to the submission's url.
+            # to the submission's URL.
             if transcription:
                 url = transcription.url
             if not url:
