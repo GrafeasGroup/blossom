@@ -341,6 +341,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             404: "The specified volunteer or submission is not found",
             409: "The submission is already completed",
             412: "The submission is not claimed or claimed by someone else",
+            428: "A transcription belonging to the volunteer was not found",
         },
     )
     @validate_request(data_params={"username"})
@@ -373,6 +374,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if not mod_override:
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
+
+        if (
+            Transcription.objects.filter(author=user, submission=submission).first()
+            is None
+        ):
+            return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
 
         submission.completed_by = user
         submission.complete_time = timezone.now()
