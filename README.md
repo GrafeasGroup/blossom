@@ -65,6 +65,21 @@ DATABASES = {
 ```
 This file will be ignored by git, so make any changes you need to while developing.
 
+## Pre-commits
+
+Blossom uses `pre-commit` to help us keep everything clean. After you check out the repo and run `poetry install`, run `pre-commit install` to configure the system. The first time that you run `git commit`, it will create a small venv specifically for checking commits based on our toolset. You can, of course, run any of these tools at any time on your own; the toolchain as written invokes the following tools:
+
+- seed-isort-config
+  - This sets .isort.cfg with all of the third-party modules that are in use.
+- isort
+  - Searches Python files for imports that are in the wrong order, then offers you the option of fixing them.
+- black
+  - Opinionated code formatter; automatically fixes issues.
+- flake8
+  - formatting checker and linter; does not automatically fix issues.
+
+If an issue is detected when you run `git commit`, the action will be aborted and you'll receive a message about what needs to be fixed before committing.
+
 ## Notes on URLs
 
 Because there are subdomains that share a common session cookie, using `localhost:8000` as the development URL isn't an option because of some legacy issues with how the internet works. In Chrome, ending any URL with `.localhost` will automatically loop back to the host computer, so you don't have to modify your `hosts` file. Make sure that when you're working with the application, you're using `grafeas.localhost:8000` as the base url; for example, `wiki.grafeas.localhost:8000` or `payments.grafeas.localhost:8000`. This will translate to `grafeas.org` when deployed, so verify that anything that needs to be cross-subdomain is able to tell what the base host is.
