@@ -67,7 +67,7 @@ This file will be ignored by git, so make any changes you need to while developi
 
 ## Pre-commits
 
-Blossom uses `pre-commit` to help us keep everything clean. After you check out the repo and run `poetry install`, run `pre-commit install` to configure the system. The first time that you run `git commit`, it will create a small venv specifically for checking commits based on our toolset. You can, of course, run any of these tools at any time on your own; the toolchain as written invokes the following tools:
+Blossom uses `pre-commit` to help us keep everything clean. After you check out the repo and run `poetry install`, run `pre-commit install` to configure the system. The first time that you run `git commit`, it will create a small venv specifically for checking commits based on our toolset. All of these are installed as part of the regular project so that you can run them as you go -- don't get taken by surprise when you go to commit! The toolchain as written invokes the following tools:
 
 - seed-isort-config
   - This sets .isort.cfg with all of the third-party modules that are in use.
