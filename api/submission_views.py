@@ -1,4 +1,4 @@
-"""The views of the API, providing the possible API requests."""
+"""Views that specifically relate to submissions."""
 import random
 from datetime import timedelta
 

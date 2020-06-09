@@ -1,4 +1,4 @@
-"""The views of the API, providing the possible API requests."""
+"""Views that don't fit in any of the other view files."""
 from typing import Dict
 
 import pytz
