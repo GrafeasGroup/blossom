@@ -10,7 +10,9 @@ from django.db.models import Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_yasg.openapi import Parameter, Response as DocResponse, Schema
+from drf_yasg.openapi import Parameter
+from drf_yasg.openapi import Response as DocResponse
+from drf_yasg.openapi import Schema
 from drf_yasg.utils import no_body, swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -375,10 +377,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-        if (
-            Transcription.objects.filter(author=user, submission=submission).first()
-            is None
-        ):
+        transcription = Transcription.objects.filter(submission=submission).first()
+        if not transcription:
             return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
 
         submission.completed_by = user
@@ -386,7 +386,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission.save()
 
         if self._should_check_transcription(user):
-            transcription = Transcription.objects.filter(submission=submission).first()
             url = None
             # it's possible that we either won't pull a transcription object OR that
             # a transcription object won't have a URL. If either fails, then we default
