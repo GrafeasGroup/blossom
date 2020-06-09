@@ -10,9 +10,9 @@ from django.test.client import RequestFactory
 from django_hosts.resolvers import reverse
 from pytest_django.fixtures import SettingsWrapper
 
+from api.slack_conn.views import github_sponsors_endpoint
 from api.slack_helpers import client as slack_client
 from api.slack_helpers import is_valid_github_request
-from api.slack_conn.views import github_sponsors_endpoint
 
 # TODO: There is a way to mock decorators, but I can't figure it out.
 # There's a lot of testing that needs to happen for this module, but I can't

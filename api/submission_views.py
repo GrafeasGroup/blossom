@@ -7,7 +7,9 @@ from django.db.models import Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_yasg.openapi import Parameter, Response as DocResponse, Schema
+from drf_yasg.openapi import Parameter
+from drf_yasg.openapi import Response as DocResponse
+from drf_yasg.openapi import Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -18,8 +20,8 @@ from api.authentication import AdminApiKeyCustomCheck
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
-from authentication.models import BlossomUser
 from api.slack_helpers import client as slack
+from authentication.models import BlossomUser
 
 
 @method_decorator(

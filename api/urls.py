@@ -59,6 +59,8 @@ urlpatterns = [
     url(r"^ping/", misc_views.PingView.as_view(), name="ping"),
     path("slack/endpoint/", slack_views.slack_endpoint, name="slack"),
     path(
-        "slack/github/sponsors/", slack_views.github_sponsors_endpoint, name="github_sponsors"
+        "slack/github/sponsors/",
+        slack_views.github_sponsors_endpoint,
+        name="github_sponsors",
     ),
 ]

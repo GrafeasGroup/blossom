@@ -9,6 +9,7 @@ from django_hosts.resolvers import reverse
 from rest_framework import status
 
 from api.models import Submission
+from api.slack_helpers import client as slack_client
 from api.tests.helpers import (
     create_submission,
     create_transcription,
@@ -16,7 +17,6 @@ from api.tests.helpers import (
     get_default_test_source,
     setup_user_client,
 )
-from api.slack_helpers import client as slack_client
 
 
 class TestSubmissionCreation:
