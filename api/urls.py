@@ -7,11 +7,11 @@ from rest_framework import permissions, routers
 
 from api import (
     misc_views,
+    slack_views,
     source_views,
     submission_views,
     transcription_views,
     volunteer_views,
-    slack_views
 )
 
 schema_view = get_schema_view(

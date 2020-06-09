@@ -10,9 +10,9 @@ from django.test.client import RequestFactory
 from django_hosts.resolvers import reverse
 from pytest_django.fixtures import SettingsWrapper
 
-from api.slack_views import github_sponsors_endpoint
 from api.slack_helpers import client as slack_client
 from api.slack_helpers import is_valid_github_request, neat_printer, process_blacklist
+from api.slack_views import github_sponsors_endpoint
 from api.tests.helpers import create_user
 from blossom.strings import translation
 
@@ -54,7 +54,7 @@ def test_challenge_request(client: Client) -> None:
     ],
 )
 def test_is_github_valid_request(
-        rf: RequestFactory, settings: SettingsWrapper, test_data: Dict
+    rf: RequestFactory, settings: SettingsWrapper, test_data: Dict
 ) -> None:
     """Test to ensure that a webhook from GitHub Sponsors is valid."""
     request = rf.post(
@@ -82,7 +82,7 @@ def test_is_github_valid_request(
 
 
 def test_github_missing_signature(rf: RequestFactory) -> None:
-    """Test to ensure a request that is missing the signature is marked invalid"""
+    """Test to ensure a request that is missing the signature is marked invalid."""
     """Test to ensure that a webhook from GitHub Sponsors is valid."""
     request = rf.post(
         "slack/github/sponsors/",
@@ -115,14 +115,14 @@ def test_github_missing_signature(rf: RequestFactory) -> None:
             "tier": "C",
             "action": "edited",
             "result": (
-                    ":rotating_light: GitHub Sponsors: [edited] - bobby | C :rotating_light:"
+                ":rotating_light: GitHub Sponsors: [edited] - bobby | C :rotating_light:"
             ),
             "status_code": 200,
         },
     ],
 )
 def test_github_sponsor_slack_message(
-        rf: RequestFactory, settings: SettingsWrapper, test_data: Dict
+    rf: RequestFactory, settings: SettingsWrapper, test_data: Dict
 ) -> None:
     """Test to ensure webhooks from GitHub Sponsors trigger appropriate slack pings."""
     slack_client.chat_postMessage = MagicMock()
@@ -160,56 +160,51 @@ def test_github_sponsor_slack_message(
     [
         {
             "data": {
-                "dictionary": {
-                    'a': 1, 'b': 2
-                },
-                "titles": [
-                    "Pinky",
-                    "Brain"
-                ],
-                "width": 20
+                "dictionary": {"a": 1, "b": 2},
+                "titles": ["Pinky", "Brain"],
+                "width": 20,
             },
             "result": [
-                'Pinky                | Brain               ',
-                '----------------------------------------',
-                'a                    | 1                   ',
-                'b                    | 2                   '
-            ]
+                "Pinky                | Brain               ",
+                "----------------------------------------",
+                "a                    | 1                   ",
+                "b                    | 2                   ",
+            ],
         },
         {
             "data": {
-                "dictionary": {'a': 1, 'b': [1, 2, 3, 4, 5]},
-                "titles": ['Pinky', 'Brain'],
-                "width": 20
+                "dictionary": {"a": 1, "b": [1, 2, 3, 4, 5]},
+                "titles": ["Pinky", "Brain"],
+                "width": 20,
             },
             "result": [
-                'Pinky                | Brain               ',
-                '----------------------------------------',
-                'a                    | 1                   ',
-                'b                    | 1, 2, 3, 4, 5       '
-            ]
+                "Pinky                | Brain               ",
+                "----------------------------------------",
+                "a                    | 1                   ",
+                "b                    | 1, 2, 3, 4, 5       ",
+            ],
         },
         {
             "data": {
-                "dictionary": {'a': None},
-                "titles": ['Pinky', 'Brain'],
-                "width": 20
+                "dictionary": {"a": None},
+                "titles": ["Pinky", "Brain"],
+                "width": 20,
             },
             "result": [
-                'Pinky                | Brain               ',
-                '----------------------------------------',
-                'a                    | None                '
-            ]
-        }
+                "Pinky                | Brain               ",
+                "----------------------------------------",
+                "a                    | None                ",
+            ],
+        },
     ],
 )
-def test_slack_neat_printer(test_data: Dict):
+def test_slack_neat_printer(test_data: Dict) -> None:
     """Verify that the neat printer formats tables appropriately."""
     result = neat_printer(**test_data["data"])
     assert result == test_data["result"]
 
 
-def test_process_blacklist():
+def test_process_blacklist() -> None:
     """Test blacklist functionality and ensure that it works in reverse."""
     slack_client.chat_postMessage = MagicMock()
 
@@ -221,16 +216,18 @@ def test_process_blacklist():
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
     assert test_user.blacklisted is True
-    assert slack_client.chat_postMessage.call_args[1]["text"] == \
-           i18n["slack"]["blacklist"]["success"].format(test_user.username)
+    assert slack_client.chat_postMessage.call_args[1]["text"] == i18n["slack"][
+        "blacklist"
+    ]["success"].format(test_user.username)
 
     # Now we unblacklist them
     process_blacklist({}, message)
     assert slack_client.chat_postMessage.call_count == 2
     test_user.refresh_from_db()
     assert test_user.blacklisted is False
-    assert slack_client.chat_postMessage.call_args[1]["text"] == \
-           i18n["slack"]["blacklist"]["success_undo"].format(test_user.username)
+    assert slack_client.chat_postMessage.call_args[1]["text"] == i18n["slack"][
+        "blacklist"
+    ]["success_undo"].format(test_user.username)
 
 
 @pytest.mark.parametrize(
@@ -238,10 +235,10 @@ def test_process_blacklist():
     [
         ("blacklist", i18n["slack"]["blacklist"]["missing_username"]),
         ("blacklist asdf", i18n["slack"]["blacklist"]["unknown_username"]),
-        ("a b c", i18n["slack"]["too_many_params"])
+        ("a b c", i18n["slack"]["too_many_params"]),
     ],
 )
-def test_process_blacklist_errors(message, response):
+def test_process_blacklist_errors(message: str, response: str) -> None:
     """Ensure that process_blacklist errors when passed the wrong username."""
     slack_client.chat_postMessage = MagicMock()
     process_blacklist({}, message)
