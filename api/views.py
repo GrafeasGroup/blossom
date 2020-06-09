@@ -10,7 +10,9 @@ from django.db.models import Q, QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from drf_yasg.openapi import Parameter, Response as DocResponse, Schema
+from drf_yasg.openapi import Parameter
+from drf_yasg.openapi import Response as DocResponse
+from drf_yasg.openapi import Schema
 from drf_yasg.utils import no_body, swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -341,6 +343,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             404: "The specified volunteer or submission is not found",
             409: "The submission is already completed",
             412: "The submission is not claimed or claimed by someone else",
+            428: "A transcription belonging to the volunteer was not found",
         },
     )
     @validate_request(data_params={"username"})
@@ -374,13 +377,23 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
+        transcription = Transcription.objects.filter(submission=submission).first()
+        if not transcription:
+            return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
+
         submission.completed_by = user
         submission.complete_time = timezone.now()
         submission.save()
 
         if self._should_check_transcription(user):
-            transcription = Transcription.objects.filter(submission=submission)
-            url = transcription.first().url if transcription else submission.tor_url
+            url = None
+            # it's possible that we either won't pull a transcription object OR that
+            # a transcription object won't have a URL. If either fails, then we default
+            # to the submission's URL.
+            if transcription:
+                url = transcription.url
+            if not url:
+                url = submission.tor_url
             slack.chat_postMessage(
                 channel="#transcription_check",
                 text="Please check the following transcription of "
