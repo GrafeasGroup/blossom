@@ -1,18 +1,18 @@
 """URL configuration for the API application."""
-from django.conf.urls import include
-from django.conf.urls import url
+from django.conf.urls import include, url
+from django.urls import path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
-from rest_framework import permissions
-from rest_framework import routers
+from rest_framework import permissions, routers
 
 from api import (
-    volunteer_views,
-    submission_views,
-    transcription_views,
     misc_views,
     source_views,
+    submission_views,
+    transcription_views,
+    volunteer_views,
 )
+from api.slack_conn import views as slack_views
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -57,4 +57,8 @@ urlpatterns = [
         r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
     ),
     url(r"^ping/", misc_views.PingView.as_view(), name="ping"),
+    path("slack/endpoint/", slack_views.slack_endpoint, name="slack"),
+    path(
+        "slack/github/sponsors/", slack_views.github_sponsors_endpoint, name="github_sponsors"
+    ),
 ]

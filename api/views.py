@@ -29,4 +29,4 @@ from api.serializers import (
     VolunteerSerializer,
 )
 from authentication.models import BlossomUser
-from blossom.slack_conn.helpers import client as slack
+from api.slack_helpers import client as slack

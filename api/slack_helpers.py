@@ -8,7 +8,7 @@ from unittest import mock
 import pytz
 import slack
 from django.conf import settings
-from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpRequest
 from django.utils import timezone
 from slack.web.slack_response import SlackResponse
 
@@ -247,7 +247,7 @@ def process_message(data: Dict) -> None:
         )
 
 
-def is_valid_github_request(request: WSGIRequest) -> bool:
+def is_valid_github_request(request: HttpRequest) -> bool:
     """Verify that a webhook from github sponsors is encoded using our key."""
     if (github_signature := request.headers["x-hub-signature"]) is None:
         return False

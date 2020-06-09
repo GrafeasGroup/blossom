@@ -3,7 +3,7 @@ import json
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from blossom.slack_conn.helpers import (
+from api.slack_helpers import (
     is_valid_github_request,
     process_message,
     send_github_sponsors_message,

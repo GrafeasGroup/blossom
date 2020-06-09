@@ -19,7 +19,7 @@ from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
 from authentication.models import BlossomUser
-from blossom.slack_conn.helpers import client as slack
+from api.slack_helpers import client as slack
 
 
 @method_decorator(
