@@ -226,6 +226,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             404: "The specified volunteer or submission is not found",
             409: "The submission is already completed",
             412: "The submission is not claimed or claimed by someone else",
+            428: "A transcription belonging to the volunteer was not found",
         },
     )
     @validate_request(data_params={"username"})
@@ -233,12 +234,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     def done(self, request: Request, pk: int, username: str = None) -> Response:
         """
         Mark the submission as done from the specified volunteer.
-
         When "mod_override" is provided as a field in the HTTP body and is true,
         and the requesting user is a mod, then the check of whether the
         completing volunteer is the volunteer that claimed the submission is
         skipped.
-
         Note that this API call has a certain chance to send a message to
         Slack for the random check of this transcription.
         """
@@ -259,13 +258,23 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
+        transcription = Transcription.objects.filter(submission=submission).first()
+        if not transcription:
+            return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
+
         submission.completed_by = user
         submission.complete_time = timezone.now()
         submission.save()
 
         if self._should_check_transcription(user):
-            transcription = Transcription.objects.filter(submission=submission)
-            url = transcription.first().url if transcription else submission.tor_url
+            url = None
+            # it's possible that we either won't pull a transcription object OR that
+            # a transcription object won't have a URL. If either fails, then we default
+            # to the submission's URL.
+            if transcription:
+                url = transcription.url
+            if not url:
+                url = submission.tor_url
             slack.chat_postMessage(
                 channel="#transcription_check",
                 text="Please check the following transcription of "
