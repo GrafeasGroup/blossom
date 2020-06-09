@@ -1,6 +1,5 @@
 from django.urls import path
 
-from api.slack_conn.urls import urlpatterns as slack_urls
 from authentication.urls import urlpatterns as auth_urls
 from website import views
 from website.helpers import grafeas_staff_required
@@ -21,4 +20,3 @@ urlpatterns = [
 ]
 
 urlpatterns += auth_urls
-urlpatterns += slack_urls

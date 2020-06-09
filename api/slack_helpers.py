@@ -20,6 +20,7 @@ from blossom.strings import translation
 if settings.ENABLE_SLACK is True:
     client = slack.WebClient(token=os.environ["SLACK_API_KEY"])
 else:
+    # this is to explicitly disable posting to Slack when doing local dev
     client = mock.Mock()
 
 i18n = translation()
@@ -74,7 +75,7 @@ def neat_printer(dictionary: Dict, titles: List, width: int) -> List:
             if value is None:
                 value = "None"
             sv = [str(value)]
-        return_list.append(formatting.format(key, *sv))
+        return_list.append(formatting.format(key, ", ".join(sv)))
     return return_list
 
 
@@ -249,7 +250,7 @@ def process_message(data: Dict) -> None:
 
 def is_valid_github_request(request: HttpRequest) -> bool:
     """Verify that a webhook from github sponsors is encoded using our key."""
-    if (github_signature := request.headers["x-hub-signature"]) is None:
+    if (github_signature := request.headers.get("x-hub-signature")) is None:
         return False
 
     body_hex = binascii.hexlify(

@@ -11,8 +11,8 @@ from api import (
     submission_views,
     transcription_views,
     volunteer_views,
+    slack_views
 )
-from api.slack_conn import views as slack_views
 
 schema_view = get_schema_view(
     openapi.Info(
