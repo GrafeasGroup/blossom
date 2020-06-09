@@ -336,6 +336,7 @@ class TestSubmissionDone:
         """Test whether done process works correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
         submission = create_submission(claimed_by=user)
+        create_transcription(submission, user)
         data = {"username": user.username}
 
         result = client.patch(
@@ -351,6 +352,25 @@ class TestSubmissionDone:
         assert submission.claimed_by == user
         assert submission.completed_by == user
         assert result.json()["original_id"] == submission.original_id
+
+    def test_done_without_transcription(self, client: Client) -> None:
+        """Test that the `done` endpoint errors out appropriately if data is missing."""
+        client, headers, user = setup_user_client(client)
+        submission = create_submission(claimed_by=user)
+        data = {"username": user.username}
+
+        result = client.patch(
+            reverse("submission-done", host="api", args=[submission.id]),
+            json.dumps(data),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        submission.refresh_from_db()
+        assert result.status_code == status.HTTP_428_PRECONDITION_REQUIRED
+        assert submission.claimed_by == user
+        assert submission.completed_by is None
 
     def test_done_without_claim(self, client: Client) -> None:
         """Test whether a done without the submission claimed is caught correctly."""
@@ -439,8 +459,8 @@ class TestSubmissionDone:
         probability: float,
         gamma: int,
         message: bool,
-        tor_url: str,
-        trans_url: str,
+        tor_url: [str, None],
+        trans_url: [str, None],
     ) -> None:
         """Test whether the random checks for the done process are invoked correctly."""
         # Mock both the gamma property and the random.random function.
@@ -453,8 +473,7 @@ class TestSubmissionDone:
 
             client, headers, user = setup_user_client(client)
             submission = create_submission(tor_url=tor_url, claimed_by=user)
-            if trans_url:
-                create_transcription(submission, user, url=trans_url)
+            create_transcription(submission, user, url=trans_url)
 
             result = client.patch(
                 reverse("submission-done", host="api", args=[submission.id]),
