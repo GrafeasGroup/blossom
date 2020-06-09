@@ -234,6 +234,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     def done(self, request: Request, pk: int, username: str = None) -> Response:
         """
         Mark the submission as done from the specified volunteer.
+
         When "mod_override" is provided as a field in the HTTP body and is true,
         and the requesting user is a mod, then the check of whether the
         completing volunteer is the volunteer that claimed the submission is
