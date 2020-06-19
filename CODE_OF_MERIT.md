@@ -3,7 +3,7 @@
 > *"Intellectual freedom can exist only where two essential conditions are met: first, that all individuals have the right to hold any belief on any subject and to convey their ideas in any form they deem appropriate, and second, that society makes an equal commitment to the right of unrestricted access to information and ideas regardless of the communication medium used, the content of work, and the viewpoints of both the author and the receiver of information."* - Intellectual Freedom Manual, 7th edition
 
 
-**1.** The project creators, lead developers, core team, constitute the managing members of the project and have final say in every decision of the project, technical or otherwise, including overruling previous decisions. There are no limitations to this decisional power.
+**1.** The project creators, lead developers, and core team constitute the managing members of the project and have final say in every decision of the project, technical or otherwise, including overruling previous decisions. There are no limitations to this decisional power.
 
 **2.** Contributions are an expected result of your membership on the project. Don’t expect others to do your work or help you with your work forever.
 
