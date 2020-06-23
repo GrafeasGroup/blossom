@@ -1,8 +1,6 @@
 """Views that don't fit in any of the other view files."""
 from typing import Dict
 
-import pytz
-from django.utils import timezone
 from drf_yasg.openapi import Response as DocResponse
 from drf_yasg.openapi import Schema
 from drf_yasg.utils import swagger_auto_schema
@@ -13,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.authentication import AdminApiKeyCustomCheck
+from api.helpers import get_time_since_open
 from api.models import Transcription
 from authentication.models import BlossomUser
 
@@ -32,17 +31,12 @@ class Summary(object):
 
         :return: A dictionary containing the three key-value pairs as described
         """
-        # subtract 2 from volunteer count for anon volunteer and u/ToR
+
         return {
             "volunteer_count": BlossomUser.objects.filter(is_volunteer=True).count()
             - 2,
             "transcription_count": Transcription.objects.count(),
-            "days_since_inception": (
-                timezone.now()
-                - pytz.timezone("UTC").localize(
-                    timezone.datetime(day=1, month=4, year=2017), is_dst=None
-                )
-            ).days,
+            "days_since_inception": get_time_since_open(days=True),
         }
 
 

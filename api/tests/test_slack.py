@@ -11,7 +11,7 @@ from django_hosts.resolvers import reverse
 from pytest_django.fixtures import SettingsWrapper
 
 from api.slack_helpers import client as slack_client
-from api.slack_helpers import is_valid_github_request, neat_printer, process_blacklist
+from api.slack_helpers import dict_to_table, is_valid_github_request, process_blacklist
 from api.slack_views import github_sponsors_endpoint
 from api.tests.helpers import create_user
 from blossom.strings import translation
@@ -200,7 +200,7 @@ def test_github_sponsor_slack_message(
 )
 def test_slack_neat_printer(test_data: Dict) -> None:
     """Verify that the neat printer formats tables appropriately."""
-    result = neat_printer(**test_data["data"])
+    result = dict_to_table(**test_data["data"])
     assert result == test_data["result"]
 
 

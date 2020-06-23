@@ -2,17 +2,14 @@ import binascii
 import hmac
 import os
 import threading
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List, Tuple
 from unittest import mock
 
-import pytz
 import slack
 from django.conf import settings
 from django.http import HttpRequest
-from django.utils import timezone
-from slack.web.slack_response import SlackResponse
 
-from api.models import Transcription
+from api.misc_views import Summary
 from api.serializers import VolunteerSerializer
 from authentication.models import BlossomUser
 from blossom.strings import translation
@@ -49,14 +46,19 @@ def fire_and_forget(
     return wrapped
 
 
-def neat_printer(dictionary: Dict, titles: List, width: int) -> List:
+def dict_to_table(dictionary: Dict, titles: List = None, width: int = None) -> List:
     """
-    Take a dict and make it into a tab-separated table.
+    Take a dictionary and make it into a tab-separated table.
 
     Adapted from
     https://github.com/varadchoudhari/Neat-Dictionary/blob/master
     /src/Python%203/neat-dictionary-fixed-column-width.py
     """
+    if not titles:
+        titles = ["Key", "Value"]
+    if not width:
+        width = len(max(dictionary.keys(), key=len)) + 2
+
     return_list = []
     formatting = ""
     for i in range(0, len(titles)):
@@ -79,36 +81,15 @@ def neat_printer(dictionary: Dict, titles: List, width: int) -> List:
     return return_list
 
 
-def get_days() -> Tuple[Union[int, float], Union[int, float]]:
-    """Return the number of days since the day we opened."""
-    # the autoformatter thinks this is evil if it's all on one line.
-    # Breaking it up a little for my own sanity.
-    start_date = pytz.timezone("UTC").localize(
-        timezone.datetime(day=1, month=4, year=2017), is_dst=None
-    )
-
-    return divmod((timezone.now() - start_date).days, 365)
-
-
-def send_help_message(event: Dict) -> None:
+def send_help_message(channel: str) -> None:
     """Post a help message to slack."""
-    client.chat_postMessage(
-        channel=event.get("channel"), text=i18n["slack"]["help_message"]
-    )
+    client.chat_postMessage(channel=channel, text=i18n["slack"]["help_message"])
 
 
-def send_summary_message(event: Dict) -> None:
+def send_summary_message(channel: str) -> None:
     """Post a summary message to slack."""
-    client.chat_postMessage(
-        channel=event.get("channel"),
-        text=i18n["slack"]["summary_message"].format(
-            BlossomUser.objects.filter(is_volunteer=True).count(),
-            Transcription.objects.count(),
-            get_days()[0],
-            get_days()[1],
-            "days" if get_days()[1] != 1 else "day",
-        ),
-    )
+    data = Summary().generate_summary()
+    client.chat_postMessage(channel=channel, text=dict_to_table(data))
 
 
 def send_github_sponsors_message(data: Dict, action: str) -> None:
@@ -132,85 +113,68 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
     username = data["sponsorship"]["sponsor"]["login"]
     sponsorlevel = data["sponsorship"]["tier"]["name"]
 
-    msg = f"{emote} GitHub Sponsors: [{action}] - {username} | {sponsorlevel} {emote}"
+    msg = i18n["slack"]["github_sponsor_update"].format(
+        emote, action, username, sponsorlevel
+    )
     client.chat_postMessage(channel="org_running", text=msg)
 
 
-def send_info(event: Dict, message: str) -> Union[SlackResponse, None]:
+def send_info(event: Dict, message: str) -> None:
     """Send info about a user to slack."""
     parsed_message = message.split()
+    msg = None
     if len(parsed_message) == 1:
         # they just sent an empty info message
-        return send_summary_message(event)
+        data = Summary().generate_summary()
+        msg = dict_to_table(data)
 
     if len(parsed_message) == 2:
-        if u := BlossomUser.objects.filter(username__iexact=parsed_message[1]).first():
-            v_s = VolunteerSerializer(u, many=False).data
-            return client.chat_postMessage(
-                channel=event.get("channel"),
-                text=i18n["slack"]["user_info"].format(
-                    u.username,
-                    "\n".join(
-                        neat_printer(
-                            v_s, ["Key", "Value"], len(max(v_s.keys(), key=len)) + 2
-                        )
-                    ),
-                ),
+        if user := BlossomUser.objects.filter(
+            username__iexact=parsed_message[1]
+        ).first():
+            v_data = VolunteerSerializer(user).data
+            msg = i18n["slack"]["user_info"].format(
+                user.username, "\n".join(dict_to_table(v_data))
             )
         else:
-            return client.chat_postMessage(
-                channel=event.get("channel"), text=i18n["slack"]["no_user_by_that_name"]
-            )
+            msg = i18n["slack"]["no_user_by_that_name"]
+    else:
+        msg = i18n["slack"]["too_many_params"]
 
-    client.chat_postMessage(
-        channel=event.get("channel"), text=i18n["slack"]["too_many_params"]
-    )
+    client.chat_postMessage(channel=event.get("channel"), text=msg)
 
 
-def process_blacklist(event: Dict, message: str) -> SlackResponse:
+def process_blacklist(event: Dict, message: str) -> None:
     """Blacklist a user based on a message from slack."""
     parsed_message = message.split()
     if len(parsed_message) == 1:
         # they didn't give a username
-        return client.chat_postMessage(
-            channel=event.get("channel"),
-            text=i18n["slack"]["blacklist"]["missing_username"],
-        )
+        msg = i18n["slack"]["blacklist"]["missing_username"]
     elif len(parsed_message) == 2:
         if u := BlossomUser.objects.filter(username__iexact=parsed_message[1]).first():
             if u.blacklisted:
                 u.blacklisted = False
                 u.save()
-                return client.chat_postMessage(
-                    channel=event.get("channel"),
-                    text=i18n["slack"]["blacklist"]["success_undo"].format(
-                        parsed_message[1]
-                    ),
+                msg = i18n["slack"]["blacklist"]["success_undo"].format(
+                    parsed_message[1]
                 )
             else:
                 u.blacklisted = True
                 u.save()
-                return client.chat_postMessage(
-                    channel=event.get("channel"),
-                    text=i18n["slack"]["blacklist"]["success"].format(
-                        parsed_message[1]
-                    ),
-                )
+                msg = i18n["slack"]["blacklist"]["success"].format(parsed_message[1])
         else:
-            return client.chat_postMessage(
-                channel=event.get("channel"),
-                text=i18n["slack"]["blacklist"]["unknown_username"],
-            )
+            msg = i18n["slack"]["blacklist"]["unknown_username"]
     else:
-        return client.chat_postMessage(
-            channel=event.get("channel"), text=i18n["slack"]["too_many_params"]
-        )
+        msg = i18n["slack"]["too_many_params"]
+
+    client.chat_postMessage(channel=event.get("channel"), text=msg)
 
 
 @fire_and_forget
 def process_message(data: Dict) -> None:
     """Identify the purpose of a slack message and route accordingly."""
     e = data.get("event")  # noqa: VNE001
+    channel = e.get("channel")
 
     try:
         # What comes in: "<@UTPFNCQS2> hello!"
@@ -219,22 +183,22 @@ def process_message(data: Dict) -> None:
         message = e["text"][e["text"].index(">") + 2 :].lower()  # noqa: E203
     except IndexError:
         client.chat_postMessage(
-            channel=e.get("channel"),
+            channel=channel,
             text="Sorry, something went wrong and I couldn't parse your message.",
         )
         return
 
     if not message:
         client.chat_postMessage(
-            channel=e.get("channel"),
+            channel=channel,
             text="Sorry, I wasn't able to get text out of that. Try again.",
         )
 
     elif "help" in message:
-        send_help_message(e)
+        send_help_message(channel)
 
     elif "summary" in message:
-        send_summary_message(e)
+        send_summary_message(channel)
 
     elif "info" in message:
         send_info(e, message)
@@ -244,7 +208,7 @@ def process_message(data: Dict) -> None:
 
     else:
         client.chat_postMessage(
-            channel=e.get("channel"), text="Sorry, I'm not sure what you're asking for."
+            channel=channel, text="Sorry, I'm not sure what you're asking for."
         )
 
 
