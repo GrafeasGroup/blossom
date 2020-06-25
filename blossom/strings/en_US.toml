@@ -41,10 +41,6 @@ Blacklist / unblacklist user: `@blossom blacklist {username}`
 Render this message: `@blossom help`
 """
 
-no_user_by_that_name="""
-Sorry, I wasn't able to find a user with that name.
-"""
-
 user_info="""
 User info for {0}:
 
@@ -55,7 +51,12 @@ User info for {0}:
 
 github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
 
-too_many_params="Too many parameters; please try again."
+    [slack.errors]
+    unknown_request="Sorry, I'm not sure what you're asking for."
+    message_parse_error="Sorry, something went wrong and I couldn't parse your message."
+    empty_message_error="Sorry, I wasn't able to get text out of that. Try again."
+    too_many_params="Too many parameters; please try again."
+    no_user_by_that_name="Sorry, I wasn't able to find a user with that name."
 
     [slack.blacklist]
     missing_username="I don't see a username in your request. Try again."

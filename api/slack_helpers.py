@@ -137,9 +137,9 @@ def send_info(event: Dict, message: str) -> None:
                 user.username, "\n".join(dict_to_table(v_data))
             )
         else:
-            msg = i18n["slack"]["no_user_by_that_name"]
+            msg = i18n["slack"]["errors"]["no_user_by_that_name"]
     else:
-        msg = i18n["slack"]["too_many_params"]
+        msg = i18n["slack"]["errors"]["too_many_params"]
 
     client.chat_postMessage(channel=event.get("channel"), text=msg)
 
@@ -165,9 +165,21 @@ def process_blacklist(event: Dict, message: str) -> None:
         else:
             msg = i18n["slack"]["blacklist"]["unknown_username"]
     else:
-        msg = i18n["slack"]["too_many_params"]
+        msg = i18n["slack"]["errors"]["too_many_params"]
 
     client.chat_postMessage(channel=event.get("channel"), text=msg)
+
+
+def get_message(data: Dict) -> str:
+    """
+    Pull message text out of slack event.
+
+    What comes in: "<@UTPFNCQS2> hello!" Strip out the beginning section
+    and see what's left.
+    """
+    event = data.get("event")
+    # Note: black and flake8 disagree on the formatting. Black wins.
+    return event["text"][event["text"].index(">") + 2 :].lower()  # noqa: E203
 
 
 @fire_and_forget
@@ -177,21 +189,16 @@ def process_message(data: Dict) -> None:
     channel = e.get("channel")
 
     try:
-        # What comes in: "<@UTPFNCQS2> hello!"
-        # Strip out the beginning section and see what's left.
-        # Note: black and flake8 disagree on the formatting. Black wins.
-        message = e["text"][e["text"].index(">") + 2 :].lower()  # noqa: E203
+        message = get_message(data)
     except IndexError:
         client.chat_postMessage(
-            channel=channel,
-            text="Sorry, something went wrong and I couldn't parse your message.",
+            channel=channel, text=i18n["slack"]["errors"]["message_parse_error"],
         )
         return
 
     if not message:
         client.chat_postMessage(
-            channel=channel,
-            text="Sorry, I wasn't able to get text out of that. Try again.",
+            channel=channel, text=i18n["slack"]["errors"]["empty_message_error"],
         )
 
     elif "help" in message:
@@ -208,7 +215,7 @@ def process_message(data: Dict) -> None:
 
     else:
         client.chat_postMessage(
-            channel=channel, text="Sorry, I'm not sure what you're asking for."
+            channel=channel, text=i18n["slack"]["errors"]["unknown_request"]
         )
 
 

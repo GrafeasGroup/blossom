@@ -235,7 +235,7 @@ def test_process_blacklist() -> None:
     [
         ("blacklist", i18n["slack"]["blacklist"]["missing_username"]),
         ("blacklist asdf", i18n["slack"]["blacklist"]["unknown_username"]),
-        ("a b c", i18n["slack"]["too_many_params"]),
+        ("a b c", i18n["slack"]["errors"]["too_many_params"]),
     ],
 )
 def test_process_blacklist_errors(message: str, response: str) -> None:
