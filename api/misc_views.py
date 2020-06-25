@@ -31,7 +31,6 @@ class Summary(object):
 
         :return: A dictionary containing the three key-value pairs as described
         """
-
         return {
             "volunteer_count": BlossomUser.objects.filter(is_volunteer=True).count()
             - 2,

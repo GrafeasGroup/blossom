@@ -67,7 +67,9 @@ def validate_request(query_params: Set = None, data_params: Set = None) -> Calla
     return decorator
 
 
-def get_time_since_open(days=False) -> Tuple[Union[int, float], Union[int, float]]:
+def get_time_since_open(
+    days: bool = False,
+) -> Tuple[Union[int, float], Union[int, float]]:
     """
     Return the number of days since the day we opened.
 
