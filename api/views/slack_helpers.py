@@ -9,8 +9,8 @@ import slack
 from django.conf import settings
 from django.http import HttpRequest
 
-from api.misc_views import Summary
 from api.serializers import VolunteerSerializer
+from api.views.misc import Summary
 from authentication.models import BlossomUser
 from blossom.strings import translation
 

@@ -5,14 +5,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions, routers
 
-from api import (
-    misc_views,
-    slack_views,
-    source_views,
-    submission_views,
-    transcription_views,
-    volunteer_views,
-)
+from api.views import misc, slack, source, submission, transcription, volunteer
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -30,19 +23,17 @@ schema_view = get_schema_view(
 
 # automatically build URLs, as recommended by django-rest-framework docs
 router = routers.DefaultRouter()
-router.register(r"volunteer", volunteer_views.VolunteerViewSet, basename="volunteer")
+router.register(r"volunteer", volunteer.VolunteerViewSet, basename="volunteer")
+router.register(r"submission", submission.SubmissionViewSet, basename="submission")
 router.register(
-    r"submission", submission_views.SubmissionViewSet, basename="submission"
+    r"transcription", transcription.TranscriptionViewSet, basename="transcription"
 )
-router.register(
-    r"transcription", transcription_views.TranscriptionViewSet, basename="transcription"
-)
-router.register(r"source", source_views.SourceViewSet, basename="source")
+router.register(r"source", source.SourceViewSet, basename="source")
 
 urlpatterns = [
     url(r"", include(router.urls)),
     url(r"^auth/", include("rest_framework.urls")),
-    url(r"^summary/", misc_views.SummaryView.as_view(), name="summary"),
+    url(r"^summary/", misc.SummaryView.as_view(), name="summary"),
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
@@ -56,11 +47,11 @@ urlpatterns = [
     url(
         r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
     ),
-    url(r"^ping/", misc_views.PingView.as_view(), name="ping"),
-    path("slack/endpoint/", slack_views.slack_endpoint, name="slack"),
+    url(r"^ping/", misc.PingView.as_view(), name="ping"),
+    path("slack/endpoint/", slack.slack_endpoint, name="slack"),
     path(
         "slack/github/sponsors/",
-        slack_views.github_sponsors_endpoint,
+        slack.github_sponsors_endpoint,
         name="github_sponsors",
     ),
 ]

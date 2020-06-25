@@ -20,7 +20,7 @@ from api.authentication import AdminApiKeyCustomCheck
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
-from api.slack_helpers import client as slack
+from api.views.slack_helpers import client as slack
 from authentication.models import BlossomUser
 
 

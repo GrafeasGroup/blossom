@@ -10,10 +10,14 @@ from django.test.client import RequestFactory
 from django_hosts.resolvers import reverse
 from pytest_django.fixtures import SettingsWrapper
 
-from api.slack_helpers import client as slack_client
-from api.slack_helpers import dict_to_table, is_valid_github_request, process_blacklist
-from api.slack_views import github_sponsors_endpoint
 from api.tests.helpers import create_user
+from api.views.slack import github_sponsors_endpoint
+from api.views.slack_helpers import client as slack_client
+from api.views.slack_helpers import (
+    dict_to_table,
+    is_valid_github_request,
+    process_blacklist,
+)
 from blossom.strings import translation
 
 i18n = translation()
