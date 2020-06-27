@@ -27,10 +27,13 @@ from authentication.models import BlossomUser
 @method_decorator(
     name="list",
     decorator=swagger_auto_schema(
-        operation_summary="Get information on all submissions or a specific"
-        " submission if specified.",
-        operation_description="Include the original_id as a query to filter"
-        " the submissions on the specified ID.",
+        operation_summary=(
+            "Get information on all submissions or a specific submission if specified."
+        ),
+        operation_description=(
+            "Include the original_id as a query to filter the submissions on the"
+            " specified ID."
+        ),
         manual_parameters=[Parameter("original_id", "query", type="string")],
     ),
 )
@@ -149,6 +152,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         responses={
             201: DocResponse("Successful claim operation", schema=serializer_class),
             400: "The volunteer username is not provided",
+            403: "The volunteer has not accepted the Code of Conduct",
             404: "The specified volunteer or submission is not found",
             409: "The submission is already claimed",
         },
@@ -163,6 +167,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         submission = get_object_or_404(Submission, id=pk)
         user = get_object_or_404(BlossomUser, username=username)
+
+        if not user.accepted_coc:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         if submission.claimed_by is not None:
             return Response(status=status.HTTP_409_CONFLICT)
@@ -223,6 +230,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         responses={
             201: DocResponse("Successful done operation", schema=serializer_class),
             400: "The volunteer username is not provided",
+            403: "The volunteer has not accepted the Code of Conduct",
             404: "The specified volunteer or submission is not found",
             409: "The submission is already completed",
             412: "The submission is not claimed or claimed by someone else",
@@ -244,6 +252,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         submission = get_object_or_404(Submission, id=pk)
         user = get_object_or_404(BlossomUser, username=username)
+
+        if not user.accepted_coc:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         if submission.completed_by is not None:
             return Response(status=status.HTTP_409_CONFLICT)
