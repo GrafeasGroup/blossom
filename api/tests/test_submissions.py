@@ -516,7 +516,7 @@ class TestSubmissionDone:
                 assert slack_client.chat_postMessage.call_count == 0
 
     def test_done_no_coc(self, client: Client) -> None:
-        """
+        """ # noqa
         Test that a submission isn't marked as done when the CoC hasn't been accepted.
         """
         client, headers, user = setup_user_client(client)
