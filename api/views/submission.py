@@ -53,7 +53,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return queryset
 
     @swagger_auto_schema(
-        manual_parameters=[Parameter("ctq", "query", type="boolean")],
+        manual_parameters=[
+            Parameter("ctq", "query", type="boolean"),
+            Parameter("hours", "query", type="integer"),
+        ],
         responses={200: DocResponse("Successful operation", schema=serializer_class)},
     )
     @action(detail=False, methods=["get"])
@@ -68,10 +71,20 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         When no posts are found, an empty array is returned in the body.
         """
+        delay_time = None
+
         if request.query_params.get("ctq", False):
             delay_time = timezone.now()
-        else:
+        elif hours := request.query_params.get("hours"):
+            try:
+                hours = int(hours)
+                delay_time = timezone.now() - timedelta(hours=hours)
+            except ValueError:
+                pass
+
+        if not delay_time:
             delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+
         queryset = Submission.objects.filter(
             completed_by=None,
             claimed_by=None,

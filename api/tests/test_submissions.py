@@ -198,6 +198,45 @@ class TestSubmissionExpired:
         assert result.status_code == status.HTTP_200_OK
         assert result.json()[0]["id"] == submission.id
 
+    def test_expired_hours_param(self, client: Client):
+        """Check that posts over a certain age can be dynamically returned as expired."""
+        client, headers, _ = setup_user_client(client)
+
+        # submission #1 -- this is not expired
+        create_submission()
+        # submission #2 -- not normally expired
+        submission2 = create_submission()
+        submission2.create_time = timezone.now() - timezone.timedelta(hours=3)
+        submission2.save()
+        # submission #3 -- very expired
+        submission3 = create_submission()
+        submission3.create_time = timezone.now() - timezone.timedelta(days=1)
+        submission3.save()
+
+        result = client.get(
+            reverse("submission-expired", host="api") + "?hours=2",
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()) == 2
+        for item in result.json():
+            assert item["id"] in [submission2.id, submission3.id]
+
+        # Now just ask for regular expired submissions. We should receive one
+        # entry back.
+        result = client.get(
+            reverse("submission-expired", host="api"),
+            HTTP_HOST="api",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()) == 1
+        assert result.json()[0]["id"] == submission3.id
+
 
 class TestSubmissionsUnarchived:
     """Tests that validate the behavior of the Submission unarchived process."""
