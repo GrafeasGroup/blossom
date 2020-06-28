@@ -8,13 +8,17 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0002_auto_20200506_0250'),
+        ("api", "0002_auto_20200506_0250"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='submission',
-            name='source',
-            field=models.ForeignKey(default=api.models.get_default_source, on_delete=django.db.models.deletion.CASCADE, to='api.Source'),
+            model_name="submission",
+            name="source",
+            field=models.ForeignKey(
+                default=api.models.get_default_source,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="api.Source",
+            ),
         ),
     ]

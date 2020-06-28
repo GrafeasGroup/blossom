@@ -1,6 +1,8 @@
 from functools import wraps
-from typing import Callable, Dict, Set
+from typing import Callable, Dict, Set, Tuple, Union
 
+import pytz
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -63,3 +65,23 @@ def validate_request(query_params: Set = None, data_params: Set = None) -> Calla
         return wrapper
 
     return decorator
+
+
+def get_time_since_open(
+    days: bool = False,
+) -> Tuple[Union[int, float], Union[int, float]]:
+    """
+    Return the number of days since the day we opened.
+
+    Returns a tuple of (years, remainder days in year). For example, (3, 103)
+    would be three years, 103 days.
+    """
+    # the autoformatter thinks this is evil if it's all on one line.
+    # Breaking it up a little for my own sanity.
+    start_date = pytz.timezone("UTC").localize(
+        timezone.datetime(day=1, month=4, year=2017), is_dst=None
+    )
+    if days:
+        return (timezone.now() - start_date).days
+    else:
+        return divmod((timezone.now() - start_date).days, 365)

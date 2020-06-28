@@ -1,12 +1,11 @@
 """URL configuration for the API application."""
-from django.conf.urls import include
-from django.conf.urls import url
+from django.conf.urls import include, url
+from django.urls import path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
-from rest_framework import permissions
-from rest_framework import routers
+from rest_framework import permissions, routers
 
-from api import views
+from api.views import misc, slack, source, submission, transcription, volunteer
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -24,15 +23,17 @@ schema_view = get_schema_view(
 
 # automatically build URLs, as recommended by django-rest-framework docs
 router = routers.DefaultRouter()
-router.register(r"volunteer", views.VolunteerViewSet, basename="volunteer")
-router.register(r"submission", views.SubmissionViewSet, basename="submission")
-router.register(r"transcription", views.TranscriptionViewSet, basename="transcription")
-router.register(r"source", views.SourceViewSet, basename="source")
+router.register(r"volunteer", volunteer.VolunteerViewSet, basename="volunteer")
+router.register(r"submission", submission.SubmissionViewSet, basename="submission")
+router.register(
+    r"transcription", transcription.TranscriptionViewSet, basename="transcription"
+)
+router.register(r"source", source.SourceViewSet, basename="source")
 
 urlpatterns = [
     url(r"", include(router.urls)),
     url(r"^auth/", include("rest_framework.urls")),
-    url(r"^summary/", views.SummaryView.as_view(), name="summary"),
+    url(r"^summary/", misc.SummaryView.as_view(), name="summary"),
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
@@ -46,5 +47,11 @@ urlpatterns = [
     url(
         r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
     ),
-    url(r"^ping/", views.PingView.as_view(), name="ping"),
+    url(r"^ping/", misc.PingView.as_view(), name="ping"),
+    path("slack/endpoint/", slack.slack_endpoint, name="slack"),
+    path(
+        "slack/github/sponsors/",
+        slack.github_sponsors_endpoint,
+        name="github_sponsors",
+    ),
 ]
