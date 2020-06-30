@@ -46,14 +46,10 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static_dev")]
 LOGIN_URL = reverse_lazy("login")
 LOGOUT_URL = reverse_lazy("logout")
 
-# wiki
+# disallow creating accounts through the wiki
 WIKI_ACCOUNT_HANDLING = False
-# ideally, we would handle this with the following line:
-# WIKI_ANONYMOUS = False
-# but if we do, then the forced login redirects with a `next` parameter of '/',
-# which of course sends us back to the regular site instead of the proper
-# subdomain. Perhaps something to look into in the future.
-# todo: fix anonymous handling
+# disallow anonymous viewing
+WIKI_ANONYMOUS = False
 
 # Application definition
 

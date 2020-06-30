@@ -21,7 +21,7 @@
         <hr>
     {% endfor %}
     <div class="text-center">
-        {% if request.host.name == 'engineeringblog' %}
+        {% if "engineering" in request.path %}
             <div class="text-muted">
                 {% generate_engineering_footer %}
             </div>

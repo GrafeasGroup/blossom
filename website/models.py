@@ -11,13 +11,14 @@ class Post(models.Model):
     author = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     date = models.DateTimeField(default=timezone.now)
 
-    # something that will go on engineering.grafeas.org
+    # something that will go on grafeas.org/engineering/
     engineeringblogpost = models.BooleanField(
         default=False, help_text="Mark this post as an engineering blog post."
     )
 
     # about page, for example
     standalone_section = models.BooleanField(default=False)
+
     slug = models.SlugField(default="", editable=False, max_length=70)
     published = models.BooleanField(default=False)
     header_order = models.IntegerField(
@@ -28,8 +29,7 @@ class Post(models.Model):
     )
     show_in_news_view = models.BooleanField(default=True)
 
-    def get_absolute_url(self, host="www"):
-
+    def get_absolute_url(self):
         kwargs = {"pk": self.id, "slug": self.slug}
         return reverse("post_detail", kwargs=kwargs)
 
