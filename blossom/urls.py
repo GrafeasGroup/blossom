@@ -31,6 +31,7 @@ urlpatterns = [
     path("payments/", include("payments.urls")),
     path("engineering/", include("engineeringblog.urls")),
     path("wiki/", include("wiki.urls")),
+    path("wiki/notifications/", include("django_nyt.urls")),
     path("", include("website.urls")),
 ]
 
