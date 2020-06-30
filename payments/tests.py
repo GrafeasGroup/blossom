@@ -1,6 +1,8 @@
 import pytest
 import requests
 import stripe
+from django.conf import Settings
+from django.test import Client
 from django.urls import reverse
 
 # NOTE: In order to test slack, you must add the `settings` hook and set
@@ -10,13 +12,17 @@ from django.urls import reverse
 # running in the github actions pipeline.
 
 
-def test_payment_endpoint_with_get_request(client):
+def test_payment_endpoint_with_get_request(client: Client) -> None:
+    """Verify that a web browser accessing the payment endpoint will be turned away."""
     result = client.get(reverse("charge"))
     assert result.status_code == 200
     assert result.content == b"go away"
 
 
-def test_payment_endpoint(client, mocker, setup_site, settings):
+def test_payment_endpoint(
+    client: Client, mocker: object, setup_site: object, settings: Settings
+) -> None:
+    """Verify a full Stripe charge completes successfully."""
     settings.ENABLE_SLACK = True
     mocker.patch("requests.post")
     mocker.patch("stripe.Charge")
@@ -34,7 +40,10 @@ def test_payment_endpoint(client, mocker, setup_site, settings):
     assert "channel" not in requests.post.call_args.kwargs.get("json")
 
 
-def test_payment_endpoint_debug_mode(client, mocker, setup_site, settings):
+def test_payment_endpoint_debug_mode(
+    client: Client, mocker: object, setup_site: object, settings: Settings
+) -> None:
+    """Verify that the test key is used when Blossom is in debug mode."""
     settings.DEBUG = True
     settings.ENABLE_SLACK = True
     mocker.patch("requests.post")
@@ -52,7 +61,8 @@ def test_payment_endpoint_debug_mode(client, mocker, setup_site, settings):
     assert "channel" in requests.post.call_args.kwargs.get("json")
 
 
-def test_failed_charge(client, mocker, settings):
+def test_failed_charge(client: Client, mocker: object, settings: Settings) -> None:
+    """Verify that a failed charge attempt through Stripe notifies Slack."""
     settings.ENABLE_SLACK = True
     mocker.patch("requests.post")
     mocker.patch("stripe.Charge")
@@ -67,7 +77,10 @@ def test_failed_charge(client, mocker, settings):
     assert "Something went wrong" in requests.post.call_args.kwargs.get("json")["text"]
 
 
-def test_failed_charge_in_debug_mode(client, mocker, settings):
+def test_failed_charge_in_debug_mode(
+    client: Client, mocker: object, settings: Settings
+) -> None:
+    """Verify that a failed charge with Blossom in debug mode uses the debug keys."""
     settings.DEBUG = True
     settings.ENABLE_SLACK = True
     mocker.patch("requests.post")

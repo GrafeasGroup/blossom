@@ -1,22 +1,26 @@
+from django.test import Client
 from django.urls import reverse
 
 from blossom.tests.helpers import create_test_user, guy
 from website.forms import LoginForm
 
 
-def test_login_redirect_admin(client, settings):
+def test_login_redirect_admin(client: Client) -> None:
+    """Assert that the staff admin page gets redirected to the login page."""
     resp = client.get(reverse("admin_view"))
     assert resp.get("Location") == "/login/?next=/admin/"
 
 
-def test_login_redirect_superadmin(client):
+def test_login_redirect_superadmin(client: Client) -> None:
+    """Assert that the superadmin page gets redirected to the django admin sign-in."""
     resp = client.get("/superadmin/")
     # this is the built-in django admin panel login page because it's a pain
     # to replace or modify.
     assert resp.get("Location") == "/superadmin/login/?next=/superadmin/"
 
 
-def test_login(client):
+def test_login(client: Client) -> None:
+    """Assert that logging in works as expected."""
     user = create_test_user()
 
     response = client.post("/login/", {"email": guy.email, "password": guy.password})
@@ -26,7 +30,8 @@ def test_login(client):
     assert response.wsgi_request.user.is_authenticated
 
 
-def test_login_bad_password(client):
+def test_login_bad_password(client: Client) -> None:
+    """Assert that logging in with an incorrect password does not work."""
     create_test_user()
 
     response = client.post(
@@ -37,7 +42,8 @@ def test_login_bad_password(client):
     assert not response.wsgi_request.user.is_authenticated
 
 
-def test_login_bad_user_info(client):
+def test_login_bad_user_info(client: Client) -> None:
+    """Assert that attempting a login with the wrong username and password fails."""
     response = client.post(
         "/login/", {"email": "a@a.com", "password": "wrong password"}
     )
@@ -46,7 +52,8 @@ def test_login_bad_user_info(client):
     assert not response.wsgi_request.user.is_authenticated
 
 
-def test_logout(client, setup_site):
+def test_logout(client: Client, setup_site: object) -> None:
+    """Assert that logging out successfully logs the user out."""
     # the setup_site fixture just runs the bootstrap management command
     # so `request()` will work
     user = create_test_user()
@@ -58,7 +65,8 @@ def test_logout(client, setup_site):
     assert not client.request().context.get("user").is_authenticated
 
 
-def test_hosts_redirect(client, setup_site):
+def test_after_login_redirect(client: Client, setup_site: object) -> None:
+    """Verify that users are redirected to the page they were attempting to reach."""
     create_test_user(is_grafeas_staff=True)
 
     response = client.post(
@@ -69,7 +77,8 @@ def test_hosts_redirect(client, setup_site):
     assert response.wsgi_request.path == "/admin/"
 
 
-def test_login_page_request(client, setup_site):
+def test_login_page_request(client: Client, setup_site: object) -> None:
+    """Verify that the LoginForm is served when visiting the login page."""
     response = client.get("/login/")
     assert response.status_code == 200
     assert response.context["form"].__class__ == LoginForm

@@ -29,16 +29,18 @@ class Post(models.Model):
     )
     show_in_news_view = models.BooleanField(default=True)
 
-    def get_absolute_url(self):
+    def get_absolute_url(self) -> str:
+        """Return the full url of a given post."""
         kwargs = {"pk": self.id, "slug": self.slug}
         return reverse("post_detail", kwargs=kwargs)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: object, **kwargs: object) -> None:
+        """Override the save functionality to set the slug for a post."""
         value = self.title
         self.slug = slugify(value, allow_unicode=True)
         super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         if self.standalone_section:
             return f"Section | Header order {self.header_order}: {self.title}"
         return self.title

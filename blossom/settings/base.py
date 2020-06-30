@@ -200,7 +200,8 @@ GITHUB_SPONSORS_SECRET_KEY = os.environ.get("GITHUB_SPONSORS_SECRET_KEY", "")
 ##############################################
 
 
-def settings_err(msg):
+def settings_err(msg: str) -> None:
+    """Print a simple formatted warning."""
     logger.warning("*" * 39)
     logger.warning(msg)
     logger.warning("*" * 39)
