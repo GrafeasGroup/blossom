@@ -1,15 +1,12 @@
-import pytest
-from django.urls.exceptions import Resolver404
-from django_hosts.resolvers import get_host_patterns, reverse
+from django.urls import reverse
 
-from authentication.views import LoginView
-from blossom.tests.helpers import guy, create_test_user
+from blossom.tests.helpers import create_test_user, guy
 from website.forms import LoginForm
 
 
 def test_login_redirect_admin(client, settings):
-    resp = client.get(reverse("admin_view", host="www"), HTTP_HOST=settings.PARENT_HOST)
-    assert resp.get("Location") == "//grafeas.localhost:8000/login/?next=/admin/"
+    resp = client.get(reverse("admin_view"))
+    assert resp.get("Location") == "/login/?next=/admin/"
 
 
 def test_login_redirect_superadmin(client):
@@ -22,7 +19,7 @@ def test_login_redirect_superadmin(client):
 def test_login(client):
     user = create_test_user()
 
-    response = client.post("/login/", {"email": guy.email, "password": guy.password,})
+    response = client.post("/login/", {"email": guy.email, "password": guy.password})
 
     assert response.status_code == 302
     assert response.wsgi_request.user == user
@@ -30,7 +27,7 @@ def test_login(client):
 
 
 def test_login_bad_password(client):
-    user = create_test_user()
+    create_test_user()
 
     response = client.post(
         "/login/", {"email": guy.email, "password": "wrong password"}
@@ -66,41 +63,10 @@ def test_hosts_redirect(client, setup_site):
 
     response = client.post(
         "/login/?next=/admin/",
-        {"email": guy.email, "password": guy.password,},
+        {"email": guy.email, "password": guy.password},
         follow=True,
     )
     assert response.wsgi_request.path == "/admin/"
-
-
-def test_hosts_redirect_subdomain(client, setup_site):
-
-    create_test_user()
-
-    # this has to use the long form for HTTP_HOST because it checks a
-    # specific condition for the redirect.
-    response = client.post(
-        "login/?next=http%3A//wiki.grafeas.localhost%3A8000/",
-        {"email": guy.email, "password": guy.password,},
-        HTTP_HOST="grafeas.localhost:8000",
-    )
-    result = LoginView().get_redirect(
-        request=response.wsgi_request, hosts=get_host_patterns()
-    )
-    assert result == "//wiki.grafeas.localhost:8000/"
-
-
-def test_hosts_redirect_invalid_endpoint(client, setup_site):
-    create_test_user()
-
-    response = client.post(
-        "/login/?next=/snarfleblat/",
-        {"email": guy.email, "password": guy.password,},
-        HTTP_HOST="grafeas.localhost:8000",
-    )
-    with pytest.raises(Resolver404):
-        LoginView().get_redirect(
-            request=response.wsgi_request, hosts=get_host_patterns()
-        )
 
 
 def test_login_page_request(client, setup_site):

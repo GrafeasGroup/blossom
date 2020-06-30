@@ -1,4 +1,4 @@
-from django_hosts.resolvers import reverse
+from django.urls import reverse
 
 from blossom.tests.helpers import create_test_user
 from website.models import Post
@@ -14,7 +14,7 @@ def test_post_create(client):
     }
 
     assert Post.objects.filter(title="A").count() == 0
-    client.post(reverse("post_create", host="www"), data)
+    client.post(reverse("post_create"), data)
     assert Post.objects.filter(title="A").count() == 1
 
 
@@ -49,7 +49,7 @@ def test_post_name(client):
         "body": "B",
         "published": "on",
     }
-    client.post(reverse("post_create", host="www"), data)
+    client.post(reverse("post_create"), data)
     a = Post.objects.get(title="A")
     assert str(a) == "A"
 

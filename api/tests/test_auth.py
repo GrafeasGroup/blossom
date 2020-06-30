@@ -1,6 +1,6 @@
 """Set of tests which are used to validate the behavior of the authentication of users."""
+from django.shortcuts import reverse
 from django.test import Client, RequestFactory
-from django_hosts.resolvers import reverse
 from rest_framework import status
 
 from api.authentication import BlossomApiPermission
@@ -13,30 +13,21 @@ USER_CREATION_DATA = {"username": "Narf"}
 def test_creation_without_authentication(client: Client) -> None:
     """Test whether creation without logging in nor providing an API key is forbidden."""
     assert len(BlossomUser.objects.all()) == 0
-    result = client.post(
-        reverse("volunteer-list", host="api"), USER_CREATION_DATA, HTTP_HOST="api"
-    )
+    result = client.post(reverse("volunteer-list"), USER_CREATION_DATA)
     assert result.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_creation_without_api_key(client: Client) -> None:
     """Test whether creation without sending the API key whilst logged in is forbidden."""
     client, headers, _ = setup_user_client(client)
-    result = client.get(
-        reverse("volunteer-list", host="api"), USER_CREATION_DATA, HTTP_HOST="api"
-    )
+    result = client.get(reverse("volunteer-list"), USER_CREATION_DATA)
     assert result.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_creation_without_login(client: Client) -> None:
     """Test whether creation without logging in to an allowed user is forbidden."""
     client, headers, _ = setup_user_client(client, login=False)
-    result = client.post(
-        reverse("volunteer-list", host="api"),
-        USER_CREATION_DATA,
-        HTTP_HOST="api",
-        **headers
-    )
+    result = client.post(reverse("volunteer-list"), USER_CREATION_DATA, **headers)
     assert result.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -46,12 +37,7 @@ def test_creation_wrong_header_format(client: Client) -> None:
     # Deform the header, so that it looks like {Authorization: mykey} instead of
     # {Authorization: Api-Key mykey}.
     headers["HTTP_AUTHORIZATION"] = headers.get("HTTP_AUTHORIZATION").split()[1]
-    result = client.get(
-        reverse("volunteer-list", host="api"),
-        USER_CREATION_DATA,
-        HTTP_HOST="api",
-        **headers
-    )
+    result = client.get(reverse("volunteer-list"), USER_CREATION_DATA, **headers)
     assert result.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -60,9 +46,7 @@ def test_creation_with_normal_user(client: Client) -> None:
     client, headers, _ = setup_user_client(
         client, is_grafeas_staff=False, is_staff=False
     )
-    result = client.post(
-        reverse("volunteer-list", host="api"), USER_CREATION_DATA, HTTP_HOST="api"
-    )
+    result = client.post(reverse("volunteer-list"), USER_CREATION_DATA)
     assert result.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -74,12 +58,7 @@ def test_creation_allowed(client: Client) -> None:
     and the corresponding API Key is provided.
     """
     client, headers, _ = setup_user_client(client)
-    result = client.post(
-        reverse("volunteer-list", host="api"),
-        USER_CREATION_DATA,
-        HTTP_HOST="api",
-        **headers
-    )
+    result = client.post(reverse("volunteer-list"), USER_CREATION_DATA, **headers)
     assert result.json().get("username") == "Narf"
     assert result.status_code == status.HTTP_201_CREATED
     assert len(BlossomUser.objects.all()) == 2

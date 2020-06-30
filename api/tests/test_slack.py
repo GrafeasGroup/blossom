@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 from django.test import Client
 from django.test.client import RequestFactory
-from django_hosts.resolvers import reverse
+from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 
 from api.tests.helpers import create_user
@@ -36,10 +36,7 @@ def test_challenge_request(client: Client) -> None:
     """Test handling of Slack's new endpoint challenge message."""
     data = {"challenge": "asdfasdfasdf"}
     result = client.post(
-        reverse("slack", host="api"),
-        json.dumps(data),
-        HTTP_HOST="api",
-        content_type="application/json",
+        reverse("slack"), json.dumps(data), content_type="application/json",
     )
     assert result.content == b"asdfasdfasdf"
 
@@ -65,7 +62,6 @@ def test_is_github_valid_request(
         "slack/github/sponsors/",
         data=test_data["data"],
         content_type="application/json",
-        HTTP_HOST="api",
     )
 
     settings.GITHUB_SPONSORS_SECRET_KEY = "shhh, it's a secret"
@@ -89,10 +85,7 @@ def test_github_missing_signature(rf: RequestFactory) -> None:
     """Test to ensure a request that is missing the signature is marked invalid."""
     """Test to ensure that a webhook from GitHub Sponsors is valid."""
     request = rf.post(
-        "slack/github/sponsors/",
-        data={"aaa": "bbb"},
-        content_type="application/json",
-        HTTP_HOST="api",
+        "slack/github/sponsors/", data={"aaa": "bbb"}, content_type="application/json",
     )
     assert is_valid_github_request(request) is False
 
@@ -139,7 +132,6 @@ def test_github_sponsor_slack_message(
                 "tier": {"name": test_data["tier"]},
             },
         },
-        HTTP_HOST="api",
         content_type="application/json",
     )
     request.headers = {

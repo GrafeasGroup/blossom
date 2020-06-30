@@ -1,8 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.shortcuts import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-from django_hosts.resolvers import reverse
 
 
 class Post(models.Model):
@@ -31,7 +31,7 @@ class Post(models.Model):
     def get_absolute_url(self, host="www"):
 
         kwargs = {"pk": self.id, "slug": self.slug}
-        return reverse("post_detail", kwargs=kwargs, host=host)
+        return reverse("post_detail", kwargs=kwargs)
 
     def save(self, *args, **kwargs):
         value = self.title

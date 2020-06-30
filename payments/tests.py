@@ -1,10 +1,7 @@
-import json
-
-from django_hosts.resolvers import reverse
-
+import pytest
 import requests
 import stripe
-import pytest
+from django.urls import reverse
 
 # NOTE: In order to test slack, you must add the `settings` hook and set
 # `settings.ENABLE_SLACK = True`. MAKE SURE that if you're writing a new
@@ -14,7 +11,7 @@ import pytest
 
 
 def test_payment_endpoint_with_get_request(client):
-    result = client.get(reverse("charge", host="payments"), HTTP_HOST="payments")
+    result = client.get(reverse("charge"))
     assert result.status_code == 200
     assert result.content == b"go away"
 
@@ -27,7 +24,7 @@ def test_payment_endpoint(client, mocker, setup_site, settings):
 
     data = {"stripeToken": "asdf", "amount": "300", "stripeEmail": "a@a.com"}
 
-    result = client.post(reverse("charge", host="payments"), data, HTTP_HOST="payments")
+    result = client.post(reverse("charge"), data)
     assert result.status_code == 302
     assert "thank-you" in result.url
     requests.post.assert_called_once()
@@ -46,7 +43,7 @@ def test_payment_endpoint_debug_mode(client, mocker, setup_site, settings):
 
     data = {"stripeToken": "asdf", "amount": "300", "stripeEmail": "a@a.com"}
 
-    result = client.post(reverse("charge", host="payments"), data, HTTP_HOST="payments")
+    client.post(reverse("charge"), data)
 
     requests.post.assert_called_once()
     assert "test" in stripe.api_key
@@ -64,9 +61,7 @@ def test_failed_charge(client, mocker, settings):
     data = {"stripeToken": "asdf", "amount": "300", "stripeEmail": "a@a.com"}
 
     with pytest.raises(ValueError):
-        result = client.post(
-            reverse("charge", host="payments"), data, HTTP_HOST="payments"
-        )
+        client.post(reverse("charge"), data)
     # post going to #org-running
     assert "channel" not in requests.post.call_args.kwargs.get("json")
     assert "Something went wrong" in requests.post.call_args.kwargs.get("json")["text"]
@@ -82,9 +77,7 @@ def test_failed_charge_in_debug_mode(client, mocker, settings):
     data = {"stripeToken": "asdf", "amount": "300", "stripeEmail": "a@a.com"}
 
     with pytest.raises(ValueError):
-        result = client.post(
-            reverse("charge", host="payments"), data, HTTP_HOST="payments"
-        )
+        client.post(reverse("charge"), data)
     # post going to #bottest
     assert "channel" in requests.post.call_args.kwargs.get("json")
     assert "Something went wrong" in requests.post.call_args.kwargs.get("json")["text"]

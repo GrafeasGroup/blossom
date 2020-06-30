@@ -2,7 +2,7 @@
 import json
 
 from django.test import Client
-from django_hosts.resolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from api.models import Submission, Transcription
@@ -17,9 +17,7 @@ class TestVolunteerSummary:
         """Test whether the process functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("volunteer-summary", host="api") + f"?username={user.username}",
-            HTTP_HOST="api",
-            **headers,
+            reverse("volunteer-summary") + f"?username={user.username}", **headers,
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -29,19 +27,13 @@ class TestVolunteerSummary:
     def test_summary_no_username(self, client: Client) -> None:
         """Test whether the summary is not provided when no username is queried."""
         client, headers, _ = setup_user_client(client)
-        result = client.get(
-            reverse("volunteer-summary", host="api"), HTTP_HOST="api", **headers
-        )
+        result = client.get(reverse("volunteer-summary"), **headers)
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_summary_nonexistent_username(self, client: Client) -> None:
         """Test whether the summary is not given when a nonexistent user is provided."""
         client, headers, _ = setup_user_client(client)
-        result = client.get(
-            reverse("volunteer-summary", host="api") + "?username=404",
-            HTTP_HOST="api",
-            **headers,
-        )
+        result = client.get(reverse("volunteer-summary") + "?username=404", **headers,)
         assert result.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -53,9 +45,8 @@ class TestVolunteerAssortedFunctions:
         client, headers, user = setup_user_client(client)
         data = {"username": "naaaarf"}
         result = client.put(
-            reverse("volunteer-detail", args=[1], host="api"),
+            reverse("volunteer-detail", args=[1]),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -70,9 +61,7 @@ class TestVolunteerAssortedFunctions:
         client, headers, user = setup_user_client(client)
         create_user(username="another_user")
         result = client.get(
-            reverse("volunteer-list", host="api") + f"?username={user.username}",
-            HTTP_HOST="api",
-            **headers,
+            reverse("volunteer-list") + f"?username={user.username}", **headers,
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -88,9 +77,7 @@ class TestVolunteerGammaPlusOne:
         client, headers, user = setup_user_client(client)
 
         result = client.patch(
-            reverse("volunteer-gamma-plusone", args=[user.id], host="api"),
-            HTTP_HOST="api",
-            **headers,
+            reverse("volunteer-gamma-plusone", args=[user.id]), **headers,
         )
 
         user.refresh_from_db()
@@ -110,9 +97,7 @@ class TestVolunteerGammaPlusOne:
         client, headers, _ = setup_user_client(client)
 
         result = client.patch(
-            reverse("volunteer-gamma-plusone", args=[404], host="api"),
-            HTTP_HOST="api",
-            **headers,
+            reverse("volunteer-gamma-plusone", args=[404]), **headers,
         )
 
         assert result.status_code == status.HTTP_404_NOT_FOUND
@@ -129,9 +114,8 @@ class TestVolunteerCreation:
         client, headers, _ = setup_user_client(client)
         data = {"username": "SPAAAACE"}
         result = client.post(
-            reverse("volunteer-list", host="api"),
+            reverse("volunteer-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -146,9 +130,8 @@ class TestVolunteerCreation:
         create_user(username=data["username"])
 
         result = client.post(
-            reverse("volunteer-list", host="api"),
+            reverse("volunteer-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -160,10 +143,7 @@ class TestVolunteerCreation:
         client, headers, _ = setup_user_client(client)
 
         result = client.post(
-            reverse("volunteer-list", host="api"),
-            HTTP_HOST="api",
-            content_type="application/json",
-            **headers,
+            reverse("volunteer-list"), content_type="application/json", **headers,
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
         assert BlossomUser.objects.count() == 1

@@ -1,13 +1,12 @@
 {% extends "website/partials/base.partial" %}
 {% load static %}
-{% load hosts %}
 {% load uri_helpers %}
 {% load fun_footers %}
 
 {% block content %}
     {% if not posts %}
         <p>
-        <h1 class="text-center">There's nothing here! Why not <a href="{% host_url "post_create" host 'www' %}"
+        <h1 class="text-center">There's nothing here! Why not <a href="{% url "post_create" %}"
                                                                  style="text-decoration: underline">add
             something?</a></h1>
         </p>
