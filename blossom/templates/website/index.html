@@ -13,7 +13,7 @@
     {% endif %}
     {% for p in posts %}
         <p>
-        <h1><a href="{% get_absolute_uri p request.host.name %}">{{ p.title }}</a></h1>
+        <h1><a href="{% get_absolute_uri p%}">{{ p.title }}</a></h1>
         </p>
         <p>
             {{ p.body|safe }}
