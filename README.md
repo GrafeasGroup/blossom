@@ -14,17 +14,6 @@ A Django app that, right now, is our website, payment portal for donations, engi
 
 ## Local development
 
-### NOTE FOR OSX:
-
-OSX does not route .localhost domains correctly, so in order to work with the API, you'll have to modify your hosts file. Edit /etc/hosts to add the following line at the bottom:
-
-```
-127.0.0.1	api.grafeas.localhost
-127.0.0.1	wiki.grafeas.localhost
-```
-
-Flush the DNS cache with `sudo dscacheutil -flushcache`; then requests to the local version of the api (for example, "http://api.grafeas.localhost:8000/submissions/", should work.)
-
 Create a file under the top level `blossom` folder called `local_settings.py`. Populate it with the following:
 
 ```python
@@ -41,10 +30,7 @@ better_exceptions.MAX_LENGTH = None
 DEBUG = True
 # this requires that you use "grafeas.localhost:8000" as your method for accessing
 # the site.
-# ALLOWED_HOSTS = ['.grafeas.localhost', 'grafeas.localhost', 'wiki.grafeas.localhost']
 ALLOWED_HOSTS = ['*']
-SESSION_COOKIE_DOMAIN = "grafeas.localhost"
-PARENT_HOST = 'grafeas.localhost:8000'
 
 CACHES = {
     'default': {
@@ -80,10 +66,6 @@ Blossom uses `pre-commit` to help us keep everything clean. After you check out 
 
 If an issue is detected when you run `git commit`, the action will be aborted and you'll receive a message about what needs to be fixed before committing.
 
-## Notes on URLs
-
-Because there are subdomains that share a common session cookie, using `localhost:8000` as the development URL isn't an option because of some legacy issues with how the internet works. In Chrome, ending any URL with `.localhost` will automatically loop back to the host computer, so you don't have to modify your `hosts` file. Make sure that when you're working with the application, you're using `grafeas.localhost:8000` as the base url; for example, `wiki.grafeas.localhost:8000` or `payments.grafeas.localhost:8000`. This will translate to `grafeas.org` when deployed, so verify that anything that needs to be cross-subdomain is able to tell what the base host is.
-
 
 * Minimum Python version: 3.8
 
@@ -101,11 +83,11 @@ Because there are subdomains that share a common session cookie, using `localhos
   * password: `asdf`
 
 You can use the above credentials to create yourself a new account.
-* Navigate to http://grafeas.localhost:8000/superadmin/newuser and log in with the above credentials.
+* Navigate to http://localhost:8000/superadmin/newuser and log in with the above credentials.
 * Create a personal user account with the requested fields. Make sure that you select "is superuser".
 
 Next, we'll disable the default admin account.
-* Navigate to http://grafeas.localhost:8000/superadmin/blossom/blossomuser/ and click on the "admin" user.
+* Navigate to http://localhost:8000/superadmin/blossom/blossomuser/ and click on the "admin" user.
 * Scroll to the bottom of the page and deselect "Active".
 * Click Save.
 
@@ -125,42 +107,42 @@ Run `python manage.py bootstrap` and see above for expected user credentials and
 
 ## Important links
 
-#### payments.grafeas.localhost:8000
+#### localhost:8000/payments/
 
 The processing url for Stripe.
 
-#### payments.grafeas.localhost:8000/ping
+#### localhost:8000/payments/ping/
 
 Used by Bubbles for site isup checks.
 
-#### grafeas.localhost:8000
+#### localhost:8000/
 
 Site root.
 
-#### grafeas.localhost:8000/admin/
+#### localhost:8000/admin/
 
 General site administration, open to all user accounts.
 
-#### grafeas.localhost:8000/superadmin/
+#### localhost:8000/superadmin/
 
 User / post traditional admin. Requires staff acount.
 
-#### grafeas.localhost:8000/superadmin/newuser
+#### localhost:8000/superadmin/newuser/
 
 Create a new user for the site.
 
-#### grafeas.localhost:8000/newpost
+#### localhost:8000/newpost/
 
 Create a new post for the site.
 
-#### wiki.grafeas.localhost:8000/
+#### localhost:8000/wiki/
 
 Root for wiki.
 
-#### api.grafeas.localhost:8000/swagger
+#### localhost:8000/api/swagger
 
 The swagger API endpoint list.
 
-#### api.grafeas.localhost:8000/redoc
+#### localhost:8000/api/redoc
 
 The same thing as swagger, just with a different layout.
