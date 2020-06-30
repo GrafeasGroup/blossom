@@ -32,7 +32,7 @@ class PostDetail(DetailView):
     query_pk_and_slug = True
     template_name = "website/post_detail.html"
 
-    def get_context_data(self, **kwargs) -> Dict:
+    def get_context_data(self, **kwargs: object) -> Dict:
         """Build the context dict with extra data needed for the templates."""
         context = super().get_context_data(**kwargs)
         context = get_additional_context(context)
@@ -94,6 +94,7 @@ class PostAdd(LoginRequiredMixin, TemplateView):
     def post(
         self, request: HttpRequest, *args: object, **kwargs: object
     ) -> HttpResponse:
+        """Save a new blog post when a POST request is sent to the server."""
         form = PostAddForm(request.POST)
         if form.is_valid():
             new_post = form.save(commit=False)
@@ -103,7 +104,10 @@ class PostAdd(LoginRequiredMixin, TemplateView):
 
 
 class AdminView(LoginRequiredMixin, TemplateView):
-    def get(self, request, *args, **kwargs):
+    def get(
+        self, request: HttpRequest, *args: object, **kwargs: object
+    ) -> HttpResponse:
+        """Render the admin view."""
         context = {"posts": Post.objects.all()}
         context = get_additional_context(context)
         return render(request, "website/admin.html", context)
@@ -111,7 +115,8 @@ class AdminView(LoginRequiredMixin, TemplateView):
 
 # superadmin role
 @staff_member_required
-def user_create(request):
+def user_create(request: HttpRequest) -> HttpResponse:
+    """Render the user creation view."""
     if request.method == "POST":
         form = AddUserForm(request.POST)
         if form.is_valid():
