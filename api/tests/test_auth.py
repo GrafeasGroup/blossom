@@ -1,6 +1,6 @@
 """Set of tests which are used to validate the behavior of the authentication of users."""
-from django.shortcuts import reverse
 from django.test import Client, RequestFactory
+from django.urls import reverse
 from rest_framework import status
 
 from api.authentication import BlossomApiPermission
