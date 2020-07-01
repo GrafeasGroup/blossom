@@ -151,16 +151,20 @@ def process_blacklist(event: Dict, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["blacklist"]["missing_username"]
     elif len(parsed_message) == 2:
-        if u := BlossomUser.objects.filter(username__iexact=parsed_message[1]).first():
-            if u.blacklisted:
-                u.blacklisted = False
-                u.save()
+        if user := BlossomUser.objects.filter(
+            username__iexact=parsed_message[1]
+        ).first():
+            if user.blacklisted:
+                user.blacklisted = False
+                user.save()
                 msg = i18n["slack"]["blacklist"]["success_undo"].format(
                     parsed_message[1]
                 )
             else:
-                u.blacklisted = True
-                u.save()
+                user.blacklisted = True
+                user.save()
+                user.blacklisted = True
+                user.save()
                 msg = i18n["slack"]["blacklist"]["success"].format(parsed_message[1])
         else:
             msg = i18n["slack"]["blacklist"]["unknown_username"]
