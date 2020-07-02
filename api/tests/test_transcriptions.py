@@ -2,7 +2,7 @@
 import json
 
 from django.test import Client
-from django_hosts.resolvers import reverse
+from django.urls import reverse
 from rest_framework import status
 
 from api.models import Transcription
@@ -31,9 +31,8 @@ class TestTranscriptionCreation:
         }
 
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -86,9 +85,8 @@ class TestTranscriptionCreation:
             "text": "test content",
         }
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -107,9 +105,8 @@ class TestTranscriptionCreation:
             "text": "test content",
         }
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -128,9 +125,8 @@ class TestTranscriptionCreation:
             "text": "test content",
         }
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -148,9 +144,8 @@ class TestTranscriptionCreation:
             "text": "test content",
         }
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -168,9 +163,8 @@ class TestTranscriptionCreation:
             "text": "test content",
         }
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -188,9 +182,8 @@ class TestTranscriptionCreation:
             "text": "test content",
         }
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -208,9 +201,8 @@ class TestTranscriptionCreation:
             "url": "https://example.com",
         }
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -228,9 +220,7 @@ class TestTranscriptionSearch:
         transcription = create_transcription(first_sub, user)
         create_transcription(second_sub, user)
         result = client.get(
-            reverse("transcription-search", host="api")
-            + f"?submission_id={first_sub.id}",
-            HTTP_HOST="api",
+            reverse("transcription-search") + f"?submission_id={first_sub.id}",
             content_type="application/json",
             **headers,
         )
@@ -242,8 +232,7 @@ class TestTranscriptionSearch:
         """Test whether no items are returned when a search on a nonexistent ID is run."""
         client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("transcription-search", host="api") + "?submission_id=404",
-            HTTP_HOST="api",
+            reverse("transcription-search") + "?submission_id=404",
             content_type="application/json",
             **headers,
         )
@@ -255,10 +244,7 @@ class TestTranscriptionSearch:
         """Check whether a search without ID is caught correctly."""
         client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("transcription-search", host="api"),
-            HTTP_HOST="api",
-            content_type="application/json",
-            **headers,
+            reverse("transcription-search"), content_type="application/json", **headers,
         )
 
         assert result.status_code == status.HTTP_400_BAD_REQUEST
@@ -270,11 +256,7 @@ class TestTranscriptionRandom:
     def test_random_none_available(self, client: Client) -> None:
         """Test that no transcription is returned when there is none available."""
         client, headers, user = setup_user_client(client)
-        result = client.get(
-            reverse("transcription-review-random", host="api"),
-            HTTP_HOST="api",
-            **headers,
-        )
+        result = client.get(reverse("transcription-review-random"), **headers,)
 
         assert not result.content
         assert result.status_code == status.HTTP_200_OK
@@ -285,11 +267,7 @@ class TestTranscriptionRandom:
         submission = create_submission()
         transcription = create_transcription(submission, user)
 
-        result = client.get(
-            reverse("transcription-review-random", host="api"),
-            HTTP_HOST="api",
-            **headers,
-        )
+        result = client.get(reverse("transcription-review-random"), **headers,)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()
