@@ -197,8 +197,7 @@ class TestSubmissionExpired:
         submission3.save()
 
         result = client.get(
-            reverse("submission-expired", host="api") + "?hours=2",
-            HTTP_HOST="api",
+            reverse("submission-expired") + "?hours=2",
             content_type="application/json",
             **headers,
         )
@@ -211,10 +210,7 @@ class TestSubmissionExpired:
         # Now just ask for regular expired submissions. We should receive one
         # entry back.
         result = client.get(
-            reverse("submission-expired", host="api"),
-            HTTP_HOST="api",
-            content_type="application/json",
-            **headers,
+            reverse("submission-expired"), content_type="application/json", **headers,
         )
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()) == 1
@@ -230,8 +226,7 @@ class TestSubmissionExpired:
         submission1.save()
 
         result = client.get(
-            reverse("submission-expired", host="api") + "?hours=asdf",
-            HTTP_HOST="api",
+            reverse("submission-expired") + "?hours=asdf",
             content_type="application/json",
             **headers,
         )
