@@ -238,17 +238,13 @@ class TestSubmissionExpired:
         assert result.json()[0]["id"] == submission3.id
 
     def test_expired_invalid_time(self, client: Client) -> None:
-        """Check that requesting an invalid time will default to 18 hours."""
+        """Check that requesting an invalid time will return an error."""
         client, headers, _ = setup_user_client(client)
 
         # this submission should not be returned
         submission1 = create_submission()
         submission1.create_time = timezone.now() - timezone.timedelta(hours=3)
         submission1.save()
-
-        submission2 = create_submission()
-        submission2.create_time = timezone.now() - timezone.timedelta(days=1)
-        submission2.save()
 
         result = client.get(
             reverse("submission-expired", host="api") + "?hours=asdf",
@@ -257,9 +253,7 @@ class TestSubmissionExpired:
             **headers,
         )
 
-        assert result.status_code == status.HTTP_200_OK
-        assert len(result.json()) == 1
-        assert result.json()[0]["id"] == submission2.id
+        assert result.status_code == status.HTTP_400_BAD_REQUEST
 
 
 class TestSubmissionsUnarchived:

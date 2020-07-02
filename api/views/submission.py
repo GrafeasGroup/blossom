@@ -57,7 +57,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             Parameter("ctq", "query", type="boolean"),
             Parameter("hours", "query", type="integer"),
         ],
-        responses={200: DocResponse("Successful operation", schema=serializer_class)},
+        responses={
+            200: DocResponse("Successful operation", schema=serializer_class),
+            400: "The custom hour provide is invalid.",
+        },
     )
     @action(detail=False, methods=["get"])
     def expired(self, request: Request) -> Response:
@@ -71,19 +74,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         When no posts are found, an empty array is returned in the body.
         """
-        delay_time = None
-
         if request.query_params.get("ctq", False):
             delay_time = timezone.now()
-        elif hours := request.query_params.get("hours"):
+        else:
+            hours = request.query_params.get("hours", settings.ARCHIVIST_DELAY_TIME)
             try:
                 hours = int(hours)
                 delay_time = timezone.now() - timedelta(hours=hours)
             except ValueError:
-                pass
-
-        if not delay_time:
-            delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+                return Response(status=status.HTTP_400_BAD_REQUEST)
 
         queryset = Submission.objects.filter(
             completed_by=None,
