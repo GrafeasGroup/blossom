@@ -302,14 +302,6 @@ six = "*"
 
 [[package]]
 category = "main"
-description = "Dynamic and static host resolving for Django. Maps hostnames to URLconfs."
-name = "django-hosts"
-optional = false
-python-versions = "*"
-version = "3.0"
-
-[[package]]
-category = "main"
 description = "script tag with additional attributes for django.forms.Media"
 name = "django-js-asset"
 optional = false
@@ -1245,7 +1237,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "1ed2d097644dc840e31c64f93406d5f3ce463dd2b0df9be1904240afb603f805"
+content-hash = "2bffe9541581d094b99593f1d072606ae2e23a85ded9825f2b532a8dbf34d11c"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -1432,10 +1424,6 @@ django = [
 ]
 django-classy-tags = [
     {file = "django-classy-tags-1.0.0.tar.gz", hash = "sha256:ad6a25fc2b58a098f00d86bd5e5dad47922f5ca4e744bc3cccb7b4be5bc35eb1"},
-]
-django-hosts = [
-    {file = "django-hosts-3.0.tar.gz", hash = "sha256:3599645f37b4c51df6140d659bef356e05ae7ff7748f8fef14c2c84083dd8089"},
-    {file = "django_hosts-3.0-py2.py3-none-any.whl", hash = "sha256:8e83232dbd7ff0d9de5c814f16bdf4cd1971bd00c54fa1f3e507aed4f93215a8"},
 ]
 django-js-asset = [
     {file = "django-js-asset-1.2.2.tar.gz", hash = "sha256:c163ae80d2e0b22d8fb598047cd0dcef31f81830e127cfecae278ad574167260"},
