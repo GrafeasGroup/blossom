@@ -163,8 +163,6 @@ def process_blacklist(event: Dict, message: str) -> None:
             else:
                 user.blacklisted = True
                 user.save()
-                user.blacklisted = True
-                user.save()
                 msg = i18n["slack"]["blacklist"]["success"].format(parsed_message[1])
         else:
             msg = i18n["slack"]["blacklist"]["unknown_username"]
