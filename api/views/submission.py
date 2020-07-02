@@ -59,7 +59,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         ],
         responses={
             200: DocResponse("Successful operation", schema=serializer_class),
-            400: "The custom hour provide is invalid.",
+            400: "The custom hour provided is invalid.",
         },
     )
     @action(detail=False, methods=["get"])
