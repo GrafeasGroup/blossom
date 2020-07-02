@@ -313,9 +313,8 @@ class TestSubmissionClaim:
         data = {"username": user.username}
 
         result = client.patch(
-            reverse("submission-claim", host="api", args=[submission.id]),
+            reverse("submission-claim", args=[submission.id]),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
@@ -496,9 +495,8 @@ class TestSubmissionDone:
         data = {"username": user.username}
 
         result = client.patch(
-            reverse("submission-done", host="api", args=[submission.id]),
+            reverse("submission-done", args=[submission.id]),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )

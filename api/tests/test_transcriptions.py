@@ -63,9 +63,8 @@ class TestTranscriptionCreation:
         }
 
         result = client.post(
-            reverse("transcription-list", host="api"),
+            reverse("transcription-list"),
             json.dumps(data),
-            HTTP_HOST="api",
             content_type="application/json",
             **headers,
         )
