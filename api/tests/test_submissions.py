@@ -355,6 +355,25 @@ class TestSubmissionClaim:
         )
         assert result.status_code == status.HTTP_409_CONFLICT
 
+    def test_claim_no_coc(self, client: Client) -> None:
+        """Test that a claim cannot be completed without accepting the CoC."""
+        client, headers, user = setup_user_client(client)
+        user.accepted_coc = False
+        user.save()
+
+        submission = create_submission()
+        data = {"username": user.username}
+
+        result = client.patch(
+            reverse("submission-claim", args=[submission.id]),
+            json.dumps(data),
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_403_FORBIDDEN
+        submission.refresh_from_db()
+        assert submission.claimed_by is None
+
 
 class TestSubmissionDone:
     """Tests to validate the behavior of the Submission done process."""
@@ -514,6 +533,30 @@ class TestSubmissionDone:
                 )
             else:
                 assert slack_client.chat_postMessage.call_count == 0
+
+    def test_done_no_coc(self, client: Client) -> None:
+        """ # noqa
+        Test that a submission isn't marked as done when the CoC hasn't been accepted.
+        """
+        client, headers, user = setup_user_client(client)
+        submission = create_submission(claimed_by=user)
+        user.accepted_coc = False
+        user.save()
+
+        create_transcription(submission, user)
+        data = {"username": user.username}
+
+        result = client.patch(
+            reverse("submission-done", args=[submission.id]),
+            json.dumps(data),
+            content_type="application/json",
+            **headers,
+        )
+
+        submission.refresh_from_db()
+        assert result.status_code == status.HTTP_403_FORBIDDEN
+        assert submission.claimed_by == user
+        assert submission.completed_by is None
 
 
 class TestSubmissionUnclaim:
