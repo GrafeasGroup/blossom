@@ -53,6 +53,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
                 "Successful transcription creation", schema=serializer_class
             ),
             400: "The request does not adhere to the specified HTTP body",
+            403: "The volunteer has not accepted the Code of Conduct",
             404: "Either the specified submission or volunteer is not found",
         },
     )
@@ -94,6 +95,10 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(BlossomUser, username=username)
         source = get_object_or_404(Source, name=source)
         removed_from_reddit = request.data.get("removed_from_reddit", False)
+
+        if not user.accepted_coc:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         transcription = Transcription.objects.create(
             submission=submission,
             author=user,

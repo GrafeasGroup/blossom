@@ -46,6 +46,32 @@ class TestTranscriptionCreation:
         assert transcription.url == data["url"]
         assert transcription.text == data["text"]
 
+    def test_create_no_coc(self, client: Client) -> None:
+        """Test that no transcription can be created without accepting the CoC."""
+        client, headers, user = setup_user_client(client)
+        user.accepted_coc = False
+        user.save()
+
+        submission = create_submission()
+        data = {
+            "submission_id": submission.id,
+            "username": user.username,
+            "original_id": "ABC",
+            "source": submission.source.name,
+            "url": "https://example.com",
+            "text": "test content",
+        }
+
+        result = client.post(
+            reverse("transcription-list"),
+            json.dumps(data),
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_403_FORBIDDEN
+        assert Transcription.objects.count() == 0
+
     def test_create_no_submission_id(self, client: Client) -> None:
         """Test whether a creation without passing `submission_id` is caught correctly."""
         client, headers, user = setup_user_client(client)

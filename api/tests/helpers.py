@@ -25,6 +25,7 @@ BASE_USER_INFO = {
     "is_grafeas_staff": True,
     "is_volunteer": True,
     "api_key": None,
+    "accepted_coc": True,
 }
 
 
