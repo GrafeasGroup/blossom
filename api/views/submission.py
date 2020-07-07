@@ -53,8 +53,14 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return queryset
 
     @swagger_auto_schema(
-        manual_parameters=[Parameter("ctq", "query", type="boolean")],
-        responses={200: DocResponse("Successful operation", schema=serializer_class)},
+        manual_parameters=[
+            Parameter("ctq", "query", type="boolean"),
+            Parameter("hours", "query", type="integer"),
+        ],
+        responses={
+            200: DocResponse("Successful operation", schema=serializer_class),
+            400: "The custom hour provided is invalid.",
+        },
     )
     @action(detail=False, methods=["get"])
     def expired(self, request: Request) -> Response:
@@ -71,7 +77,13 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if request.query_params.get("ctq", False):
             delay_time = timezone.now()
         else:
-            delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+            hours = request.query_params.get("hours", settings.ARCHIVIST_DELAY_TIME)
+            try:
+                hours = int(hours)
+                delay_time = timezone.now() - timedelta(hours=hours)
+            except ValueError:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+
         queryset = Submission.objects.filter(
             completed_by=None,
             claimed_by=None,
