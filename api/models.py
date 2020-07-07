@@ -75,7 +75,7 @@ class Submission(models.Model):
     last_update_time = models.DateTimeField(default=timezone.now)
 
     # The ID of the Submission in the old Redis database.
-    # Note that this field is only used for handling the redis changeover and
+    # This field is only used for handling the redis changeover and
     # can be removed afterwards.
     redis_id = models.CharField(max_length=12, blank=True, null=True)
 
