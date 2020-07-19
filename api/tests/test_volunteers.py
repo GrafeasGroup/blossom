@@ -147,3 +147,37 @@ class TestVolunteerCreation:
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
         assert BlossomUser.objects.count() == 1
+
+
+class TestVolunteerCoCAcceptance:
+    """Tests to validate that accepting the CoC works correctly."""
+
+    def test_accept_coc(self, client: Client) -> None:
+        """Test that a correctly formatted request succeeds."""
+        client, headers, user = setup_user_client(client, accepted_coc=False)
+
+        assert user.accepted_coc is False
+
+        result = client.post(
+            reverse("volunteer-accept-coc", args=[user.id]),
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        user.refresh_from_db()
+        assert user.accepted_coc is True
+
+    def test_accept_coc_invalid_user(self, client: Client) -> None:
+        """Test that an operation on an invalid volunteer fails as expected."""
+        client, headers, user = setup_user_client(client, accepted_coc=False)
+
+        assert user.accepted_coc is False
+
+        result = client.post(
+            reverse("volunteer-accept-coc", args=[999]),
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_404_NOT_FOUND
+        user.refresh_from_db()
+        assert user.accepted_coc is False

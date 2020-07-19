@@ -94,9 +94,9 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             type="object", properties={"username": Schema(type="string")}
         ),
         responses={
-            201: DocResponse("Successful creation", schema=serializer_class),
-            400: 'No "username" key in the data body',
-            422: "There already exists a volunteer with the specified username",
+            201: DocResponse("User successfully updated.", schema=serializer_class),
+            400: 'No "username" key in the data body.',
+            422: "There already exists a volunteer with the specified username.",
         },
     )
     @validate_request(data_params={"username"})
@@ -113,3 +113,18 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         return Response(
             self.serializer_class(user).data, status=status.HTTP_201_CREATED
         )
+
+    @swagger_auto_schema(
+        request_body=no_body,
+        responses={
+            200: "The volunteer has been updated successfully.",
+            404: "No volunteer with the specified ID.",
+        },
+    )
+    @action(detail=True, methods=["post"])
+    def accept_coc(self, request: Request, pk: int) -> Response:
+        """Set the requested volunteer as having accepted the Code of Conduct."""
+        user = get_object_or_404(BlossomUser, id=pk, is_volunteer=True)
+        user.accepted_coc = True
+        user.save()
+        return Response(status=status.HTTP_200_OK)
