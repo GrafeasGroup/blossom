@@ -207,6 +207,32 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
+    def test_with_blacklisted_user(self, client: Client) -> None:
+        """Test whether a creation with a blacklisted user is rejected."""
+        client, headers, user = setup_user_client(client)
+        user.blacklisted = True
+        user.save()
+
+        submission = create_submission()
+        data = {
+            "submission_id": submission.id,
+            "username": user.username,
+            "original_id": "ABC",
+            "source": submission.source.name,
+            "url": "https://example.com",
+            "text": "test content",
+        }
+
+        result = client.post(
+            reverse("transcription-list"),
+            json.dumps(data),
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_423_LOCKED
+        assert Transcription.objects.count() == 0
+
 
 class TestTranscriptionSearch:
     """Tests validating the Transcription search procedure."""

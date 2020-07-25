@@ -51,6 +51,8 @@ class BlossomUser(AbstractUser):
 
         :return: the number of transcriptions written by the user.
         """
+        if self.blacklisted:
+            return 0  # see https://github.com/GrafeasGroup/blossom/issues/15
         return Transcription.objects.filter(author=self).count()
 
     def __str__(self) -> str:
