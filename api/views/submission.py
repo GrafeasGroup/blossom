@@ -15,6 +15,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
+from slack import WebClient
 
 from api.authentication import AdminApiKeyCustomCheck
 from api.helpers import validate_request
@@ -124,6 +125,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             406: "The specified volunteer has not claimed the specified submission",
             409: "The submission has already been completed",
             412: "The submission has not yet been claimed",
+            423: "The user is blacklisted",
         },
     )
     @validate_request(data_params={"username"})
@@ -136,6 +138,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         submission = get_object_or_404(Submission, id=pk)
         user = get_object_or_404(BlossomUser, username=username)
+
+        if user.blacklisted:
+            return Response(status=status.HTTP_423_LOCKED)
 
         if submission.claimed_by is None:
             return Response(status=status.HTTP_412_PRECONDITION_FAILED)
@@ -164,6 +169,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             403: "The volunteer has not accepted the Code of Conduct",
             404: "The specified volunteer or submission is not found",
             409: "The submission is already claimed",
+            423: "The user is blacklisted",
         },
     )
     @validate_request(data_params={"username"})
@@ -176,6 +182,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         submission = get_object_or_404(Submission, id=pk)
         user = get_object_or_404(BlossomUser, username=username)
+
+        if user.blacklisted:
+            return Response(status=status.HTTP_423_LOCKED)
 
         if not user.accepted_coc:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -227,6 +236,28 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                     return False
         return random.random() < 0.05
 
+    def _send_transcription_to_slack(
+        self,
+        transcription: Transcription,
+        submission: Submission,
+        user: BlossomUser,
+        slack: WebClient,
+    ) -> None:
+        """Notify slack for the transcription check."""
+        url = None
+        # it's possible that we either won't pull a transcription object OR that
+        # a transcription object won't have a URL. If either fails, then we default
+        # to the submission's URL.
+        if transcription:
+            url = transcription.url
+        if not url:
+            url = submission.tor_url
+        slack.chat_postMessage(
+            channel="#transcription_check",
+            text="Please check the following transcription of "
+            f"u/{user.username}: {url}.",
+        )
+
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
@@ -243,6 +274,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             404: "The specified volunteer or submission is not found",
             409: "The submission is already completed",
             412: "The submission is not claimed or claimed by someone else",
+            423: "The user is blacklisted",
             428: "A transcription belonging to the volunteer was not found",
         },
     )
@@ -261,6 +293,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         submission = get_object_or_404(Submission, id=pk)
         user = get_object_or_404(BlossomUser, username=username)
+
+        if user.blacklisted:
+            return Response(status=status.HTTP_423_LOCKED)
 
         if not user.accepted_coc:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -288,19 +323,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission.save()
 
         if self._should_check_transcription(user):
-            url = None
-            # it's possible that we either won't pull a transcription object OR that
-            # a transcription object won't have a URL. If either fails, then we default
-            # to the submission's URL.
-            if transcription:
-                url = transcription.url
-            if not url:
-                url = submission.tor_url
-            slack.chat_postMessage(
-                channel="#transcription_check",
-                text="Please check the following transcription of "
-                f"u/{user.username}: {url}.",
-            )
+            self._send_transcription_to_slack(transcription, submission, user, slack)
 
         return Response(
             status=status.HTTP_201_CREATED,

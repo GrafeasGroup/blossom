@@ -374,6 +374,24 @@ class TestSubmissionClaim:
         submission.refresh_from_db()
         assert submission.claimed_by is None
 
+    def test_claim_blacklisted_user(self, client: Client) -> None:
+        """Test whether claim process errors with a blacklisted user."""
+        client, headers, user = setup_user_client(client)
+        user.blacklisted = True
+        user.save()
+
+        submission = create_submission()
+        data = {"username": user.username}
+        result = client.patch(
+            reverse("submission-claim", args=[submission.id]),
+            data,
+            content_type="application/json",
+            **headers,
+        )
+        submission.refresh_from_db()
+        assert result.status_code == status.HTTP_423_LOCKED
+        assert submission.claimed_by is None
+
 
 class TestSubmissionDone:
     """Tests to validate the behavior of the Submission done process."""
@@ -558,6 +576,24 @@ class TestSubmissionDone:
         assert submission.claimed_by == user
         assert submission.completed_by is None
 
+    def test_claim_blacklisted_user(self, client: Client) -> None:
+        """Test whether claim process errors with blacklisted user."""
+        client, headers, user = setup_user_client(client)
+        user.blacklisted = True
+        user.save()
+
+        submission = create_submission()
+        data = {"username": user.username}
+        result = client.patch(
+            reverse("submission-claim", args=[submission.id]),
+            data,
+            content_type="application/json",
+            **headers,
+        )
+        submission.refresh_from_db()
+        assert result.status_code == status.HTTP_423_LOCKED
+        assert submission.claimed_by is None
+
 
 class TestSubmissionUnclaim:
     """Tests that validate the behavior of the Submission unclaim process."""
@@ -577,7 +613,6 @@ class TestSubmissionUnclaim:
         submission.refresh_from_db()
         assert result.status_code == status.HTTP_201_CREATED
         assert submission.claimed_by is None
-        assert submission.claim_time is None
 
     def test_unclaim_unclaimed_submission(self, client: Client) -> None:
         """Test whether unclaiming an unclaimed submission is caught successfully."""
@@ -639,3 +674,22 @@ class TestSubmissionUnclaim:
         submission.refresh_from_db()
         assert result.status_code == status.HTTP_406_NOT_ACCEPTABLE
         assert submission.claimed_by == claiming_user
+
+    def test_unclaim_blacklisted_user(self, client: Client) -> None:
+        """Test whether the unclaim process works correctly when invoked correctly."""
+        client, headers, user = setup_user_client(client)
+        user.blacklisted = True
+        user.save()
+
+        submission = create_submission(claimed_by=user)
+
+        result = client.patch(
+            reverse("submission-unclaim", args=[submission.id]),
+            {"username": user.username},
+            content_type="application/json",
+            **headers,
+        )
+
+        submission.refresh_from_db()
+        assert result.status_code == status.HTTP_423_LOCKED
+        assert submission.claimed_by == user

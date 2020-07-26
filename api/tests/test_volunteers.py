@@ -6,7 +6,12 @@ from django.urls import reverse
 from rest_framework import status
 
 from api.models import Submission, Transcription
-from api.tests.helpers import create_user, setup_user_client
+from api.tests.helpers import (
+    create_submission,
+    create_transcription,
+    create_user,
+    setup_user_client,
+)
 from authentication.models import BlossomUser
 
 
@@ -35,6 +40,35 @@ class TestVolunteerSummary:
         client, headers, _ = setup_user_client(client)
         result = client.get(reverse("volunteer-summary") + "?username=404", **headers,)
         assert result.status_code == status.HTTP_404_NOT_FOUND
+
+    def test_summary_blacklisted_user(self, client: Client) -> None:
+        """Test that a blacklisted user is reported as having 0 gamma."""
+        client, headers, user = setup_user_client(client)
+        user.blacklisted = True
+        user.save()
+
+        submission = create_submission()
+        for _ in range(3):
+            create_transcription(submission, user)
+
+        assert Transcription.objects.filter(author=user).count() == 3
+
+        result = client.get(
+            reverse("volunteer-summary") + f"?username={user.username}", **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json().get("username") == user.username
+        assert result.json()["gamma"] == 0
+
+        user.blacklisted = False
+        user.save()
+
+        result = client.get(
+            reverse("volunteer-summary") + f"?username={user.username}", **headers,
+        )
+
+        assert result.json()["gamma"] == 3
 
 
 class TestVolunteerAssortedFunctions:
