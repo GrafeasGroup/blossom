@@ -118,13 +118,17 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         request_body=no_body,
         responses={
             200: "The volunteer has been updated successfully.",
-            404: "No volunteer with the specified ID.",
+            404: "No volunteer with the specified username.",
+            409: "The volunteer has already accepted the Code of Conduct.",
         },
     )
-    @action(detail=True, methods=["post"])
-    def accept_coc(self, request: Request, pk: int) -> Response:
+    @validate_request(query_params={"username"})
+    @action(detail=False, methods=["post"])
+    def accept_coc(self, request: Request, username: str) -> Response:
         """Set the requested volunteer as having accepted the Code of Conduct."""
-        user = get_object_or_404(BlossomUser, id=pk, is_volunteer=True)
+        user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
+        if user.accepted_coc is True:
+            return Response(status=status.HTTP_409_CONFLICT)
         user.accepted_coc = True
         user.save()
         return Response(status=status.HTTP_200_OK)

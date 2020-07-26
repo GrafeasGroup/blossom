@@ -157,12 +157,10 @@ class TestVolunteerCoCAcceptance:
         client, headers, user = setup_user_client(client, accepted_coc=False)
 
         assert user.accepted_coc is False
-
         result = client.post(
-            reverse("volunteer-accept-coc", args=[user.id]),
-            content_type="application/json",
-            **headers,
+            reverse("volunteer-accept-coc") + f"?username={user.username}", **headers,
         )
+
         assert result.status_code == status.HTTP_200_OK
         user.refresh_from_db()
         assert user.accepted_coc is True
@@ -172,12 +170,20 @@ class TestVolunteerCoCAcceptance:
         client, headers, user = setup_user_client(client, accepted_coc=False)
 
         assert user.accepted_coc is False
-
         result = client.post(
-            reverse("volunteer-accept-coc", args=[999]),
-            content_type="application/json",
-            **headers,
+            reverse("volunteer-accept-coc") + "?username=AAAAAAAAA", **headers,
         )
         assert result.status_code == status.HTTP_404_NOT_FOUND
         user.refresh_from_db()
         assert user.accepted_coc is False
+
+    def test_accept_coc_duplicate(self, client: Client) -> None:
+        """Test that a 409 is returned when endpoint is called twice on same user."""
+        client, headers, user = setup_user_client(client, accepted_coc=True)
+
+        result = client.post(
+            reverse("volunteer-accept-coc") + f"?username={user.username}", **headers,
+        )
+        assert result.status_code == status.HTTP_409_CONFLICT
+        user.refresh_from_db()
+        assert user.accepted_coc is True
