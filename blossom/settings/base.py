@@ -15,6 +15,7 @@ import os
 
 import dotenv
 from django.urls import reverse_lazy
+from praw import Reddit
 
 dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
@@ -81,6 +82,7 @@ INSTALLED_APPS = [
     "authentication",
     "engineeringblog",
     "payments",
+    "ocr",
     "website",
     # API
     "rest_framework",
@@ -144,6 +146,22 @@ DATABASES = {
     }
 }
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler",},},  # noqa: E231
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+        },
+        "blossom": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
+        },
+    },
+}
+
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 25,
@@ -191,13 +209,43 @@ ARCHIVIST_DELAY_TIME = 18
 # number of hours to allow a completed post to stay up
 ARCHIVIST_COMPLETED_DELAY_TIME = 0.5
 
+# Global flag; if this is set to False, all slack calls will fail silently
 ENABLE_SLACK = True
 
 GITHUB_SPONSORS_SECRET_KEY = os.environ.get("GITHUB_SPONSORS_SECRET_KEY", "")
 
-##############################################
+# Global flag; if this is set to False, all calls to ocr.space will fail silently
+ENABLE_OCR = True
+
+# Only enable if there are connection problems with all three primary endpoints
+OCR_ENABLE_BACKUP_ENDPOINT = os.getenv("OCR_ENABLE_BACKUP_ENDPOINT", False)
+# "helloworld" is a valid API key, however use it sparingly
+OCR_API_KEY = os.getenv("OCR_API_KEY", "helloworld")
+
+OCR_API_URLS = [
+    "https://apipro1.ocr.space/parse/image",  # USA
+    "https://apipro2.ocr.space/parse/image",  # Europe
+    "https://apipro3.ocr.space/parse/image",  # Asia
+]
+
+if OCR_ENABLE_BACKUP_ENDPOINT:
+    # unofficial backup endpoint. May or may not be up at any given time.
+    OCR_API_URLS += ["https://apix.ocr.space/parse/image"]
+
+OCR_NOOP_MODE = bool(os.getenv("OCR_NOOP_MODE", ""))
+OCR_DEBUG_MODE = bool(os.getenv("OCR_DEBUG_MODE", ""))
+
+REDDIT = Reddit(
+    client_id=os.getenv("REDDIT_CLIENT_ID"),
+    client_secret=os.getenv("REDDIT_SECRET"),
+    password=os.getenv("REDDIT_PASSWORD"),
+    username=os.getenv("REDDIT_USERNAME"),
+    user_agent=os.getenv("REDDIT_USER_AGENT"),
+)
+
+###############################################
 # simple validation -- add new keys above this
-##############################################
+###############################################
 
 
 def settings_err(msg: str) -> None:
@@ -212,3 +260,6 @@ if SECRET_KEY == default_secret_key:
 
 if DATABASES["default"].get("PASSWORD") == default_db_password:
     settings_err("Using default database password!")
+
+if OCR_API_KEY == "helloworld":
+    settings_err("Using default OCR API key, not ours!")

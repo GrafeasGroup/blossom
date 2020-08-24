@@ -188,6 +188,12 @@ class Command(BaseCommand):
         if not Source.objects.filter(name="reddit").exists():
             Source.objects.create(name="reddit")
 
+        if not Source.objects.filter(name="blossom").exists():
+            Source.objects.create(name="blossom")
+
+        if not Source.objects.filter(name="failed_ocr").exists():
+            Source.objects.create(name="failed_ocr")
+
     def create_website_posts(self) -> None:
         """Installs the default posts for the primary grafeas.org blog."""
         slugs = ["about-us", "giving-to-grafeas", "terms-of-service", "thank-you"]

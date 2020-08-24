@@ -2,7 +2,6 @@
 import uuid
 
 from django.db import models
-from django.db.models import Q
 from django.utils import timezone
 
 
@@ -64,8 +63,8 @@ class Submission(models.Model):
 
     # The ID of the Submission on the "source" platform.
     # Note that this field is not used as a primary key; an underlying
-    # "id" field is the primary key. Note: this is not named "source_id"
-    # because of internal conflicts with the `source` FK.
+    # "id" field is the primary key. Also note that this is not named
+    # "source_id" because of internal conflicts with the `source` FK.
     original_id = models.CharField(max_length=36, default=create_id)
 
     # The time the Submission was created.
@@ -117,6 +116,9 @@ class Submission(models.Model):
     # Whether the post has been archived, for example by /u/tor_archivist.
     archived = models.BooleanField(default=False)
 
+    # Only images can be flagged for OCR transcriptions.
+    is_image = models.BooleanField(default=None, null=True)
+
     def __str__(self) -> str:
         return f"{self.original_id}"
 
@@ -132,7 +134,7 @@ class Submission(models.Model):
         """
         return bool(
             Transcription.objects.filter(
-                Q(submission=self) & Q(author__username="transcribot")
+                submission=self, author__username="transcribot"
             )
         )
 
@@ -151,9 +153,13 @@ class Transcription(models.Model):
 
     # The ID of the Transcription on the "source" platform.
     # Note that this field is not used as a primary key; an underlying
-    # "id" field is the primary key. Note: this is not named "source_id"
+    # "id" field is the primary key. This is not named "source_id"
     # because of internal conflicts with the `source` FK.
-    original_id = models.CharField(max_length=36)
+    # If this field is null, that means that it's a transcribot post
+    # that hasn't actually been posted yet and we don't have the patch
+    # call to add this field. All transcriptions that come in from other
+    # places (ToR, the transcription app, etc) should have this field.
+    original_id = models.CharField(max_length=36, blank=True, null=True)
 
     # The platform from which the Transcription originates.
     source = models.ForeignKey(

@@ -23,6 +23,7 @@ from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
 from api.views.slack_helpers import client as slack
 from authentication.models import BlossomUser
+from ocr.helpers import generate_ocr_transcription
 
 
 @method_decorator(
@@ -367,7 +368,37 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission = Submission.objects.create(
             original_id=original_id, source=source_obj, url=url, tor_url=tor_url
         )
+
+        # TODO: This is a great candidate for a basic queue system
+        generate_ocr_transcription(submission)
+
         return Response(
             status=status.HTTP_201_CREATED,
             data=self.serializer_class(submission, context={"request": request}).data,
         )
+
+    @swagger_auto_schema(
+        responses={200: DocResponse("Successful operation", schema=serializer_class)}
+    )
+    @action(detail=False, methods=["get"])
+    def get_transcribot_queue(self, request: Request) -> Response:
+        """
+        Get the submissions that still need to be attempted by transcribot.
+
+        The helper method of `.has_ocr_transcription` exists, but you cannot
+        filter a django queryset on a property because it's generated in Python,
+        not stored in the database.
+
+        All transcriptions that have text but are missing vital information (like
+        the original_id) because this information will be added by transcribot
+        when the transcription is posted. This endpoint will return all the
+        submissions that need updates along with their transcription FKs, then
+        transcribot pulls the transcription text as needed.
+        """
+        transcribot = BlossomUser.objects.get(username="transcribot")
+        queryset = Submission.objects.exclude(
+            id__in=Submission.objects.filter(transcription__author=transcribot).filter(
+                transcription__original_id__isnull=False
+            )
+        ).exclude(transcription__source=Source.objects.get(name="failed_ocr"))
+        return Response(data=self.get_serializer(queryset, many=True).data)

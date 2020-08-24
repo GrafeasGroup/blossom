@@ -1,14 +1,17 @@
 """Tests to validate the behavior of the Submission View."""
 import json
+from typing import Any
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
-from api.models import Submission
+from api.models import Source, Submission, Transcription
 from api.tests.helpers import (
     create_submission,
     create_transcription,
@@ -99,6 +102,63 @@ class TestSubmissionCreation:
         )
 
         assert result.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_ocr_on_create(
+        self, client: Client, settings: SettingsWrapper, setup_site: Any
+    ) -> None:
+        """Verify that a new submission completes the OCR process."""
+        settings.ENABLE_OCR = True
+        assert Transcription.objects.count() == 0
+
+        client, headers, _ = setup_user_client(client)
+        source = get_default_test_source()
+        data = {"original_id": "spaaaaace", "source": source.pk}
+
+        with patch(
+            "ocr.helpers.process_image", return_value={"text": "AAA"}
+        ) as mock, patch("ocr.helpers._get_reddit_image_url"):
+
+            result = client.post(
+                reverse("submission-list"),
+                data,
+                content_type="application/json",
+                **headers,
+            )
+            mock.assert_called_once()
+
+        assert result.status_code == status.HTTP_201_CREATED
+        assert Transcription.objects.count() == 1
+        transcription = Transcription.objects.first()
+        assert transcription.text == "AAA"
+        assert transcription.source == Source.objects.get(name="blossom")
+
+    def test_failed_ocr_on_create(
+        self, client: Client, settings: SettingsWrapper, setup_site: Any
+    ) -> None:
+        """Verify that a new submission completes the OCR process."""
+        settings.ENABLE_OCR = True
+        assert Transcription.objects.count() == 0
+
+        client, headers, _ = setup_user_client(client)
+        source = get_default_test_source()
+        data = {"original_id": "spaaaaace", "source": source.pk}
+
+        with patch("ocr.helpers.process_image", return_value=None) as mock, patch(
+            "ocr.helpers._get_reddit_image_url"
+        ):
+            result = client.post(
+                reverse("submission-list"),
+                data,
+                content_type="application/json",
+                **headers,
+            )
+            mock.assert_called_once()
+
+        assert result.status_code == status.HTTP_201_CREATED
+        assert Transcription.objects.count() == 1
+        transcription = Transcription.objects.first()
+        assert transcription.text == ""
+        assert transcription.source == Source.objects.get(name="failed_ocr")
 
 
 class TestSubmissionGet:
@@ -693,3 +753,94 @@ class TestSubmissionUnclaim:
         submission.refresh_from_db()
         assert result.status_code == status.HTTP_423_LOCKED
         assert submission.claimed_by == user
+
+
+class TestSubmissionTranscribotQueue:
+    def test_get_transcribot_queue(self, client: Client, setup_site: Any) -> None:
+        """Test that the OCR queue endpoint returns the correct data."""
+        client, headers, _ = setup_user_client(client)
+        user_model = get_user_model()
+        transcribot = user_model.objects.get(username="transcribot")
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue"),
+            content_type="application/json",
+            **headers,
+        )
+
+        assert len(result.data) == 0  # there are no posts to work on
+
+        submission = create_submission()
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue"),
+            content_type="application/json",
+            **headers,
+        )
+
+        # now there's a submission without a transcribot transcription
+        assert len(result.data) == 1
+        create_transcription(submission, transcribot)
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue"),
+            content_type="application/json",
+            **headers,
+        )
+
+        # now the submission has a transcribot entry
+        assert len(result.data) == 0
+
+    def test_completed_ocr_transcriptions(
+        self, client: Client, setup_site: Any
+    ) -> None:
+        """Test that a completed transcription removes the submission from the queue."""
+        client, headers, _ = setup_user_client(client)
+        user_model = get_user_model()
+        transcribot = user_model.objects.get(username="transcribot")
+        submission = create_submission()
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue"),
+            content_type="application/json",
+            **headers,
+        )
+
+        assert len(result.data) == 1
+
+        create_transcription(submission, transcribot)
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue"),
+            content_type="application/json",
+            **headers,
+        )
+
+        # all submissions have valid OCR transcriptions
+        assert len(result.data) == 0
+
+    def test_normal_transcriptions_dont_affect_ocr_queue(
+        self, client: Client, setup_site: Any
+    ) -> None:
+        """Verify that a human-completed transcription doesn't affect the OCR queue."""
+        client, headers, user = setup_user_client(client)
+        submission = create_submission()
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue"),
+            content_type="application/json",
+            **headers,
+        )
+
+        assert len(result.data) == 1
+
+        create_transcription(submission, user)
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue"),
+            content_type="application/json",
+            **headers,
+        )
+
+        # there should be no change to the OCR queue
+        assert len(result.data) == 1

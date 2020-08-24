@@ -63,8 +63,16 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
             "url",
             "tor_url",
             "has_ocr_transcription",
+            "transcription_set",
             "archived",
         )
+        # TODO: Omitting the below line while adding `transcription_set` makes
+        # a call to a single submission created with the test data set take
+        # ~_15.3 seconds_. If we mark just that field as read-only, the page
+        # render time drops to ~0.1 seconds.
+        #
+        # WTF‽
+        read_only_fields = ["transcription_set"]
 
 
 class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
