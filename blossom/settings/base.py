@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import logging
 import os
+from unittest.mock import MagicMock
 
 import dotenv
 from django.urls import reverse_lazy
@@ -235,13 +236,16 @@ if OCR_ENABLE_BACKUP_ENDPOINT:
 OCR_NOOP_MODE = bool(os.getenv("OCR_NOOP_MODE", ""))
 OCR_DEBUG_MODE = bool(os.getenv("OCR_DEBUG_MODE", ""))
 
-REDDIT = Reddit(
-    client_id=os.getenv("REDDIT_CLIENT_ID"),
-    client_secret=os.getenv("REDDIT_SECRET"),
-    password=os.getenv("REDDIT_PASSWORD"),
-    username=os.getenv("REDDIT_USERNAME"),
-    user_agent=os.getenv("REDDIT_USER_AGENT"),
-)
+if ENABLE_OCR:
+    REDDIT = Reddit(
+        client_id=os.getenv("REDDIT_CLIENT_ID"),
+        client_secret=os.getenv("REDDIT_SECRET"),
+        password=os.getenv("REDDIT_PASSWORD"),
+        username=os.getenv("REDDIT_USERNAME"),
+        user_agent=os.getenv("REDDIT_USER_AGENT"),
+    )
+else:
+    REDDIT = MagicMock()
 
 ###############################################
 # simple validation -- add new keys above this
