@@ -83,7 +83,6 @@ def decode_image_from_url(
         If it doesn't exist, it will use "helloworld"
     :return: Result in JSON format.
     """
-
     payload = {
         "url": url,
         "isOverlayRequired": overlay,
@@ -92,7 +91,7 @@ def decode_image_from_url(
 
     result = None
 
-    for API in settings.OCR_API_URLS:
+    for API in settings.OCR_API_URLS:  # noqa: N806
         try:
             # The timeout for this request goes until the first bit response,
             # not for the entire request process. If we don't hear anything
@@ -136,7 +135,7 @@ def decode_image_from_url(
 
 
 def escape_reddit_links(body: str) -> str:
-    """
+    r"""
     Escape u/ and r/ links in a message.
 
     There is no (known) way to escape u/ or r/ (without a preceding slash),
@@ -177,16 +176,15 @@ def _get_reddit_image_url(submission_url: str) -> str:
 
 def generate_ocr_transcription(submission_obj: Submission) -> None:
     """Create automatic OCR transcriptions of images."""
-
-    # translate the reddit url to the url of the linked object
-    # example:
-    # https://reddit.com/r/thatHappened/comments/bprnwl/twitter_dissapoints_me_yet_again/
-    # -> https://i.redd.it/uppbded53sy21.jpg
     if not settings.ENABLE_OCR:
         logging.warning("OCR is disabled; this call has been ignored.")
         return
 
     try:
+        # translate the reddit url to the url of the linked object
+        # example:
+        # https://reddit.com/r/thatHappened/comments/bprnwl/twitter_dissapoints_me_yet_again/
+        # -> https://i.redd.it/uppbded53sy21.jpg
         image_url = _get_reddit_image_url(submission_obj.url)
         result = process_image(image_url)
     except (prawcore.exceptions.Forbidden, prawcore.exceptions.NotFound, OCRError) as e:

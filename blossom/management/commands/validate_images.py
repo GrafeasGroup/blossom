@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 from urllib.parse import urlparse
 
 import prawcore
@@ -11,9 +12,10 @@ logger = logging.getLogger("blossom.management.validate_images")
 
 
 class Command(BaseCommand):
-    help = "Go through all submissions in the db to validate if it's an image or not."
+    help = "Check all submissions in the db to check if they're images."  # noqa: VNE003
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
+        """See help message."""
         image_domains = [
             "imgur.com",
             "i.imgur.com",

@@ -1,3 +1,6 @@
+from typing import Dict
+
+
 class OCRError(Exception):
     # all codes from https://ocr.space/ocrapi
     OCR_EXIT_CODES = {
@@ -19,7 +22,7 @@ class OCRError(Exception):
         3: "File failed validation",  # This is not documented, beware!
     }
 
-    def __init__(self, result):
+    def __init__(self, result: Dict) -> None:  # noqa D107
         super(OCRError, self).__init__(
             self.PAGE_EXIT_CODES.get(
                 result["exit_code"],
