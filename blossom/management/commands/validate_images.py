@@ -2,10 +2,10 @@ import logging
 from urllib.parse import urlparse
 
 import prawcore
-from django.conf import settings
 from django.core.management.base import BaseCommand
 
 from api.models import Submission
+from blossom.reddit import REDDIT
 
 logger = logging.getLogger("blossom.management.validate_images")
 
@@ -42,10 +42,7 @@ class Command(BaseCommand):
                 sub.save()
                 continue
             try:
-                if (
-                    urlparse(settings.REDDIT.submission(url=sub.url).url).netloc
-                    in image_domains
-                ):
+                if urlparse(REDDIT.submission(url=sub.url).url).netloc in image_domains:
                     sub.is_image = True
                     sub.save()
                 else:

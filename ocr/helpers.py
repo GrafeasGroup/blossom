@@ -10,6 +10,7 @@ from requests.exceptions import ConnectTimeout, RequestException
 
 from api.models import Source, Submission, Transcription
 from authentication.models import BlossomUser
+from blossom.reddit import REDDIT
 from ocr.errors import OCRError
 
 
@@ -171,7 +172,7 @@ def _get_reddit_image_url(submission_url: str) -> str:
 
     This is a standalone function for testing purposes.
     """
-    return settings.REDDIT.submission(url=submission_url).url
+    return REDDIT.submission(url=submission_url).url
 
 
 def generate_ocr_transcription(submission_obj: Submission) -> None:
