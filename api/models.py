@@ -5,14 +5,15 @@ from django.db import models
 from django.utils import timezone
 
 
-def create_id() -> uuid.UUID:
+def create_id() -> uuid.UUID:  # pragma: no cover
     """
     Create a random UUID for elements as needed.
 
     Sometimes we won't have the original ID of transcriptions or submissions,
     so instead we fake them using UUIDs. For example, this is used when
     creating dummy transcriptions or submissions due to incomplete data from
-    the Redis transition over 2019-20.
+    the Redis transition over 2019-20. Excluded from testing because this is
+    just a wrapper for the standard library.
 
     :return: the random UUID
     """
@@ -30,11 +31,11 @@ class Source(models.Model):
     # Name of the origin of the content. For example: reddit, blossom, etc.
     name = models.CharField(max_length=20, primary_key=True)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return self.name
 
 
-def get_default_source() -> Source:
+def get_default_source() -> str:
     """
     Grabs the proper default ID for submissions and transcriptions.
 
@@ -119,7 +120,7 @@ class Submission(models.Model):
     # Only images can be flagged for OCR transcriptions.
     is_image = models.BooleanField(default=None, null=True)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return f"{self.original_id}"
 
     @property
@@ -183,5 +184,5 @@ class Transcription(models.Model):
     # through workarounds.
     removed_from_reddit = models.BooleanField(default=False)
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return f"{self.submission} by {self.author.username}"

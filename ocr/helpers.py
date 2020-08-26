@@ -67,6 +67,50 @@ def process_image(image_url: str) -> Union[None, Dict]:
         return result
 
 
+def _get_results_from_ocrspace(payload: Dict) -> Dict:
+    """Major API logic from decode_image_from_url."""
+    result = None
+    for API in settings.OCR_API_URLS:  # noqa: N806
+        try:
+            # The timeout for this request goes until the first bit response,
+            # not for the entire request process. If we don't hear anything
+            # from the remote server for 10 seconds, throw a ConnectTimeout
+            # and move on to the next one.
+            result = requests.post(API, data=payload, timeout=10)
+            # crash and burn if the API is down, or similar
+            result.raise_for_status()
+
+            if result.json()["OCRExitCode"] == 6:
+                # process timed out waiting for response
+                raise ConnectionError
+
+            # if the request succeeds, we'll have a result. Therefore, just
+            # break the loop here.
+            break
+        except (ConnectTimeout, ConnectionError):
+            # Sometimes the ocr.space API will just... not respond. Move on.
+            # Try the next API in the list, then release from the loop if we
+            # exhaust our options.
+            continue
+        except RequestException as e:
+            # we have a result object here but it's not right.
+            if result is None:
+                logging.warning(
+                    f"Received null object because of a request exception. "
+                    f"Attempted API: {API} | Error: {e}"
+                )
+            else:
+                logging.error(
+                    f"ERROR {result.status_code} with OCR:\n\nHEADERS:\n "
+                    f"{repr(result.headers)}\n\nBODY:\n{repr(result.text)} "
+                )
+            continue
+        except Exception as e:
+            logging.error(f"Unknown error! Attempted API: {API} | Error: {e}")
+
+    return result
+
+
 def decode_image_from_url(
     url: str, overlay: bool = False, api_key: str = settings.OCR_API_KEY
 ) -> Dict:
@@ -89,49 +133,21 @@ def decode_image_from_url(
         "apikey": api_key,
     }
 
-    result = None
-
-    for API in settings.OCR_API_URLS:  # noqa: N806
-        try:
-            # The timeout for this request goes until the first bit response,
-            # not for the entire request process. If we don't hear anything
-            # from the remote server for 10 seconds, throw a ConnectTimeout
-            # and move on to the next one.
-            result = requests.post(API, data=payload, timeout=10)
-            # crash and burn if the API is down, or similar
-            result.raise_for_status()
-
-            if result.json()["OCRExitCode"] == 6:
-                # process timed out waiting for response
-                raise ConnectionError
-
-            # if the request succeeds, we'll have a result. Therefore, just
-            # break the loop here.
-            break
-        except ConnectTimeout:
-            # Sometimes the ocr.space API will just... not respond. Move on.
-            continue
-        except ConnectionError:
-            # try the next API in the list, then release from the loop if we
-            # exhaust our options.
-            continue
-        except RequestException as e:
-            # we have a result object here but it's not right.
-            if result is None:
-                logging.warning(
-                    f"Received null object because of a request exception. "
-                    f"Attempted API: {API} | Error: {e}"
-                )
-            else:
-                logging.error(
-                    f"ERROR {result.status_code} with OCR:\n\nHEADERS:\n "
-                    f"{repr(result.headers)}\n\nBODY:\n{repr(result.text)} "
-                )
+    result = _get_results_from_ocrspace(payload)
 
     if result is None or not result.ok:
         raise ConnectionError("Attempted all three OCR.space APIs -- cannot connect!")
 
-    return result.json()
+    # it is technically possible to reach this point with an object and a bad
+    # json response. Let's check for that here.
+    try:
+        return result.json()
+    except:  # noqa: E722
+        return {
+            "OCRExitCode": 999,
+            "ErrorMessage": "This request absolutely did not work as expected.",
+            "error_details": "No json available for this response.",
+        }
 
 
 def escape_reddit_links(body: str) -> str:

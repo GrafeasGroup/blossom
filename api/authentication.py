@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from rest_framework.request import Request
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     # Python doesn't have great handling of circular imports for type checking
     # purposes. Because View is only required for type checking, we can lock
     # it behind the above statement. TYPE_CHECKING will always evaluate to False

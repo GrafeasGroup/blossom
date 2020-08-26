@@ -10,6 +10,8 @@ class OCRError(Exception):
         4: "ENGINE ERROR: FATAL",
         6: "Timed out while waiting for results",
         99: "Not a valid URL; invalid image or pdf",
+        # our error message for a request that is very, very broken
+        999: "Something went horribly wrong",
     }
 
     PAGE_EXIT_CODES = {

@@ -15,7 +15,7 @@ from authentication.models import BlossomUser
 from blossom.strings import translation
 
 if settings.ENABLE_SLACK is True:
-    client = slack.WebClient(token=os.environ["SLACK_API_KEY"])
+    client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
 else:
     # this is to explicitly disable posting to Slack when doing local dev
     client = mock.Mock()
