@@ -10,26 +10,27 @@ from blossom.reddit import REDDIT
 
 logger = logging.getLogger("blossom.management.validate_images")
 
+IMAGE_DOMAINS = [
+    "imgur.com",
+    "i.imgur.com",
+    "m.imgur.com",
+    "i.reddit.com",
+    "i.redd.it",
+    "puu.sh",
+    "i.redditmedia.com",
+]
+
 
 class Command(BaseCommand):
     help = "Check all submissions in the db to check if they're images."  # noqa: VNE003
 
     def handle(self, *args: Any, **options: Any) -> None:
         """See help message."""
-        image_domains = [
-            "imgur.com",
-            "i.imgur.com",
-            "m.imgur.com",
-            "i.reddit.com",
-            "i.redd.it",
-            "puu.sh",
-            "i.redditmedia.com",
-        ]
         subs = Submission.objects.filter(is_image=None)
         logger.info(
             self.style.SUCCESS(
                 f"Total to process: {len(subs)} out of {Submission.objects.count()}"
-                f" - {(1-(len(subs)/Submission.objects.count()))*100:.2f}% done"
+                f" - {(1 - (len(subs) / Submission.objects.count())) * 100:.2f}% done"
             )
         )
 
@@ -44,7 +45,7 @@ class Command(BaseCommand):
                 sub.save()
                 continue
             try:
-                if urlparse(REDDIT.submission(url=sub.url).url).netloc in image_domains:
+                if urlparse(REDDIT.submission(url=sub.url).url).netloc in IMAGE_DOMAINS:
                     sub.is_image = True
                     sub.save()
                 else:

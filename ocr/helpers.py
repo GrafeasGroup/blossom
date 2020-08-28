@@ -7,6 +7,7 @@ import prawcore
 import requests
 from django.conf import settings
 from requests.exceptions import ConnectTimeout, RequestException
+from requests.models import Response as RequestsResponse
 
 from api.models import Source, Submission, Transcription
 from authentication.models import BlossomUser
@@ -67,7 +68,7 @@ def process_image(image_url: str) -> Union[None, Dict]:
         return result
 
 
-def _get_results_from_ocrspace(payload: Dict) -> Dict:
+def _get_results_from_ocrspace(payload: Dict) -> RequestsResponse:
     """Major API logic from decode_image_from_url."""
     result = None
     for API in settings.OCR_API_URLS:  # noqa: N806
@@ -108,6 +109,9 @@ def _get_results_from_ocrspace(payload: Dict) -> Dict:
         except Exception as e:
             logging.error(f"Unknown error! Attempted API: {API} | Error: {e}")
 
+    if result is None or not result.ok:
+        raise ConnectionError("Attempted all three OCR.space APIs -- cannot connect!")
+
     return result
 
 
@@ -134,9 +138,6 @@ def decode_image_from_url(
     }
 
     result = _get_results_from_ocrspace(payload)
-
-    if result is None or not result.ok:
-        raise ConnectionError("Attempted all three OCR.space APIs -- cannot connect!")
 
     # it is technically possible to reach this point with an object and a bad
     # json response. Let's check for that here.
