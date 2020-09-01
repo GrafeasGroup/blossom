@@ -347,27 +347,79 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             404: "Source requested was not found",
         },
     )
-    @validate_request(data_params={"original_id", "source"})
+    @validate_request(data_params={"original_id", "source", "content_url"})
     def create(
         self,
         request: Request,
         original_id: str = None,
         source: str = None,
+        content_url: str = None,
         *args: object,
         **kwargs: object,
     ) -> Response:
         """
         Create a new submission.
 
-        Note that both the original id and the source should be supplied.
+        Note that both the original id, source, and content_url should be supplied.
         """
         source_obj = get_object_or_404(Source, pk=source)
         url = request.data.get("url")
         tor_url = request.data.get("tor_url")
         submission = Submission.objects.create(
-            original_id=original_id, source=source_obj, url=url, tor_url=tor_url
+            original_id=original_id,
+            source=source_obj,
+            url=url,
+            tor_url=tor_url,
+            content_url=content_url,
         )
+
         return Response(
             status=status.HTTP_201_CREATED,
             data=self.serializer_class(submission, context={"request": request}).data,
         )
+
+    @swagger_auto_schema(
+        responses={200: DocResponse("Successful operation", schema=serializer_class)}
+    )
+    @validate_request(query_params={"source"})
+    @action(detail=False, methods=["get"])
+    def get_transcribot_queue(self, request: Request, source: str = None) -> Response:
+        """
+        Get the submissions that still need to be attempted by transcribot.
+
+        The helper method of `.has_ocr_transcription` exists, but you cannot
+        filter a django queryset on a property because it's generated in Python,
+        not stored in the database.
+
+        All transcriptions that have text but are missing vital information (like
+        the original_id) because this information will be added by transcribot
+        when the transcription is posted. This endpoint will return all the
+        submissions that need updates along with their transcription FKs, then
+        transcribot pulls the transcription text as needed.
+
+        Brief walkthrough of this query:
+
+        A = Start with all the submissions from a given source, like reddit
+
+        B = create a queryset that is all submissions that have transcription
+            objects written by transcribot AND that transcription object does
+            not have an original_id key -- if that key is there, that means the
+            transcription has been posted
+
+        C = get a queryset of all submissions that have a transcription object
+            linked to them where the source for the transcription is failed_ocr
+
+        return ((A - B) - C)
+        """
+        source_obj = get_object_or_404(Source, pk=source)
+        transcribot = BlossomUser.objects.get(username="transcribot")
+        queryset = (
+            Submission.objects.filter(source=source_obj)
+            .exclude(
+                id__in=Submission.objects.filter(
+                    transcription__author=transcribot
+                ).filter(transcription__original_id__isnull=False)
+            )
+            .exclude(transcription__source=Source.objects.get(name="failed_ocr"))
+        )
+        return Response(data=self.get_serializer(queryset, many=True).data)

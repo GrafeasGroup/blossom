@@ -1,11 +1,10 @@
-# noinspection PyUnresolvedReferences
-from blossom.settings.base import *
+import os
+
+from blossom.settings.base import *  # noqa: F403
 
 ENVIRONMENT = "testing"
 DEBUG = True
 ALLOWED_HOSTS = ["*"]
-SESSION_COOKIE_DOMAIN = "grafeas.localhost"
-PARENT_HOST = "grafeas.localhost:8000"
 # Cave Johnson, Portal 2.
 SECRET_KEY = (
     "There's a thousand tests performed every day here in our enrichment spheres."
@@ -14,19 +13,21 @@ SECRET_KEY = (
     " occur in the course of your science adventure."
 )
 
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache",}}
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache",}  # noqa: E231
+}
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),  # noqa: F405
     }
 }
 
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},
+    "handlers": {"console": {"class": "logging.StreamHandler",},},  # noqa: E231
     "loggers": {
         "django": {
             "handlers": ["console"],
@@ -40,3 +41,4 @@ LOGGING = {
 }
 
 ENABLE_SLACK = False
+ENABLE_OCR = False

@@ -192,6 +192,10 @@ def test_github_sponsor_slack_message(
                 "a                    | None                ",
             ],
         },
+        {
+            "data": {"dictionary": {"a": None},},  # noqa: E231
+            "result": ["Key | Value", "------", "a   | None",],  # noqa: E231
+        },
     ],
 )
 def test_slack_neat_printer(test_data: Dict) -> None:

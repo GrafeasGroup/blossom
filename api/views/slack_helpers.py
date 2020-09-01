@@ -1,49 +1,26 @@
 import binascii
 import hmac
 import os
-import threading
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Dict, List
 from unittest import mock
 
 import slack
 from django.conf import settings
 from django.http import HttpRequest
 
+from api.helpers import fire_and_forget
 from api.serializers import VolunteerSerializer
 from api.views.misc import Summary
 from authentication.models import BlossomUser
 from blossom.strings import translation
 
 if settings.ENABLE_SLACK is True:
-    client = slack.WebClient(token=os.environ["SLACK_API_KEY"])
+    client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
 else:
     # this is to explicitly disable posting to Slack when doing local dev
     client = mock.Mock()
 
 i18n = translation()
-
-
-def fire_and_forget(
-    func: Callable[[Any], Any], *args: Tuple, **kwargs: Dict
-) -> Callable[[Any], Any]:
-    """
-    Decorate functions to build a thread for a given function and trigger it.
-
-    Originally from https://stackoverflow.com/a/59043636, this function
-    prepares a thread for a given function and then starts it, intentionally
-    severing communication with the thread so that we can continue moving
-    on.
-
-    This should be used sparingly and only when we are 100% sure that
-    the function we are passing does not need to communicate with the main
-    process and that it will exit cleanly (and that if it explodes, we don't
-    care).
-    """
-
-    def wrapped(*args: Tuple, **kwargs: Dict) -> None:
-        threading.Thread(target=func, args=(args), kwargs=kwargs).start()
-
-    return wrapped
 
 
 def dict_to_table(dictionary: Dict, titles: List = None, width: int = None) -> List:
