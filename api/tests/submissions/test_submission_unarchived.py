@@ -1,5 +1,3 @@
-"""Tests to validate the behavior of the Submission View."""
-
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone

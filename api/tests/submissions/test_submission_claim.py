@@ -1,4 +1,3 @@
-"""Tests to validate the behavior of the Submission View."""
 import json
 
 from django.test import Client

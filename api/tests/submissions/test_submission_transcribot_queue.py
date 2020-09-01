@@ -1,4 +1,3 @@
-"""Tests to validate the behavior of the Submission View."""
 from typing import Any
 
 from django.contrib.auth import get_user_model
