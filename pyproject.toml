@@ -31,6 +31,7 @@ slackclient = "^2.5"
 pyyaml = "^5.3"
 coveralls = "^1.11.1"
 mimesis = "^4.0.0"
+praw = "^7.1.0"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"

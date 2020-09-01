@@ -182,11 +182,12 @@ class Command(BaseCommand):
 
     def create_sources(self) -> None:
         """Installs the default Source objects for transcriptions and submissions."""
-        if not Source.objects.filter(name="gamma_plus_one").exists():
-            Source.objects.create(name="gamma_plus_one")
+        sources = ["gamma_plus_one", "reddit", "blossom", "failed_ocr"]
 
-        if not Source.objects.filter(name="reddit").exists():
-            Source.objects.create(name="reddit")
+        for source in sources:
+            if not Source.objects.filter(name=source).exists():
+                Source.objects.create(name=source)
+                logger.debug(self.style.SUCCESS(f"Created source {source}"))
 
     def create_website_posts(self) -> None:
         """Installs the default posts for the primary grafeas.org blog."""

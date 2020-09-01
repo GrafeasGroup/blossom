@@ -1,6 +1,7 @@
 """Set of tests which are used to validate the behavior of the authentication of users."""
 from django.test import Client, RequestFactory
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
 from api.authentication import BlossomApiPermission
@@ -98,4 +99,20 @@ class TestPermissionsCheck:
         request = rf.get("/")
         request.user = user
         request.META.update(headers)
+        assert BlossomApiPermission().has_permission(request, None)
+
+    def test_permissions_override_api_auth(
+        self, rf: RequestFactory, settings: SettingsWrapper
+    ) -> None:
+        """Test whether the API does allow superusers without API key access."""
+        # first, verify that access is denied
+        user = create_user(is_staff=False, is_grafeas_staff=False)
+        request = rf.get("/")
+        request.user = user
+        assert not BlossomApiPermission().has_permission(request, None)
+
+        # now make sure it works with the flag toggled on
+        settings.OVERRIDE_API_AUTH = True
+        request = rf.get("/")
+        request.user = user
         assert BlossomApiPermission().has_permission(request, None)
