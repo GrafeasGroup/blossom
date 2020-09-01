@@ -23,7 +23,6 @@ from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
 from api.views.slack_helpers import client as slack
 from authentication.models import BlossomUser
-from ocr.helpers import generate_ocr_transcription
 
 
 @method_decorator(
@@ -348,29 +347,31 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             404: "Source requested was not found",
         },
     )
-    @validate_request(data_params={"original_id", "source"})
+    @validate_request(data_params={"original_id", "source", "content_url"})
     def create(
         self,
         request: Request,
         original_id: str = None,
         source: str = None,
+        content_url: str = None,
         *args: object,
         **kwargs: object,
     ) -> Response:
         """
         Create a new submission.
 
-        Note that both the original id and the source should be supplied.
+        Note that both the original id, source, and content_url should be supplied.
         """
         source_obj = get_object_or_404(Source, pk=source)
         url = request.data.get("url")
         tor_url = request.data.get("tor_url")
         submission = Submission.objects.create(
-            original_id=original_id, source=source_obj, url=url, tor_url=tor_url
+            original_id=original_id,
+            source=source_obj,
+            url=url,
+            tor_url=tor_url,
+            content_url=content_url,
         )
-
-        # TODO: This is a great candidate for a basic queue system
-        generate_ocr_transcription(submission)
 
         return Response(
             status=status.HTTP_201_CREATED,
@@ -380,8 +381,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         responses={200: DocResponse("Successful operation", schema=serializer_class)}
     )
+    @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
-    def get_transcribot_queue(self, request: Request) -> Response:
+    def get_transcribot_queue(self, request: Request, source: str = None) -> Response:
         """
         Get the submissions that still need to be attempted by transcribot.
 
@@ -395,10 +397,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submissions that need updates along with their transcription FKs, then
         transcribot pulls the transcription text as needed.
         """
+        source_obj = get_object_or_404(Source, pk=source)
         transcribot = BlossomUser.objects.get(username="transcribot")
-        queryset = Submission.objects.exclude(
-            id__in=Submission.objects.filter(transcription__author=transcribot).filter(
-                transcription__original_id__isnull=False
+        queryset = (
+            Submission.objects.filter(source=source_obj)
+            .exclude(
+                id__in=Submission.objects.filter(
+                    transcription__author=transcribot
+                ).filter(transcription__original_id__isnull=False)
             )
-        ).exclude(transcription__source=Source.objects.get(name="failed_ocr"))
+            .exclude(transcription__source=Source.objects.get(name="failed_ocr"))
+        )
         return Response(data=self.get_serializer(queryset, many=True).data)

@@ -1,17 +1,12 @@
 import logging
 import re
-import uuid
 from typing import Dict, Union
 
-import prawcore
 import requests
 from django.conf import settings
 from requests.exceptions import ConnectTimeout, RequestException
 from requests.models import Response as RequestsResponse
 
-from api.models import Source, Submission, Transcription
-from authentication.models import BlossomUser
-from blossom.reddit import REDDIT
 from ocr.errors import OCRError
 
 
@@ -141,6 +136,7 @@ def decode_image_from_url(
 
     # it is technically possible to reach this point with an object and a bad
     # json response. Let's check for that here.
+    # noinspection PyBroadException
     try:
         return result.json()
     except:  # noqa: E722
@@ -160,73 +156,6 @@ def escape_reddit_links(body: str) -> str:
     :param body: the text to escape
     :return: the escaped text
     """
+    body = body.replace("\r\n", "\n\n").replace(">>", r"\>\>")
     magic = re.compile(r"(?<![a-zA-Z0-9])([ur])/|/([ur])/")
     return magic.sub(r"\/\1\2/", body)
-
-
-def _generate_failed_transcription(submission: Submission) -> None:
-    """
-    Create a transcription object for a failed OCR attempt.
-
-    This is used to mark a submission as having been attempted by OCR but was
-    unable to complete for some reason.
-    """
-    transcribot = BlossomUser.objects.get(username="transcribot")
-    failed_ocr_source = Source.objects.get(name="failed_ocr")
-    Transcription.objects.create(
-        submission=submission,
-        author=transcribot,
-        original_id=uuid.uuid4(),
-        source=failed_ocr_source,
-        text="",
-    )
-
-
-def _get_reddit_image_url(submission_url: str) -> str:
-    """
-    Use PRAW to get the URL of the linked content.
-
-    This is a standalone function for testing purposes.
-    """
-    return REDDIT.submission(url=submission_url).url
-
-
-def generate_ocr_transcription(submission_obj: Submission) -> None:
-    """Create automatic OCR transcriptions of images."""
-    if not settings.ENABLE_OCR:
-        logging.warning("OCR is disabled; this call has been ignored.")
-        return
-
-    try:
-        # translate the reddit url to the url of the linked object
-        # example:
-        # https://reddit.com/r/thatHappened/comments/bprnwl/twitter_dissapoints_me_yet_again/
-        # -> https://i.redd.it/uppbded53sy21.jpg
-        image_url = _get_reddit_image_url(submission_obj.url)
-        result = process_image(image_url)
-    except (prawcore.exceptions.Forbidden, prawcore.exceptions.NotFound, OCRError) as e:
-        logging.warning(
-            "There was an error in generating the OCR transcription: " + str(e)
-        )
-        _generate_failed_transcription(submission_obj)
-        return
-
-    if not result:
-        _generate_failed_transcription(submission_obj)
-        return
-
-    transcription_text = escape_reddit_links(
-        result["text"].replace("\r\n", "\n\n").replace(">>", r"\>\>")
-    )
-
-    transcribot = BlossomUser.objects.get(username="transcribot")
-    blossom_source = Source.objects.get(name="blossom")
-
-    # we are deliberately setting a blank original_id because we'll update
-    # the transcription later with it after transcribot posts it.
-    Transcription.objects.create(
-        submission=submission_obj,
-        author=transcribot,
-        source=blossom_source,
-        text=transcription_text,
-    )

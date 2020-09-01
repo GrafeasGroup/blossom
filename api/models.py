@@ -1,8 +1,16 @@
 """Specification of classes used within the API."""
+import logging
 import uuid
+from typing import Any
+from urllib.parse import urlparse
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
+
+from ocr.errors import OCRError
+from ocr.helpers import escape_reddit_links, process_image
 
 
 def create_id() -> uuid.UUID:  # pragma: no cover
@@ -29,7 +37,7 @@ class Source(models.Model):
     """
 
     # Name of the origin of the content. For example: reddit, blossom, etc.
-    name = models.CharField(max_length=20, primary_key=True)
+    name = models.CharField(max_length=36, primary_key=True)
 
     def __str__(self) -> str:  # pragma: no cover
         return self.name
@@ -117,8 +125,9 @@ class Submission(models.Model):
     # Whether the post has been archived, for example by /u/tor_archivist.
     archived = models.BooleanField(default=False)
 
-    # Only images can be flagged for OCR transcriptions.
-    is_image = models.BooleanField(default=None, null=True)
+    # A link to the content that the submission is about. An image, audio, video, etc.
+    # If this is an image, it is sent to ocr.space for automatic transcription.
+    content_url = models.URLField(null=True, blank=True)
 
     def __str__(self) -> str:  # pragma: no cover
         return f"{self.original_id}"
@@ -138,6 +147,82 @@ class Submission(models.Model):
                 submission=self, author__username="transcribot"
             )
         )
+
+    @property
+    def is_image(self) -> bool:
+        """Check whether the content url is from an image host we recognize."""
+        return urlparse(self.content_url).netloc in settings.IMAGE_DOMAINS
+
+    def _generate_failed_transcription(self) -> None:
+        """
+        Create a transcription object for a failed OCR attempt.
+
+        This is used to mark a submission as having been attempted by OCR but was
+        unable to complete for some reason.
+        """
+        transcribot = get_user_model().objects.get(username="transcribot")
+        failed_ocr_source = Source.objects.get(name="failed_ocr")
+        Transcription.objects.create(
+            submission=self,
+            author=transcribot,
+            original_id=uuid.uuid4(),
+            source=failed_ocr_source,
+            text="",
+        )
+
+    def _create_ocr_transcription(self, text: str) -> None:
+        """
+        Handle creation of an OCR transcription in a testable way.
+
+        This function creates a transcription object, but deliberately leaves
+        `original_id` out because it will be handled with a patch call from
+        transcribot after it's processed.
+        """
+        Transcription.objects.create(
+            submission=self,
+            author=get_user_model().objects.get(username="transcribot"),
+            source=Source.objects.get(name="blossom"),
+            text=text,
+        )
+
+    def generate_ocr_transcription(self) -> None:
+        """Create automatic OCR transcriptions of images."""
+        if not settings.ENABLE_OCR:
+            logging.warning("OCR is disabled; this call has been ignored.")
+            return
+
+        try:
+            result = process_image(self.content_url)
+        except OCRError as e:
+            logging.warning(
+                "There was an error in generating the OCR transcription: " + str(e)
+            )
+            self._generate_failed_transcription()
+            return
+
+        if not result:
+            self._generate_failed_transcription()
+            return
+
+        if self.source.name == "reddit":
+            result["text"] = escape_reddit_links(result["text"])
+
+        self._create_ocr_transcription(text=result["text"])
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        """
+        Save the submission object.
+
+        The submission must be saved before the OCR is run, because otherwise
+        we'd assign an unsaved object as the other end of the foreign key for
+        the new transcription. This is an annoying bug to track down, so make
+        sure that you save the submission before actually creating anything
+        that relates to it.
+        """
+        super(Submission, self).save(*args, **kwargs)
+        if self.is_image and not self.has_ocr_transcription:
+            # TODO: This is a great candidate for a basic queue system
+            self.generate_ocr_transcription()
 
 
 class Transcription(models.Model):

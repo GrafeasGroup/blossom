@@ -6,7 +6,7 @@ from praw import Reddit
 
 # This is abstracted out for testing purposes so that it's easy to override.
 
-if settings.ENABLE_OCR:
+if settings.ENABLE_REDDIT:
     REDDIT = Reddit(
         client_id=os.getenv("REDDIT_CLIENT_ID"),
         client_secret=os.getenv("REDDIT_SECRET"),

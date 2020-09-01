@@ -75,6 +75,8 @@ def create_submission(**kwargs: object) -> Submission:
     }
     if submission_info["source"] is None:
         submission_info["source"] = get_default_test_source()
+    if isinstance(submission_info["source"], str):
+        submission_info["source"] = Source.objects.get(name=submission_info["source"])
     return Submission.objects.create(**submission_info)
 
 

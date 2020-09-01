@@ -214,7 +214,7 @@ ENABLE_SLACK = True
 GITHUB_SPONSORS_SECRET_KEY = os.environ.get("GITHUB_SPONSORS_SECRET_KEY", "")
 
 # Global flag; if this is set to False, all calls to ocr.space will fail silently
-ENABLE_OCR = False
+ENABLE_OCR = True
 
 # Only enable if there are connection problems with all three primary endpoints
 OCR_ENABLE_BACKUP_ENDPOINT = os.getenv("OCR_ENABLE_BACKUP_ENDPOINT", False)
@@ -234,6 +234,17 @@ if OCR_ENABLE_BACKUP_ENDPOINT:
 OCR_NOOP_MODE = bool(os.getenv("OCR_NOOP_MODE", ""))
 OCR_DEBUG_MODE = bool(os.getenv("OCR_DEBUG_MODE", ""))
 
+ENABLE_REDDIT = True
+
+IMAGE_DOMAINS = [
+    "imgur.com",
+    "i.imgur.com",
+    "m.imgur.com",
+    "i.reddit.com",
+    "i.redd.it",
+    "puu.sh",
+    "i.redditmedia.com",
+]
 
 ###############################################
 # simple validation -- add new keys above this

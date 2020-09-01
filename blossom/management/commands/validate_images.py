@@ -1,6 +1,5 @@
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
 import prawcore
 from django.core.management.base import BaseCommand
@@ -26,7 +25,7 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:
         """See help message."""
-        subs = Submission.objects.filter(is_image=None)
+        subs = Submission.objects.filter(is_image=True, image_url=None)
         logger.info(
             self.style.SUCCESS(
                 f"Total to process: {len(subs)} out of {Submission.objects.count()}"
@@ -40,17 +39,10 @@ class Command(BaseCommand):
 
         for sub in subs:
             logger.info(self.style.SUCCESS(f"Processing {sub.original_id}"))
-            if not sub.url:
-                sub.is_image = False
-                sub.save()
-                continue
             try:
-                if urlparse(REDDIT.submission(url=sub.url).url).netloc in IMAGE_DOMAINS:
-                    sub.is_image = True
-                    sub.save()
-                else:
-                    sub.is_image = False
-                    sub.save()
+                image_url = REDDIT.submission(url=sub.url).url
+                sub.image_url = image_url
+                sub.save()
             except (prawcore.exceptions.Forbidden, prawcore.exceptions.NotFound):
                 sub.is_image = False
                 sub.save()
