@@ -396,6 +396,20 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         when the transcription is posted. This endpoint will return all the
         submissions that need updates along with their transcription FKs, then
         transcribot pulls the transcription text as needed.
+
+        Brief walkthrough of this query:
+
+        A = Start with all the submissions from a given source, like reddit
+
+        B = create a queryset that is all submissions that have transcription
+            objects written by transcribot AND that transcription object does
+            not have an original_id key -- if that key is there, that means the
+            transcription has been posted
+
+        C = get a queryset of all submissions that have a transcription object
+            linked to them where the source for the transcription is failed_ocr
+
+        return ((A - B) - C)
         """
         source_obj = get_object_or_404(Source, pk=source)
         transcribot = BlossomUser.objects.get(username="transcribot")
