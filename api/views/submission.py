@@ -333,12 +333,13 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
-            required=["original_id", "source"],
+            required=["original_id", "source", "content_url"],
             properties={
                 "original_id": Schema(type="string"),
                 "source": Schema(type="string"),
                 "url": Schema(type="string"),
                 "tor_url": Schema(type="string"),
+                "content_url": Schema(type="string"),
             },
         ),
         responses={
