@@ -41,7 +41,7 @@ class EmailBackend(ModelBackend):
 class BlossomRestFrameworkAuth(authentication.BaseAuthentication):
     def authenticate(self, request):
         if user_data := authentication.SessionAuthentication().authenticate(request):
-            if user_data[0].is_staff or user_data[0].is_grafeas_staff():
+            if user_data[0].is_staff or user_data[0].is_grafeas_staff:
                 return user_data
 
         if user := EmailBackend().authenticate(
