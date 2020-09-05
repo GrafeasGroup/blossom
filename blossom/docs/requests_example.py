@@ -1,28 +1,25 @@
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict
+from typing import Any, Dict, Union
 from urllib.parse import urljoin
 
+from praw.models import Comment
 from requests import Request, Response, Session
-
-# If you're implementing a Grafeas bot, you'll probably want this.
-try:
-    from praw.models import Comment
-except ImportError:
-    Comment = Any
 
 
 class BlossomStatus(Enum):
-    ok = auto()
-    not_found = auto()
-    missing_prerequisite = auto()
-    other_user = auto()
     already_completed = auto()
+    coc_not_accepted = auto()
+    data_missing = auto()
+    missing_prerequisite = auto()
+    not_found = auto()
+    ok = auto()
+    other_user = auto()
 
 
 @dataclass
 class BlossomResponse:
-    data: Dict[str, Any] = None
+    data: Union[Dict[str, Any], None] = None
     status: BlossomStatus = BlossomStatus.ok
 
 
@@ -33,7 +30,6 @@ class BlossomAPI:
         password: str,
         api_key: str,
         api_base_url: str = "http://localhost:8000/api/",
-        login_url: str = "http://localhost:8000/login/",
         num_retries: int = 1,
     ) -> None:
         """
@@ -43,7 +39,6 @@ class BlossomAPI:
         :param password: the password to use to log into Blossom
         :param api_key: the API key to use to perform requests to Blossom
         :param api_base_url: the base URL of the API used as a prefix to API paths
-        :param login_url: the URL used to log the bot into Blossom
         :param num_retries: the number of retries each failing call should do before error
         """
         if not email:
@@ -54,24 +49,14 @@ class BlossomAPI:
             raise ValueError("Need an API key!")
         if not api_base_url:
             raise ValueError("Need to know the API base URL!")
-        if not login_url:
-            raise ValueError("Need to know the login URL!")
 
         self.email = email
         self.password = password
         self.base_url = api_base_url
-        self.login_url = login_url
         self.num_retries = num_retries
 
         self.http = Session()
         self.http.headers.update({"Authorization": f"Api-Key {api_key}"})
-
-    def _login(self) -> Response:
-        """Log into Blossom using the provided URL and credentials."""
-        resp = self.http.post(
-            self.login_url, data={"email": self.email, "password": self.password}
-        )
-        return resp
 
     def _call(
         self, method: str, path: str, data: Dict = None, params: Dict = None
@@ -90,6 +75,7 @@ class BlossomAPI:
         """
         # https://2.python-requests.org/en/master/user/advanced/#prepared-requests
         data = data if data is not None else dict()
+        data.update({"email": self.email, "password": self.password})
         params = params if params is not None else dict()
 
         if method != "GET":
@@ -102,6 +88,8 @@ class BlossomAPI:
             method=method, url=urljoin(self.base_url, path), data=data, params=params
         )
 
+        resp = None
+
         for _ in range(self.num_retries):
             prepped = self.http.prepare_request(req)
             settings = self.http.merge_environment_settings(
@@ -110,33 +98,27 @@ class BlossomAPI:
             resp = self.http.send(prepped, **settings)
 
             if resp.status_code == 403:
-                if (
-                    resp.json().get("detail")
-                    == "Authentication credentials were not provided."
-                ):
-                    # It seems that the bot is not yet logged in, so perform the login.
-                    self._login()
-                else:
-                    break
-            else:
-                break
-        else:
-            raise Exception("Unable to authenticate! Check your email and password!")
+                raise Exception(
+                    "Unable to authenticate! Check your email and password!"
+                )
+
+            break
+
         return resp
 
-    def get(self, path: str, data: Dict = None, params: Dict = None) -> Response:
+    def get(self, path: str, data=None, params=None) -> Response:
         """Request a GET request to the API."""
         return self._call("GET", path, data, params)
 
-    def post(self, path: str, data: Dict = None, params: Dict = None) -> Response:
+    def post(self, path: str, data=None, params=None) -> Response:
         """Request a POST request to the API."""
         return self._call("POST", path, data, params)
 
-    def patch(self, path: str, data: Dict = None, params: Dict = None) -> Response:
+    def patch(self, path: str, data=None, params=None) -> Response:
         """Request a PATCH request to the API."""
         return self._call("PATCH", path, data, params)
 
-    def delete(self, path: str, data: Dict = None, params: Dict = None) -> Response:
+    def delete(self, path: str, data=None, params=None) -> Response:
         """Request a DELETE request to the API."""
         return self._call("DELETE", path, data, params)
 
@@ -152,7 +134,7 @@ class BlossomAPI:
 
     def get_user(self, username: str) -> BlossomResponse:
         """Get the user with the specified username."""
-        response = self.get("volunteer", params={"username": username})
+        response = self.get("volunteer/", params={"username": username})
         response.raise_for_status()
         results = response.json()["results"]
         if results:
@@ -197,9 +179,10 @@ class BlossomAPI:
         )
         if response.status_code == 201:
             return BlossomResponse(data=response.json())
+        elif response.status_code == 403:
+            return BlossomResponse(status=BlossomStatus.coc_not_accepted)
         elif response.status_code == 404:
             return BlossomResponse(status=BlossomStatus.not_found)
-        # TODO: Add the response for when CoC has not yet been accepted.
         response.raise_for_status()
         return BlossomResponse()
 
@@ -210,16 +193,16 @@ class BlossomAPI:
         )
         if response.status_code == 201:
             return BlossomResponse(data=response.json())
+        elif response.status_code == 403:
+            return BlossomResponse(status=BlossomStatus.coc_not_accepted)
         elif response.status_code == 404:
             return BlossomResponse(status=BlossomStatus.not_found)
         elif response.status_code == 409:
-            return BlossomResponse(status=BlossomStatus.other_user)
-        # TODO: Add the response for when CoC has not yet been accepted.
+            return BlossomResponse(status=BlossomStatus.already_completed)
         response.raise_for_status()
         return BlossomResponse()
 
     def unclaim(self, submission_id: str, username: str) -> BlossomResponse:
-        """Ask Blossom to process an unclaim action for the given username."""
         response = self.patch(
             f"submission/{submission_id}/unclaim", data={"username": username}
         )
@@ -247,12 +230,15 @@ class BlossomAPI:
         )
         if response.status_code == 201:
             return BlossomResponse(data=response.json())
+        elif response.status_code == 403:
+            return BlossomResponse(status=BlossomStatus.coc_not_accepted)
         elif response.status_code == 404:
             return BlossomResponse(status=BlossomStatus.not_found)
         elif response.status_code == 409:
             return BlossomResponse(status=BlossomStatus.already_completed)
         elif response.status_code == 412:
             return BlossomResponse(status=BlossomStatus.missing_prerequisite)
-
+        elif response.status_code == 428:
+            return BlossomResponse(status=BlossomStatus.data_missing)
         response.raise_for_status()
         return BlossomResponse()

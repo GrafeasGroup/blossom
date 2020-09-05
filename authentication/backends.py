@@ -4,6 +4,7 @@ from typing import Union
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import User
+from rest_framework import authentication
 
 
 class EmailBackend(ModelBackend):
@@ -35,3 +36,16 @@ class EmailBackend(ModelBackend):
             return None
         else:
             return user if user.check_password(password) else None
+
+
+class BlossomRestFrameworkAuth(authentication.BaseAuthentication):
+    def authenticate(self, request):
+        if user_data := authentication.SessionAuthentication().authenticate(request):
+            if user_data[0].is_staff or user_data[0].is_grafeas_staff():
+                return user_data
+
+        if user := EmailBackend().authenticate(
+            username=request.data.get("email"), password=request.data.get("password")
+        ):
+            return (user, None)
+        return None
