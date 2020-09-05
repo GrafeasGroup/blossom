@@ -106,19 +106,19 @@ class BlossomAPI:
 
         return resp
 
-    def get(self, path: str, data=None, params=None) -> Response:
+    def get(self, path: str, data: Dict = None, params: Dict = None) -> Response:
         """Request a GET request to the API."""
         return self._call("GET", path, data, params)
 
-    def post(self, path: str, data=None, params=None) -> Response:
+    def post(self, path: str, data: Dict = None, params: Dict = None) -> Response:
         """Request a POST request to the API."""
         return self._call("POST", path, data, params)
 
-    def patch(self, path: str, data=None, params=None) -> Response:
+    def patch(self, path: str, data: Dict = None, params: Dict = None) -> Response:
         """Request a PATCH request to the API."""
         return self._call("PATCH", path, data, params)
 
-    def delete(self, path: str, data=None, params=None) -> Response:
+    def delete(self, path: str, data: Dict = None, params: Dict = None) -> Response:
         """Request a DELETE request to the API."""
         return self._call("DELETE", path, data, params)
 
@@ -203,6 +203,7 @@ class BlossomAPI:
         return BlossomResponse()
 
     def unclaim(self, submission_id: str, username: str) -> BlossomResponse:
+        """Unclaim a given Submission and release it from a user."""
         response = self.patch(
             f"submission/{submission_id}/unclaim", data={"username": username}
         )
