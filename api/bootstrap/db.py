@@ -57,7 +57,7 @@ def get_or_create_transcription(
             logger.info(f"creating OCR transcription on {post.id}")
             Transcription.objects.create(
                 submission=post,
-                author="transcribot",
+                author=BlossomUser.objects.get(username="transcribot"),
                 create_time=datetime.utcfromtimestamp(
                     transcribot_comment.created_utc
                 ).replace(tzinfo=pytz.UTC),

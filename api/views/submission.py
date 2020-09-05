@@ -17,7 +17,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from slack import WebClient
 
-from api.authentication import AdminApiKeyCustomCheck
+from api.authentication import BlossomApiPermission
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
@@ -37,7 +37,7 @@ from authentication.models import BlossomUser
 )
 class SubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = SubmissionSerializer
-    permission_classes = (AdminApiKeyCustomCheck,)
+    permission_classes = (BlossomApiPermission,)
 
     def get_queryset(self) -> QuerySet:
         """
@@ -421,5 +421,5 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 ).filter(transcription__original_id__isnull=False)
             )
             .exclude(transcription__source=Source.objects.get(name="failed_ocr"))
-        )
+        )[:10]
         return Response(data=self.get_serializer(queryset, many=True).data)

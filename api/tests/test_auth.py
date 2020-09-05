@@ -20,7 +20,9 @@ def test_creation_without_authentication(client: Client) -> None:
 
 def test_creation_without_api_key(client: Client) -> None:
     """Test whether creation without sending the API key whilst logged in is forbidden."""
-    client, headers, _ = setup_user_client(client)
+    client, headers, _ = setup_user_client(
+        client, is_staff=False, is_grafeas_staff=False
+    )
     result = client.get(reverse("volunteer-list"), USER_CREATION_DATA)
     assert result.status_code == status.HTTP_403_FORBIDDEN
 
@@ -34,7 +36,9 @@ def test_creation_without_login(client: Client) -> None:
 
 def test_creation_wrong_header_format(client: Client) -> None:
     """Test whether creation without proper header format is forbidden."""
-    client, headers, _ = setup_user_client(client)
+    client, headers, _ = setup_user_client(
+        client, is_staff=False, is_grafeas_staff=False
+    )
     # Deform the header, so that it looks like {Authorization: mykey} instead of
     # {Authorization: Api-Key mykey}.
     headers["HTTP_AUTHORIZATION"] = headers.get("HTTP_AUTHORIZATION").split()[1]
