@@ -21,6 +21,14 @@ class TestTranscriptionCreation:
         """Test that the primary API page for transcriptions works correctly."""
         client, headers, user = setup_user_client(client)
         submission = create_submission()
+
+        result = client.get(
+            reverse("transcription-list"), content_type="application/json", **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()["count"] == 0
+
         create_transcription(submission, user)
 
         result = client.get(

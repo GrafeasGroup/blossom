@@ -84,6 +84,16 @@ class TestVolunteerAssortedFunctions:
         assert result.json()["count"] == 1
         assert result.json()["results"][0]["username"] == user.username
 
+        create_user(email="a@a.com", username="AAA")
+
+        result = client.get(
+            reverse("volunteer-list"), content_type="application/json", **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()["count"] == 2
+        assert result.json()["results"][1]["username"] == "AAA"
+
     def test_edit_volunteer(self, client: Client) -> None:
         """Test whether an edit of a user is propagated correctly."""
         client, headers, user = setup_user_client(client)
