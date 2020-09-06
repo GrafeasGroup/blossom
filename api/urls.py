@@ -32,7 +32,6 @@ router.register(r"source", source.SourceViewSet, basename="source")
 
 urlpatterns = [
     url(r"", include(router.urls)),
-    url(r"^auth/", include("rest_framework.urls")),
     url(r"^summary/", misc.SummaryView.as_view(), name="summary"),
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",

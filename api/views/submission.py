@@ -1,6 +1,7 @@
 """Views that specifically relate to submissions."""
 import random
 from datetime import timedelta
+from typing import Union
 
 from django.conf import settings
 from django.db.models import Q, QuerySet
@@ -17,7 +18,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from slack import WebClient
 
-from api.authentication import AdminApiKeyCustomCheck
+from api.authentication import BlossomApiPermission
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
@@ -37,7 +38,7 @@ from authentication.models import BlossomUser
 )
 class SubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = SubmissionSerializer
-    permission_classes = (AdminApiKeyCustomCheck,)
+    permission_classes = (BlossomApiPermission,)
 
     def get_queryset(self) -> QuerySet:
         """
@@ -333,12 +334,13 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
-            required=["original_id", "source"],
+            required=["original_id", "source", "content_url"],
             properties={
                 "original_id": Schema(type="string"),
                 "source": Schema(type="string"),
                 "url": Schema(type="string"),
                 "tor_url": Schema(type="string"),
+                "content_url": Schema(type="string"),
             },
         ),
         responses={
@@ -378,6 +380,24 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 
+    def _get_limit_value(self, request: Request, default: int = 10) -> Union[int, None]:
+        """
+        Retrieve an optional limit parameter for get_transcribot_queue.
+
+        If no limit is passed in, a default of 10 is used. Passing in "none"
+        will return the entire queryset.
+        """
+        limit_value = request.query_params.get("limit")
+        if not limit_value:
+            return default
+        try:
+            return int(limit_value)
+        except (ValueError, TypeError):
+            if str(limit_value).lower() == "none":
+                return None
+            else:
+                return default
+
     @swagger_auto_schema(
         responses={200: DocResponse("Successful operation", schema=serializer_class)}
     )
@@ -413,6 +433,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         source_obj = get_object_or_404(Source, pk=source)
         transcribot = BlossomUser.objects.get(username="transcribot")
+        return_limit = self._get_limit_value(request)
+
         queryset = (
             Submission.objects.filter(source=source_obj)
             .exclude(
@@ -421,5 +443,5 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 ).filter(transcription__original_id__isnull=False)
             )
             .exclude(transcription__source=Source.objects.get(name="failed_ocr"))
-        )
+        )[:return_limit]
         return Response(data=self.get_serializer(queryset, many=True).data)

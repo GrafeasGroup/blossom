@@ -1,13 +1,17 @@
 import logging
-
-import pytz
 import uuid
 from datetime import datetime
 
-from api.models import Transcription, Submission
+import prawcore
+import pytz
+
+from api.models import Source, Submission, Transcription
 from authentication.models import BlossomUser
+from blossom.reddit import REDDIT
 
 logger = logging.getLogger(__name__)
+
+SOURCE = Source.objects.get(name="reddit")
 
 
 def get_or_create_user(username):
@@ -40,29 +44,27 @@ def get_or_create_transcription(
         Transcription.objects.create(
             submission=post,
             author=volunteer,
-            post_time=datetime.utcfromtimestamp(t_comment.created_utc).replace(
+            create_time=datetime.utcfromtimestamp(t_comment.created_utc).replace(
                 tzinfo=pytz.UTC
             ),
-            transcription_id=t_comment.id,
-            completion_method="reddit",
+            original_id=t_comment.id,
+            source=SOURCE,
             url=f"https://reddit.com{t_comment.permalink}",
             text=comment_body,
-            ocr_text=None,
             removed_from_reddit=False,
         )
         if transcribot_comment:
             logger.info(f"creating OCR transcription on {post.id}")
             Transcription.objects.create(
                 submission=post,
-                author="transcribot",
-                post_time=datetime.utcfromtimestamp(
+                author=BlossomUser.objects.get(username="transcribot"),
+                create_time=datetime.utcfromtimestamp(
                     transcribot_comment.created_utc
                 ).replace(tzinfo=pytz.UTC),
-                transcription_id=transcribot_comment.id,
-                completion_method="reddit",
+                original_id=transcribot_comment.id,
+                source=SOURCE,
                 url=f"https://reddit.com{transcribot_comment.permalink}",
-                text=None,
-                ocr_text=transcribot_text,
+                text=transcribot_text,
                 removed_from_reddit=False,
             )
 
@@ -72,8 +74,6 @@ def get_or_create_post(tor_post, v, claim, done, redis_id):
         p = Submission.objects.get(original_id=tor_post.id)
         logger.info("Found a matching post for a transcription ID!")
     except Submission.DoesNotExist:
-        p = None
-        # claim, done = get_tor_claim_and_done_from_pushshift(tor_post.id)
         logger.info(f"creating post {tor_post.id}")
 
         if claim is None:
@@ -89,9 +89,14 @@ def get_or_create_post(tor_post, v, claim, done, redis_id):
                 tzinfo=pytz.UTC
             )
 
+        try:
+            image_url = REDDIT.submission(url=tor_post.url).url
+        except (prawcore.exceptions.Forbidden, prawcore.exceptions.NotFound):
+            image_url = None
+
         p = Submission.objects.create(
             original_id=tor_post.id,
-            submission_time=datetime.utcfromtimestamp(tor_post.created_utc).replace(
+            create_time=datetime.utcfromtimestamp(tor_post.created_utc).replace(
                 tzinfo=pytz.UTC
             ),
             claimed_by=v,
@@ -99,9 +104,10 @@ def get_or_create_post(tor_post, v, claim, done, redis_id):
             redis_id=redis_id,
             claim_time=claim_time,
             complete_time=complete_time,
-            source="reddit",
+            source=SOURCE,
             url=tor_post.url,
             tor_url=f"https://reddit.com{tor_post.permalink}",
+            content_url=image_url,
         )
     return p
 
@@ -112,7 +118,10 @@ def get_anon_user():
 
 def generate_dummy_post(vlntr=None):
     logger.info(f"creating dummy post...")
-    return Submission.objects.create(source="bootstrap_from_redis", completed_by=vlntr)
+    return Submission.objects.create(
+        source=Source.objects.get_or_create(name="bootstrap_from_redis")[0],
+        completed_by=vlntr,
+    )
 
 
 def generate_dummy_transcription(vlntr, post=None):
@@ -133,7 +142,7 @@ def generate_dummy_transcription(vlntr, post=None):
     Transcription.objects.create(
         submission=post,
         author=vlntr,
-        transcription_id=str(uuid.uuid4()),
-        completion_method="bootstrap_from_redis",
+        original_id=str(uuid.uuid4()),
+        source=Source.objects.get_or_create(name="bootstrap_from_redis")[0],
         text="dummy transcription",
     )
