@@ -125,7 +125,7 @@ class TestSubmissionTranscribotQueue:
 
 
 def test_get_limit() -> None:
-    """Verify that get_limit_value returns the requested value or 10"""
+    """Verify that get_limit_value returns the requested value or 10."""
     request = MagicMock()
     request.query_params.get.return_value = None
     return_value = SubmissionViewSet()._get_limit_value(request)
