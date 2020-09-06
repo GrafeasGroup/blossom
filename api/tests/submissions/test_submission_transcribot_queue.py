@@ -1,10 +1,12 @@
 from typing import Any
+from unittest.mock import MagicMock
 
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
 from api.tests.helpers import create_submission, create_transcription, setup_user_client
+from api.views.submission import SubmissionViewSet
 
 
 class TestSubmissionTranscribotQueue:
@@ -96,3 +98,49 @@ class TestSubmissionTranscribotQueue:
 
         # there should be no change to the OCR queue
         assert len(result.data) == 1
+
+    def test_transcribot_limit_param(self, client: Client, setup_site: Any) -> None:
+        client, headers, _ = setup_user_client(client)
+        submission1 = create_submission(source="reddit", original_id="A")
+        create_submission(source="reddit", original_id="B")
+        create_submission(source="reddit", original_id="C")
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue") + "?source=reddit&limit=none",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert len(result.data) == 3
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue") + "?source=reddit&limit=1",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert len(result.data) == 1
+        assert result.json()[0]["id"] == submission1.id
+
+
+def test_get_limit() -> None:
+    request = MagicMock()
+    request.query_params.get.return_value = None
+    return_value = SubmissionViewSet()._get_limit_value(request)
+    assert return_value == 10
+
+    request.query_params.get.return_value = "999"
+    return_value = SubmissionViewSet()._get_limit_value(request)
+    assert return_value == 999
+
+    request.query_params.get.return_value = "none"
+    return_value = SubmissionViewSet()._get_limit_value(request)
+    assert return_value is None
+
+    request.query_params.get.return_value = "aaa"
+    return_value = SubmissionViewSet()._get_limit_value(request)
+    assert return_value == 10
+
+    request.query_params.get.return_value = "!@#$%&%)%^&"
+    return_value = SubmissionViewSet()._get_limit_value(request)
+    assert return_value == 10
