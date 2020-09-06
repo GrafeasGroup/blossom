@@ -17,6 +17,28 @@ from api.tests.helpers import (
 class TestTranscriptionCreation:
     """Tests to validate the behavior of the Transcription creation process."""
 
+    def test_list(self, client: Client) -> None:
+        """Test that the primary API page for transcriptions works correctly."""
+        client, headers, user = setup_user_client(client)
+        submission = create_submission()
+
+        result = client.get(
+            reverse("transcription-list"), content_type="application/json", **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()["count"] == 0
+
+        create_transcription(submission, user)
+
+        result = client.get(
+            reverse("transcription-list"), content_type="application/json", **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert result.json()["count"] == 1
+        assert result.json()["results"][0]["id"] == 1
+
     def test_create(self, client: Client) -> None:
         """Test whether the creation functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)

@@ -2,7 +2,7 @@
 
 from rest_framework import viewsets
 
-from api.authentication import AdminApiKeyCustomCheck
+from api.authentication import BlossomApiPermission
 from api.models import Source
 from api.serializers import SourceSerializer
 
@@ -16,4 +16,4 @@ class SourceViewSet(viewsets.ModelViewSet):
 
     queryset = Source.objects.all().order_by("pk")
     serializer_class = SourceSerializer
-    permission_classes = (AdminApiKeyCustomCheck,)
+    permission_classes = (BlossomApiPermission,)
