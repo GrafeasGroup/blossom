@@ -23,7 +23,7 @@ from authentication.models import BlossomUser
 class TranscriptionViewSet(viewsets.ModelViewSet):
     """The API view to view and edit information regarding Transcribers."""
 
-    queryset = Transcription.objects.all().order_by("-post_time")
+    queryset = Transcription.objects.all().order_by("-create_time")
     serializer_class = TranscriptionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
 
