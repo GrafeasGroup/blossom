@@ -54,75 +54,39 @@ GIVING_PAGE = """
 
 <p>Every dollar counts! We recommend picking the option that's best for you &mdash; if the preset options don't suit your needs, please contact us for more information.</p>
 
-<form id="donations" action="https://payments.grafeas.org/" method="POST">
-    <div class="row">
-        <div class="col">
-            <div class="text-center">
-                <input type="button" class="btn btn-block btn-outline-secondary shadow" id="ten" value="$10 USD">
-            </div>
-        </div>
-        <div class="col">
-            <div class="text-center">
-                <input type="button" class="btn btn-block btn-outline-secondary shadow" id="twentyFive" value="$25 USD">
-            </div>
-        </div>
-        <div class="col">
-            <div class="text-center">
-                <input type="button" class="btn btn-block btn-outline-secondary shadow" id="fifty" value="$50 USD">
-            </div>
-        </div>
-    </div>
+<button class="btn btn-block btn-outline-secondary shadow" id="checkout-button">Checkout</button>
 
-    <input type="hidden" id="stripeToken" name="stripeToken" />
-    <input type="hidden" id="stripeEmail" name="stripeEmail" />
-    <input type="hidden" name="amount" id="donationAmount" value=""/>
-</form>
-<p></p>
+<script src="https://js.stripe.com/v3/"></script>
+<script type="text/javascript">
+      // Create an instance of the Stripe object with your publishable API key
+      var stripe = Stripe('pk_test_Qgem2MtFoeRvlAqt7SQGyg2y');
+      var checkoutButton = document.getElementById('checkout-button');
 
-<script src="https://checkout.stripe.com/checkout.js"></script>
-<script>
-Array.from(document.querySelectorAll('.stripe-button-el')).forEach(function(el) { el.style.display = 'none'; });
-
-var handler = StripeCheckout.configure({
-    key: '',
-    token: function(token) {
-        // append your token id and email, submit your form
-        $("#stripeToken").val(token.id);
-        $("#stripeEmail").val(token.email);
-        $("#donations").submit();
-    }
-  });
-
-  $('#ten').on('click', function(e) {
-    $("#donationAmount").val("1000");
-    openCheckout("Donation ($10)", 1000);
-    e.preventDefault();
-  });
-  $('#twentyFive').on('click', function(e) {
-    $("#donationAmount").val("2500");
-    openCheckout("Donation ($25)", 2500);
-    e.preventDefault();
-  });
-  $('#fifty').on('click', function(e) {
-    $("#donationAmount").val("5000");
-    openCheckout("Donation ($50)", 5000);
-    e.preventDefault();
-  });
-
-  function openCheckout(description, amount)
-  {
-    handler.open({
-      name: 'Grafeas Group, Ltd.',
-      image: '/static/images/logo.svg',
-      description: description,
-      amount: amount
-    });
-  }
-  // Close Checkout on page navigation
-  $(window).on('popstate', function() {
-    handler.close();
-  });
-</script>
+      checkoutButton.addEventListener('click', function() {
+        // Create a new Checkout Session using the server-side endpoint you
+        // created in step 3.
+        fetch('/payments/', {
+          method: 'POST',
+        })
+        .then(function(response) {
+          return response.json();
+        })
+        .then(function(session) {
+          return stripe.redirectToCheckout({ sessionId: session.id });
+        })
+        .then(function(result) {
+          // If `redirectToCheckout` fails due to a browser or network
+          // error, you should display the localized error message to your
+          // customer using `error.message`.
+          if (result.error) {
+            alert(result.error.message);
+          }
+        })
+        .catch(function(error) {
+          console.error('Error:', error);
+        });
+      });
+    </script>
 """  # noqa: E501
 
 TOS_PAGE = """
@@ -208,20 +172,22 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Wrote about page!"))
 
-        if not Post.objects.filter(slug=slugs[1]).exists():
-            donation_post = Post.objects.create(
-                title="Giving to Grafeas",
-                body=GIVING_PAGE,
-                author=admin,
-                published=True,
-                standalone_section=True,
-                header_order=20,
-            )
-            donation_post.body.replace(
-                "key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'"
-            )
-            donation_post.save()
-            logger.debug(self.style.SUCCESS("Wrote donation page!"))
+        if Post.objects.filter(slug=slugs[1]).exists():
+            Post.objects.filter(slug=slugs[1]).delete()
+
+        donation_post = Post.objects.create(
+            title="Giving to Grafeas",
+            body=GIVING_PAGE,
+            author=admin,
+            published=True,
+            standalone_section=True,
+            header_order=20,
+        )
+        donation_post.body.replace(
+            "key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'"
+        )
+        donation_post.save()
+        logger.debug(self.style.SUCCESS("Wrote donation page!"))
 
         if not Post.objects.filter(slug=slugs[2]).exists():
             Post.objects.create(

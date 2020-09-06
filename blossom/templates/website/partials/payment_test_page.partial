@@ -1,0 +1,120 @@
+{% extends 'website/partials/base.partial' %}
+{% load static %}
+
+{% block content %}
+    {% if request.user.is_authenticated %}
+        <a class="btn btn-primary" href="edit/">Edit!</a>
+    {% endif %}
+    <p>
+    <h1>{{ post.title }}</h1>
+    <p>
+    <p>We at Grafeas are passionate about making the world a better place, but we can't do it without your help. Our
+        volunteers work diligently around the clock to help us get closer to this goal, but we still have operating
+        costs that hard work cannot cover.</p>
+    <p>Our amazing sponsors help us keep the lights on and we'd love to add you to this list. Our sponsors, both in
+        services rendered and monetarily, include:</p>
+
+    <ul>
+        <li><a href="https://www.bugsnag.com/open-source/" class="real-link" target="_blank"
+               rel="noreferrer">Bugsnag</a> &mdash; providing free error catching to our open source projects
+        </li>
+        <li><a href="https://blog.cloudflare.com/cloudflare-open-source-your-upgrade-is-on-the-house/" class="real-link"
+               target="_blank" rel="noreferrer">Cloudflare</a> &mdash; providing a free Pro Plan for our domain
+        </li>
+        <li><a href="https://www.linode.com/" class="real-link" target="_blank" rel="noreferrer">Linode</a> &mdash;
+            providing free hosting for our servers
+        </li>
+        <li><a href="https://stripe.com/" class="real-link" target="_blank" rel="noreferrer">Stripe</a> &mdash; special
+            rates and great service
+        </li>
+        <li>Patrons who have donated here and through <a href="https://www.patreon.com/grafeasgroup" class="real-link"
+                                                         target="_blank" rel="noreferrer">Patreon</a></li>
+    </ul>
+
+    <p>Your donation to the Grafeas Group will help us further our goal of worldwide accessibility on the internet. All
+        funding goes towards:</p>
+
+    <p>
+    <ul>
+        <li>Upgrading servers</li>
+        <li>Community management</li>
+        <li>Outreach</li>
+        <li>Forging new partnerships</li>
+    </ul>
+
+    <p>
+        Every dollar counts! We greatly appreciate every donation that we receive, and we do our level best to
+        put donations to the best uses possible. If you have any questions, feel free to contact us at
+        <a href="mailto:donations@grafeas.org">donations@grafeas.org</a>.
+    </p>
+
+    <div class="card">
+        <div class="card-body shadow">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="input-group input-group-lg needs-validation mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">$</span>
+                        </div>
+                        <input type="text" id="donationAmount" class="form-control" value="10"
+                               aria-label="Amount (to the nearest dollar)">
+                    </div>
+                    <div class="invalid-feedback">
+                        Please provide a valid number.
+                    </div>
+                </div>
+                <div class="col-lg-9">
+                    <button class="btn btn-block btn-outline-secondary btn-lg shadow" id="checkout-button">Donate!
+                    </button>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="small text-muted">
+                    Donations are handled through Stripe; any transaction will take place on their site.
+                    All donations are tax-deductable in the U.S. &mdash; a receipt will be sent to you through
+                    email from Stripe.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://js.stripe.com/v3/"></script>
+    <script type="text/javascript">
+        // Create an instance of the Stripe object with your publishable API key
+        var stripe = Stripe('pk_test_Qgem2MtFoeRvlAqt7SQGyg2y');
+        var checkoutButton = document.getElementById('checkout-button');
+
+        checkoutButton.addEventListener('click', function () {
+            // Create a new Checkout Session using the server-side endpoint you
+            // created in step 3.
+            let amountElement = document.getElementById("donationAmount")
+            if (amountElement.value.match(/^[1-9]\d*(((,\d{3}){1})?(\.\d{0,2})?)$/) === null) {
+                amountElement.classList.add("is-invalid")
+                return
+            }
+
+            fetch(`/payments/?amount=${amountElement.value}`, {
+                method: 'POST',
+            })
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (session) {
+                    return stripe.redirectToCheckout({sessionId: session.id});
+                })
+                .then(function (result) {
+                    // If `redirectToCheckout` fails due to a browser or network
+                    // error, you should display the localized error message to your
+                    // customer using `error.message`.
+                    if (result.error) {
+                        alert(result.error.message);
+                    }
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+        });
+    </script>
+    </p>
+    <script src="{% static 'js/emailmagic.js' %}"></script>
+{% endblock %}
