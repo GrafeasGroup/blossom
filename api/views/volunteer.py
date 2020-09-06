@@ -13,7 +13,7 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from api.authentication import AdminApiKeyCustomCheck
+from api.authentication import BlossomApiPermission
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import VolunteerSerializer
@@ -36,7 +36,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
     serializer_class = VolunteerSerializer
     basename = "volunteer"
-    permission_classes = (AdminApiKeyCustomCheck,)
+    permission_classes = (BlossomApiPermission,)
 
     def get_queryset(self) -> QuerySet:
         """

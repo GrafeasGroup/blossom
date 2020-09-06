@@ -165,6 +165,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 25,
     "DEFAULT_PERMISSION_CLASSES": ("api.authentication.BlossomApiPermission",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "authentication.backends.BlossomRestFrameworkAuth",
+    ),
 }
 API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
 
