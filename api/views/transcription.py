@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.openapi import Parameter
 from drf_yasg.openapi import Response as DocResponse
 from drf_yasg.openapi import Schema
@@ -26,6 +27,16 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
     queryset = Transcription.objects.all().order_by("-create_time")
     serializer_class = TranscriptionSerializer
     permission_classes = (BlossomApiPermission,)
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = [
+        "id",
+        "submission",
+        "author",
+        "original_id",
+        "source",
+        "url",
+        "removed_from_reddit",
+    ]
 
     @swagger_auto_schema(
         request_body=Schema(

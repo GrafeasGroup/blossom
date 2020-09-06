@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     "website",
     # API
     "rest_framework",
+    "django_filters",
     "rest_framework_api_key",
     "drf_yasg",
     # Social authentication
@@ -148,7 +149,7 @@ DATABASES = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},  # noqa: E231
+    "handlers": {"console": {"class": "logging.StreamHandler"}},  # noqa: E231
     "loggers": {
         "django": {
             "handlers": ["console"],
@@ -168,6 +169,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "authentication.backends.BlossomRestFrameworkAuth",
     ),
+    "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
 

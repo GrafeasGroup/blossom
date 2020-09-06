@@ -4,10 +4,11 @@ from datetime import timedelta
 from typing import Union
 
 from django.conf import settings
-from django.db.models import Q, QuerySet
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.openapi import Parameter
 from drf_yasg.openapi import Response as DocResponse
 from drf_yasg.openapi import Schema
@@ -39,20 +40,19 @@ from authentication.models import BlossomUser
 class SubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = SubmissionSerializer
     permission_classes = (BlossomApiPermission,)
-
-    def get_queryset(self) -> QuerySet:
-        """
-        Get information on all submissions or a specific submission if specified.
-
-        When a original_id is provided as a query parameter, filter the
-        queryset on that submission.
-        """
-        queryset = Submission.objects.all().order_by("id")
-        if "original_id" in self.request.query_params:
-            queryset = queryset.filter(
-                original_id=self.request.query_params["original_id"]
-            )
-        return queryset
+    queryset = Submission.objects.order_by("id")
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = [
+        "id",
+        "original_id",
+        "claimed_by",
+        "completed_by",
+        "source",
+        "url",
+        "tor_url",
+        "archived",
+        "content_url",
+    ]
 
     @swagger_auto_schema(
         manual_parameters=[

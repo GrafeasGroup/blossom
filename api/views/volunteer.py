@@ -1,9 +1,9 @@
 """Views that specifically relate to volunteers."""
 import uuid
 
-from django.db.models import QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.openapi import Parameter
 from drf_yasg.openapi import Response as DocResponse
 from drf_yasg.openapi import Schema
@@ -33,22 +33,12 @@ from authentication.models import BlossomUser
 class VolunteerViewSet(viewsets.ModelViewSet):
     """The API view to view and edit information regarding Volunteers."""
 
-    queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("-join_date")
+    queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("date_joined")
     serializer_class = VolunteerSerializer
     basename = "volunteer"
     permission_classes = (BlossomApiPermission,)
-
-    def get_queryset(self) -> QuerySet:
-        """
-        Get information on all volunteers or a specific volunteer if specified.
-
-        Including a username as a query parameter filters the volunteers on the
-        specified username.
-        """
-        queryset = BlossomUser.objects.filter(is_volunteer=True).order_by("id")
-        if "username" in self.request.query_params:
-            queryset = queryset.filter(username=self.request.query_params["username"])
-        return queryset
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["id", "username", "is_volunteer", "accepted_coc", "blacklisted"]
 
     @swagger_auto_schema(
         manual_parameters=[Parameter("username", "query", type="string")],
