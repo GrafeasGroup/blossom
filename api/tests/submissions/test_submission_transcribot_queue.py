@@ -100,6 +100,7 @@ class TestSubmissionTranscribotQueue:
         assert len(result.data) == 1
 
     def test_transcribot_limit_param(self, client: Client, setup_site: Any) -> None:
+        """Verify that adding the `limit` QSP modifies the results."""
         client, headers, _ = setup_user_client(client)
         submission1 = create_submission(source="reddit", original_id="A")
         create_submission(source="reddit", original_id="B")
@@ -124,10 +125,15 @@ class TestSubmissionTranscribotQueue:
 
 
 def test_get_limit() -> None:
+    """Verify that get_limit_value returns the requested value or 10"""
     request = MagicMock()
     request.query_params.get.return_value = None
     return_value = SubmissionViewSet()._get_limit_value(request)
     assert return_value == 10
+
+    request.query_params.get.return_value = None
+    return_value = SubmissionViewSet()._get_limit_value(request, default=200)
+    assert return_value == 200
 
     request.query_params.get.return_value = "999"
     return_value = SubmissionViewSet()._get_limit_value(request)
