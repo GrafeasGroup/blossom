@@ -22,7 +22,6 @@ from blossom.strings import translation
 
 i18n = translation()
 
-
 # TODO: There is a way to mock decorators, but I can't figure it out.
 # There's a lot of testing that needs to happen for this module, but I can't
 # get past the threading decorator and the patch calls don't seem to work.
@@ -31,12 +30,18 @@ i18n = translation()
 # http://alexmarandon.com/articles/python_mock_gotchas/
 # https://stackoverflow.com/questions/36812830/mocking-decorators-in-python-with-mock-and-pytest  # noqa: E501
 
+# NOTE: In order to test slack, you must add the `settings` hook and set
+# `settings.ENABLE_SLACK = True`. MAKE SURE that if you're writing a new
+# test that uses ENABLE_SLACK that you patch `requests.post` or it will
+# try and ping modchat (if you're running locally) or explode if this is
+# running in the github actions pipeline.
+
 
 def test_challenge_request(client: Client) -> None:
     """Test handling of Slack's new endpoint challenge message."""
     data = {"challenge": "asdfasdfasdf"}
     result = client.post(
-        reverse("slack"), json.dumps(data), content_type="application/json",
+        reverse("slack"), json.dumps(data), content_type="application/json"
     )
     assert result.content == b"asdfasdfasdf"
 
@@ -85,7 +90,7 @@ def test_github_missing_signature(rf: RequestFactory) -> None:
     """Test to ensure a request that is missing the signature is marked invalid."""
     """Test to ensure that a webhook from GitHub Sponsors is valid."""
     request = rf.post(
-        "slack/github/sponsors/", data={"aaa": "bbb"}, content_type="application/json",
+        "slack/github/sponsors/", data={"aaa": "bbb"}, content_type="application/json"
     )
     assert is_valid_github_request(request) is False
 
@@ -193,8 +198,8 @@ def test_github_sponsor_slack_message(
             ],
         },
         {
-            "data": {"dictionary": {"a": None},},  # noqa: E231
-            "result": ["Key | Value", "------", "a   | None",],  # noqa: E231
+            "data": {"dictionary": {"a": None}},  # noqa: E231
+            "result": ["Key | Value", "------", "a   | None"],  # noqa: E231
         },
     ],
 )

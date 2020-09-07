@@ -1,96 +1,30 @@
-import pytest
-import requests
-import stripe
-from django.conf import Settings
+from unittest.mock import MagicMock
+
 from django.test import Client
 from django.urls import reverse
 
-# NOTE: In order to test slack, you must add the `settings` hook and set
-# `settings.ENABLE_SLACK = True`. MAKE SURE that if you're writing a new
-# test that uses ENABLE_SLACK that you patch `requests.post` or it will
-# try and ping modchat (if you're running locally) or explode if this is
-# running in the github actions pipeline.
 
-
-def test_payment_endpoint_with_get_request(client: Client) -> None:
-    """Verify that a web browser accessing the payment endpoint will be turned away."""
-    result = client.get(reverse("charge"))
-    assert result.status_code == 200
-    assert result.content == b"go away"
-
-
-def test_payment_endpoint(
-    client: Client, mocker: object, setup_site: object, settings: Settings
-) -> None:
+def test_payment_endpoint(client: Client, mocker: object, setup_site: object) -> None:
     """Verify a full Stripe charge completes successfully."""
-    settings.ENABLE_SLACK = True
-    mocker.patch("requests.post")
-    mocker.patch("stripe.Charge")
-    stripe.Charge.create.return_value = {"status": "succeeded"}
+    session_obj = MagicMock()
+    session_obj.id = 99
 
-    data = {"stripeToken": "asdf", "amount": "300", "stripeEmail": "a@a.com"}
+    mocker.patch("stripe.checkout.Session.create", return_value=session_obj)
 
-    result = client.post(reverse("charge"), data)
+    result = client.post(reverse("charge") + "?amount=7")
+    assert result.status_code == 200
+    assert result.json()["id"] == 99
+
+
+def test_payment_no_amount(client: Client, setup_site: object) -> None:
+    """Verify we're redirected to the donation page if no amount is passed."""
+    result = client.post(reverse("charge"))
     assert result.status_code == 302
-    assert "thank-you" in result.url
-    requests.post.assert_called_once()
-    assert "live" in stripe.api_key
-    stripe.Charge.create.assert_called_once()
-    # post going to #org-running
-    assert "channel" not in requests.post.call_args.kwargs.get("json")
+    assert "giving-to-grafeas" in result.url
 
 
-def test_payment_endpoint_debug_mode(
-    client: Client, mocker: object, setup_site: object, settings: Settings
-) -> None:
-    """Verify that the test key is used when Blossom is in debug mode."""
-    settings.DEBUG = True
-    settings.ENABLE_SLACK = True
-    mocker.patch("requests.post")
-    mocker.patch("stripe.Charge")
-    stripe.Charge.create.return_value = {"status": "succeeded"}
-
-    data = {"stripeToken": "asdf", "amount": "300", "stripeEmail": "a@a.com"}
-
-    client.post(reverse("charge"), data)
-
-    requests.post.assert_called_once()
-    assert "test" in stripe.api_key
-    stripe.Charge.create.assert_called_once()
-    # post going to #org-running
-    assert "channel" in requests.post.call_args.kwargs.get("json")
-
-
-def test_failed_charge(client: Client, mocker: object, settings: Settings) -> None:
-    """Verify that a failed charge attempt through Stripe notifies Slack."""
-    settings.ENABLE_SLACK = True
-    mocker.patch("requests.post")
-    mocker.patch("stripe.Charge")
-    stripe.Charge.create.return_value = {"status": "failed"}
-
-    data = {"stripeToken": "asdf", "amount": "300", "stripeEmail": "a@a.com"}
-
-    with pytest.raises(ValueError):
-        client.post(reverse("charge"), data)
-    # post going to #org-running
-    assert "channel" not in requests.post.call_args.kwargs.get("json")
-    assert "Something went wrong" in requests.post.call_args.kwargs.get("json")["text"]
-
-
-def test_failed_charge_in_debug_mode(
-    client: Client, mocker: object, settings: Settings
-) -> None:
-    """Verify that a failed charge with Blossom in debug mode uses the debug keys."""
-    settings.DEBUG = True
-    settings.ENABLE_SLACK = True
-    mocker.patch("requests.post")
-    mocker.patch("stripe.Charge")
-    stripe.Charge.create.return_value = {"status": "failed"}
-
-    data = {"stripeToken": "asdf", "amount": "300", "stripeEmail": "a@a.com"}
-
-    with pytest.raises(ValueError):
-        client.post(reverse("charge"), data)
-    # post going to #bottest
-    assert "channel" in requests.post.call_args.kwargs.get("json")
-    assert "Something went wrong" in requests.post.call_args.kwargs.get("json")["text"]
+def test_payment_invalid_amount(client: Client, setup_site: object) -> None:
+    """Verify we're redirected to the donation page if an invalid amount is given."""
+    result = client.post(reverse("charge") + "?amount=aaa")
+    assert result.status_code == 302
+    assert "giving-to-grafeas" in result.url

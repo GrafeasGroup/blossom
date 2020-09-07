@@ -1,16 +1,19 @@
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
-from django.db.models import Q
 
+from website.helpers import get_additional_context
 from website.models import Post
 
 
-def index(request):
+def index(request: HttpRequest) -> HttpResponse:
+    """Render the homepage for the engineering posts."""
+    posts = Post.objects.filter(
+        published=True,
+        engineeringblogpost=True,
+        standalone_section=False,
+        show_in_news_view=True,
+    ).order_by("-date")
 
-    p = Post.objects.filter(
-        Q(published=True)
-        & Q(engineeringblogpost=True)
-        & Q(standalone_section=False)
-        & Q(show_in_news_view=True)
-    )
+    context = get_additional_context({"posts": posts})
 
-    return render(request, "website/index.html", {"posts": p})
+    return render(request, "website/index.html", context)
