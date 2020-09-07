@@ -5,7 +5,7 @@ from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
-from api.models import Transcription
+from api.models import Source, Transcription
 from api.tests.helpers import (
     create_submission,
     create_transcription,
@@ -23,7 +23,7 @@ class TestTranscriptionCreation:
         submission = create_submission()
 
         result = client.get(
-            reverse("transcription-list"), content_type="application/json", **headers,
+            reverse("transcription-list"), content_type="application/json", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -32,11 +32,53 @@ class TestTranscriptionCreation:
         create_transcription(submission, user)
 
         result = client.get(
-            reverse("transcription-list"), content_type="application/json", **headers,
+            reverse("transcription-list"), content_type="application/json", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 1
+        assert result.json()["results"][0]["id"] == 1
+
+    def test_list_with_filters(self, client: Client) -> None:
+        """Verify that listing all submissions works correctly."""
+        client, headers, user = setup_user_client(client)
+
+        AAA, _ = Source.objects.get_or_create(name="AAA")
+        BBB, _ = Source.objects.get_or_create(name="BBB")
+
+        submission = create_submission()
+
+        create_transcription(submission, user, source=AAA)
+        create_transcription(submission, user, source=AAA)
+        create_transcription(submission, user, source=BBB)
+        create_transcription(submission, user, source=BBB)
+
+        result = client.get(
+            reverse("transcription-list"), content_type="application/json", **headers
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 4
+
+        result = client.get(
+            reverse("transcription-list") + "?source=AAA",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 2
+        assert "AAA" in result.json()["results"][0]["source"]  # it will be a full link
+
+        result = client.get(
+            reverse("transcription-list") + "?source=AAA&id=1",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 1
+        assert "AAA" in result.json()["results"][0]["source"]  # it will be a full link
         assert result.json()["results"][0]["id"] == 1
 
     def test_create(self, client: Client) -> None:
@@ -291,7 +333,7 @@ class TestTranscriptionSearch:
         """Check whether a search without ID is caught correctly."""
         client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("transcription-search"), content_type="application/json", **headers,
+            reverse("transcription-search"), content_type="application/json", **headers
         )
 
         assert result.status_code == status.HTTP_400_BAD_REQUEST
@@ -303,7 +345,7 @@ class TestTranscriptionRandom:
     def test_random_none_available(self, client: Client) -> None:
         """Test that no transcription is returned when there is none available."""
         client, headers, user = setup_user_client(client)
-        result = client.get(reverse("transcription-review-random"), **headers,)
+        result = client.get(reverse("transcription-review-random"), **headers)
 
         assert not result.content
         assert result.status_code == status.HTTP_200_OK
@@ -314,7 +356,7 @@ class TestTranscriptionRandom:
         submission = create_submission()
         transcription = create_transcription(submission, user)
 
-        result = client.get(reverse("transcription-review-random"), **headers,)
+        result = client.get(reverse("transcription-review-random"), **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()

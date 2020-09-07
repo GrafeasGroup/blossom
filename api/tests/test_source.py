@@ -15,7 +15,7 @@ class TestSourceViewset:
         """Verify that listing all Source objects works correctly."""
         client, headers, _ = setup_user_client(client)
         result = client.get(
-            reverse("source-list"), content_type="application/json", **headers,
+            reverse("source-list"), content_type="application/json", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -24,12 +24,37 @@ class TestSourceViewset:
         source = get_default_test_source()
 
         result = client.get(
-            reverse("source-list"), content_type="application/json", **headers,
+            reverse("source-list"), content_type="application/json", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 1
         assert result.json()["results"][0]["name"] == source.name
+
+    def test_list_with_filters(self, client: Client) -> None:
+        """Verify that listing all submissions works correctly."""
+        client, headers, _ = setup_user_client(client)
+
+        Source.objects.get_or_create(name="AAA")
+        Source.objects.get_or_create(name="BBB")
+        Source.objects.get_or_create(name="CCC")
+
+        result = client.get(
+            reverse("source-list"), content_type="application/json", **headers
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 3
+
+        result = client.get(
+            reverse("source-list") + "?name=AAA",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 1
+        assert result.json()["results"][0]["name"] == "AAA"
 
     def test_source_create(self, client: Client) -> None:
         """Verify that creating a Source through the API works as expected."""
