@@ -1,5 +1,6 @@
 """The views of the API, providing the possible API requests."""
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 
 from api.authentication import BlossomApiPermission
@@ -17,3 +18,5 @@ class SourceViewSet(viewsets.ModelViewSet):
     queryset = Source.objects.all().order_by("pk")
     serializer_class = SourceSerializer
     permission_classes = (BlossomApiPermission,)
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ["name"]
