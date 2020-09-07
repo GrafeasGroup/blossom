@@ -94,7 +94,11 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "authentication.BlossomUser"
 
 MIDDLEWARE = [
-    "bugsnag.django.middleware.BugsnagMiddleware",
+    # Bugsnag is having certificate issues with notify.bugsnag.com -- it is
+    # triggering cascading SSL errors whenever their middleware tries to
+    # file an issue. I have filed a ticket on 9/6/2020 and we can uncomment
+    # this after their certificate issue is resolved.
+    # "bugsnag.django.middleware.BugsnagMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -148,7 +152,7 @@ DATABASES = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},  # noqa: E231
+    "handlers": {"console": {"class": "logging.StreamHandler"}},  # noqa: E231
     "loggers": {
         "django": {
             "handlers": ["console"],
