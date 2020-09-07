@@ -62,13 +62,13 @@ class TestSubmissionGet:
         """Verify that listing all submissions works correctly."""
         client, headers, _ = setup_user_client(client)
 
-        AAA, _ = Source.objects.get_or_create(name="AAA")
-        BBB, _ = Source.objects.get_or_create(name="BBB")
+        aaa, _ = Source.objects.get_or_create(name="AAA")
+        bbb, _ = Source.objects.get_or_create(name="BBB")
 
-        create_submission(source=AAA)
-        create_submission(source=AAA)
-        create_submission(source=BBB)
-        create_submission(source=BBB)
+        create_submission(source=aaa)
+        create_submission(source=aaa)
+        create_submission(source=bbb)
+        create_submission(source=bbb)
 
         result = client.get(
             reverse("submission-list"), content_type="application/json", **headers

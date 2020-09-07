@@ -43,15 +43,15 @@ class TestTranscriptionCreation:
         """Verify that listing all submissions works correctly."""
         client, headers, user = setup_user_client(client)
 
-        AAA, _ = Source.objects.get_or_create(name="AAA")
-        BBB, _ = Source.objects.get_or_create(name="BBB")
+        aaa, _ = Source.objects.get_or_create(name="AAA")
+        bbb, _ = Source.objects.get_or_create(name="BBB")
 
         submission = create_submission()
 
-        create_transcription(submission, user, source=AAA)
-        create_transcription(submission, user, source=AAA)
-        create_transcription(submission, user, source=BBB)
-        create_transcription(submission, user, source=BBB)
+        create_transcription(submission, user, source=aaa)
+        create_transcription(submission, user, source=aaa)
+        create_transcription(submission, user, source=bbb)
+        create_transcription(submission, user, source=bbb)
 
         result = client.get(
             reverse("transcription-list"), content_type="application/json", **headers
