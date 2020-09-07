@@ -22,7 +22,7 @@ class TestVolunteerSummary:
         """Test whether the process functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("volunteer-summary") + f"?username={user.username}", **headers,
+            reverse("volunteer-summary") + f"?username={user.username}", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -38,7 +38,7 @@ class TestVolunteerSummary:
     def test_summary_nonexistent_username(self, client: Client) -> None:
         """Test whether the summary is not given when a nonexistent user is provided."""
         client, headers, _ = setup_user_client(client)
-        result = client.get(reverse("volunteer-summary") + "?username=404", **headers,)
+        result = client.get(reverse("volunteer-summary") + "?username=404", **headers)
         assert result.status_code == status.HTTP_404_NOT_FOUND
 
     def test_summary_blacklisted_user(self, client: Client) -> None:
@@ -54,7 +54,7 @@ class TestVolunteerSummary:
         assert Transcription.objects.filter(author=user).count() == 3
 
         result = client.get(
-            reverse("volunteer-summary") + f"?username={user.username}", **headers,
+            reverse("volunteer-summary") + f"?username={user.username}", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -65,7 +65,7 @@ class TestVolunteerSummary:
         user.save()
 
         result = client.get(
-            reverse("volunteer-summary") + f"?username={user.username}", **headers,
+            reverse("volunteer-summary") + f"?username={user.username}", **headers
         )
 
         assert result.json()["gamma"] == 3
@@ -78,7 +78,7 @@ class TestVolunteerAssortedFunctions:
         """Verify that getting the list of users works correctly."""
         client, headers, user = setup_user_client(client)
         result = client.get(
-            reverse("volunteer-list"), content_type="application/json", **headers,
+            reverse("volunteer-list"), content_type="application/json", **headers
         )
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 1
@@ -87,12 +87,47 @@ class TestVolunteerAssortedFunctions:
         create_user(email="a@a.com", username="AAA")
 
         result = client.get(
-            reverse("volunteer-list"), content_type="application/json", **headers,
+            reverse("volunteer-list"), content_type="application/json", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 2
         assert result.json()["results"][1]["username"] == "AAA"
+
+    def test_list_with_filters(self, client: Client) -> None:
+        """Verify that listing all submissions works correctly."""
+        client, headers, user = setup_user_client(client)
+
+        create_user(username="A")
+        create_user(username="B")
+        create_user(username="C")
+        create_user(username="D")
+
+        result = client.get(
+            reverse("volunteer-list"), content_type="application/json", **headers
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 5
+
+        result = client.get(
+            reverse("volunteer-list") + "?username=C",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 1
+        assert result.json()["results"][0]["username"] == "C"
+
+        result = client.get(
+            reverse("volunteer-list") + "?username=C&id=1",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 0
 
     def test_edit_volunteer(self, client: Client) -> None:
         """Test whether an edit of a user is propagated correctly."""
@@ -115,7 +150,7 @@ class TestVolunteerAssortedFunctions:
         client, headers, user = setup_user_client(client)
         create_user(username="another_user")
         result = client.get(
-            reverse("volunteer-list") + f"?username={user.username}", **headers,
+            reverse("volunteer-list") + f"?username={user.username}", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -131,7 +166,7 @@ class TestVolunteerGammaPlusOne:
         client, headers, user = setup_user_client(client)
 
         result = client.patch(
-            reverse("volunteer-gamma-plusone", args=[user.id]), **headers,
+            reverse("volunteer-gamma-plusone", args=[user.id]), **headers
         )
 
         user.refresh_from_db()
@@ -150,9 +185,7 @@ class TestVolunteerGammaPlusOne:
         """Test whether a plus one with a nonexistent ID is caught correctly."""
         client, headers, _ = setup_user_client(client)
 
-        result = client.patch(
-            reverse("volunteer-gamma-plusone", args=[404]), **headers,
-        )
+        result = client.patch(reverse("volunteer-gamma-plusone", args=[404]), **headers)
 
         assert result.status_code == status.HTTP_404_NOT_FOUND
         # shouldn't have created anything
@@ -197,7 +230,7 @@ class TestVolunteerCreation:
         client, headers, _ = setup_user_client(client)
 
         result = client.post(
-            reverse("volunteer-list"), content_type="application/json", **headers,
+            reverse("volunteer-list"), content_type="application/json", **headers
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
         assert BlossomUser.objects.count() == 1
@@ -212,7 +245,7 @@ class TestVolunteerCoCAcceptance:
 
         assert user.accepted_coc is False
         result = client.post(
-            reverse("volunteer-accept-coc") + f"?username={user.username}", **headers,
+            reverse("volunteer-accept-coc") + f"?username={user.username}", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -225,7 +258,7 @@ class TestVolunteerCoCAcceptance:
 
         assert user.accepted_coc is False
         result = client.post(
-            reverse("volunteer-accept-coc") + "?username=AAAAAAAAA", **headers,
+            reverse("volunteer-accept-coc") + "?username=AAAAAAAAA", **headers
         )
         assert result.status_code == status.HTTP_404_NOT_FOUND
         user.refresh_from_db()
@@ -236,7 +269,7 @@ class TestVolunteerCoCAcceptance:
         client, headers, user = setup_user_client(client, accepted_coc=True)
 
         result = client.post(
-            reverse("volunteer-accept-coc") + f"?username={user.username}", **headers,
+            reverse("volunteer-accept-coc") + f"?username={user.username}", **headers
         )
         assert result.status_code == status.HTTP_409_CONFLICT
         user.refresh_from_db()
