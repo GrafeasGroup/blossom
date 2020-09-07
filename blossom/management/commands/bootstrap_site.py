@@ -30,18 +30,31 @@ ABOUT_PAGE = """
 """  # noqa: E501
 
 GIVING_PAGE = """
-<p>We at Grafeas are passionate about making the world a better place, but we can't do it without your help. Our volunteers work diligently around the clock to help us get closer to this goal, but we still have operating costs that hard work cannot cover.</p>
-<p>Our amazing sponsors help us keep the lights on and we'd love to add you to this list. Our sponsors, both in services rendered and monetarily, include:</p>
+<p>We at Grafeas are passionate about making the world a better place, but we can't do it without your help. Our
+    volunteers work diligently around the clock to help us get closer to this goal, but we still have operating
+    costs that hard work cannot cover.</p>
+<p>Our amazing sponsors help us keep the lights on and we'd love to add you to this list. Our sponsors, both in
+    services rendered and monetarily, include:</p>
 
 <ul>
-  <li><a href="https://www.bugsnag.com/open-source/" class="real-link" target="_blank" rel="noreferrer">Bugsnag</a> &mdash; providing free error catching to our open source projects</li>
-  <li><a href="https://blog.cloudflare.com/cloudflare-open-source-your-upgrade-is-on-the-house/" class="real-link" target="_blank" rel="noreferrer">Cloudflare</a> &mdash; providing a free Pro Plan for our domain</li>
-  <li><a href="https://www.linode.com/" class="real-link" target="_blank" rel="noreferrer">Linode</a> &mdash; providing free hosting for our servers</li>
-  <li><a href="https://stripe.com/" class="real-link" target="_blank" rel="noreferrer">Stripe</a> &mdash; special rates and great service</li>
-  <li>Patrons who have donated here and through <a href="https://www.patreon.com/grafeasgroup" class="real-link" target="_blank" rel="noreferrer">Patreon</a></li>
+    <li><a href="https://www.bugsnag.com/open-source/" class="real-link" target="_blank"
+           rel="noreferrer">Bugsnag</a> &mdash; providing free error catching to our open source projects
+    </li>
+    <li><a href="https://blog.cloudflare.com/cloudflare-open-source-your-upgrade-is-on-the-house/" class="real-link"
+           target="_blank" rel="noreferrer">Cloudflare</a> &mdash; providing a free Pro Plan for our domain
+    </li>
+    <li><a href="https://www.linode.com/" class="real-link" target="_blank" rel="noreferrer">Linode</a> &mdash;
+        providing free hosting for our servers
+    </li>
+    <li><a href="https://stripe.com/" class="real-link" target="_blank" rel="noreferrer">Stripe</a> &mdash; special
+        rates and great service
+    </li>
+    <li>Patrons who have donated here and through <a href="https://www.patreon.com/grafeasgroup" class="real-link"
+                                                     target="_blank" rel="noreferrer">Patreon</a></li>
 </ul>
 
-<p>Your donation to the Grafeas Group will help us further our goal of worldwide accessibility on the internet. All funding goes towards:</p>
+<p>Your donation to the Grafeas Group will help us further our goal of worldwide accessibility on the internet. All
+    funding goes towards:</p>
 
 <p>
 <ul>
@@ -50,80 +63,81 @@ GIVING_PAGE = """
     <li>Outreach</li>
     <li>Forging new partnerships</li>
 </ul>
+
+<p>
+    Every dollar counts! We greatly appreciate every donation that we receive, and we do our level best to
+    put donations to the best uses possible. If you have any questions, feel free to contact us at
+    <a href="mailto:donations@grafeas.org">donations@grafeas.org</a>.
 </p>
 
-<p>Every dollar counts! We recommend picking the option that's best for you &mdash; if the preset options don't suit your needs, please contact us for more information.</p>
-
-<form id="donations" action="https://payments.grafeas.org/" method="POST">
-    <div class="row">
-        <div class="col">
-            <div class="text-center">
-                <input type="button" class="btn btn-block btn-outline-secondary shadow" id="ten" value="$10 USD">
+<div class="card">
+    <div class="card-body shadow">
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="input-group input-group-lg needs-validation mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">$</span>
+                    </div>
+                    <input type="text" id="donationAmount" class="form-control" value="10"
+                           aria-label="Amount (to the nearest dollar)">
+                </div>
+                <div class="invalid-feedback">
+                    Please provide a valid number.
+                </div>
+            </div>
+            <div class="col-lg-9">
+                <button class="btn btn-block btn-outline-secondary btn-lg shadow" id="checkout-button">Donate!
+                </button>
             </div>
         </div>
-        <div class="col">
-            <div class="text-center">
-                <input type="button" class="btn btn-block btn-outline-secondary shadow" id="twentyFive" value="$25 USD">
-            </div>
-        </div>
-        <div class="col">
-            <div class="text-center">
-                <input type="button" class="btn btn-block btn-outline-secondary shadow" id="fifty" value="$50 USD">
+        <div class="card-footer">
+            <div class="small text-muted">
+                Donations are handled through Stripe; any transaction will take place on their site.
+                All donations are tax-deductable in the U.S. &mdash; a receipt will be sent to you through
+                email from Stripe.
             </div>
         </div>
     </div>
+</div>
 
-    <input type="hidden" id="stripeToken" name="stripeToken" />
-    <input type="hidden" id="stripeEmail" name="stripeEmail" />
-    <input type="hidden" name="amount" id="donationAmount" value=""/>
-</form>
-<p></p>
+<script src="https://js.stripe.com/v3/"></script>
+<script type="text/javascript">
+    // Create an instance of the Stripe object with your publishable API key
+    var stripe = Stripe('pk_test_Qgem2MtFoeRvlAqt7SQGyg2y');
+    var checkoutButton = document.getElementById('checkout-button');
 
-<script src="https://checkout.stripe.com/checkout.js"></script>
-<script>
-Array.from(document.querySelectorAll('.stripe-button-el')).forEach(function(el) { el.style.display = 'none'; });
+    checkoutButton.addEventListener('click', function () {
+        // Create a new Checkout Session using the server-side endpoint you
+        // created in step 3.
+        let amountElement = document.getElementById("donationAmount")
+        if (amountElement.value.match(/^[1-9]\d*(((,\d{3}){1})?(\.\d{0,2})?)$/) === null) {
+            amountElement.classList.add("is-invalid")
+            return
+        }
 
-var handler = StripeCheckout.configure({
-    key: '',
-    token: function(token) {
-        // append your token id and email, submit your form
-        $("#stripeToken").val(token.id);
-        $("#stripeEmail").val(token.email);
-        $("#donations").submit();
-    }
-  });
-
-  $('#ten').on('click', function(e) {
-    $("#donationAmount").val("1000");
-    openCheckout("Donation ($10)", 1000);
-    e.preventDefault();
-  });
-  $('#twentyFive').on('click', function(e) {
-    $("#donationAmount").val("2500");
-    openCheckout("Donation ($25)", 2500);
-    e.preventDefault();
-  });
-  $('#fifty').on('click', function(e) {
-    $("#donationAmount").val("5000");
-    openCheckout("Donation ($50)", 5000);
-    e.preventDefault();
-  });
-
-  function openCheckout(description, amount)
-  {
-    handler.open({
-      name: 'Grafeas Group, Ltd.',
-      image: '/static/images/logo.svg',
-      description: description,
-      amount: amount
+        fetch(`/payments/?amount=${amountElement.value}`, {
+            method: 'POST',
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (session) {
+                return stripe.redirectToCheckout({sessionId: session.id});
+            })
+            .then(function (result) {
+                // If `redirectToCheckout` fails due to a browser or network
+                // error, you should display the localized error message to your
+                // customer using `error.message`.
+                if (result.error) {
+                    alert(result.error.message);
+                }
+            })
+            .catch(function (error) {
+                console.error('Error:', error);
+            });
     });
-  }
-  // Close Checkout on page navigation
-  $(window).on('popstate', function() {
-    handler.close();
-  });
 </script>
-"""  # noqa: E501
+"""  # noqa: E501, W605
 
 TOS_PAGE = """
 <p>Let's keep this really simple: Usage of content ("Content") produced by or associated with Grafeas Group, Ltd. or any of its projects, including but not limited to Transcribers Of Reddit, indicates acceptance of these terms of service ("Terms").</p>
@@ -208,20 +222,22 @@ class Command(BaseCommand):
             )
             logger.debug(self.style.SUCCESS("Wrote about page!"))
 
-        if not Post.objects.filter(slug=slugs[1]).exists():
-            donation_post = Post.objects.create(
-                title="Giving to Grafeas",
-                body=GIVING_PAGE,
-                author=admin,
-                published=True,
-                standalone_section=True,
-                header_order=20,
-            )
-            donation_post.body.replace(
-                "key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'"
-            )
-            donation_post.save()
-            logger.debug(self.style.SUCCESS("Wrote donation page!"))
+        if Post.objects.filter(slug=slugs[1]).exists():
+            Post.objects.filter(slug=slugs[1]).delete()
+
+        donation_post = Post.objects.create(
+            title="Giving to Grafeas",
+            body=GIVING_PAGE,
+            author=admin,
+            published=True,
+            standalone_section=True,
+            header_order=20,
+        )
+        donation_post.body.replace(
+            "key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'"
+        )
+        donation_post.save()
+        logger.debug(self.style.SUCCESS("Wrote donation page!"))
 
         if not Post.objects.filter(slug=slugs[2]).exists():
             Post.objects.create(
