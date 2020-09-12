@@ -33,8 +33,8 @@ class TestSubmissionTranscribotQueue:
         )
 
         # now there's a submission without a transcribot transcription
-        assert len(result.data) == 1
-        create_transcription(submission, transcribot)
+        assert len(result.data) == 0
+        create_transcription(submission, transcribot, original_id=None)
 
         result = client.get(
             reverse("submission-get-transcribot-queue") + "?source=reddit",
@@ -43,7 +43,7 @@ class TestSubmissionTranscribotQueue:
         )
 
         # now the submission has a transcribot entry
-        assert len(result.data) == 0
+        assert len(result.data) == 1
 
     def test_completed_ocr_transcriptions(
         self, client: Client, setup_site: Any
@@ -60,9 +60,9 @@ class TestSubmissionTranscribotQueue:
             **headers,
         )
 
-        assert len(result.data) == 1
+        assert len(result.data) == 0
 
-        create_transcription(submission, transcribot)
+        transcription = create_transcription(submission, transcribot, original_id=None)
 
         result = client.get(
             reverse("submission-get-transcribot-queue") + "?source=reddit",
@@ -70,7 +70,20 @@ class TestSubmissionTranscribotQueue:
             **headers,
         )
 
-        # all submissions have valid OCR transcriptions
+        # now there's a transcription that needs work
+        assert len(result.data) == 1
+
+        # transcribot works on it
+        transcription.original_id = "AAA"
+        transcription.save()
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue") + "?source=reddit",
+            content_type="application/json",
+            **headers,
+        )
+
+        # Queue goes back to 0.
         assert len(result.data) == 0
 
     def test_normal_transcriptions_dont_affect_ocr_queue(
@@ -86,7 +99,7 @@ class TestSubmissionTranscribotQueue:
             **headers,
         )
 
-        assert len(result.data) == 1
+        assert len(result.data) == 0
 
         create_transcription(submission, user)
 
@@ -97,14 +110,21 @@ class TestSubmissionTranscribotQueue:
         )
 
         # there should be no change to the OCR queue
-        assert len(result.data) == 1
+        assert len(result.data) == 0
 
     def test_transcribot_limit_param(self, client: Client, setup_site: Any) -> None:
         """Verify that adding the `limit` QSP modifies the results."""
         client, headers, _ = setup_user_client(client)
+        user_model = get_user_model()
+        transcribot = user_model.objects.get(username="transcribot")
+
         submission1 = create_submission(source="reddit", original_id="A")
-        create_submission(source="reddit", original_id="B")
-        create_submission(source="reddit", original_id="C")
+        submission2 = create_submission(source="reddit", original_id="B")
+        submission3 = create_submission(source="reddit", original_id="C")
+
+        create_transcription(submission1, transcribot, original_id=None)
+        create_transcription(submission2, transcribot, original_id=None)
+        create_transcription(submission3, transcribot, original_id=None)
 
         result = client.get(
             reverse("submission-get-transcribot-queue") + "?source=reddit&limit=none",
