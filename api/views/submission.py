@@ -253,6 +253,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             url = transcription.url
         if not url:
             url = submission.tor_url
+
+        url = "https://reddit.com" + url if submission.source == "reddit" else url
+
         slack.chat_postMessage(
             channel="#transcription_check",
             text="Please check the following transcription of "
@@ -434,13 +437,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         source_obj = get_object_or_404(Source, pk=source)
         transcribot = BlossomUser.objects.get(username="transcribot")
         return_limit = self._get_limit_value(request)
-
         queryset = (
             Submission.objects.filter(source=source_obj)
-            .exclude(
+            .filter(
                 id__in=Submission.objects.filter(
                     transcription__author=transcribot
-                ).filter(transcription__original_id__isnull=False)
+                ).filter(transcription__original_id__isnull=True)
             )
             .exclude(transcription__source=Source.objects.get(name="failed_ocr"))
         )[:return_limit]
