@@ -103,6 +103,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
             - username              the ID or username of the authoring volunteer
             - removed_from_reddit   whether the transcription is removed from Reddit
         """
+        # todo: if the original_id is passed in here, make sure this is okay
         submission = get_object_or_404(Submission, id=submission_id)
         user = get_object_or_404(BlossomUser, username=username)
         source = get_object_or_404(Source, name=source)
