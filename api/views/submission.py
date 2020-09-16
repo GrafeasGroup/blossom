@@ -4,7 +4,6 @@ from datetime import timedelta
 from typing import Union
 
 from django.conf import settings
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -59,13 +58,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             Parameter("ctq", "query", type="boolean"),
             Parameter("hours", "query", type="integer"),
         ],
+        required=["source"],
         responses={
             200: DocResponse("Successful operation", schema=serializer_class),
             400: "The custom hour provided is invalid.",
         },
     )
+    @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
-    def expired(self, request: Request) -> Response:
+    def expired(self, request: Request, source: str = None) -> Response:
         """
         Return all old submissions that have not been claimed or completed yet.
 
@@ -85,33 +86,40 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 delay_time = timezone.now() - timedelta(hours=hours)
             except ValueError:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
-
+        source_obj = get_object_or_404(Source, pk=source)
         queryset = Submission.objects.filter(
             completed_by=None,
             claimed_by=None,
             create_time__lt=delay_time,
             archived=False,
+            source=source_obj,
         )
         return Response(
             self.get_serializer(queryset, many=True, context={"request", request}).data
         )
 
     @swagger_auto_schema(
-        responses={200: DocResponse("Successful operation", schema=serializer_class)}
+        responses={200: DocResponse("Successful operation", schema=serializer_class)},
+        required=["source"],
     )
+    @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
-    def unarchived(self, request: Request) -> Response:
+    def unarchived(self, request: Request, source: str = None) -> Response:
         """
         Return all completed old submissions which are not archived.
 
         The definition of old in this method is half an hour. When no posts are
         found, an empty array is returned in the body.
         """
+        source_obj = get_object_or_404(Source, pk=source)
         delay_time = timezone.now() - timedelta(
             hours=settings.ARCHIVIST_COMPLETED_DELAY_TIME
         )
         queryset = Submission.objects.filter(
-            ~Q(completed_by=None) & Q(complete_time__lt=delay_time) & Q(archived=False)
+            completed_by__isnull=False,
+            complete_time__lt=delay_time,
+            archived=False,
+            source=source_obj,
         )
         return Response(data=self.get_serializer(queryset, many=True).data)
 
