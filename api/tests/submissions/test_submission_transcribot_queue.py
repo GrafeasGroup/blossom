@@ -143,6 +143,30 @@ class TestSubmissionTranscribotQueue:
         assert len(result.data) == 1
         assert result.json()[0]["id"] == submission1.id
 
+    def test_verify_no_removed_posts(self, client: Client, setup_site: Any) -> None:
+        """Verify that a post removed from the queue is not sent to transcribot."""
+        client, headers, _ = setup_user_client(client)
+        user_model = get_user_model()
+        transcribot = user_model.objects.get(username="transcribot")
+
+        submission1 = create_submission(source="reddit", original_id="A")
+        submission2 = create_submission(
+            source="reddit", original_id="B", removed_from_queue=True
+        )
+        submission3 = create_submission(source="reddit", original_id="C")
+
+        create_transcription(submission1, transcribot, original_id=None)
+        create_transcription(submission2, transcribot, original_id=None)
+        create_transcription(submission3, transcribot, original_id=None)
+
+        result = client.get(
+            reverse("submission-get-transcribot-queue") + "?source=reddit&limit=none",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert len(result.data) == 2
+
 
 def test_get_limit() -> None:
     """Verify that get_limit_value returns the requested value or 10."""

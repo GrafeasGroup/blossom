@@ -93,6 +93,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             create_time__lt=delay_time,
             archived=False,
             source=source_obj,
+            removed_from_queue=False,
         )
         return Response(self.get_serializer(queryset, many=True).data)
 
@@ -428,28 +429,29 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         Brief walkthrough of this query:
 
-        A = Start with all the submissions from a given source, like reddit
+        A = Grab all submissions that:
+            * are from a given source
+            * have a transcription object written by transcribot
+            * that the transcription objects do NOT have an original_id key
+              - if that key was there, that would mean that the transcription
+                had been posted
+            * that the submission has not been marked as removed from the queue
+              - ie. it broke rules and was reported & removed
 
-        B = create a queryset that is all submissions that have transcription
-            objects written by transcribot AND that transcription object does
-            not have an original_id key -- if that key is there, that means the
-            transcription has been posted
-
-        C = get a queryset of all submissions that have a transcription object
+        B = get a queryset of all submissions that have a transcription object
             linked to them where the source for the transcription is failed_ocr
 
-        return ((A - B) - C)
+        return A - B
         """
         source_obj = get_object_or_404(Source, pk=source)
         transcribot = BlossomUser.objects.get(username="transcribot")
         return_limit = self._get_limit_value(request)
         queryset = (
-            Submission.objects.filter(source=source_obj)
-            .filter(
-                id__in=Submission.objects.filter(
-                    transcription__author=transcribot
-                ).filter(transcription__original_id__isnull=True)
-            )
-            .exclude(transcription__source=Source.objects.get(name="failed_ocr"))
+            Submission.objects.filter(
+                source=source_obj,
+                id__in=Submission.objects.filter(transcription__author=transcribot),
+                transcription__original_id__isnull=True,
+                removed_from_queue=False,
+            ).exclude(transcription__source=Source.objects.get(name="failed_ocr"),)
         )[:return_limit]
         return Response(data=self.get_serializer(queryset, many=True).data)

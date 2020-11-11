@@ -38,6 +38,9 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
     just send a 200 OK as fast as we can so that Slack doesn't screw up
     our day.
 
+    Modifying the request URL on Slack's side is done under the Event
+    Subscriptions tab under "Your Apps".
+
     :param request: HttpRequest
     :return: HttpRequest
     """
