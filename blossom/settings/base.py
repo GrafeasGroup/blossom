@@ -46,13 +46,7 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static_dev")]
 LOGIN_URL = reverse_lazy("login")
 LOGOUT_URL = reverse_lazy("logout")
 
-# disallow creating accounts through the wiki
-WIKI_ACCOUNT_HANDLING = False
-# disallow anonymous viewing
-WIKI_ANONYMOUS = False
-
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -62,19 +56,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # additional functionality
     "widget_tweaks",
-    # wiki
-    "django.contrib.sites.apps.SitesConfig",
-    "django.contrib.humanize.apps.HumanizeConfig",
-    "django_nyt.apps.DjangoNytConfig",
-    "mptt",
-    "sekizai",
-    "sorl.thumbnail",
-    "wiki.apps.WikiConfig",
-    "wiki.plugins.attachments.apps.AttachmentsConfig",
-    # todo: this is super broken for some reason
-    # 'wiki.plugins.notifications.apps.NotificationsConfig',
-    "wiki.plugins.images.apps.ImagesConfig",
-    "wiki.plugins.macros.apps.MacrosConfig",
     # blossom internal apps
     "blossom",
     "api",
@@ -95,11 +76,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "authentication.BlossomUser"
 
 MIDDLEWARE = [
-    # Bugsnag is having certificate issues with notify.bugsnag.com -- it is
-    # triggering cascading SSL errors whenever their middleware tries to
-    # file an issue. I have filed a ticket on 9/6/2020 and we can uncomment
-    # this after their certificate issue is resolved.
-    # "bugsnag.django.middleware.BugsnagMiddleware",
+    "bugsnag.django.middleware.BugsnagMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -127,7 +104,6 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "sekizai.context_processors.sekizai",
             ],
         },
     },
