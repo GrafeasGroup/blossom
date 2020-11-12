@@ -429,29 +429,23 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         Brief walkthrough of this query:
 
-        A = Grab all submissions that:
-            * are from a given source
-            * have a transcription object written by transcribot
-            * that the transcription objects do NOT have an original_id key
-              - if that key was there, that would mean that the transcription
-                had been posted
-            * that the submission has not been marked as removed from the queue
-              - ie. it broke rules and was reported & removed
-
-        B = get a queryset of all submissions that have a transcription object
-            linked to them where the source for the transcription is failed_ocr
-
-        return A - B
+        Grab all submissions that:
+        * are from a given source
+        * have a transcription object written by transcribot
+        * that the transcription objects do NOT have an original_id key
+          - if that key was there, that would mean that the transcription
+            had been posted
+        * that the submission has not been marked as removed from the queue
+          - ie. it broke rules and was reported & removed
         """
         source_obj = get_object_or_404(Source, pk=source)
         transcribot = BlossomUser.objects.get(username="transcribot")
         return_limit = self._get_limit_value(request)
-        queryset = (
-            Submission.objects.filter(
-                source=source_obj,
-                id__in=Submission.objects.filter(transcription__author=transcribot),
-                transcription__original_id__isnull=True,
-                removed_from_queue=False,
-            ).exclude(transcription__source=Source.objects.get(name="failed_ocr"),)
+        queryset = Submission.objects.filter(
+            source=source_obj,
+            id__in=Submission.objects.filter(transcription__author=transcribot),
+            transcription__original_id__isnull=True,
+            removed_from_queue=False,
+            cannot_ocr=False,
         )[:return_limit]
         return Response(data=self.get_serializer(queryset, many=True).data)

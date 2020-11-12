@@ -136,6 +136,10 @@ class Submission(models.Model):
     # specifically.
     removed_from_queue = models.BooleanField(default=False)
 
+    # If we get errors back from our OCR solution or if a given submission cannot
+    # be run through OCR, this flag should be set.
+    cannot_ocr = models.BooleanField(default=False)
+
     def __str__(self) -> str:  # pragma: no cover
         return f"{self.original_id}"
 
@@ -149,9 +153,13 @@ class Submission(models.Model):
 
         :return: whether the Submission has an OCR transcription
         """
-        return bool(
-            Transcription.objects.filter(
-                submission=self, author__username="transcribot"
+        return (
+            False
+            if self.cannot_ocr
+            else bool(
+                Transcription.objects.filter(
+                    submission=self, author__username="transcribot"
+                )
             )
         )
 
@@ -159,23 +167,6 @@ class Submission(models.Model):
     def is_image(self) -> bool:
         """Check whether the content url is from an image host we recognize."""
         return urlparse(self.content_url).netloc in settings.IMAGE_DOMAINS
-
-    def _generate_failed_transcription(self) -> None:
-        """
-        Create a transcription object for a failed OCR attempt.
-
-        This is used to mark a submission as having been attempted by OCR but was
-        unable to complete for some reason.
-        """
-        transcribot = get_user_model().objects.get(username="transcribot")
-        failed_ocr_source = Source.objects.get(name="failed_ocr")
-        Transcription.objects.create(
-            submission=self,
-            author=transcribot,
-            original_id=uuid.uuid4(),
-            source=failed_ocr_source,
-            text="",
-        )
 
     def _create_ocr_transcription(self, text: str) -> None:
         """
@@ -204,11 +195,11 @@ class Submission(models.Model):
             logging.warning(
                 "There was an error in generating the OCR transcription: " + str(e)
             )
-            self._generate_failed_transcription()
+            self.cannot_ocr = True
             return
 
         if not result:
-            self._generate_failed_transcription()
+            self.cannot_ocr = True
             return
 
         if self.source.name == "reddit":

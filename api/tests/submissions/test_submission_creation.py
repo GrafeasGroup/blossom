@@ -160,7 +160,5 @@ class TestSubmissionCreation:
             mock.assert_called_once()
 
         assert result.status_code == status.HTTP_201_CREATED
-        assert Transcription.objects.count() == 1
-        transcription = Transcription.objects.first()
-        assert transcription.text == ""
-        assert transcription.source == Source.objects.get(name="failed_ocr")
+        assert Transcription.objects.count() == 0
+        assert result.json().get("cannot_ocr") is True
