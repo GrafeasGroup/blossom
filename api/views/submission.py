@@ -377,12 +377,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         source_obj = get_object_or_404(Source, pk=source)
         url = request.data.get("url")
         tor_url = request.data.get("tor_url")
+        # allows pre-marking submissions we know won't be able to make it through OCR
+        cannot_ocr = request.data.get("cannot_ocr", False)
         submission = Submission.objects.create(
             original_id=original_id,
             source=source_obj,
             url=url,
             tor_url=tor_url,
             content_url=content_url,
+            cannot_ocr=cannot_ocr,
         )
 
         return Response(

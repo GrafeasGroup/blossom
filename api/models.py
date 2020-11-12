@@ -188,6 +188,9 @@ class Submission(models.Model):
         if not settings.ENABLE_OCR:
             logging.warning("OCR is disabled; this call has been ignored.")
             return
+        if self.cannot_ocr:
+            logging.info("Submission already marked with `cannot_ocr`; skipping.")
+            return
 
         try:
             result = process_image(self.content_url)
