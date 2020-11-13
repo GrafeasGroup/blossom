@@ -99,13 +99,12 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
 def send_info(event: Dict, message: str) -> None:
     """Send info about a user to slack."""
     parsed_message = message.split()
-    msg = None
     if len(parsed_message) == 1:
         # they just sent an empty info message
         data = Summary().generate_summary()
-        msg = dict_to_table(data)
+        msg = i18n["slack"]["server_summary"].format("\n".join(dict_to_table(data)))
 
-    if len(parsed_message) == 2:
+    elif len(parsed_message) == 2:
         if user := BlossomUser.objects.filter(
             username__iexact=parsed_message[1]
         ).first():
@@ -149,6 +148,11 @@ def process_blacklist(event: Dict, message: str) -> None:
     client.chat_postMessage(channel=event.get("channel"), text=msg)
 
 
+def pong(channel: str) -> None:
+    """Respond to pings."""
+    client.chat_postMessage(channel=channel, text="PONG")
+
+
 def get_message(data: Dict) -> str:
     """
     Pull message text out of slack event.
@@ -179,6 +183,9 @@ def process_message(data: Dict) -> None:
         client.chat_postMessage(
             channel=channel, text=i18n["slack"]["errors"]["empty_message_error"],
         )
+
+    elif "ping" in message:
+        pong(channel)
 
     elif "help" in message:
         send_help_message(channel)

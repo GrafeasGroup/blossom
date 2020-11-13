@@ -129,6 +129,13 @@ class Submission(models.Model):
     # If this is an image, it is sent to ocr.space for automatic transcription.
     content_url = models.URLField(null=True, blank=True)
 
+    # We need to keep track of every submission that we come across, but there
+    # will always be content that needs to be removed from the hands of our volunteers
+    # because of various reasons (rule-breaking content on other subs, something that
+    # got posted that shouldn't have, etc.). This is used by the unclaim feature
+    # specifically.
+    removed_from_queue = models.BooleanField(default=False)
+
     def __str__(self) -> str:  # pragma: no cover
         return f"{self.original_id}"
 
