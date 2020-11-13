@@ -351,6 +351,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 "url": Schema(type="string"),
                 "tor_url": Schema(type="string"),
                 "content_url": Schema(type="string"),
+                "cannot_ocr": Schema(type="boolean"),
             },
         ),
         responses={
@@ -366,6 +367,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         original_id: str = None,
         source: str = None,
         content_url: str = None,
+        cannot_ocr: bool = None,
         *args: object,
         **kwargs: object,
     ) -> Response:
