@@ -41,6 +41,14 @@ Blacklist / unblacklist user: `@blossom blacklist {username}`
 Render this message: `@blossom help`
 """
 
+server_summary="""
+Here's a status update on everything!
+
+```
+{0}
+```
+"""
+
 user_info="""
 User info for {0}:
 

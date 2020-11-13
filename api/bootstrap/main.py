@@ -7,22 +7,22 @@ from typing import Dict
 from django.db import reset_queries
 
 from api.bootstrap.db import (
-    get_or_create_user,
+    generate_dummy_post,
+    generate_dummy_transcription,
     get_anon_user,
     get_or_create_post,
     get_or_create_transcription,
-    generate_dummy_transcription,
-    generate_dummy_post,
+    get_or_create_user,
 )
 from api.bootstrap.helpers import (
     get_user_list_from_redis,
+    graceful_interrupt_handler,
     pull_user_data_from_redis,
     redis,
-    graceful_interrupt_handler,
 )
 from api.bootstrap.pushshift import (
-    get_tor_claim_and_done_from_pushshift,
     get_extended_transcript_body,
+    get_tor_claim_and_done_from_pushshift,
     get_transcription_data_from_pushshift,
 )
 from api.models import Transcription
@@ -68,7 +68,7 @@ def process_user(redis_user_obj: Dict):
         try:
             # if this succeeds, then we don't need to worry about creating
             # everything and can just move on.
-            Transcription.objects.get(submission__redis_id=t)
+            Transcription.objects.filter(submission__redis_id=t).first()
             logger.debug("Success! Found existing transcription! Continuing on!")
             continue
         except Transcription.DoesNotExist:

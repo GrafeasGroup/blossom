@@ -249,7 +249,7 @@ if OCR_ENABLE_BACKUP_ENDPOINT:
 OCR_NOOP_MODE = bool(os.getenv("OCR_NOOP_MODE", ""))
 OCR_DEBUG_MODE = bool(os.getenv("OCR_DEBUG_MODE", ""))
 
-ENABLE_REDDIT = False
+ENABLE_REDDIT = True
 
 IMAGE_DOMAINS = [
     "imgur.com",
