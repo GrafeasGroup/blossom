@@ -134,6 +134,37 @@ class TestSubmissionCreation:
         assert transcription.text == "AAA"
         assert transcription.source == Source.objects.get(name="blossom")
 
+    def test_ocr_on_create_with_cannot_ocr_flag(
+        self, client: Client, settings: SettingsWrapper, setup_site: Any
+    ) -> None:
+        """Verify the OCR process exits early if the cannot_ocr flag is already set."""
+        settings.ENABLE_OCR = True
+        settings.IMAGE_DOMAINS = ["example.com"]
+        assert Transcription.objects.count() == 0
+
+        client, headers, _ = setup_user_client(client)
+        source = get_default_test_source()
+        data = {
+            "original_id": "spaaaaace",
+            "source": source.pk,
+            "content_url": "http://example.com/a.jpg",
+            "cannot_ocr": True,
+        }
+
+        with patch("api.models.process_image", return_value={"text": "AAA"}) as mock:
+            # mock it anyway just in case this fails -- we don't want to actually
+            # call OCR
+            result = client.post(
+                reverse("submission-list"),
+                data,
+                content_type="application/json",
+                **headers,
+            )
+            mock.assert_not_called()
+
+        assert result.status_code == status.HTTP_201_CREATED
+        assert Transcription.objects.count() == 0
+
     def test_failed_ocr_on_create(
         self, client: Client, settings: SettingsWrapper, setup_site: Any
     ) -> None:
