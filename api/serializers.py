@@ -65,6 +65,7 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
             "has_ocr_transcription",
             "transcription_set",
             "archived",
+            "cannot_ocr",
         )
         # TODO: Omitting the below line while adding `transcription_set` makes
         # a call to a single submission created with the test data set take

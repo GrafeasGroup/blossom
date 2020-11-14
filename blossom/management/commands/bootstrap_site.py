@@ -196,7 +196,7 @@ class Command(BaseCommand):
 
     def create_sources(self) -> None:
         """Installs the default Source objects for transcriptions and submissions."""
-        sources = ["gamma_plus_one", "reddit", "blossom", "failed_ocr"]
+        sources = ["gamma_plus_one", "reddit", "blossom"]
 
         for source in sources:
             if not Source.objects.filter(name=source).exists():
