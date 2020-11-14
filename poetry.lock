@@ -109,19 +109,6 @@ typed-ast = ">=1.4.0"
 d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
 
 [[package]]
-name = "bleach"
-version = "3.1.5"
-description = "An easy safelist-based HTML-sanitizing tool."
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-
-[package.dependencies]
-packaging = "*"
-six = ">=1.9.0"
-webencodings = "*"
-
-[[package]]
 name = "bugsnag"
 version = "3.9.0"
 description = "Automatic error monitoring for django, flask, etc."
@@ -300,17 +287,6 @@ argon2 = ["argon2-cffi (>=16.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
-name = "django-classy-tags"
-version = "2.0.0"
-description = "Class based template tags for Django"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-django = ">=2.2"
-
-[[package]]
 name = "django-filter"
 version = "2.4.0"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
@@ -320,49 +296,6 @@ python-versions = ">=3.5"
 
 [package.dependencies]
 Django = ">=2.2"
-
-[[package]]
-name = "django-js-asset"
-version = "1.2.2"
-description = "script tag with additional attributes for django.forms.Media"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
-name = "django-mptt"
-version = "0.11.0"
-description = "Utilities for implementing Modified Preorder Tree Traversal with your Django Models and working with trees of Model instances."
-category = "main"
-optional = false
-python-versions = ">=3.5"
-
-[package.dependencies]
-Django = ">=1.11"
-django-js-asset = "*"
-
-[[package]]
-name = "django-nyt"
-version = "1.1.6"
-description = "A pluggable notification system written for the Django framework."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-django = ">=1.11,<3.2"
-
-[[package]]
-name = "django-sekizai"
-version = "2.0.0"
-description = "Django Sekizai"
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-django = ">=2.2"
-django-classy-tags = ">=1"
 
 [[package]]
 name = "django-widget-tweaks"
@@ -586,17 +519,6 @@ MarkupSafe = ">=0.23"
 i18n = ["Babel (>=0.8)"]
 
 [[package]]
-name = "markdown"
-version = "3.2.2"
-description = "Python implementation of Markdown."
-category = "main"
-optional = false
-python-versions = ">=3.5"
-
-[package.extras]
-testing = ["coverage", "pyyaml"]
-
-[[package]]
 name = "markupsafe"
 version = "1.1.1"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -679,14 +601,6 @@ python-versions = "*"
 
 [package.dependencies]
 flake8-polyfill = ">=1.0.2,<2"
-
-[[package]]
-name = "pillow"
-version = "8.0.1"
-description = "Python Imaging Library (Fork)"
-category = "main"
-optional = false
-python-versions = ">=3.6"
 
 [[package]]
 name = "pluggy"
@@ -1105,14 +1019,6 @@ openidconnect = ["python-jose (>=3.0.0)", "pyjwt (>=1.7.1)"]
 saml = ["python-saml (>=2.2.0)"]
 
 [[package]]
-name = "sorl-thumbnail"
-version = "12.6.3"
-description = "Thumbnails for Django"
-category = "main"
-optional = false
-python-versions = ">=3.4"
-
-[[package]]
 name = "sqlparse"
 version = "0.4.1"
 description = "A non-validating SQL parser."
@@ -1219,14 +1125,6 @@ docs = ["proselint (>=0.10.2)", "sphinx (>=3)", "sphinx-argparse (>=0.2.5)", "sp
 testing = ["coverage (>=4)", "coverage-enable-subprocess (>=1)", "flaky (>=3)", "pytest (>=4)", "pytest-env (>=0.6.2)", "pytest-freezegun (>=0.4.1)", "pytest-mock (>=2)", "pytest-randomly (>=1)", "pytest-timeout (>=1)", "pytest-xdist (>=1.31.0)", "packaging (>=20.0)", "xonsh (>=0.9.16)"]
 
 [[package]]
-name = "webencodings"
-version = "0.5.1"
-description = "Character encoding aliases for legacy web content"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "webob"
 version = "1.8.6"
 description = "WSGI request and response object"
@@ -1250,30 +1148,6 @@ python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 six = "*"
 
 [[package]]
-name = "wiki"
-version = "0.7"
-description = "A wiki system written for the Django framework."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.dependencies]
-bleach = ">=3.1.0,<3.2"
-Django = ">=2.1,<3.2"
-django-mptt = ">=0.11,<0.12"
-django-nyt = ">=1.1.5,<1.2"
-django-sekizai = ">=0.10"
-Markdown = ">=3.1,<3.3"
-Pillow = "*"
-sorl-thumbnail = ">=12.6.2,<13"
-
-[package.extras]
-devel = ["django-functest (>=1.0.3,<1.1)", "pytest (>=5.3,<5.4)", "pytest-django", "pytest-cov", "pytest-pythonpath", "flake8 (>=3.7,<3.8)", "black (>=20.8b1,<20.9)", "pre-commit"]
-test = ["django-functest (>=1.0.3,<1.1)", "pytest (>=5.3,<5.4)", "pytest-django", "pytest-cov", "pytest-pythonpath"]
-testlint = ["flake8 (>=3.7,<3.8)", "black (>=20.8b1,<20.9)", "pre-commit"]
-transifex = ["transifex-client"]
-
-[[package]]
 name = "yarl"
 version = "1.6.2"
 description = "Yet another URL library"
@@ -1288,7 +1162,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "456ff59c1243357236037c6f84e39cd1a928a37f4b1fef6bdc9fbecfa3715470"
+content-hash = "12a3e456af03fc067af076e243595d7c7309fdcdb22faa88af99ff3bc4d36387"
 
 [metadata.files]
 aiohttp = [
@@ -1357,10 +1231,6 @@ better-exceptions = [
 black = [
     {file = "black-19.10b0-py36-none-any.whl", hash = "sha256:1b30e59be925fafc1ee4565e5e08abef6b03fe455102883820fe5ee2e4734e0b"},
     {file = "black-19.10b0.tar.gz", hash = "sha256:c2edb73a08e9e0e6f65a0e6af18b059b8b1cdd5bef997d7a0b181df93dc81539"},
-]
-bleach = [
-    {file = "bleach-3.1.5-py2.py3-none-any.whl", hash = "sha256:2bce3d8fab545a6528c8fa5d9f9ae8ebc85a56da365c7f85180bfe96a35ef22f"},
-    {file = "bleach-3.1.5.tar.gz", hash = "sha256:3c4c520fdb9db59ef139915a5db79f8b51bc2a7257ea0389f30c846883430a4b"},
 ]
 bugsnag = [
     {file = "bugsnag-3.9.0-py2.py3-none-any.whl", hash = "sha256:33cfcc6410a8c42311dd3958b5e5f5704e36617cd49bb53b59832a0cd6b90151"},
@@ -1512,29 +1382,9 @@ django = [
     {file = "Django-3.1.3-py3-none-any.whl", hash = "sha256:14a4b7cd77297fba516fc0d92444cc2e2e388aa9de32d7a68d4a83d58f5a4927"},
     {file = "Django-3.1.3.tar.gz", hash = "sha256:14b87775ffedab2ef6299b73343d1b4b41e5d4e2aa58c6581f114dbec01e3f8f"},
 ]
-django-classy-tags = [
-    {file = "django-classy-tags-2.0.0.tar.gz", hash = "sha256:d59d98bdf96a764dcf7a2929a86439d023b283a9152492811c7e44fc47555bc9"},
-    {file = "django_classy_tags-2.0.0-py3-none-any.whl", hash = "sha256:25eb4f95afee396148683bfb4811b83b3f5729218d73ad0a3399271a6f9fcc49"},
-]
 django-filter = [
     {file = "django-filter-2.4.0.tar.gz", hash = "sha256:84e9d5bb93f237e451db814ed422a3a625751cbc9968b484ecc74964a8696b06"},
     {file = "django_filter-2.4.0-py3-none-any.whl", hash = "sha256:e00d32cebdb3d54273c48f4f878f898dced8d5dfaad009438fe61ebdf535ace1"},
-]
-django-js-asset = [
-    {file = "django-js-asset-1.2.2.tar.gz", hash = "sha256:c163ae80d2e0b22d8fb598047cd0dcef31f81830e127cfecae278ad574167260"},
-    {file = "django_js_asset-1.2.2-py2.py3-none-any.whl", hash = "sha256:8ec12017f26eec524cab436c64ae73033368a372970af4cf42d9354fcb166bdd"},
-]
-django-mptt = [
-    {file = "django-mptt-0.11.0.tar.gz", hash = "sha256:dfdb3af75ad27cdd4458b0544ec8574174f2b90f99bc2cafab6a15b4bc1895a8"},
-    {file = "django_mptt-0.11.0-py2.py3-none-any.whl", hash = "sha256:90eb236eb4f1a92124bd7c37852bbe09c0d21158477cc237556d59842a91c509"},
-]
-django-nyt = [
-    {file = "django-nyt-1.1.6.tar.gz", hash = "sha256:a0d9b14c06507af17774a47a461c44c9da683fa1fc23425f9d14f2fc842e07fb"},
-    {file = "django_nyt-1.1.6-py3-none-any.whl", hash = "sha256:235c6132325b9d1fc15e64303a15552857f13f9bf94f0ae6b6fed75581a696f0"},
-]
-django-sekizai = [
-    {file = "django-sekizai-2.0.0.tar.gz", hash = "sha256:e829f09b0d6bf01ee5cde05de1fb3faf2fbc5df66dc4dc280fbaac224ca4336f"},
-    {file = "django_sekizai-2.0.0-py3-none-any.whl", hash = "sha256:5c5e16845d37ce822fc655ce79ec02715191b3d03330b550997bcb842cf24fdf"},
 ]
 django-widget-tweaks = [
     {file = "django-widget-tweaks-1.4.8.tar.gz", hash = "sha256:9f91ca4217199b7671971d3c1f323a2bec71a0c27dec6260b3c006fa541bc489"},
@@ -1614,10 +1464,6 @@ itypes = [
 jinja2 = [
     {file = "Jinja2-2.11.2-py2.py3-none-any.whl", hash = "sha256:f0a4641d3cf955324a89c04f3d94663aa4d638abe8f733ecd3582848e1c37035"},
     {file = "Jinja2-2.11.2.tar.gz", hash = "sha256:89aab215427ef59c34ad58735269eb58b1a5808103067f7bb9d5836c651b3bb0"},
-]
-markdown = [
-    {file = "Markdown-3.2.2-py3-none-any.whl", hash = "sha256:c467cd6233885534bf0fe96e62e3cf46cfc1605112356c4f9981512b8174de59"},
-    {file = "Markdown-3.2.2.tar.gz", hash = "sha256:1fafe3f1ecabfb514a5285fca634a53c1b32a81cb0feb154264d55bf2ff22c17"},
 ]
 markupsafe = [
     {file = "MarkupSafe-1.1.1-cp27-cp27m-macosx_10_6_intel.whl", hash = "sha256:09027a7803a62ca78792ad89403b1b7a73a01c8cb65909cd876f7fcebd79b161"},
@@ -1710,36 +1556,6 @@ pathspec = [
 pep8-naming = [
     {file = "pep8-naming-0.9.1.tar.gz", hash = "sha256:a33d38177056321a167decd6ba70b890856ba5025f0a8eca6a3eda607da93caf"},
     {file = "pep8_naming-0.9.1-py2.py3-none-any.whl", hash = "sha256:45f330db8fcfb0fba57458c77385e288e7a3be1d01e8ea4268263ef677ceea5f"},
-]
-pillow = [
-    {file = "Pillow-8.0.1-cp36-cp36m-macosx_10_10_x86_64.whl", hash = "sha256:b63d4ff734263ae4ce6593798bcfee6dbfb00523c82753a3a03cbc05555a9cc3"},
-    {file = "Pillow-8.0.1-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:5f9403af9c790cc18411ea398a6950ee2def2a830ad0cfe6dc9122e6d528b302"},
-    {file = "Pillow-8.0.1-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:6b4a8fd632b4ebee28282a9fef4c341835a1aa8671e2770b6f89adc8e8c2703c"},
-    {file = "Pillow-8.0.1-cp36-cp36m-manylinux2014_aarch64.whl", hash = "sha256:cc3ea6b23954da84dbee8025c616040d9aa5eaf34ea6895a0a762ee9d3e12e11"},
-    {file = "Pillow-8.0.1-cp36-cp36m-win32.whl", hash = "sha256:d8a96747df78cda35980905bf26e72960cba6d355ace4780d4bdde3b217cdf1e"},
-    {file = "Pillow-8.0.1-cp36-cp36m-win_amd64.whl", hash = "sha256:7ba0ba61252ab23052e642abdb17fd08fdcfdbbf3b74c969a30c58ac1ade7cd3"},
-    {file = "Pillow-8.0.1-cp37-cp37m-macosx_10_10_x86_64.whl", hash = "sha256:795e91a60f291e75de2e20e6bdd67770f793c8605b553cb6e4387ce0cb302e09"},
-    {file = "Pillow-8.0.1-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:0a2e8d03787ec7ad71dc18aec9367c946ef8ef50e1e78c71f743bc3a770f9fae"},
-    {file = "Pillow-8.0.1-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:006de60d7580d81f4a1a7e9f0173dc90a932e3905cc4d47ea909bc946302311a"},
-    {file = "Pillow-8.0.1-cp37-cp37m-manylinux2014_aarch64.whl", hash = "sha256:bd7bf289e05470b1bc74889d1466d9ad4a56d201f24397557b6f65c24a6844b8"},
-    {file = "Pillow-8.0.1-cp37-cp37m-win32.whl", hash = "sha256:95edb1ed513e68bddc2aee3de66ceaf743590bf16c023fb9977adc4be15bd3f0"},
-    {file = "Pillow-8.0.1-cp37-cp37m-win_amd64.whl", hash = "sha256:e38d58d9138ef972fceb7aeec4be02e3f01d383723965bfcef14d174c8ccd039"},
-    {file = "Pillow-8.0.1-cp38-cp38-macosx_10_10_x86_64.whl", hash = "sha256:d3d07c86d4efa1facdf32aa878bd508c0dc4f87c48125cc16b937baa4e5b5e11"},
-    {file = "Pillow-8.0.1-cp38-cp38-manylinux1_i686.whl", hash = "sha256:fbd922f702582cb0d71ef94442bfca57624352622d75e3be7a1e7e9360b07e72"},
-    {file = "Pillow-8.0.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:92c882b70a40c79de9f5294dc99390671e07fc0b0113d472cbea3fde15db1792"},
-    {file = "Pillow-8.0.1-cp38-cp38-manylinux2014_aarch64.whl", hash = "sha256:7c9401e68730d6c4245b8e361d3d13e1035cbc94db86b49dc7da8bec235d0015"},
-    {file = "Pillow-8.0.1-cp38-cp38-win32.whl", hash = "sha256:6c1aca8231625115104a06e4389fcd9ec88f0c9befbabd80dc206c35561be271"},
-    {file = "Pillow-8.0.1-cp38-cp38-win_amd64.whl", hash = "sha256:cc9ec588c6ef3a1325fa032ec14d97b7309db493782ea8c304666fb10c3bd9a7"},
-    {file = "Pillow-8.0.1-cp39-cp39-macosx_10_10_x86_64.whl", hash = "sha256:eb472586374dc66b31e36e14720747595c2b265ae962987261f044e5cce644b5"},
-    {file = "Pillow-8.0.1-cp39-cp39-manylinux1_i686.whl", hash = "sha256:0eeeae397e5a79dc088d8297a4c2c6f901f8fb30db47795113a4a605d0f1e5ce"},
-    {file = "Pillow-8.0.1-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:81f812d8f5e8a09b246515fac141e9d10113229bc33ea073fec11403b016bcf3"},
-    {file = "Pillow-8.0.1-cp39-cp39-manylinux2014_aarch64.whl", hash = "sha256:895d54c0ddc78a478c80f9c438579ac15f3e27bf442c2a9aa74d41d0e4d12544"},
-    {file = "Pillow-8.0.1-cp39-cp39-win32.whl", hash = "sha256:2fb113757a369a6cdb189f8df3226e995acfed0a8919a72416626af1a0a71140"},
-    {file = "Pillow-8.0.1-cp39-cp39-win_amd64.whl", hash = "sha256:59e903ca800c8cfd1ebe482349ec7c35687b95e98cefae213e271c8c7fffa021"},
-    {file = "Pillow-8.0.1-pp36-pypy36_pp73-macosx_10_10_x86_64.whl", hash = "sha256:5abd653a23c35d980b332bc0431d39663b1709d64142e3652890df4c9b6970f6"},
-    {file = "Pillow-8.0.1-pp36-pypy36_pp73-manylinux2010_x86_64.whl", hash = "sha256:4b0ef2470c4979e345e4e0cc1bbac65fda11d0d7b789dbac035e4c6ce3f98adb"},
-    {file = "Pillow-8.0.1-pp37-pypy37_pp73-win32.whl", hash = "sha256:8de332053707c80963b589b22f8e0229f1be1f3ca862a932c1bcd48dafb18dd8"},
-    {file = "Pillow-8.0.1.tar.gz", hash = "sha256:11c5c6e9b02c9dac08af04f093eb5a2f84857df70a7d4a6a6ad461aca803fb9e"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},
@@ -1979,10 +1795,6 @@ social-auth-core = [
     {file = "social_auth_core-3.3.3-py2-none-any.whl", hash = "sha256:4a3cdf69c449b235cdabd54a1be7ba3722611297e69fded52e3584b1a990af25"},
     {file = "social_auth_core-3.3.3-py3-none-any.whl", hash = "sha256:21c0639c56befd33ec162c2210d583bb1de8e1136d53b21bafb96afaf2f86c91"},
 ]
-sorl-thumbnail = [
-    {file = "sorl-thumbnail-12.6.3.tar.gz", hash = "sha256:66771521f3c0ed771e1ce8e1aaf1639ebff18f7f5a40cfd3083da8f0fe6c7c99"},
-    {file = "sorl_thumbnail-12.6.3-py3-none-any.whl", hash = "sha256:7162639057dff222a651bacbdb6bd6f558fc32946531d541fc71e10c0167ebdf"},
-]
 sqlparse = [
     {file = "sqlparse-0.4.1-py3-none-any.whl", hash = "sha256:017cde379adbd6a1f15a61873f43e8274179378e95ef3fede90b5aa64d304ed0"},
     {file = "sqlparse-0.4.1.tar.gz", hash = "sha256:0f91fd2e829c44362cbcfab3e9ae12e22badaa8a29ad5ff599f9ec109f0454e8"},
@@ -2042,10 +1854,6 @@ virtualenv = [
     {file = "virtualenv-20.1.0-py2.py3-none-any.whl", hash = "sha256:b0011228208944ce71052987437d3843e05690b2f23d1c7da4263fde104c97a2"},
     {file = "virtualenv-20.1.0.tar.gz", hash = "sha256:b8d6110f493af256a40d65e29846c69340a947669eec8ce784fcf3dd3af28380"},
 ]
-webencodings = [
-    {file = "webencodings-0.5.1-py2.py3-none-any.whl", hash = "sha256:a0af1213f3c2226497a97e2b3aa01a7e4bee4f403f95be16fc9acd2947514a78"},
-    {file = "webencodings-0.5.1.tar.gz", hash = "sha256:b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923"},
-]
 webob = [
     {file = "WebOb-1.8.6-py2.py3-none-any.whl", hash = "sha256:a3c89a8e9ba0aeb17382836cdb73c516d0ecf6630ec40ec28288f3ed459ce87b"},
     {file = "WebOb-1.8.6.tar.gz", hash = "sha256:aa3a917ed752ba3e0b242234b2a373f9c4e2a75d35291dcbe977649bd21fd108"},
@@ -2053,10 +1861,6 @@ webob = [
 websocket-client = [
     {file = "websocket_client-0.57.0-py2.py3-none-any.whl", hash = "sha256:0fc45c961324d79c781bab301359d5a1b00b13ad1b10415a4780229ef71a5549"},
     {file = "websocket_client-0.57.0.tar.gz", hash = "sha256:d735b91d6d1692a6a181f2a8c9e0238e5f6373356f561bb9dc4c7af36f452010"},
-]
-wiki = [
-    {file = "wiki-0.7-py3-none-any.whl", hash = "sha256:66d7dd71e530f4461597438402c8b3a0c73ba1b38e7da7b0aa550ca44be7e4aa"},
-    {file = "wiki-0.7.tar.gz", hash = "sha256:bd7e7a845bbdad91d62eaad07bb3c706d50b64d27d69ec89452ab577e6c3b5e7"},
 ]
 yarl = [
     {file = "yarl-1.6.2-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:d77f6c9133d2aabb290a7846aaa74ec14d7b5ab35b01591fac5a70c4a8c959a2"},
