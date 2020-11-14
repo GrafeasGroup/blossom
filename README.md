@@ -20,18 +20,16 @@ Create a file under the top level `blossom` folder called `local_settings.py`. P
 # noinspection PyUnresolvedReferences
 from blossom.settings.local import *
 import better_exceptions
-
+import os
 # trust me, this will make your life better.
 better_exceptions.MAX_LENGTH = None
 
 # Use this file when developing locally -- it has some helpful additions which
 # change how the server runs.
-
 DEBUG = True
-# this requires that you use "grafeas.localhost:8000" as your method for accessing
-# the site.
-ALLOWED_HOSTS = ['*']
+ENABLE_SLACK = False
 
+ALLOWED_HOSTS = ['*']
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
@@ -48,6 +46,29 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+        },
+        'blossom': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG')
+        }
+    },
+}
+
+# Uncomment the below to disable all auth checks for the API to test responses.
+# OVERRIDE_API_AUTH=True
 ```
 This file will be ignored by git, so make any changes you need to while developing.
 
@@ -69,10 +90,6 @@ If an issue is detected when you run `git commit`, the action will be aborted an
 
 * Minimum Python version: 3.8
 
-* In order to get the wiki to work, there are some extra system dependencies that need to be installed. 
-  * OSX: Download and install this: `http://ethan.tira-thompson.com/Mac_OS_X_Ports_files/libjpeg-libpng%20%28universal%29.dmg` (more information here: https://django-wiki.readthedocs.io/en/latest/installation.html#mac-os-x-10-5)
-  * Debian / Ubuntu: `sudo apt-get install libjpeg8 libjpeg-dev libpng12-0 libpng12-dev`
-
 * Install dependencies with `poetry install`. Don't have Poetry? Info here: https://poetry.eustace.io/
 
 * Run `python manage.py makemigrations blossom` to build the migrations, then commit them to the database with `python manage.py migrate --settings=blossom.local_settings`.
@@ -83,11 +100,11 @@ If an issue is detected when you run `git commit`, the action will be aborted an
   * password: `asdf`
 
 You can use the above credentials to create yourself a new account.
-* Navigate to http://localhost:8000/superadmin/newuser and log in with the above credentials.
+* Navigate to `http://localhost:8000/superadmin/newuser` and log in with the above credentials.
 * Create a personal user account with the requested fields. Make sure that you select "is superuser".
 
 Next, we'll disable the default admin account.
-* Navigate to http://localhost:8000/superadmin/blossom/blossomuser/ and click on the "admin" user.
+* Navigate to `http://localhost:8000/superadmin/blossom/blossomuser/` and click on the "admin" user.
 * Scroll to the bottom of the page and deselect "Active".
 * Click Save.
 
@@ -107,6 +124,14 @@ Run `python manage.py bootstrap` and see above for expected user credentials and
 
 ## Important links
 
+#### localhost:8000/
+
+Site root.
+
+#### localhost:8000/api/
+
+API root.
+
 #### localhost:8000/payments/
 
 The processing url for Stripe.
@@ -114,10 +139,6 @@ The processing url for Stripe.
 #### localhost:8000/payments/ping/
 
 Used by Bubbles for site isup checks.
-
-#### localhost:8000/
-
-Site root.
 
 #### localhost:8000/admin/
 
@@ -134,10 +155,6 @@ Create a new user for the site.
 #### localhost:8000/newpost/
 
 Create a new post for the site.
-
-#### localhost:8000/wiki/
-
-Root for wiki.
 
 #### localhost:8000/api/swagger
 
