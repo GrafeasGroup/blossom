@@ -74,7 +74,7 @@ github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
 
     [slack.reset_coc]
     success="Code of Conduct acceptance revoked for user '{0}'."
-    success_undo="Code of Conduct acceptance approved user '{0}'."
+    success_undo="Code of Conduct acceptance approved for user '{0}'."
 
     [slack.dadjoke]
     message = "Hey {0}! {1}"
