@@ -14,9 +14,11 @@ from api.tests.helpers import create_user
 from api.views.slack import github_sponsors_endpoint
 from api.views.slack_helpers import client as slack_client
 from api.views.slack_helpers import (
+    dadjoke_target,
     dict_to_table,
     is_valid_github_request,
     process_blacklist,
+    process_coc_reset,
 )
 from blossom.strings import translation
 
@@ -217,7 +219,7 @@ def test_process_blacklist() -> None:
     assert test_user.blacklisted is False
     message = f"blacklist {test_user.username}"
 
-    process_blacklist({}, message)
+    process_blacklist("", message)
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
     assert test_user.blacklisted is True
@@ -226,7 +228,7 @@ def test_process_blacklist() -> None:
     ]["success"].format(test_user.username)
 
     # Now we unblacklist them
-    process_blacklist({}, message)
+    process_blacklist("", message)
     assert slack_client.chat_postMessage.call_count == 2
     test_user.refresh_from_db()
     assert test_user.blacklisted is False
@@ -238,8 +240,8 @@ def test_process_blacklist() -> None:
 @pytest.mark.parametrize(
     "message,response",
     [
-        ("blacklist", i18n["slack"]["blacklist"]["missing_username"]),
-        ("blacklist asdf", i18n["slack"]["blacklist"]["unknown_username"]),
+        ("blacklist", i18n["slack"]["errors"]["missing_username"]),
+        ("blacklist asdf", i18n["slack"]["errors"]["unknown_username"]),
         ("a b c", i18n["slack"]["errors"]["too_many_params"]),
     ],
 )
@@ -249,3 +251,70 @@ def test_process_blacklist_errors(message: str, response: str) -> None:
     process_blacklist({}, message)
     slack_client.chat_postMessage.assert_called_once()
     assert slack_client.chat_postMessage.call_args[1]["text"] == response
+
+
+def test_process_coc_reset() -> None:
+    """Test blacklist functionality and ensure that it works in reverse."""
+    slack_client.chat_postMessage = MagicMock()
+
+    test_user = create_user()
+    assert test_user.accepted_coc is True
+    message = f"reset {test_user.username}"
+
+    # revoke their code of conduct acceptance
+    process_coc_reset("", message)
+    slack_client.chat_postMessage.assert_called_once()
+    test_user.refresh_from_db()
+    assert test_user.accepted_coc is False
+    assert slack_client.chat_postMessage.call_args[1]["text"] == i18n["slack"][
+        "reset_coc"
+    ]["success"].format(test_user.username)
+
+    # Now we approve them
+    process_coc_reset("", message)
+    assert slack_client.chat_postMessage.call_count == 2
+    test_user.refresh_from_db()
+    assert test_user.accepted_coc is True
+    assert slack_client.chat_postMessage.call_args[1]["text"] == i18n["slack"][
+        "reset_coc"
+    ]["success_undo"].format(test_user.username)
+
+
+@pytest.mark.parametrize(
+    "message,response",
+    [
+        ("reset", i18n["slack"]["errors"]["missing_username"]),
+        ("reset asdf", i18n["slack"]["errors"]["unknown_username"]),
+        ("reset a b c", i18n["slack"]["errors"]["too_many_params"]),
+    ],
+)
+def test_process_coc_reset_errors(message: str, response: str) -> None:
+    """Ensure that process_coc_reset errors when passed the wrong username."""
+    slack_client.chat_postMessage = MagicMock()
+    process_coc_reset("", message)
+    slack_client.chat_postMessage.assert_called_once()
+    assert slack_client.chat_postMessage.call_args[1]["text"] == response
+
+
+@pytest.mark.parametrize(
+    "message", [("dadjoke"), ("dadjoke <@asdf>"), ("dadjoke a b c")],
+)
+def test_dadjoke_target(message: str) -> None:
+    """Verify that dadjokes are delivered appropriately."""
+    slack_client.chat_postMessage = MagicMock()
+
+    dadjoke_target("", message, use_api=False)
+    slack_client.chat_postMessage.assert_called_once()
+    assert (
+        i18n["slack"]["dadjoke"]["fallback_joke"]
+        in slack_client.chat_postMessage.call_args[1]["text"]
+    )
+    if "<@" in message:
+        # needs to be uppercased because otherwise slack will barf and
+        # not parse it as a valid ping
+        assert slack_client.chat_postMessage.call_args[1]["text"].startswith(
+            "Hey <@ASDF>"
+        )
+    else:
+        # no included username means don't use the ping formatting
+        assert not slack_client.chat_postMessage.call_args[1]["text"].startswith("Hey")

@@ -186,20 +186,21 @@ def process_coc_reset(channel: str, message: str) -> None:
     client.chat_postMessage(channel=channel, text=msg)
 
 
-def dadjoke_target(channel: str, message: str) -> None:
+def dadjoke_target(channel: str, message: str, use_api: bool = True) -> None:
     """Send the pinged user a dad joke. Or just send everybody a joke."""
     parsed_message = message.split()
     ping_username, msg = None, None
     try:
-        joke = requests.get(
-            "https://icanhazdadjoke.com/", headers={"Accept": "text/plain"}
-        ).content.decode()
+        if use_api:
+            joke = requests.get(
+                "https://icanhazdadjoke.com/", headers={"Accept": "text/plain"}
+            ).content.decode()
+        else:
+            raise Exception("Testing mode -- just use fallback.")
     except:  # noqa: E722
         joke = i18n["slack"]["dadjoke"]["fallback_joke"]
 
-    if len(parsed_message) == 1:
-        msg = joke
-    elif len(parsed_message) == 2:
+    if len(parsed_message) == 2:
         if parsed_message[1].startswith("<"):
             ping_username = parsed_message[1].upper()
 
