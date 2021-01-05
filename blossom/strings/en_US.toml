@@ -36,8 +36,9 @@ help_message="""
 Help is on the way!
 
 Get information about a user: `@blossom info {username}`
-Get general server information: `@blossom info` | `@blossom summary`
+Get general server information: `@blossom info`
 Blacklist / unblacklist user: `@blossom blacklist {username}`
+Toggle CoC status of user: `@blossom reset {username}`
 Render this message: `@blossom help`
 """
 
