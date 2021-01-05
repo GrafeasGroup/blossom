@@ -64,15 +64,6 @@ def send_help_message(channel: str, *args: Any) -> None:
     client.chat_postMessage(channel=channel, text=i18n["slack"]["help_message"])
 
 
-def send_summary_message(channel: str, *args: Any) -> None:
-    """Post a summary message to slack."""
-    data = Summary().generate_summary()
-    client.chat_postMessage(
-        channel=channel,
-        text=i18n["slack"]["server_summary"].format("\n".join(dict_to_table(data))),
-    )
-
-
 def send_github_sponsors_message(data: Dict, action: str) -> None:
     """
     Process the POST request from GitHub Sponsors.
@@ -104,8 +95,12 @@ def send_info(channel: str, message: str) -> None:
     """Send info about a user to slack."""
     parsed_message = message.split()
     if len(parsed_message) == 1:
-        # they just sent an empty info message
-        send_summary_message(channel)
+        # they just sent an empty info message, create a summary response
+        data = Summary().generate_summary()
+        client.chat_postMessage(
+            channel=channel,
+            text=i18n["slack"]["server_summary"].format("\n".join(dict_to_table(data))),
+        )
         return
 
     elif len(parsed_message) == 2:
@@ -249,7 +244,6 @@ def process_message(data: Dict) -> None:
     options = {
         "ping": pong,
         "help": send_help_message,
-        "summary": send_summary_message,
         "reset": process_coc_reset,
         "info": send_info,
         "blacklist": process_blacklist,
