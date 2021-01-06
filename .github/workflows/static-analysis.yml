@@ -9,7 +9,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.8]
+        python-version: [3.8, 3.9]
 
     steps:
     - name: Checkout current branch
@@ -20,27 +20,17 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: dschep/install-poetry-action@v1.3
+    - uses: snok/install-poetry@v1.1.1
       with:
-        create_virtualenvs: true
+        virtualenvs-create: true
     - name: Install Dependencies
       run: |
         sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git -y
         poetry install
-    - name: Clone pyflakes repository
-      uses: actions/checkout@v2
-      with:
-        repository: PyCQA/pyflakes
-        path: pyflakes
-    - name: Clone pycodestyle repository
-      uses: actions/checkout@v2
-      with:
-        repository: PyCQA/pycodestyle
-        path: pycodestyle
     - name: Install latest pyflakes and pycodestyle version
       run: |
-        poetry run pip install -e pyflakes
-        poetry run pip install -e pycodestyle
+        poetry run pip install pyflakes
+        poetry run pip install pycodestyle
     - name: Run Static Analysis
       run: |
         /usr/bin/git diff -u ${{ github.event.pull_request.base.sha }} | poetry run flake8 --diff

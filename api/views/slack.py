@@ -39,7 +39,8 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
     our day.
 
     Modifying the request URL on Slack's side is done under the Event
-    Subscriptions tab under "Your Apps".
+    Subscriptions tab under "Your Apps". Remember to click "Save Changes"
+    after confirming the new URL, too!
 
     :param request: HttpRequest
     :return: HttpRequest

@@ -36,8 +36,9 @@ help_message="""
 Help is on the way!
 
 Get information about a user: `@blossom info {username}`
-Get general server information: `@blossom info` | `@blossom summary`
+Get general server information: `@blossom info`
 Blacklist / unblacklist user: `@blossom blacklist {username}`
+Toggle CoC status of user: `@blossom reset {username}`
 Render this message: `@blossom help`
 """
 
@@ -65,9 +66,17 @@ github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
     empty_message_error="Sorry, I wasn't able to get text out of that. Try again."
     too_many_params="Too many parameters; please try again."
     no_user_by_that_name="Sorry, I wasn't able to find a user with that name."
+    missing_username="I don't see a username in your request -- make sure you're formatting your request as \"@blossom {action} {argument}\". Example: \"@blossom dadjoke @itsthejoker\""
+    unknown_username="No username like that on file; please check your spelling."
 
     [slack.blacklist]
-    missing_username="I don't see a username in your request. Try again."
-    unknown_username="No username like that on file; please check your spelling."
     success="User '{0}' blacklisted."
     success_undo="User '{0}' unblacklisted."
+
+    [slack.reset_coc]
+    success="Code of Conduct acceptance revoked for user '{0}'."
+    success_undo="Code of Conduct acceptance approved for user '{0}'."
+
+    [slack.dadjoke]
+    message = "Hey {0}! {1}"
+    fallback_joke = "Did you know that fortune tellers make their tents purple? They believe the color has mythical properties. It allows them to tell the fuschia."
