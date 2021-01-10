@@ -277,12 +277,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         Because gamma is calculated off of transcriptions and the `done` endpoint
         is called after the transcription is posted, by the time that we go to
-        calculate the gamma of the user, their gamma has already changed.
-
-        We use the new function `get_past_gamma_count` to get the historical
-        count of transcriptions (everything minus whatever was filed in the last
-        five seconds -- overly cautious, but more than enough to account for
-        network issues) so that any changes in their rank will be visible.
+        calculate the gamma of the user, their gamma has already changed... so
+        we'll just subtract one from their current score and see if that changes
+        anything.
         """
         current_rank = user.get_rank()
         if user.get_rank(override=user.gamma - 1) != current_rank:
