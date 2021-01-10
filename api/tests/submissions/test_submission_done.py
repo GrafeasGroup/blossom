@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, PropertyMock, call, patch
 import pytest
 from django.test import Client
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from api.tests.helpers import (
@@ -173,6 +174,75 @@ class TestSubmissionDone:
                 )
             else:
                 assert slack_client.chat_postMessage.call_count == 0
+
+    def test_check_for_rank_up(self, client: Client) -> None:
+        """Verify that a slack message fires when a volunteer ranks up."""
+        client, headers, user = setup_user_client(client)
+        for iteration in range(49):
+            submission = create_submission(
+                claimed_by=user, completed_by=user, original_id=iteration
+            )
+            create_transcription(
+                submission,
+                user,
+                create_time=timezone.now() - timezone.timedelta(hours=1),
+            )
+
+        # Mock the Slack client to catch the sent messages by the function under test.
+        slack_client.chat_postMessage = MagicMock()
+
+        submission = create_submission(claimed_by=user, original_id=50)
+        pinging_transcription = create_transcription(
+            submission, user, create_time=timezone.now()
+        )
+
+        # patch out random so that the "check transcription" doesn't fire
+        with patch("random.random", lambda: 1):
+            result = client.patch(
+                reverse("submission-done", args=[submission.id]),
+                json.dumps({"username": user.username}),
+                content_type="application/json",
+                **headers,
+            )
+        assert result.status_code == 201
+        slack_message = (
+            f"Congrats to {user.username} on achieving the rank of {user.get_rank()}!!"
+            f" {submission.tor_url}"
+        )
+
+        assert (
+            call(channel="#new_volunteers_meta", text=slack_message)
+            == slack_client.chat_postMessage.call_args_list[0]
+        )
+
+        # pretend the transcription is a bit older now
+        pinging_transcription.create_time = timezone.now() - timezone.timedelta(
+            seconds=15
+        )
+        pinging_transcription.save()
+
+        # now they do another transcription!
+        submission = create_submission(claimed_by=user, original_id=51)
+        create_transcription(submission, user, create_time=timezone.now())
+
+        # now it shouldn't trigger on the next transcription
+        # patch out random so that the "check transcription" doesn't fire
+        old_count_of_slack_calls = len(slack_client.chat_postMessage.call_args_list)
+
+        with patch("random.random", lambda: 1):
+            result = client.patch(
+                reverse("submission-done", args=[submission.id]),
+                json.dumps({"username": user.username}),
+                content_type="application/json",
+                **headers,
+            )
+            assert result.status_code == 201
+
+        # nothing fired, right?
+        assert (
+            len(slack_client.chat_postMessage.call_args_list)
+            == old_count_of_slack_calls
+        )
 
     def test_done_no_coc(self, client: Client) -> None:
         """ # noqa
