@@ -1,6 +1,7 @@
 import logging
 import re
 from typing import Dict, Union
+from urllib.parse import urlparse
 
 import requests
 from django.conf import settings
@@ -8,6 +9,11 @@ from requests.exceptions import ConnectTimeout, RequestException
 from requests.models import Response as RequestsResponse
 
 from ocr.errors import OCRError
+
+URL_RE = (
+    r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]" r"|[*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
+)
+SPECIAL_CHARS = ["(", ")", "!", ".", ","]
 
 
 def process_image(image_url: str) -> Union[None, Dict]:
@@ -159,3 +165,66 @@ def escape_reddit_links(body: str) -> str:
     body = body.replace("\r\n", "\n\n").replace(">>", r"\>\>")
     magic = re.compile(r"(?<![a-zA-Z0-9])([ur])/|/([ur])/")
     return magic.sub(r"\/\1\2/", body)
+
+
+def _is_shortlink(url: str) -> bool:
+    """Rule-based checker to identify short links."""
+    # Long URLs aren't short.
+    if len(url) > 30:
+        return False
+
+    url = urlparse(url)
+
+    # if it's a bare hostname, it's not a shortlink
+    if len(url.path) == 0:
+        return False
+
+    # Is it a complicated URL? https://a.com/b/c/d/?
+    if len(url.path.split("/")) == 3:
+        # check the difference between a.com/b/c and a.com/b/
+        # black fights flake8 on formatting here, so black wins
+        if len(url.path[url.path.rfind("/") :]) > 1:  # noqa: E203
+            return False
+        else:
+            return True
+
+    if len(url.path.split("/")) > 3:
+        return False
+
+    # what's after the hostname?
+    if len(url.path) > 12:
+        return False
+
+    # how long is the host? http://asdfasdfasdfasdf.com isn't short.
+    if len(url.netloc[: url.netloc.index(".")]) > 10:
+        return False
+
+    return True
+
+
+def replace_shortlinks(content: str, replacement: str = "<redacted link>") -> str:
+    """
+    Pull out anything that looks like a shortlink and replace with a redacted string.
+
+    So that we don't actually have to deal with _following_ the link, we adapt
+    this answer from SO (https://stackoverflow.com/a/9557685) so that it it _looks_
+    like a shortlink, just replace it to be on the safe side.
+    """
+    # pull out all the matches with finditer because findall doesn't preserve the
+    # location of the matches
+    matches = list(re.finditer(URL_RE, content))
+    if len(matches) == 0:
+        return content
+
+    # go backwards so that we can replace multiple links without messing up the
+    # location positions from changing the length of the strings
+    for match in list(reversed(matches)):
+        if _is_shortlink(match.group().strip("".join(SPECIAL_CHARS))):
+            start, end = match.span()
+            # if the last character is something that's not something we want,
+            # leave it in place
+            if match.group()[-1] in SPECIAL_CHARS:
+                end = end - 1
+            content = content[:start] + replacement + content[end:]
+
+    return content

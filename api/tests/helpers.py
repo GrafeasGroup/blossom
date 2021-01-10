@@ -49,9 +49,11 @@ def create_user(**kwargs: object) -> BlossomUser:
     return user
 
 
-def get_default_test_source() -> Source:
+def get_default_test_source(override: str = None) -> Source:
     """Build or get the Source needed to create transcriptions / submissions."""
-    source, _ = Source.objects.get_or_create(name="unit_tests")
+    source, _ = Source.objects.get_or_create(
+        name="unit_tests" if not override else override
+    )
     return source
 
 
