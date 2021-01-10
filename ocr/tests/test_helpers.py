@@ -65,7 +65,7 @@ def test_replace_shortlinks(test_input: str, expected_result: str) -> None:
         ("r/test is the best", "\/r/test is the best"),  # noqa: W605
         ("/r/test is the best", "\/r/test is the best"),  # noqa: W605
     ],
-)  # noqa: W605
+)
 def test_escape_reddit_links(test_input: str, expected_result: str) -> None:
     """Verify that reddit pings are appropriately replaced."""
     assert escape_reddit_links(test_input) == expected_result
