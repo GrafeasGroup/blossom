@@ -98,6 +98,43 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return Response(self.get_serializer(queryset, many=True).data)
 
     @swagger_auto_schema(
+        manual_parameters=[Parameter("hours", "query", type="integer")],
+        required=["source"],
+        responses={
+            200: DocResponse("Successful operation", schema=serializer_class),
+            400: "The hour provided is invalid.",
+        },
+    )
+    @validate_request(query_params={"source"})
+    @action(detail=False, methods=["get"])
+    def in_progress(self, request: Request, source: str = None) -> Response:
+        """
+        Return all old submissions that are still in progress.
+
+        Sometimes submissions get lost in the ether because volunteers forget
+        to complete them. This function accepts a query string of `hours` that
+        can be used to adjust the amount of time that is considered before returning
+        a submission that is still in progress. Default is four hours.
+        """
+        hours = request.query_params.get("hours", 4)
+        try:
+            hours = int(hours)
+            delay_time = timezone.now() - timedelta(hours=hours)
+        except ValueError:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        source_obj = get_object_or_404(Source, pk=source)
+        queryset = Submission.objects.filter(
+            completed_by=None,
+            claimed_by__isnull=False,
+            claim_time__lt=delay_time,
+            archived=False,
+            source=source_obj,
+            removed_from_queue=False,
+        )
+        return Response(self.get_serializer(queryset, many=True).data)
+
+    @swagger_auto_schema(
         responses={200: DocResponse("Successful operation", schema=serializer_class)},
         required=["source"],
     )
