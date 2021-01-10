@@ -62,7 +62,7 @@ class BlossomUser(AbstractUser):
         """
         Return the name of the volunteer's current rank.
 
-        Override provided for the purposes of
+        Override provided for the purposes of checking ranks.
         """
         gamma = override if override else self.gamma
 
