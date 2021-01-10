@@ -200,6 +200,39 @@ class TestSubmissionCreation:
         assert transcription.text == "<redacted link>"
         assert transcription.source == Source.objects.get(name="blossom")
 
+    def test_ocr_on_create_with_valid_link(
+        self, client: Client, settings: SettingsWrapper, setup_site: Any
+    ) -> None:
+        """Verify that a new submission completes the OCR process."""
+        settings.ENABLE_OCR = True
+        settings.IMAGE_DOMAINS = ["example.com"]
+        assert Transcription.objects.count() == 0
+
+        client, headers, _ = setup_user_client(client)
+        source = get_default_test_source("reddit")
+        data = {
+            "original_id": "spaaaaace",
+            "source": source.pk,
+            "content_url": "http://example.com/a.jpg",
+        }
+
+        with patch(
+            "api.models.process_image", return_value={"text": "https://aaa.com/"}
+        ) as mock:
+            result = client.post(
+                reverse("submission-list"),
+                data,
+                content_type="application/json",
+                **headers,
+            )
+            mock.assert_called_once()
+
+        assert result.status_code == status.HTTP_201_CREATED
+        assert Transcription.objects.count() == 1
+        transcription = Transcription.objects.first()
+        assert transcription.text == "https://aaa.com/"
+        assert transcription.source == Source.objects.get(name="blossom")
+
     def test_ocr_on_create_with_shortlink_and_reddit_ping(
         self, client: Client, settings: SettingsWrapper, setup_site: Any
     ) -> None:

@@ -176,7 +176,7 @@ def _is_shortlink(url: str) -> bool:
     url = urlparse(url)
 
     # if it's a bare hostname, it's not a shortlink
-    if len(url.path) == 0:
+    if len(url.path) == 0 or url.path == "/":
         return False
 
     # Is it a complicated URL? https://a.com/b/c/d/?

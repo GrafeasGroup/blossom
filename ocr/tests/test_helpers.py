@@ -6,6 +6,7 @@ from ocr.helpers import _is_shortlink, escape_reddit_links, replace_shortlinks
 @pytest.mark.parametrize(
     "test_input,expected_result",
     [
+        ("https://aaa.com/", False),
         ("http://aaa.com/a/", True),
         ("http://aaa.com/a/a", False),
         ("https://aaa.ly/asdf", True),
