@@ -284,13 +284,14 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         five seconds -- overly cautious, but more than enough to account for
         network issues) so that any changes in their rank will be visible.
         """
-        old_rank = user.get_rank(override=user.get_past_gamma_count())
-        new_rank = user.get_rank()
-        if old_rank != new_rank:
+        current_rank = user.get_rank()
+        if user.get_rank(override=user.gamma - 1) != current_rank:
             slack.chat_postMessage(
                 channel="#new_volunteers_meta",
-                text=f"Congrats to {user.username} on achieving the rank of {new_rank}!!"
-                f" {submission.tor_url}",
+                text=(
+                    f"Congrats to {user.username} on achieving the rank"
+                    f" of {current_rank}!! {submission.tor_url}"
+                ),
             )
 
     @swagger_auto_schema(

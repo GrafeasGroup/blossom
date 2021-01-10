@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, PropertyMock, call, patch
 import pytest
 from django.test import Client
 from django.urls import reverse
-from django.utils import timezone
 from rest_framework import status
 
 from api.tests.helpers import (
@@ -179,22 +178,14 @@ class TestSubmissionDone:
         """Verify that a slack message fires when a volunteer ranks up."""
         client, headers, user = setup_user_client(client)
         for iteration in range(49):
-            submission = create_submission(
-                claimed_by=user, completed_by=user, original_id=iteration
-            )
-            create_transcription(
-                submission,
-                user,
-                create_time=timezone.now() - timezone.timedelta(hours=1),
-            )
+            submission = create_submission(claimed_by=user, completed_by=user)
+            create_transcription(submission, user)
 
         # Mock the Slack client to catch the sent messages by the function under test.
         slack_client.chat_postMessage = MagicMock()
 
         submission = create_submission(claimed_by=user, original_id=50)
-        pinging_transcription = create_transcription(
-            submission, user, create_time=timezone.now()
-        )
+        create_transcription(submission, user)
 
         # patch out random so that the "check transcription" doesn't fire
         with patch("random.random", lambda: 1):
@@ -215,15 +206,9 @@ class TestSubmissionDone:
             == slack_client.chat_postMessage.call_args_list[0]
         )
 
-        # pretend the transcription is a bit older now
-        pinging_transcription.create_time = timezone.now() - timezone.timedelta(
-            seconds=15
-        )
-        pinging_transcription.save()
-
         # now they do another transcription!
         submission = create_submission(claimed_by=user, original_id=51)
-        create_transcription(submission, user, create_time=timezone.now())
+        create_transcription(submission, user)
 
         # now it shouldn't trigger on the next transcription
         # patch out random so that the "check transcription" doesn't fire

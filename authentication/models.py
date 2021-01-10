@@ -55,28 +55,15 @@ class BlossomUser(AbstractUser):
             return 0  # see https://github.com/GrafeasGroup/blossom/issues/15
         return Transcription.objects.filter(author=self).count()
 
-    def get_past_gamma_count(self, delay: int = 5) -> int:
-        """
-        Return the number of gamma that a user had X seconds ago.
-
-        Defaults to 5 seconds because that's a reasonable delay to make the rank-up
-        check work efficiently.
-
-        :param delay: integer; seconds.
-        :return: integer; the number of transcriptions written by the user `delay`
-            seconds ago.
-        """
-        delay_time = timezone.now() - timezone.timedelta(seconds=delay)
-
-        return Transcription.objects.filter(
-            author=self, create_time__lt=delay_time
-        ).count()
-
     def __str__(self) -> str:
         return self.username
 
     def get_rank(self, override: int = None) -> str:
-        """Return the name of the volunteer's current rank."""
+        """
+        Return the name of the volunteer's current rank.
+
+        Override provided for the purposes of
+        """
         gamma = override if override else self.gamma
 
         if gamma >= 10000:
