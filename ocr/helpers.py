@@ -183,10 +183,7 @@ def _is_shortlink(url: str) -> bool:
     if len(url.path.split("/")) == 3:
         # check the difference between a.com/b/c and a.com/b/
         # black fights flake8 on formatting here, so black wins
-        if len(url.path[url.path.rfind("/") :]) > 1:  # noqa: E203
-            return False
-        else:
-            return True
+        return len(url.path[url.path.rfind("/") :]) <= 1  # noqa: E203
 
     if len(url.path.split("/")) > 3:
         return False
@@ -224,7 +221,7 @@ def replace_shortlinks(content: str, replacement: str = "<redacted link>") -> st
             # if the last character is something that's not something we want,
             # leave it in place
             if match.group()[-1] in SPECIAL_CHARS:
-                end = end - 1
+                end -= 1
             content = content[:start] + replacement + content[end:]
 
     return content
