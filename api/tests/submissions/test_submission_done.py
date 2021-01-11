@@ -195,7 +195,7 @@ class TestSubmissionDone:
                 content_type="application/json",
                 **headers,
             )
-        assert result.status_code == 201
+        assert result.status_code == status.HTTP_201_CREATED
         slack_message = (
             f"Congrats to {user.username} on achieving the rank of {user.get_rank()}!!"
             f" {submission.tor_url}"
@@ -221,7 +221,7 @@ class TestSubmissionDone:
                 content_type="application/json",
                 **headers,
             )
-            assert result.status_code == 201
+            assert result.status_code == status.HTTP_201_CREATED
 
         # nothing fired, right?
         assert (
