@@ -2,6 +2,7 @@ import json
 from typing import Any
 from unittest.mock import patch
 
+import pytest
 from django.test import Client
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
@@ -103,8 +104,26 @@ class TestSubmissionCreation:
 
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
+    @pytest.mark.parametrize(
+        "test_input,output",
+        [
+            ("AAA", "AAA"),
+            ("hi, u/ToR!", "hi, \/u/ToR!"),  # noqa: W605
+            ("https://aaa.com/aaaa", "<redacted link>"),
+            ("https://aaa.com/", "https://aaa.com/"),
+            (
+                "https://aaa.com/aaaa -- it's the best, u/aa!",
+                "<redacted link> -- it's the best, \/u/aa!",  # noqa: W605
+            ),
+        ],
+    )
     def test_ocr_on_create(
-        self, client: Client, settings: SettingsWrapper, setup_site: Any
+        self,
+        client: Client,
+        settings: SettingsWrapper,
+        setup_site: Any,
+        test_input: str,
+        output: str,
     ) -> None:
         """Verify that a new submission completes the OCR process."""
         settings.ENABLE_OCR = True
@@ -112,14 +131,16 @@ class TestSubmissionCreation:
         assert Transcription.objects.count() == 0
 
         client, headers, _ = setup_user_client(client)
-        source = get_default_test_source()
+        source = get_default_test_source("reddit")
         data = {
             "original_id": "spaaaaace",
             "source": source.pk,
             "content_url": "http://example.com/a.jpg",
         }
 
-        with patch("api.models.process_image", return_value={"text": "AAA"}) as mock:
+        with patch(
+            "api.models.process_image", return_value={"text": test_input}
+        ) as mock:
             result = client.post(
                 reverse("submission-list"),
                 data,
@@ -131,7 +152,7 @@ class TestSubmissionCreation:
         assert result.status_code == status.HTTP_201_CREATED
         assert Transcription.objects.count() == 1
         transcription = Transcription.objects.first()
-        assert transcription.text == "AAA"
+        assert transcription.text == output
         assert transcription.source == Source.objects.get(name="blossom")
 
     def test_ocr_on_create_with_cannot_ocr_flag(

@@ -10,7 +10,7 @@ from django.db import models
 from django.utils import timezone
 
 from ocr.errors import OCRError
-from ocr.helpers import escape_reddit_links, process_image
+from ocr.helpers import escape_reddit_links, process_image, replace_shortlinks
 
 
 def create_id() -> uuid.UUID:  # pragma: no cover
@@ -207,6 +207,7 @@ class Submission(models.Model):
 
         if self.source.name == "reddit":
             result["text"] = escape_reddit_links(result["text"])
+            result["text"] = replace_shortlinks(result["text"])
 
         self._create_ocr_transcription(text=result["text"])
 
