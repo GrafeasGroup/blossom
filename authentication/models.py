@@ -57,3 +57,30 @@ class BlossomUser(AbstractUser):
 
     def __str__(self) -> str:
         return self.username
+
+    def get_rank(self, override: int = None) -> str:
+        """
+        Return the name of the volunteer's current rank.
+
+        Override provided for the purposes of checking ranks.
+        """
+        gamma = override if override else self.gamma
+
+        if gamma >= 10000:
+            return "Jade"
+        elif gamma >= 5000:
+            return "Topaz"
+        elif gamma >= 2500:
+            return "Ruby"
+        elif gamma >= 1000:
+            return "Diamond"
+        elif gamma >= 500:
+            return "Gold"
+        elif gamma >= 250:
+            return "Purple"
+        elif gamma >= 100:
+            return "Teal"
+        elif gamma >= 50:
+            return "Green"
+        else:
+            return "Initiate"

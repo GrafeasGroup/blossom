@@ -308,6 +308,28 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             f"u/{user.username}: {url}.",
         )
 
+    def _check_for_rank_up(
+        self, user: BlossomUser, submission: Submission = None
+    ) -> None:
+        """
+        Check if a volunteer has changed rank and, if so, notify Slack.
+
+        Because gamma is calculated off of transcriptions and the `done` endpoint
+        is called after the transcription is posted, by the time that we go to
+        calculate the gamma of the user, their gamma has already changed... so
+        we'll just subtract one from their current score and see if that changes
+        anything.
+        """
+        current_rank = user.get_rank()
+        if user.get_rank(override=user.gamma - 1) != current_rank:
+            slack.chat_postMessage(
+                channel="#new_volunteers_meta",
+                text=(
+                    f"Congrats to {user.username} on achieving the rank"
+                    f" of {current_rank}!! {submission.tor_url}"
+                ),
+            )
+
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
@@ -371,6 +393,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission.completed_by = user
         submission.complete_time = timezone.now()
         submission.save()
+
+        self._check_for_rank_up(user, submission)
 
         if self._should_check_transcription(user):
             self._send_transcription_to_slack(transcription, submission, user, slack)
