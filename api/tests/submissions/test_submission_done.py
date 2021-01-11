@@ -115,7 +115,8 @@ class TestSubmissionDone:
     @pytest.mark.parametrize(
         "probability,gamma,message,tor_url,trans_url",
         [
-            (0.8, 0, False, None, None),
+            (1, 3, False, None, None),
+            (0.8, 25, False, None, None),
             (0.7999, 50, True, None, None),
             (0.7, 51, False, None, None),
             (0.6999, 100, True, None, None),

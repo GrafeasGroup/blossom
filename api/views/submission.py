@@ -217,7 +217,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         This is based on the gamma of the user. Given this gamma, a probability
         for the check is provided. The following probabilities are in use:
 
-        - gamma <= 50:              0.8
+        - gamma <= 5:               1
+        - 5 < gamma <= 50:          0.8
         - 50 < gamma <= 100:        0.7
         - 100 < gamma <= 250:       0.6
         - 250 < gamma <= 500:       0.5
@@ -226,9 +227,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         - 5000 < gamma:             0.05
 
         :param volunteer:   the volunteer for which the post should be checked
-        :return:            whether the post has to be checked
+        :return:            whether the post should be checked
         """
         probabilities = [
+            (5, 1),
             (50, 0.8),
             (100, 0.7),
             (250, 0.6),
