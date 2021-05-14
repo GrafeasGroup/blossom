@@ -6,7 +6,7 @@ from blossom.api.models import Transcription
 
 
 class BlossomUser(AbstractUser):
-    backend = 'blossom.authentication.backends.EmailBackend'
+    backend = "blossom.authentication.backends.EmailBackend"
 
     is_grafeas_staff = models.BooleanField(default=False)
     api_key = models.OneToOneField(

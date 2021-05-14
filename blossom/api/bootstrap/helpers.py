@@ -103,17 +103,15 @@ def get_transcribot_text(comments: List, post_id: str):
     # Try to pull the transcribot comment too
     try:
         trancribot_text = [
-            i for i in comments if
-            i.parent_id != post_id
-            and i.author == "transcribot"
-        ][0].body.split('\n\n---\n\n')[0]
+            i for i in comments if i.parent_id != post_id and i.author == "transcribot"
+        ][0].body.split("\n\n---\n\n")[0]
     except Exception:
         trancribot_text = None
     return trancribot_text
 
 
 class graceful_interrupt_handler(object):
-    '''
+    """
     Usage:
     with graceful_interrupt_handler as handler:
         do_stuff()
@@ -127,7 +125,7 @@ class graceful_interrupt_handler(object):
     point it will require as many consecutive calls to kill as you wrap.
 
     A fully tested suite based off http://stackoverflow.com/a/10972804/2638784
-    '''
+    """
 
     def __init__(self, signals=(signal.SIGINT, signal.SIGTERM)):
         self.signals = signals

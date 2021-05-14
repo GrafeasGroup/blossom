@@ -8,11 +8,13 @@ from blossom.website.models import Post
 
 
 def get_additional_context(context):
-    context['navbar'] = Post.objects.filter(Q(published=True) & Q(standalone_section=True)).order_by('header_order')
+    context["navbar"] = Post.objects.filter(
+        Q(published=True) & Q(standalone_section=True)
+    ).order_by("header_order")
     try:
-        context['tos'] = Post.objects.get(slug='terms-of-service')
+        context["tos"] = Post.objects.get(slug="terms-of-service")
     except Post.DoesNotExist:
-        if settings.ENVIRONMENT == 'testing':
+        if settings.ENVIRONMENT == "testing":
             raise ImproperlyConfigured(
                 "The test site is not built yet; did you remember to add the"
                 " `setup_site` fixture?"
@@ -27,9 +29,7 @@ def get_additional_context(context):
 
 
 def grafeas_staff_required(
-        view_func=None,
-        redirect_field_name=REDIRECT_FIELD_NAME,
-        login_url=None
+    view_func=None, redirect_field_name=REDIRECT_FIELD_NAME, login_url=None
 ):
     """
     Decorator for views that checks that the user is logged in and is a staff
@@ -41,7 +41,7 @@ def grafeas_staff_required(
         # superadmins should be allowed in too
         lambda u: u.is_active and (u.is_grafeas_staff or u.is_staff),
         login_url=login_url,
-        redirect_field_name=redirect_field_name
+        redirect_field_name=redirect_field_name,
     )
     if view_func:
         return actual_decorator(view_func)

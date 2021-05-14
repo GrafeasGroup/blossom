@@ -12,17 +12,15 @@ from blossom.website.models import Post
 
 def index(request):
     c = {
-        'posts': Post.objects.filter(
-            Q(published=True) &
-            Q(standalone_section=False) &
-            Q(show_in_news_view=True) &
-            Q(engineeringblogpost=False)
-        ).order_by('-date')
+        "posts": Post.objects.filter(
+            Q(published=True)
+            & Q(standalone_section=False)
+            & Q(show_in_news_view=True)
+            & Q(engineeringblogpost=False)
+        ).order_by("-date")
     }
     c = get_additional_context(c)
-    return render(
-        request, 'website/index.html', c
-    )
+    return render(request, "website/index.html", c)
 
 
 class LoginView(TemplateView):
@@ -59,7 +57,7 @@ class PostView(TemplateView):
 class PostDetail(DetailView):
     model = Post
     query_pk_and_slug = True
-    template_name = 'website/post_detail.html'
+    template_name = "website/post_detail.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -70,16 +68,18 @@ class PostDetail(DetailView):
 class PostUpdate(LoginRequiredMixin, UpdateView):
     model = Post
     query_pk_and_slug = True
-    fields = ['title', 'body', 'published', 'standalone_section', 'header_order']
-    template_name = 'website/generic_form.html'
+    fields = ["title", "body", "published", "standalone_section", "header_order"]
+    template_name = "website/generic_form.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context.update({
-            'enable_trumbowyg': True,
-            # id of html element we want to convert
-            'trumbowyg_target': 'id_body'
-        })
+        context.update(
+            {
+                "enable_trumbowyg": True,
+                # id of html element we want to convert
+                "trumbowyg_target": "id_body",
+            }
+        )
         context = get_additional_context(context)
         return context
 
@@ -87,15 +87,15 @@ class PostUpdate(LoginRequiredMixin, UpdateView):
 class PostAdd(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
         c = {
-            'form': PostAddForm(),
-            'header': 'Add a new post!',
-            'subheader': 'Remember to toggle "Published" if you want your post to appear!',
-            'enable_trumbowyg': True,
+            "form": PostAddForm(),
+            "header": "Add a new post!",
+            "subheader": 'Remember to toggle "Published" if you want your post to appear!',
+            "enable_trumbowyg": True,
             # id of html element we want to convert
-            'trumbowyg_target': 'id_body'
+            "trumbowyg_target": "id_body",
         }
         c = get_additional_context(c)
-        return render(request, 'website/generic_form.html', c)
+        return render(request, "website/generic_form.html", c)
 
     def post(self, request, *args, **kwargs):
         form = PostAddForm(request.POST)
@@ -108,25 +108,23 @@ class PostAdd(LoginRequiredMixin, TemplateView):
 
 class AdminView(LoginRequiredMixin, TemplateView):
     def get(self, request, *args, **kwargs):
-        c = {
-            'posts': Post.objects.all()
-        }
+        c = {"posts": Post.objects.all()}
         c = get_additional_context(c)
-        return render(request, 'website/admin.html', c)
+        return render(request, "website/admin.html", c)
 
 
 # superadmin role
 @staff_member_required
 def user_create(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         f = AddUserForm(request.POST)
         if f.is_valid():
             f.save()
-            return redirect('homepage')
+            return redirect("homepage")
 
     else:
         f = AddUserForm()
 
-    c = {'form': f, 'header': 'Create New User'}
+    c = {"form": f, "header": "Create New User"}
 
-    return render(request, 'website/generic_form.html', c)
+    return render(request, "website/generic_form.html", c)

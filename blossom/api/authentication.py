@@ -8,10 +8,12 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
     def has_permission(self, request, view):
         if not isinstance(request.user, AnonymousUser):
             if request.user.api_key:
-                return all([
-                    request.user.api_key.is_valid(request.headers.get("X-Api-Key")),
-                    request.user.is_grafeas_staff or request.user.is_staff,
-                ])
+                return all(
+                    [
+                        request.user.api_key.is_valid(request.headers.get("X-Api-Key")),
+                        request.user.is_grafeas_staff or request.user.is_staff,
+                    ]
+                )
 
 
 class BlossomApiPermission(rfperms.BasePermission):

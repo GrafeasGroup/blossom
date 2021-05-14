@@ -59,17 +59,21 @@ class RedditCommentTree(object):
         return self.search(self.tree, parent_id)
 
     def _add_item(self, path, item):
-        container = {'object': None, 'children': {}}
-        path = '/' + '/'.join(path)
-        dpath.util.new(self.tree, path + f'/children/{item.id}', container)
-        dpath.util.set(self.tree, path + f'/children/{item.id}/object', item)
+        container = {"object": None, "children": {}}
+        path = "/" + "/".join(path)
+        dpath.util.new(self.tree, path + f"/children/{item.id}", container)
+        dpath.util.set(self.tree, path + f"/children/{item.id}/object", item)
 
     def create_tree(self):
-        top_level_comments = [i for i in self.raw_comments if i.parent_id.startswith('t3_')]
-        child_comments = [i for i in self.raw_comments if not i.parent_id.startswith('t3_')]
+        top_level_comments = [
+            i for i in self.raw_comments if i.parent_id.startswith("t3_")
+        ]
+        child_comments = [
+            i for i in self.raw_comments if not i.parent_id.startswith("t3_")
+        ]
         logger.debug(
-            f'Found {len(top_level_comments)} top level comments and {len(child_comments)} '
-            f'child comments.'
+            f"Found {len(top_level_comments)} top level comments and {len(child_comments)} "
+            f"child comments."
         )
 
         added_ids = list()
@@ -78,7 +82,7 @@ class RedditCommentTree(object):
         kill_time = tree_create_start + timedelta(seconds=20)
 
         for item in top_level_comments:
-            self.tree[item.id] = {'object': item, 'children': {}}
+            self.tree[item.id] = {"object": item, "children": {}}
         while True:
             checkpoint = datetime.now()
             if checkpoint > kill_time:
@@ -104,10 +108,10 @@ class RedditCommentTree(object):
             checkpoint = datetime.now()
             if checkpoint > kill_time:
                 raise StopIteration
-            if '/r/TranscribersOfReddit/wiki/' in self.tree[item]['object'].body:
-                t_body = self.tree[item]['object'].body
-                t_author = self.tree[item]['object'].author
-                t_id = self.tree[item]['object'].id
+            if "/r/TranscribersOfReddit/wiki/" in self.tree[item]["object"].body:
+                t_body = self.tree[item]["object"].body
+                t_author = self.tree[item]["object"].author
+                t_id = self.tree[item]["object"].id
                 current_item = self.tree[item]
 
                 while True:
@@ -116,22 +120,25 @@ class RedditCommentTree(object):
                         raise StopIteration
                     found_something = False
 
-                    children = current_item['children']
+                    children = current_item["children"]
 
                     for blorp in children.keys():
                         try:
-                            if children[blorp]['object'].author == t_author \
-                                    and children[blorp]['object'].id != t_id:
+                            if (
+                                children[blorp]["object"].author == t_author
+                                and children[blorp]["object"].id != t_id
+                            ):
                                 found_something = True
                                 t_body += "\n\n"
-                                t_body += children[blorp]['object'].body
-                                logger.info(f"Found piece of extended transcript! ID {children[blorp]['object'].id}")
+                                t_body += children[blorp]["object"].body
+                                logger.info(
+                                    f"Found piece of extended transcript! ID {children[blorp]['object'].id}"
+                                )
 
-                                children = children[blorp]['children']
+                                children = children[blorp]["children"]
                         except KeyError:
                             continue
 
                     if not found_something:
                         logger.info(f"returning {len(t_body)} characters")
                         return t_body
-

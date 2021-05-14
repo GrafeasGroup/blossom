@@ -11,26 +11,18 @@ from typing import Tuple, Dict
 
 from blossom.api import Summary
 from blossom.api.authentication import AdminApiKeyCustomCheck
-from blossom.api.helpers import (
-    VolunteerMixin,
-    RequestDataMixin,
-    ERROR,
-    SUCCESS
-)
-from blossom.api.models import (
-    Submission,
-    Transcription
-)
+from blossom.api.helpers import VolunteerMixin, RequestDataMixin, ERROR, SUCCESS
+from blossom.api.models import Submission, Transcription
 from blossom.api.serializers import (
     VolunteerSerializer,
     SubmissionSerializer,
-    TranscriptionSerializer
+    TranscriptionSerializer,
 )
 from blossom.authentication.models import BlossomUser
 
 
 def build_response(
-        result: str, message: str, status_code: int, data: Dict=None
+    result: str, message: str, status_code: int, data: Dict = None
 ) -> Response:
     resp = {result: message}
     if data:
@@ -73,7 +65,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             return build_response(
                 ERROR,
                 "No username received. Use ?username= in your request.",
-                status.HTTP_400_BAD_REQUEST
+                status.HTTP_400_BAD_REQUEST,
             )
         v = BlossomUser.objects.filter(
             Q(username=username) & Q(is_volunteer=True)
@@ -82,26 +74,25 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             return build_response(
                 ERROR,
                 "No volunteer found with that username.",
-                status.HTTP_404_NOT_FOUND
+                status.HTTP_404_NOT_FOUND,
             )
         return build_response(
             SUCCESS,
             f"User {username} was found. See 'data' key for summary.",
             status.HTTP_200_OK,
             data={
-                'username': v.username,
-                'gamma': v.gamma,
-                'join_date': v.date_joined,
-                'accepted_coc': v.accepted_coc
-            }
+                "username": v.username,
+                "gamma": v.gamma,
+                "join_date": v.date_joined,
+                "accepted_coc": v.accepted_coc,
+            },
         )
 
     @action(detail=True, methods=["post"])
     def gamma_plusone(self, request: Request, pk: int) -> Response:
         def _generate_dummy_post(request):
             return Submission.objects.create(
-                source="blossom_gamma_plusone",
-                completed_by=request.user
+                source="blossom_gamma_plusone", completed_by=request.user
             )
 
         def _generate_dummy_transcription(request, post=None):
@@ -112,8 +103,9 @@ class VolunteerViewSet(viewsets.ModelViewSet):
                 author=request.user,
                 transcription_id=str(uuid.uuid4()),
                 completion_method="blossom_gamma_plusone",
-                text="dummy transcription"
+                text="dummy transcription",
             )
+
         """
         This endpoint updates the given score of a user by one by forcing a
         fake transcription in their name; this should only be used in times
@@ -131,17 +123,13 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             v = BlossomUser.objects.get(id=pk)
         except BlossomUser.DoesNotExist:
             return build_response(
-                ERROR,
-                "No volunteer with that ID.",
-                status.HTTP_404_NOT_FOUND
+                ERROR, "No volunteer with that ID.", status.HTTP_404_NOT_FOUND
             )
 
         _generate_dummy_transcription(request)
 
         return build_response(
-            SUCCESS,
-            f"Updated gamma for {v.username} to {v.gamma}.",
-            status.HTTP_200_OK
+            SUCCESS, f"Updated gamma for {v.username} to {v.gamma}.", status.HTTP_200_OK
         )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
@@ -163,7 +151,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             return build_response(
                 ERROR,
                 "Must have the `username` key in JSON body.",
-                status.HTTP_400_BAD_REQUEST
+                status.HTTP_400_BAD_REQUEST,
             )
 
         if existing_user := BlossomUser.objects.filter(username=username).first():
@@ -171,7 +159,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
                 ERROR,
                 f"There is already a user with the username of"
                 f" `{existing_user.username}`.",
-                status.HTTP_422_UNPROCESSABLE_ENTITY
+                status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
 
         v = BlossomUser.objects.create(username=username)
@@ -180,7 +168,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         return build_response(
             SUCCESS,
             f"Volunteer created with username `{v.username}`",
-            status.HTTP_200_OK
+            status.HTTP_200_OK,
         )
 
 
@@ -209,9 +197,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             p = Submission.objects.get(id=pk)
         except Submission.DoesNotExist:
             return build_response(
-                ERROR,
-                "No post with that ID.",
-                status.HTTP_404_NOT_FOUND
+                ERROR, "No post with that ID.", status.HTTP_404_NOT_FOUND
             )
 
         resp = self.get_user_info_from_json(request, error_out_if_bad_data=True)
@@ -225,7 +211,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             return build_response(
                 ERROR,
                 "No volunteer with that ID / username.",
-                status.HTTP_404_NOT_FOUND
+                status.HTTP_404_NOT_FOUND,
             )
         return p, v
 
@@ -243,7 +229,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             return build_response(
                 ERROR,
                 f"Post ID {p.id} has been claimed already by {p.claimed_by}!",
-                status.HTTP_409_CONFLICT
+                status.HTTP_409_CONFLICT,
             )
 
         p.claimed_by = v
@@ -253,9 +239,8 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         return build_response(
             SUCCESS,
             f"Post {p.submission_id} claimed by {v.username}",
-            status.HTTP_200_OK
+            status.HTTP_200_OK,
         )
-
 
     @action(detail=True, methods=["post"])
     def done(self, request: Request, pk: int) -> Response:
@@ -270,15 +255,15 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             return build_response(
                 ERROR,
                 f"Submission ID {p.submission_id} has already been completed"
-                    f" by {p.completed_by}!",
-                status.HTTP_409_CONFLICT
+                f" by {p.completed_by}!",
+                status.HTTP_409_CONFLICT,
             )
 
         if p.claimed_by is None:
             return build_response(
                 ERROR,
                 f"Submission ID {p.submission_id} has not yet been claimed!",
-                status.HTTP_412_PRECONDITION_FAILED
+                status.HTTP_412_PRECONDITION_FAILED,
             )
         p.completed_by = v
         p.complete_time = timezone.now()
@@ -287,7 +272,7 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
         return build_response(
             SUCCESS,
             f"Submission ID {p.submission_id} completed by {v.username}",
-            status.HTTP_200_OK
+            status.HTTP_200_OK,
         )
 
     def create(self, request: Request, *args, **kwargs) -> Response:
@@ -318,17 +303,15 @@ class SubmissionViewSet(viewsets.ModelViewSet, RequestDataMixin, VolunteerMixin)
             return build_response(
                 ERROR,
                 "Must contain the keys `submission_id` (str, 20char max) and "
-                    "`source` (str 20char max)",
-                status.HTTP_400_BAD_REQUEST
+                "`source` (str 20char max)",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         p = Submission.objects.create(
             submission_id=submission_id, source=source, url=url, tor_url=tor_url
         )
         return build_response(
-            SUCCESS,
-            f"Post object {p.id} created!",
-            status.HTTP_200_OK
+            SUCCESS, f"Post object {p.id} created!", status.HTTP_200_OK
         )
 
 
@@ -336,7 +319,6 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
     queryset = Transcription.objects.all().order_by("-post_time")
     serializer_class = TranscriptionSerializer
     permission_classes = (AdminApiKeyCustomCheck,)
-
 
     def create(self, request: Request, *args, **kwargs) -> Response:
         """
@@ -363,8 +345,8 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             return build_response(
                 ERROR,
                 "Missing JSON body key `submission_id`, str; the ID of "
-                    "the post the transcription is on.",
-                status.HTTP_400_BAD_REQUEST
+                "the post the transcription is on.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         # did they give us an actual submission id?
@@ -376,7 +358,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
                 return build_response(
                     ERROR,
                     f"No post found with ID {submission_id}!",
-                    status.HTTP_404_NOT_FOUND
+                    status.HTTP_404_NOT_FOUND,
                 )
 
         v = self.get_volunteer_from_request(request)
@@ -384,7 +366,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             return build_response(
                 ERROR,
                 "No volunteer found with that ID / username.",
-                status.HTTP_404_NOT_FOUND
+                status.HTTP_404_NOT_FOUND,
             )
 
         t_id = request.data.get("t_id")
@@ -392,7 +374,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             return build_response(
                 ERROR,
                 "Missing JSON body key `t_id`, str; the ID of the transcription.",
-                status.HTTP_400_BAD_REQUEST
+                status.HTTP_400_BAD_REQUEST,
             )
 
         completion_method = request.data.get("completion_method")
@@ -400,9 +382,9 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             return build_response(
                 ERROR,
                 "Missing JSON body key `completion_method`, str;"
-                    " the service this transcription was completed"
-                    " through. `app`, `ToR`, etc. 20char max.",
-                status.HTTP_400_BAD_REQUEST
+                " the service this transcription was completed"
+                " through. `app`, `ToR`, etc. 20char max.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         t_url = request.data.get("t_url")
@@ -410,9 +392,9 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             return build_response(
                 ERROR,
                 "Missing JSON body key `t_url`, str; the direct"
-                    " URL for the transcription. Use string `None` if"
-                    " no URL is available.",
-                status.HTTP_400_BAD_REQUEST
+                " URL for the transcription. Use string `None` if"
+                " no URL is available.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         t_text = request.data.get("t_text")
@@ -420,8 +402,8 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
             return build_response(
                 ERROR,
                 "Missing JSON body key `t_text`, str; the content"
-                    " of the transcription.",
-                status.HTTP_400_BAD_REQUEST
+                " of the transcription.",
+                status.HTTP_400_BAD_REQUEST,
             )
         removed_from_reddit = request.data.get("removed_from_reddit", False)
 
@@ -437,8 +419,8 @@ class TranscriptionViewSet(viewsets.ModelViewSet, VolunteerMixin):
         return build_response(
             SUCCESS,
             f"Transcription ID {t.id} created on post"
-                f" {p.submission_id}, written by {v.username}",
-            status.HTTP_200_OK
+            f" {p.submission_id}, written by {v.username}",
+            status.HTTP_200_OK,
         )
 
 
@@ -446,12 +428,15 @@ class SummaryView(APIView):
     """
     send an unauthenticated request to /api/summary
     """
+
     permission_classes = (AdminApiKeyCustomCheck,)
+
     def get(self, request, *args, **kw):
         return Response(Summary().generate_summary(), status=status.HTTP_200_OK)
 
 
 class PingView(APIView):
     permission_classes = (AllowAny,)
+
     def get(self, request, *args, **kw):
         return Response({"ping?!": "PONG"}, status=status.HTTP_200_OK)

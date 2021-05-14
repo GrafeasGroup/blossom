@@ -17,12 +17,12 @@ from blossom.api.bootstrap.helpers import (
     get_user_list_from_redis,
     pull_user_data_from_redis,
     redis,
-    graceful_interrupt_handler
+    graceful_interrupt_handler,
 )
 from blossom.api.bootstrap.pushshift import (
     get_tor_claim_and_done_from_pushshift,
     get_extended_transcript_body,
-    get_transcription_data_from_pushshift
+    get_transcription_data_from_pushshift,
 )
 from blossom.api.models import Transcription, Volunteer
 
@@ -50,14 +50,16 @@ def process_user(redis_user_obj: Dict):
     # after all, they might have made new transcriptions since this version of the
     # db was pulled
     if total_transcriptions_for_user >= gamma:
-        logger.info("All the transcriptions for this user appear to be here. Moving on!")
+        logger.info(
+            "All the transcriptions for this user appear to be here. Moving on!"
+        )
         return
 
-    logger.debug(f"Gamma listed at {gamma}, found {len(transcriptions)} posts on record.")
+    logger.debug(
+        f"Gamma listed at {gamma}, found {len(transcriptions)} posts on record."
+    )
     if gamma - len(transcriptions) != 0:
-        logger.debug(
-            f"Should generate {gamma - len(transcriptions)} dummy entries."
-        )
+        logger.debug(f"Should generate {gamma - len(transcriptions)} dummy entries.")
 
     for t in transcriptions:
         start_time = datetime.now()
@@ -65,13 +67,20 @@ def process_user(redis_user_obj: Dict):
             # if this succeeds, then we don't need to worry about creating
             # everything and can just move on.
             Transcription.objects.get(submission__redis_id=t)
-            logger.debug('Success! Found existing transcription! Continuing on!')
+            logger.debug("Success! Found existing transcription! Continuing on!")
             continue
         except Transcription.DoesNotExist:
-            logger.debug(f'Processing {t}')
+            logger.debug(f"Processing {t}")
             # t_comment is the comment that holds the transcription
-            tor_post, t_comment, post_id, all_comments = get_transcription_data_from_pushshift(t)
-            claim, done, transcribot_text = get_tor_claim_and_done_from_pushshift(tor_post)
+            (
+                tor_post,
+                t_comment,
+                post_id,
+                all_comments,
+            ) = get_transcription_data_from_pushshift(t)
+            claim, done, transcribot_text = get_tor_claim_and_done_from_pushshift(
+                tor_post
+            )
             if tor_post is not None:
                 p = get_or_create_post(tor_post, v, claim, done, t)
             else:
@@ -96,9 +105,7 @@ def process_user(redis_user_obj: Dict):
                 # Nonetheless, let's create a dummy transcription
                 generate_dummy_transcription(v, p)
         end_time = datetime.now()
-        logger.info(
-            f'Completed operation in {(end_time - start_time).seconds} seconds'
-        )
+        logger.info(f"Completed operation in {(end_time - start_time).seconds} seconds")
 
     logged_transcription_count = Transcription.objects.filter(author=v).count()
     if logged_transcription_count < gamma:
@@ -128,7 +135,7 @@ def BOOTSTRAP_THAT_MOFO():
     logger.info("Parsing user data from Redis...")
     user_objects = pull_user_data_from_redis(user_list, rconn)
 
-    total_count = int(rconn.get('total_completed'))
+    total_count = int(rconn.get("total_completed"))
 
     logger.info(f"Creating at least {len(user_objects)*2 + total_count} models...")
     get_anon_user()  # just make sure it exists

@@ -6,23 +6,23 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('blossom', '0001_initial'),
+        ("blossom", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='post',
-            name='engineeringblogpost',
-            field=models.BooleanField(default=False, help_text='Mark this post as an engineering blog post.'),
+            model_name="post",
+            name="engineeringblogpost",
+            field=models.BooleanField(
+                default=False, help_text="Mark this post as an engineering blog post."
+            ),
         ),
         migrations.AlterField(
-            model_name='post',
-            name='body',
-            field=models.TextField(),
+            model_name="post", name="body", field=models.TextField(),
         ),
         migrations.AlterField(
-            model_name='post',
-            name='standalone_section',
+            model_name="post",
+            name="standalone_section",
             field=models.BooleanField(default=False),
         ),
     ]

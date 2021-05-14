@@ -13,32 +13,25 @@ class Post(models.Model):
 
     # something that will go on engineering.grafeas.org
     engineeringblogpost = models.BooleanField(
-        default=False,
-        help_text="Mark this post as an engineering blog post."
+        default=False, help_text="Mark this post as an engineering blog post."
     )
 
     # about page, for example
     standalone_section = models.BooleanField(default=False)
-    slug = models.SlugField(
-        default='',
-        editable=False,
-        max_length=70
-    )
+    slug = models.SlugField(default="", editable=False, max_length=70)
     published = models.BooleanField(default=False)
     header_order = models.IntegerField(
         help_text="Optional: an integer from 1-99 -- lower numbers will appear "
-                  "more to the left.",
-        blank=True, null=True
+        "more to the left.",
+        blank=True,
+        null=True,
     )
     show_in_news_view = models.BooleanField(default=True)
 
-    def get_absolute_url(self, host='www'):
+    def get_absolute_url(self, host="www"):
 
-        kwargs = {
-            'pk': self.id,
-            'slug': self.slug
-        }
-        return reverse('post_detail', kwargs=kwargs, host=host)
+        kwargs = {"pk": self.id, "slug": self.slug}
+        return reverse("post_detail", kwargs=kwargs, host=host)
 
     def save(self, *args, **kwargs):
         value = self.title

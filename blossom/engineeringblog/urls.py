@@ -4,7 +4,7 @@ from blossom.engineeringblog import views
 from blossom.website.urls import urlpatterns as website_urls
 
 urlpatterns = [
-    path('', views.index, name="blog_index"),
+    path("", views.index, name="blog_index"),
 ]
 
 # This is so that normal operations on posts, like the detail view, editing,
