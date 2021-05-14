@@ -184,3 +184,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static_dev')
 ]
+SITE_ID = 1
+
+OVERRIDE_API_AUTH = False

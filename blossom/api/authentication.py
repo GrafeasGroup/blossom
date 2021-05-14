@@ -1,11 +1,14 @@
 import rest_framework.permissions as rfperms
 from django.contrib.auth.models import AnonymousUser
-
+from django.conf import settings
 
 class AdminApiKeyCustomCheck(rfperms.BasePermission):
     message = "Sorry, this resource can only be accessed by an admin API key."
 
     def has_permission(self, request, view):
+        if settings.OVERRIDE_API_AUTH:
+            return True
+
         if not isinstance(request.user, AnonymousUser):
             if request.user.api_key:
                 request_key = None
@@ -28,9 +31,6 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
                         request.user.is_grafeas_staff or request.user.is_staff,
                     ]
                 )
-            elif request.user.is_staff:
-                # just make the web interface work if they're a superadmin.
-                return True
 
 
 class BlossomApiPermission(rfperms.BasePermission):
