@@ -237,6 +237,8 @@ IMAGE_DOMAINS = [
     "i.redditmedia.com",
 ]
 
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 ###############################################
 # simple validation -- add new keys above this
 ###############################################
