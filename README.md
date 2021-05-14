@@ -10,7 +10,7 @@
 
 The website. The app. The everything.
 
-A Django app that, right now, is our website, payment portal for donations, engineering blog, and API.
+A Django app that serves our website, payment portal for donations, engineering blog, and API. As of this instant, it is not yet deployed and we are still running on the old system. However, Blossom is functionally complete and ready to go.
 
 ## Local development
 
