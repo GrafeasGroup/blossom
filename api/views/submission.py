@@ -94,9 +94,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             archived=False,
             source=source_obj,
         )
-        return Response(
-            self.get_serializer(queryset, many=True, context={"request", request}).data
-        )
+        return Response(self.get_serializer(queryset, many=True).data)
 
     @swagger_auto_schema(
         responses={200: DocResponse("Successful operation", schema=serializer_class)},
