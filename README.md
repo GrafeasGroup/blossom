@@ -8,7 +8,7 @@
 <a href='https://coveralls.io/github/GrafeasGroup/blossom?branch=master'><img src='https://coveralls.io/repos/github/GrafeasGroup/blossom/badge.svg?branch=master&amp;t=X9mgMK' alt='Coverage Status' /></a>
 </p>
 
-The website. The app. The everything. MUST REMAIN PRIVATE.
+The website. The app. The everything.
 
 A Django app that, right now, is our website, payment portal for donations, engineering blog, and API.
 
