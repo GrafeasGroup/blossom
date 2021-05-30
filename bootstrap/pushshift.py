@@ -3,7 +3,7 @@ import re
 
 from psaw import PushshiftAPI
 
-from api.bootstrap.helpers import get_transcribot_text, get_transcribot_comment
+from api.bootstrap.helpers import get_transcribot_comment, get_transcribot_text
 from api.bootstrap.reddit_comment_tree import RedditCommentTree
 
 api = PushshiftAPI()
@@ -63,8 +63,9 @@ def get_transcription_data_from_pushshift(comment_id: str):
     for item in c_result:
         # only grab the comment if it has part of the footer and is a top-level
         # comment
-        if "/r/transcribersofreddit/wiki/index)" in item.body.lower() and item.parent_id.startswith(
-            "t3_"
+        if (
+            "/r/transcribersofreddit/wiki/index)" in item.body.lower()
+            and item.parent_id.startswith("t3_")
         ):
             return tor_result, item, linked_id, c_result
 
