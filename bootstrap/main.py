@@ -6,7 +6,9 @@ from typing import Dict
 
 from django.db import reset_queries
 
-from api.bootstrap.db import (
+from api.models import Transcription
+from authentication.models import BlossomUser
+from bootstrap.db import (
     generate_dummy_post,
     generate_dummy_transcription,
     get_anon_user,
@@ -14,19 +16,17 @@ from api.bootstrap.db import (
     get_or_create_transcription,
     get_or_create_user,
 )
-from api.bootstrap.helpers import (
+from bootstrap.helpers import (
     get_user_list_from_redis,
     graceful_interrupt_handler,
     pull_user_data_from_redis,
     redis,
 )
-from api.bootstrap.pushshift import (
+from bootstrap.pushshift import (
     get_extended_transcript_body,
     get_tor_claim_and_done_from_pushshift,
     get_transcription_data_from_pushshift,
 )
-from api.models import Transcription
-from authentication.models import BlossomUser
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

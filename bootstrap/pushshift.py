@@ -3,8 +3,8 @@ import re
 
 from psaw import PushshiftAPI
 
-from api.bootstrap.helpers import get_transcribot_comment, get_transcribot_text
-from api.bootstrap.reddit_comment_tree import RedditCommentTree
+from bootstrap.helpers import get_transcribot_comment, get_transcribot_text
+from bootstrap.reddit_comment_tree import RedditCommentTree
 
 api = PushshiftAPI()
 logger = logging.getLogger(__name__)
