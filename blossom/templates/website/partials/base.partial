@@ -36,14 +36,18 @@
 <body>
 {% include 'website/partials/navbar.partial' with n=navbar %}
 <div class="content container">
-    <div class="row">
-        <div class="col-sm-0 col-md-2"></div>
-        <div class="col-sm-12 col-md-8">
-            {% block content %}
-            {% endblock %}
+    {% if not fullwidth_view %}
+        <div class="row">
+            <div class="col-sm-0 col-md-2"></div>
+                <div class="col-sm-12 col-md-8">
+                    {% endif %}
+                        {% block content %}
+                        {% endblock %}
+                    {% if not fullwidth_view %}
+                </div>
+            <div class="col-sm-0 col-md-2"></div>
         </div>
-        <div class="col-sm-0 col-md-2"></div>
-    </div>
+    {% endif %}
 </div>
 
 <div class="footer container">
@@ -64,7 +68,8 @@
                 {% endfor %}
                 <li><a class="text-muted" target="_blank" rel="noreferrer" href="https://github.com/grafeasgroup/">Github</a>
                 </li>
-                <li><a class="text-muted" target="_blank" rel="noreferrer" href="https://www.etsy.com/shop/GrafeasGroup">Merch</a>
+                <li><a class="text-muted" target="_blank" rel="noreferrer"
+                       href="https://www.etsy.com/shop/GrafeasGroup">Merch</a>
                 </li>
             </ul>
         </div>
