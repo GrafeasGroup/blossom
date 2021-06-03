@@ -383,7 +383,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         )
 
         if not mod_override:
-            breakpoint()
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
             transcription = Transcription.objects.filter(submission=submission).first()
