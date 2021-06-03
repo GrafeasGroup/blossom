@@ -56,6 +56,22 @@ class TestSubmissionDone:
         assert submission.claimed_by == user
         assert submission.completed_by is None
 
+    def test_done_without_transcription_with_override(self, client: Client) -> None:
+        """Test calling `done` with mod override ignores the need for transcription."""
+        client, headers, user = setup_user_client(client)
+        submission = create_submission(claimed_by=user)
+        data = {"username": user.username, "mod_override": True}
+        result = client.patch(
+            reverse("submission-done", args=[submission.id]),
+            json.dumps(data),
+            content_type="application/json",
+            **headers,
+        )
+        submission.refresh_from_db()
+        assert result.status_code == status.HTTP_201_CREATED
+        assert submission.claimed_by == user
+        assert submission.completed_by == user
+
     def test_done_without_claim(self, client: Client) -> None:
         """Test whether a done without the submission claimed is caught correctly."""
         client, headers, user = setup_user_client(client)
@@ -231,7 +247,7 @@ class TestSubmissionDone:
         )
 
     def test_done_no_coc(self, client: Client) -> None:
-        """ # noqa
+        """# noqa
         Test that a submission isn't marked as done when the CoC hasn't been accepted.
         """
         client, headers, user = setup_user_client(client)

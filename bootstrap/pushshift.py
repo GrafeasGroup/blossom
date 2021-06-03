@@ -3,8 +3,8 @@ import re
 
 from psaw import PushshiftAPI
 
-from api.bootstrap.helpers import get_transcribot_text, get_transcribot_comment
-from api.bootstrap.reddit_comment_tree import RedditCommentTree
+from bootstrap.helpers import get_transcribot_comment, get_transcribot_text
+from bootstrap.reddit_comment_tree import RedditCommentTree
 
 api = PushshiftAPI()
 logger = logging.getLogger(__name__)
@@ -22,6 +22,7 @@ def get_transcription_data_from_pushshift(comment_id: str):
     :return: the post on r/ToR, the comment object that holds the transcription,
         and the full comments from the post that was transcribed
     """
+    return None, None, None, None
     post_regex = r"\/comments\/?([a-z0-9]+)\/"
 
     # Get the actual comment object that we have the ID for
@@ -63,8 +64,9 @@ def get_transcription_data_from_pushshift(comment_id: str):
     for item in c_result:
         # only grab the comment if it has part of the footer and is a top-level
         # comment
-        if "/r/transcribersofreddit/wiki/index)" in item.body.lower() and item.parent_id.startswith(
-            "t3_"
+        if (
+            "/r/transcribersofreddit/wiki/index)" in item.body.lower()
+            and item.parent_id.startswith("t3_")
         ):
             return tor_result, item, linked_id, c_result
 
@@ -82,6 +84,7 @@ def get_tor_claim_and_done_from_pushshift(post):
     #
     # if not comment_ids:
     #     return None, None
+
     if post is None:
         logger.info("Received None for post! There's nothing to look for.")
         return None, None, None, None

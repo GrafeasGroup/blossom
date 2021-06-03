@@ -1,9 +1,8 @@
-from collections import defaultdict
-import dpath.util
-
 import logging
-from datetime import datetime
-from datetime import timedelta
+from collections import defaultdict
+from datetime import datetime, timedelta
+
+import dpath.util
 
 logger = logging.getLogger(__name__)
 
