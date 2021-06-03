@@ -15,8 +15,9 @@ urlpatterns = [
         grafeas_staff_required(views.PostUpdate.as_view()),
         name="post_update",
     ),
-    path("admin/", grafeas_staff_required(views.AdminView.as_view()), name="admin_view")
-    # path('admin/', views.AdminView.as_view(), name='admin_view')
+    path(
+        "admin/", grafeas_staff_required(views.AdminView.as_view()), name="admin_view"
+    ),
 ]
 
 urlpatterns += auth_urls
