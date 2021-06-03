@@ -47,6 +47,7 @@ pytest-cov = "^2.8"
 pytest-mock = "^1.13"
 coveralls = "^1.11.1"
 mimesis = "^4.0.0"
+blossom-wrapper = { git = "https://github.com/GrafeasGroup/blossom-wrapper.git", branch = "master" }
 
 [tool.black]
 include = '\.pyi?$'

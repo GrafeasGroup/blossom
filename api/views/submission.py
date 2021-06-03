@@ -51,6 +51,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         "tor_url",
         "archived",
         "content_url",
+        "redis_id",
     ]
 
     @swagger_auto_schema(
@@ -377,7 +378,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         if submission.claimed_by is None:
             return Response(status=status.HTTP_412_PRECONDITION_FAILED)
-
         mod_override = (
             request.data.get("mod_override", False) and request.user.is_grafeas_staff
         )
@@ -385,19 +385,19 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if not mod_override:
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
+            transcription = Transcription.objects.filter(submission=submission).first()
+            if not transcription:
+                return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
+            self._check_for_rank_up(user, submission)
 
-        transcription = Transcription.objects.filter(submission=submission).first()
-        if not transcription:
-            return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
+            if self._should_check_transcription(user):
+                self._send_transcription_to_slack(
+                    transcription, submission, user, slack
+                )
 
         submission.completed_by = user
         submission.complete_time = timezone.now()
         submission.save()
-
-        self._check_for_rank_up(user, submission)
-
-        if self._should_check_transcription(user):
-            self._send_transcription_to_slack(transcription, submission, user, slack)
 
         return Response(
             status=status.HTTP_201_CREATED,
