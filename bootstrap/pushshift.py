@@ -22,6 +22,7 @@ def get_transcription_data_from_pushshift(comment_id: str):
     :return: the post on r/ToR, the comment object that holds the transcription,
         and the full comments from the post that was transcribed
     """
+    return None, None, None, None
     post_regex = r"\/comments\/?([a-z0-9]+)\/"
 
     # Get the actual comment object that we have the ID for
@@ -83,6 +84,7 @@ def get_tor_claim_and_done_from_pushshift(post):
     #
     # if not comment_ids:
     #     return None, None
+
     if post is None:
         logger.info("Received None for post! There's nothing to look for.")
         return None, None, None, None

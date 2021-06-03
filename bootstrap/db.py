@@ -1,31 +1,27 @@
 import logging
 import uuid
-from datetime import datetime
+from typing import Dict
 
 import prawcore
-import pytz
+from blossom_wrapper import BlossomStatus
 
-from api.models import Source, Submission, Transcription
-from authentication.models import BlossomUser
-from blossom.reddit import REDDIT
+from bootstrap import REDDIT, blossom
 
 logger = logging.getLogger(__name__)
 
-SOURCE = Source.objects.get(name="reddit")
-
 
 def get_or_create_user(username):
-    try:
-        v = BlossomUser.objects.get(username=username)
-        logger.info("Volunteer already exists! Pulled existing record.")
-    except BlossomUser.DoesNotExist:
-        # we'll set a random password; if they need it, we can reset it.
-        v = BlossomUser.objects.create(
-            username=username, accepted_coc=True, is_volunteer=True
-        )
-        v.set_unusable_password()
-        v.save()
-    return v
+    v = blossom.get_user(username)
+    if v.status == BlossomStatus.not_found:
+        # we'll just grab the newly created user, even though it doesn't have
+        # the accepted_coc flag set, because we can just use it and not worry
+        # about it
+        v = blossom.create_user(username)
+        blossom.accept_coc(username)
+    if v.status == BlossomStatus.ok:
+        return v
+    else:
+        raise Exception(f"something went wrong: {v}")
 
 
 def get_or_create_transcription(
@@ -36,95 +32,83 @@ def get_or_create_transcription(
     transcribot_text=None,
     transcribot_comment=None,
 ):
-    try:
-        Transcription.objects.get(submission=post)
-        logger.info("Found a matching transcription for that post!")
-    except Transcription.DoesNotExist:
-        logger.info(f"creating transcription {post.id}")
-        Transcription.objects.create(
-            submission=post,
-            author=volunteer,
-            create_time=datetime.utcfromtimestamp(t_comment.created_utc).replace(
-                tzinfo=pytz.UTC
-            ),
-            original_id=t_comment.id,
-            source=SOURCE,
-            url=f"https://reddit.com{t_comment.permalink}",
-            text=comment_body,
+    transcription = blossom.get_transcription(submission=post["id"])
+    if transcription.status == BlossomStatus.ok:
+        for transcription_obj in transcription.data:
+            if transcription_obj["author"] == volunteer["username"]:
+                logger.info("Found a matching transcription for that post!")
+                return transcription_obj
+
+    logger.info(f"creating transcription {post['id']}")
+    blossom.create_transcription(
+        transcription_id=t_comment.id,
+        text=comment_body,
+        url=f"https://reddit.com{t_comment.permalink}",
+        username=volunteer["username"],
+        submission_id=post["id"],
+        removed_from_reddit=False,
+    )
+    if transcribot_comment:
+        logger.info(f"creating OCR transcription on {post.id}")
+        blossom.create_transcription(
+            transcription_id=transcribot_comment.id,
+            text=transcribot_text,
+            url=f"https://reddit.com{transcribot_comment.permalink}",
+            username="transcribot",
+            submission_id=post["id"],
             removed_from_reddit=False,
         )
-        if transcribot_comment:
-            logger.info(f"creating OCR transcription on {post.id}")
-            Transcription.objects.create(
-                submission=post,
-                author=BlossomUser.objects.get(username="transcribot"),
-                create_time=datetime.utcfromtimestamp(
-                    transcribot_comment.created_utc
-                ).replace(tzinfo=pytz.UTC),
-                original_id=transcribot_comment.id,
-                source=SOURCE,
-                url=f"https://reddit.com{transcribot_comment.permalink}",
-                text=transcribot_text,
-                removed_from_reddit=False,
-            )
 
 
-def get_or_create_post(tor_post, v, claim, done, redis_id):
-    try:
-        p = Submission.objects.get(original_id=tor_post.id)
+def get_or_create_post(tor_post, v):
+    p = blossom.get_submission(original_id=tor_post.id)
+    if p.status == BlossomStatus.ok:
         logger.info("Found a matching post for a transcription ID!")
-    except Submission.DoesNotExist:
-        logger.info(f"creating post {tor_post.id}")
+        return p.data
 
-        if claim is None:
-            claim_time = None
-        else:
-            claim_time = datetime.utcfromtimestamp(claim.created_utc).replace(
-                tzinfo=pytz.UTC
-            )
-        if done is None:
-            complete_time = None
-        else:
-            complete_time = datetime.utcfromtimestamp(done.created_utc).replace(
-                tzinfo=pytz.UTC
-            )
+    logger.info(f"creating post {tor_post.id}")
 
-        try:
-            image_url = REDDIT.submission(url=tor_post.url).url
-        except (prawcore.exceptions.Forbidden, prawcore.exceptions.NotFound):
-            image_url = None
+    try:
+        image_url = REDDIT.submission(url=tor_post.url).url
+    except (prawcore.exceptions.Forbidden, prawcore.exceptions.NotFound):
+        image_url = None
 
-        p = Submission.objects.create(
-            original_id=tor_post.id,
-            create_time=datetime.utcfromtimestamp(tor_post.created_utc).replace(
-                tzinfo=pytz.UTC
-            ),
-            claimed_by=v,
-            completed_by=v,
-            redis_id=redis_id,
-            claim_time=claim_time,
-            complete_time=complete_time,
-            source=SOURCE,
-            url=tor_post.url,
-            tor_url=f"https://reddit.com{tor_post.permalink}",
-            content_url=image_url,
-        )
-    return p
+    new_submission = blossom.create_submission(
+        post_id=tor_post.id,
+        post_url=f"https://reddit.com{tor_post.permalink}",
+        original_url=tor_post.url,
+        content_url=image_url,
+    )
+    blossom.claim(new_submission.data["id"], v["username"])
+    blossom.done(new_submission.data["id"], v["username"], mod_override=True)
+    return new_submission.data
 
 
 def get_anon_user():
     return get_or_create_user("GrafeasAnonymousUser")
 
 
-def generate_dummy_post(vlntr=None):
+def generate_dummy_post(vlntr: Dict = None) -> None:
     logger.info(f"creating dummy post...")
-    return Submission.objects.create(
-        source=Source.objects.get_or_create(name="bootstrap_from_redis")[0],
-        completed_by=vlntr,
+    new_submission = blossom.create_submission(
+        post_id=str(uuid.uuid4()),
+        post_url="https://example.com",
+        original_url="https://example.com",
+        content_url="https://example.com",
     )
+    if vlntr:
+        blossom.claim(
+            submission_id=new_submission.data["id"], username=vlntr["username"]
+        )
+        blossom.done(
+            submission_id=new_submission.data["id"],
+            username=vlntr["username"],
+            mod_override=True,
+        )
+    return new_submission.data
 
 
-def generate_dummy_transcription(vlntr, post=None):
+def generate_dummy_transcription(vlntr: Dict, post: Dict = None):
     """
     This can be for any volunteer, because especially for older volunteers,
     their official gamma count will not match the number of transcription
@@ -139,10 +123,11 @@ def generate_dummy_transcription(vlntr, post=None):
     if post is None:
         post = generate_dummy_post(vlntr)
     logger.info("Creating dummy transcription...")
-    Transcription.objects.create(
-        submission=post,
-        author=vlntr,
-        original_id=str(uuid.uuid4()),
-        source=Source.objects.get_or_create(name="bootstrap_from_redis")[0],
+    blossom.create_transcription(
+        submission_id=post["id"],
+        username=vlntr["username"],
         text="dummy transcription",
+        url="https://example.com",
+        transcription_id=str(uuid.uuid4()),
+        removed_from_reddit=False,
     )
