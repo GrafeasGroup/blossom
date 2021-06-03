@@ -1,3 +1,5 @@
+from typing import Callable, Dict
+
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import user_passes_test
@@ -7,7 +9,10 @@ from django.db.models import Q
 from website.models import Post
 
 
-def get_additional_context(context):
+def get_additional_context(context: Dict = None) -> Dict:
+    """Build the default context dictionary for the views."""
+    if not context:
+        context = {}
     context["navbar"] = Post.objects.filter(
         Q(published=True) & Q(standalone_section=True)
     ).order_by("header_order")
@@ -29,17 +34,21 @@ def get_additional_context(context):
 
 
 def grafeas_staff_required(
-    view_func=None, redirect_field_name=REDIRECT_FIELD_NAME, login_url=None
-):
+    view_func: Callable = None,
+    redirect_field_name: str = REDIRECT_FIELD_NAME,
+    login_url: str = None,
+) -> Callable:
     """
-    Decorator for views that checks that the user is logged in and is a staff
+    Login decorator for functions.
+
+    Decorator for view functions that checks that the user is logged in and is a staff
     member, redirecting to the login page if necessary.
     """
     if not login_url:
         login_url = settings.LOGIN_URL
     actual_decorator = user_passes_test(
         # superadmins should be allowed in too
-        lambda u: u.is_active and (u.is_grafeas_staff or u.is_staff),
+        lambda u: u.is_authenticated and (u.is_grafeas_staff or u.is_staff),
         login_url=login_url,
         redirect_field_name=redirect_field_name,
     )
