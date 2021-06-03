@@ -32,8 +32,7 @@ SECRET_KEY = os.environ.get("BLOSSOM_SECRET_KEY", default_secret_key)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-# force cross-domain cookies so that wiki login can use the regular login page
-ALLOWED_HOSTS = [".grafeas.org/", "grafeas.org/"]
+ALLOWED_HOSTS = ["staging.grafeas.org", ".grafeas.org", "grafeas.org"]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -93,10 +92,7 @@ ROOT_URLCONF = "blossom.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [
-            os.path.join(BASE_DIR, "templates"),
-            os.path.join(BASE_DIR, "templates", "wiki"),
-        ],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -184,12 +180,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static_dev")]
 SITE_ID = 1
 
 OVERRIDE_API_AUTH = False
