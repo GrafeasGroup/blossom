@@ -103,7 +103,7 @@ GIVING_PAGE = """
 <script src="https://js.stripe.com/v3/"></script>
 <script type="text/javascript">
     // Create an instance of the Stripe object with your publishable API key
-    var stripe = Stripe('pk_test_Qgem2MtFoeRvlAqt7SQGyg2y');
+    var stripe = Stripe('pk_live_pRSTbdTHvPIh5i1YkXf1cmBG');
     var checkoutButton = document.getElementById('checkout-button');
 
     checkoutButton.addEventListener('click', function () {

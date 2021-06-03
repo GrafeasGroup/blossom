@@ -10,6 +10,7 @@ blossom = BlossomAPI(
     email=os.environ.get("BLOSSOM_EMAIL"),
     password=os.environ.get("BLOSSOM_PASSWORD"),
     api_key=os.environ.get("BLOSSOM_API_KEY"),
+    api_base_url="https://staging.grafeas.org/api/",
 )
 REDDIT = Reddit(
     client_id=os.getenv("REDDIT_CLIENT_ID"),

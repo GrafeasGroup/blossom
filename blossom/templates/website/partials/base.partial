@@ -64,6 +64,8 @@
                 {% endfor %}
                 <li><a class="text-muted" target="_blank" rel="noreferrer" href="https://github.com/grafeasgroup/">Github</a>
                 </li>
+                <li><a class="text-muted" target="_blank" rel="noreferrer" href="https://www.etsy.com/shop/GrafeasGroup">Merch</a>
+                </li>
             </ul>
         </div>
         <div class="col-xs-0 col-sm-4"></div>
