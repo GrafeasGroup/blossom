@@ -202,13 +202,12 @@ class TestSubmissionDone:
         slack_client.chat_postMessage = MagicMock()
 
         submission = create_submission(claimed_by=user, original_id=50)
-        create_transcription(submission, user)
 
         # patch out random so that the "check transcription" doesn't fire
         with patch("random.random", lambda: 1):
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
-                json.dumps({"username": user.username}),
+                json.dumps({"username": user.username, "mod_override": "True"}),
                 content_type="application/json",
                 **headers,
             )
