@@ -27,8 +27,9 @@ from api.serializers import SubmissionSerializer
 from api.views.slack_helpers import client as slack
 from authentication.models import BlossomUser
 
-
 logger = logging.getLogger("blossom")
+
+
 @method_decorator(
     name="list",
     decorator=swagger_auto_schema(
@@ -390,7 +391,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if not mod_override:
             logger.info("Mod override is skipped")
             if submission.claimed_by != user:
-                logger.info(f"Submission is not claimed by {user}, but by {submission.claimed_by}")
+                logger.info(
+                    f"Submission is not claimed by {user}, but by {submission.claimed_by}"
+                )
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
             logger.info(f"Submission is claimed by {user}")
             transcription = Transcription.objects.filter(submission=submission).first()
@@ -572,3 +575,16 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         qs.delete()
 
         return Response(status=status.HTTP_200_OK, data={"total_yeeted": yeeted})
+
+    @action(detail=False, methods=["post"])
+    def bulkcheck(self, request: Request) -> Response:
+        """Start with of a list of IDs, then return which ones are new to us."""
+        # we can't do a filter for things that don't exist, and excluding doesn't
+        # make sense here because we're looking for IDs that actually don't exist.
+        urls = dict(request.data).get("urls")
+        submissions = Submission.objects.filter(url__in=urls)
+        for submission in submissions:
+            if submission.url in urls:
+                urls.pop(urls.index(submission.url))
+
+        return Response(status=status.HTTP_200_OK, data=urls)
