@@ -186,7 +186,7 @@ class TestSubmissionDone:
             if message:
                 assert (
                     call(channel="#transcription_check", text=slack_message)
-                    == slack_client.chat_postMessage.call_args_list[-1]
+                    == slack_client.chat_postMessage.call_args_list[0]
                 )
             else:
                 assert slack_client.chat_postMessage.call_count == 0
