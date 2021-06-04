@@ -13,11 +13,13 @@
     {% endif %}
     {% for p in posts %}
         <p>
-        <h1><a href="{% get_absolute_uri p%}">{{ p.title }}</a></h1>
+        <h1><a href="{% get_absolute_uri p %}">{{ p.title }}</a></h1>
         </p>
-        <p>
-            {{ p.body|safe }}
-        </p>
+        <div class="underline-links">
+            <p>
+                {{ p.body|safe }}
+            </p>
+        </div>
         <hr>
     {% endfor %}
     <div class="text-center">
