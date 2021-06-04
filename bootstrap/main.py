@@ -1,10 +1,8 @@
 import logging
-import os
 import sys
 from datetime import datetime
 from typing import Dict
 
-import dotenv
 from blossom_wrapper import BlossomStatus
 
 from bootstrap import blossom
@@ -34,6 +32,26 @@ logger.setLevel(logging.DEBUG)
 
 class BootstrapException(Exception):
     pass
+
+
+def yeet_user(redis_user_obj: Dict) -> None:
+    r_username = redis_user_obj.get("username")
+    r_gamma = redis_user_obj.get("transcriptions", 0)
+
+    logger.info(f"Processing username: {r_username}")
+
+    v = get_or_create_user(r_username).data
+
+    if r_gamma < v["gamma"]:
+        logger.warning(f"Found discrepancy. Redis: {r_gamma} | Blossom: {v['gamma']}")
+        response = blossom.post(
+            "submission/yeet/",
+            data={"username": r_username, "count": abs(r_gamma - v["gamma"])},
+        )
+        if response.status_code != 200:
+            logger.error(f"Received a {response.status_code} - {response.json()}")
+        else:
+            logger.info(response.json())
 
 
 def process_user(redis_user_obj: Dict):
@@ -158,6 +176,7 @@ def bootstrap(users):
     for z in users:
         with graceful_interrupt_handler() as handler:
             process_user(z)
+            yeet_user(z)
             if handler.interrupted:
                 sys.exit()
 
@@ -174,7 +193,7 @@ def BOOTSTRAP_THAT_MOFO():
 
     total_count = int(rconn.get("total_completed"))
 
-    logger.info(f"Creating at least {len(user_objects)*2 + total_count} models...")
+    logger.info(f"Creating at least {len(user_objects) * 2 + total_count} models...")
     get_anon_user()  # just make sure it exists
     # v_count = BlossomUser.objects.count()
     #     logger.info(
