@@ -384,7 +384,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if submission.claimed_by is None:
             return Response(status=status.HTTP_412_PRECONDITION_FAILED)
         mod_override = (
-            request.data.get("mod_override", False) and request.user.is_grafeas_staff
+            request.data.get("mod_override", "False") == "True" and request.user.is_grafeas_staff
         )
 
         logger.info(f"Mod override is {mod_override}")
@@ -455,7 +455,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         url = request.data.get("url")
         tor_url = request.data.get("tor_url")
         # allows pre-marking submissions we know won't be able to make it through OCR
-        cannot_ocr = request.data.get("cannot_ocr", False)
+        cannot_ocr = request.data.get("cannot_ocr", "False") == "True"
         submission = Submission.objects.create(
             original_id=original_id,
             source=source_obj,
