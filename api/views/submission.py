@@ -558,8 +558,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         if auto_generated_submissions.count() == 0:
             return Response(status=status.HTTP_411_LENGTH_REQUIRED)
-        Submission.objects.filter(
+        qs = Submission.objects.filter(
             pk__in=auto_generated_submissions.values_list("pk", flat=True)[:count]
-        ).delete()
+        )
+        yeeted = qs.count()
+        qs.delete()
 
-        return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_200_OK, data={"total_yeeted": yeeted})
