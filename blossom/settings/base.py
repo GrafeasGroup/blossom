@@ -195,7 +195,7 @@ ENABLE_SLACK = True
 GITHUB_SPONSORS_SECRET_KEY = os.environ.get("GITHUB_SPONSORS_SECRET_KEY", "")
 
 # Global flag; if this is set to False, all calls to ocr.space will fail silently
-ENABLE_OCR = False
+ENABLE_OCR = True
 
 # Only enable if there are connection problems with all three primary endpoints
 OCR_ENABLE_BACKUP_ENDPOINT = os.getenv("OCR_ENABLE_BACKUP_ENDPOINT", False)
