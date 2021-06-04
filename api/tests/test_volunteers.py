@@ -47,11 +47,10 @@ class TestVolunteerSummary:
         user.blacklisted = True
         user.save()
 
-        submission = create_submission()
         for _ in range(3):
-            create_transcription(submission, user)
+            create_submission(completed_by=user)
 
-        assert Transcription.objects.filter(author=user).count() == 3
+        assert Submission.objects.filter(completed_by=user).count() == 3
 
         result = client.get(
             reverse("volunteer-summary") + f"?username={user.username}", **headers
