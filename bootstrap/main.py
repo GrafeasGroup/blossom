@@ -41,7 +41,6 @@ def yeet_user(redis_user_obj: Dict) -> None:
     logger.info(f"Processing username: {r_username}")
 
     v = get_or_create_user(r_username).data
-
     if r_gamma > v["gamma"]:
         logger.warning(
             f"Missing dummy entries. Redis: {r_gamma} | Blossom: {v['gamma']}"
@@ -49,6 +48,7 @@ def yeet_user(redis_user_obj: Dict) -> None:
         for _ in range(r_gamma - v["gamma"]):
             generate_dummy_post(v)
 
+    v = get_or_create_user(r_username).data
     if r_gamma < v["gamma"]:
         logger.warning(f"Found discrepancy. Redis: {r_gamma} | Blossom: {v['gamma']}")
         response = blossom.post(
