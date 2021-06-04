@@ -66,6 +66,10 @@ a {
     color: black
 }
 
+.underline-links a {
+    text-decoration: underline;
+}
+
 .content {
     margin-top: 1em;
 }
