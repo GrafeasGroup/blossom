@@ -4,7 +4,7 @@ from django.db import models
 from django.utils import timezone
 from rest_framework_api_key.models import APIKey
 
-from api.models import Transcription
+from api.models import Submission
 
 
 class BlossomUser(AbstractUser):
@@ -53,7 +53,7 @@ class BlossomUser(AbstractUser):
         """
         if self.blacklisted:
             return 0  # see https://github.com/GrafeasGroup/blossom/issues/15
-        return Transcription.objects.filter(author=self).count()
+        return Submission.objects.filter(completed_by=self).count()
 
     def __str__(self) -> str:
         return self.username
