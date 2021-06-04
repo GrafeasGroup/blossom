@@ -1,4 +1,5 @@
 """Views that specifically relate to submissions."""
+import logging
 import random
 from datetime import timedelta
 from typing import Union
@@ -27,6 +28,7 @@ from api.views.slack_helpers import client as slack
 from authentication.models import BlossomUser
 
 
+logger = logging.getLogger(__name__)
 @method_decorator(
     name="list",
     decorator=swagger_auto_schema(
@@ -365,6 +367,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         Note that this API call has a certain chance to send a message to
         Slack for the random check of this transcription.
         """
+        logger.info(f"Request data for done is {request.data}")
         submission = get_object_or_404(Submission, id=pk)
         user = get_object_or_404(BlossomUser, username=username)
 
@@ -383,9 +386,13 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             request.data.get("mod_override", False) and request.user.is_grafeas_staff
         )
 
+        logger.info(f"Mod override is {mod_override}")
         if not mod_override:
+            logger.info("Mod override is skipped")
             if submission.claimed_by != user:
+                logger.info(f"Submission is not claimed by {user}, but by {submission.claimed_by}")
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
+            logger.info(f"Submission is claimed by {user}")
             transcription = Transcription.objects.filter(submission=submission).first()
             if not transcription:
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
@@ -394,8 +401,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 self._send_transcription_to_slack(
                     transcription, submission, user, slack
                 )
-
         self._check_for_rank_up(user, submission)
+        logger.info(f"Submission is claimed by {user}, now completed by {user}")
 
         submission.completed_by = user
         submission.complete_time = timezone.now()
