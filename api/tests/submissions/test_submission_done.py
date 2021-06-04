@@ -60,7 +60,7 @@ class TestSubmissionDone:
         """Test calling `done` with mod override ignores the need for transcription."""
         client, headers, user = setup_user_client(client)
         submission = create_submission(claimed_by=user)
-        data = {"username": user.username, "mod_override": True}
+        data = {"username": user.username, "mod_override": "True"}
         result = client.patch(
             reverse("submission-done", args=[submission.id]),
             json.dumps(data),
