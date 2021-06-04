@@ -5,8 +5,8 @@ from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
-from api.models import Submission
-from api.tests.helpers import create_submission, setup_user_client
+from api.models import Submission, Transcription
+from api.tests.helpers import create_submission, create_transcription, setup_user_client
 
 
 class TestSubmissionYeet:
@@ -77,3 +77,24 @@ class TestSubmissionYeet:
             reverse("submission-yeet"), content_type="application/json", **headers
         )
         assert response.status_code == 400
+
+    def test_yeet_also_removes_linked_transcription(self, client: Client) -> None:
+        """Verify that a linked transcription also gets yeeted."""
+        client, headers, user = setup_user_client(client)
+        submission = create_submission(original_id=str(uuid4()), completed_by=user)
+        create_transcription(submission, user)
+
+        assert Submission.objects.count() == 1
+        assert Transcription.objects.count() == 1
+
+        data = {"username": user.username}
+
+        client.post(
+            reverse("submission-yeet"),
+            json.dumps(data),
+            content_type="application/json",
+            **headers
+        )
+
+        assert Submission.objects.count() == 0
+        assert Transcription.objects.count() == 0
