@@ -28,7 +28,7 @@ from api.views.slack_helpers import client as slack
 from authentication.models import BlossomUser
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("blossom")
 @method_decorator(
     name="list",
     decorator=swagger_auto_schema(
