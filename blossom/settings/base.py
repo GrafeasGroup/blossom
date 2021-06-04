@@ -125,8 +125,20 @@ DATABASES = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},  # noqa: E231
+    "handlers": {
+        "bugsnag": {
+            "level": "INFO",
+            "class": "bugsnag.handlers.BugsnagHandler"
+        },
+        "console": {
+            "class": "logging.StreamHandler"
+        }
+    },  # noqa: E231
     "loggers": {
+        "root": {
+            "handlers": ["bugsnag"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+        },
         "django": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
