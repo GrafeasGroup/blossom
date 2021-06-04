@@ -127,7 +127,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {
         "bugsnag": {
-            "level": "INFO",
+            "level": "ERROR",
             "class": "bugsnag.handlers.BugsnagHandler"
         },
         "console": {
