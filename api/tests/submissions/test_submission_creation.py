@@ -169,7 +169,7 @@ class TestSubmissionCreation:
             "original_id": "spaaaaace",
             "source": source.pk,
             "content_url": "http://example.com/a.jpg",
-            "cannot_ocr": True,
+            "cannot_ocr": "True",
         }
 
         with patch("api.models.process_image", return_value={"text": "AAA"}) as mock:
