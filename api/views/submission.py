@@ -4,6 +4,7 @@ from datetime import timedelta
 from typing import Union
 
 from django.conf import settings
+from django.db.models.functions import Length
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -388,12 +389,13 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             transcription = Transcription.objects.filter(submission=submission).first()
             if not transcription:
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
-            self._check_for_rank_up(user, submission)
 
             if self._should_check_transcription(user):
                 self._send_transcription_to_slack(
                     transcription, submission, user, slack
                 )
+
+        self._check_for_rank_up(user, submission)
 
         submission.completed_by = user
         submission.complete_time = timezone.now()
@@ -477,7 +479,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 return default
 
     @swagger_auto_schema(
-        responses={200: DocResponse("Successful operation", schema=serializer_class)}
+        responses={
+            200: DocResponse("Successful operation", schema=serializer_class),
+            400: "Required parameters not provided",
+        }
     )
     @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
@@ -517,3 +522,44 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             cannot_ocr=False,
         )[:return_limit]
         return Response(data=self.get_serializer(queryset, many=True).data)
+
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object",
+            required=["username"],
+            properties={"username": Schema(type="string"), "count": Schema(type="int")},
+        ),
+        responses={
+            200: DocResponse(
+                "Submissions were successfully yeeted", schema=serializer_class
+            ),
+            400: "Required parameters not provided",
+            411: "No yeetable submissions were found",
+        },
+    )
+    @validate_request(data_params={"username"})
+    @action(detail=False, methods=["post"])
+    def yeet(self, request: Request, username: str = None) -> Response:
+        """
+        Manually fix users who have too many auto-generated submissions.
+
+        For an unidentified reason, sometimes the bootstrap script is creating
+        too many submissions for a given user. This function allows us to yeet
+        some of the offending submissions out of the database while we focus on
+        cleaning and maintaining the data with the redis cache after deployment.
+        """
+        user = get_object_or_404(BlossomUser, username=username)
+        count = int(request.data.get("count", 1))
+        auto_generated_submissions = (
+            Submission.objects.filter(completed_by=user)
+            .annotate(id_len=Length("original_id"))
+            .filter(id_len__gt=10)
+        )
+
+        if auto_generated_submissions.count() == 0:
+            return Response(status=status.HTTP_411_LENGTH_REQUIRED)
+        Submission.objects.filter(
+            pk__in=auto_generated_submissions.values_list("pk", flat=True)[:count]
+        ).delete()
+
+        return Response(status=status.HTTP_200_OK)
