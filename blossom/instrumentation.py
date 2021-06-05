@@ -6,7 +6,7 @@ from typing import Any
 import beeline
 
 
-def post_worker_init(*args: Any, **kwargs: Any) -> None:
+def post_worker_init(worker: Any) -> None:
     """
     Gunicorn post-forking hook, initializing new process.
 
