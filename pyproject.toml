@@ -28,6 +28,7 @@ pyyaml = "^5.3"
 praw = "^7.1.0"
 django-filter = "^2.3.0"
 gunicorn = "^20.1.0"
+honeycomb-beeline = "^2.17.0"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"

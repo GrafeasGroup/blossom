@@ -76,6 +76,7 @@ AUTH_USER_MODEL = "authentication.BlossomUser"
 
 MIDDLEWARE = [
     "bugsnag.django.middleware.BugsnagMiddleware",
+    "beeline.middleware.django.HoneyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
