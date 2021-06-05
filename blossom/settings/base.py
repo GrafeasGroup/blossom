@@ -136,16 +136,12 @@ LOGGING = {
         }
     },  # noqa: E231
     "loggers": {
-        "root": {
-            "handlers": ["bugsnag"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-        },
         "django": {
-            "handlers": ["console"],
+            "handlers": ["console", "bugsnag"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
         "blossom": {
-            "handlers": ["console"],
+            "handlers": ["console", "bugsnag"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
         },
     },
