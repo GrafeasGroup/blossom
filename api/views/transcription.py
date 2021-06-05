@@ -107,7 +107,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         submission = get_object_or_404(Submission, id=submission_id)
         user = get_object_or_404(BlossomUser, username=username)
         source = get_object_or_404(Source, name=source)
-        removed_from_reddit = request.data.get("removed_from_reddit", False)
+        removed_from_reddit = request.data.get("removed_from_reddit", "False") == "True"
 
         if user.blacklisted:
             return Response(status=status.HTTP_423_LOCKED)

@@ -126,13 +126,8 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "bugsnag": {
-            "level": "ERROR",
-            "class": "bugsnag.handlers.BugsnagHandler"
-        },
-        "console": {
-            "class": "logging.StreamHandler"
-        }
+        "bugsnag": {"level": "ERROR", "class": "bugsnag.handlers.BugsnagHandler"},
+        "console": {"class": "logging.StreamHandler"},
     },  # noqa: E231
     "loggers": {
         "root": {

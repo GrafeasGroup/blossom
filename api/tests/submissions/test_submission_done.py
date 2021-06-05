@@ -195,20 +195,18 @@ class TestSubmissionDone:
         """Verify that a slack message fires when a volunteer ranks up."""
         client, headers, user = setup_user_client(client)
         for iteration in range(49):
-            submission = create_submission(claimed_by=user, completed_by=user)
-            create_transcription(submission, user)
+            create_submission(claimed_by=user, completed_by=user)
 
         # Mock the Slack client to catch the sent messages by the function under test.
         slack_client.chat_postMessage = MagicMock()
 
         submission = create_submission(claimed_by=user, original_id=50)
-        create_transcription(submission, user)
 
         # patch out random so that the "check transcription" doesn't fire
         with patch("random.random", lambda: 1):
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
-                json.dumps({"username": user.username}),
+                json.dumps({"username": user.username, "mod_override": "True"}),
                 content_type="application/json",
                 **headers,
             )
@@ -217,7 +215,6 @@ class TestSubmissionDone:
             f"Congrats to {user.username} on achieving the rank of {user.get_rank()}!!"
             f" {submission.tor_url}"
         )
-
         assert (
             call(channel="#new_volunteers_meta", text=slack_message)
             == slack_client.chat_postMessage.call_args_list[0]
