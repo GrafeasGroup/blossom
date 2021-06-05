@@ -16,6 +16,7 @@ def post_worker_init(worker: Any) -> None:
     defined, it will verbosely print to stderr what info it would have
     sent there. No valid API key would then be necessary.
     """
+    1 / 0
     logging.info(f"beeline initialization on process pid {os.getpid()}")
 
     honeycomb_key = os.getenv("HONEYCOMB_KEY", "")
