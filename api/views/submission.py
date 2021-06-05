@@ -27,7 +27,6 @@ from api.views.slack_helpers import client as slack
 from authentication.models import BlossomUser
 
 
-
 @method_decorator(
     name="list",
     decorator=swagger_auto_schema(
@@ -380,8 +379,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         if submission.claimed_by is None:
             return Response(status=status.HTTP_412_PRECONDITION_FAILED)
+
         mod_override = (
-            request.data.get("mod_override", "False") == "True" and request.user.is_grafeas_staff
+            request.data.get("mod_override", "False") == "True"
+            and request.user.is_grafeas_staff
         )
 
         if not mod_override:
@@ -395,11 +396,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 self._send_transcription_to_slack(
                     transcription, submission, user, slack
                 )
-        self._check_for_rank_up(user, submission)
 
         submission.completed_by = user
         submission.complete_time = timezone.now()
         submission.save()
+
+        self._check_for_rank_up(user, submission)
 
         return Response(
             status=status.HTTP_201_CREATED,
