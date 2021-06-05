@@ -70,6 +70,9 @@ class Submission(models.Model):
     common example of this phenomenon.
     """
 
+    class Meta:
+        indexes = [models.Index(fields=["url", "tor_url"])]
+
     # The ID of the Submission on the "source" platform.
     # Note that this field is not used as a primary key; an underlying
     # "id" field is the primary key. Also note that this is not named
