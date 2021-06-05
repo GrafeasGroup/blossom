@@ -97,7 +97,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             source=source_obj,
             removed_from_queue=False,
         )
-        return Response(self.get_serializer(queryset, many=True).data)
+        return Response(self.get_serializer(queryset[:100], many=True).data)
 
     @swagger_auto_schema(
         manual_parameters=[Parameter("hours", "query", type="integer")],
@@ -134,7 +134,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             source=source_obj,
             removed_from_queue=False,
         )
-        return Response(self.get_serializer(queryset, many=True).data)
+        return Response(self.get_serializer(queryset[:100], many=True).data)
 
     @swagger_auto_schema(
         responses={200: DocResponse("Successful operation", schema=serializer_class)},
@@ -159,7 +159,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             archived=False,
             source=source_obj,
         )
-        return Response(data=self.get_serializer(queryset, many=True).data)
+        return Response(data=self.get_serializer(queryset[:100], many=True).data)
 
     @swagger_auto_schema(
         request_body=Schema(
@@ -522,8 +522,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             transcription__original_id__isnull=True,
             removed_from_queue=False,
             cannot_ocr=False,
-        )[:return_limit]
-        return Response(data=self.get_serializer(queryset, many=True).data)
+        )
+        return Response(
+            data=self.get_serializer(queryset[:return_limit], many=True).data
+        )
 
     @swagger_auto_schema(
         request_body=Schema(
