@@ -76,6 +76,7 @@ AUTH_USER_MODEL = "authentication.BlossomUser"
 
 MIDDLEWARE = [
     "bugsnag.django.middleware.BugsnagMiddleware",
+    "beeline.middleware.django.HoneyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -130,16 +131,12 @@ LOGGING = {
         "console": {"class": "logging.StreamHandler"},
     },  # noqa: E231
     "loggers": {
-        "root": {
-            "handlers": ["bugsnag"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-        },
         "django": {
-            "handlers": ["console"],
+            "handlers": ["console", "bugsnag"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
         "blossom": {
-            "handlers": ["console"],
+            "handlers": ["console", "bugsnag"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
         },
     },
