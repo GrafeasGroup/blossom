@@ -1,0 +1,4 @@
+--
+-- Here's where you would write some initial SQL prior to
+-- running DB migrations. Perhaps activating a pg extension?
+--

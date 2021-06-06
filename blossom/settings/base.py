@@ -115,11 +115,11 @@ default_db_password = "Pink fluffy unicorns dancing on rainbows"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "blossom",
-        "USER": "blossom_app",
+        "NAME": os.getenv("BLOSSOM_DB_DATABASE", "blossom"),
+        "USER": os.getenv("BLOSSOM_DB_USERNAME", "blossom_app"),
         "PASSWORD": os.getenv("BLOSSOM_DB_PASSWORD", default_db_password),
-        "HOST": "localhost",
-        "PORT": "",
+        "HOST": os.getenv("BLOSSOM_DB_HOST", "localhost"),
+        "PORT": os.getenv("BLOSSOM_DB_PORT", ""),
     }
 }
 

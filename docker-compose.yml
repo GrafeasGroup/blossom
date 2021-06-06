@@ -1,0 +1,47 @@
+---
+version: '3'
+services:
+  db:
+    image: postgres:11.5-alpine
+    environment:
+      POSTGRES_DB: 'mydb'
+      POSTGRES_PASSWORD: 'hunter2'
+      POSTGRES_USER: 'roto_rooter'
+    volumes:
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - 5432:5432
+
+  blossom:
+    depends_on:
+      - db
+    build:
+      context: .
+      dockerfile: ./docker/blossom.Dockerfile
+    environment:
+      ENVIRONMENT: local
+      PORT: '8000'
+      BLOSSOM_SECRET_KEY: 'imhenrytheeigthiam.henrytheeigthiamiam.igotmarriedtothewidownextdoor.shesbeenmarriedseventimesbefore'
+      BLOSSOM_DB_DATABASE: 'mydb'
+      BLOSSOM_DB_USERNAME: 'roto_rooter'
+      BLOSSOM_DB_PASSWORD: 'hunter2'
+      BLOSSOM_DB_HOST: db  # Funky DNS stuff with docker-compose. See above service.
+      BLOSSOM_DB_PORT: '5432'
+      DJANGO_LOG_LEVEL: INFO
+    volumes:
+      - static:/app/blossom/static
+      - ./blossom/settings:/app/blossom/settings:ro
+      - ./docker/local_settings.py:/app/blossom/settings/local.py:ro
+
+  http:
+    depends_on:
+      - blossom  # Because DNS needs to be there or this container fails
+    image: nginx:alpine
+    volumes:
+      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
+      - static:/data/static:ro
+    ports:
+      - 8080:80
+
+volumes:
+  static:
