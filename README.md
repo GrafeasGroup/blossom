@@ -10,7 +10,7 @@
 
 The website. The app. The everything.
 
-A Django app that serves our website, payment portal for donations, engineering blog, and API. As of this instant, it is not yet deployed and we are still running on the old system. However, Blossom is functionally complete and ready to go.
+A Django app that serves our website, payment portal for donations, engineering blog, and API. It can be found at https://grafeas.org.
 
 ## Local development
 
@@ -28,6 +28,7 @@ better_exceptions.MAX_LENGTH = None
 # change how the server runs.
 DEBUG = True
 ENABLE_SLACK = False
+ENABLE_OCR = False
 
 ALLOWED_HOSTS = ['*']
 CACHES = {
@@ -67,8 +68,9 @@ LOGGING = {
     },
 }
 
-# Uncomment the below to disable all auth checks for the API to test responses.
-# OVERRIDE_API_AUTH=True
+OVERRIDE_API_AUTH = True
+MIDDLEWARE = [i for i in MIDDLEWARE if "bugsnag" not in i]
+MIDDLEWARE = ["blossom.middleware.BetterExceptionsMiddleware"] + MIDDLEWARE
 ```
 This file will be ignored by git, so make any changes you need to while developing.
 
