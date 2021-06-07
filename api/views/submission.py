@@ -304,10 +304,19 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         url = "https://reddit.com" + url if submission.source == "reddit" else url
 
+        msg = (
+            f"Please check the following transcription of " f"u/{user.username}: {url}."
+        )
+
+        # the `done` process is still going here, so they technically don't have
+        # a transcription yet. It's about to get assigned, but for right now the
+        # value is still zero.
+        if user.gamma == 0:
+            msg = ":rotating_light: First transcription! :rotating_light: " + msg
+
         slack.chat_postMessage(
             channel="#transcription_check",
-            text="Please check the following transcription of "
-            f"u/{user.username}: {url}.",
+            text=msg,
         )
 
     def _check_for_rank_up(

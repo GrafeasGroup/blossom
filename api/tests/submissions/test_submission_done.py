@@ -146,8 +146,8 @@ class TestSubmissionDone:
             (0.0999, 5000, True, None, None),
             (0.05, 5001, False, None, None),
             (0.0499, 10000, True, None, None),
-            (0, 0, True, "url", None),
-            (0, 0, True, "tor_url", "trans_url"),
+            (0, 1, True, "url", None),
+            (0, 1, True, "tor_url", "trans_url"),
         ],
     )
     def test_done_random_checks(
@@ -190,6 +190,60 @@ class TestSubmissionDone:
                 )
             else:
                 assert slack_client.chat_postMessage.call_count == 0
+
+    def test_send_transcription_to_slack(self, client: Client) -> None:
+        """Verify that a new user gets a different welcome message."""
+        # Mock both the gamma property and the random.random function.
+        with patch(
+            "authentication.models.BlossomUser.gamma", new_callable=PropertyMock
+        ) as mock:
+            mock.return_value = 0
+            # Mock the Slack client to catch the sent messages by the function under test.
+            slack_client.chat_postMessage = MagicMock()
+
+            client, headers, user = setup_user_client(client)
+            submission = create_submission(tor_url="asdf", claimed_by=user)
+            create_transcription(submission, user, url=None)
+
+            result = client.patch(
+                reverse("submission-done", args=[submission.id]),
+                json.dumps({"username": user.username}),
+                content_type="application/json",
+                **headers,
+            )
+
+            first_slack_message = (
+                f":rotating_light: First transcription! :rotating_light:"
+                f" Please check the following transcription of u/{user.username}:"
+                f" asdf."
+            )
+            second_slack_message = (
+                f"Please check the following transcription of u/{user.username}:"
+                f" asdf."
+            )
+
+            assert result.status_code == status.HTTP_201_CREATED
+            assert (
+                call(channel="#transcription_check", text=first_slack_message)
+                == slack_client.chat_postMessage.call_args_list[0]
+            )
+            submission.refresh_from_db()
+            submission.completed_by = None
+            submission.save()
+
+            mock.return_value = 1
+
+            result = client.patch(
+                reverse("submission-done", args=[submission.id]),
+                json.dumps({"username": user.username}),
+                content_type="application/json",
+                **headers,
+            )
+            assert result.status_code == status.HTTP_201_CREATED
+            assert (
+                call(channel="#transcription_check", text=second_slack_message)
+                == slack_client.chat_postMessage.call_args_list[-1]
+            )
 
     def test_check_for_rank_up(self, client: Client) -> None:
         """Verify that a slack message fires when a volunteer ranks up."""
