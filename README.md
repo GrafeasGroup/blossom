@@ -14,6 +14,8 @@ A Django app that serves our website, payment portal for donations, engineering 
 
 ## Local development
 
+> For a quick and dirty method of testing blossom locally, run `docker-compose up -d` and point your browser to <http://localhost:8080/>
+
 Create a file under the top level `blossom` folder called `local_settings.py`. Populate it with the following:
 
 ```python
