@@ -254,28 +254,26 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         Return whether a transcription should be checked based on user gamma.
 
         This is based on the gamma of the user. Given this gamma, a probability
-        for the check is provided. The following probabilities are in use:
-
-        - gamma <= 5:               1
-        - 5 < gamma <= 50:          0.8
-        - 50 < gamma <= 100:        0.7
-        - 100 < gamma <= 250:       0.6
-        - 250 < gamma <= 500:       0.5
-        - 500 < gamma <= 1000:      0.3
-        - 1000 <= gamma <= 5000:    0.1
-        - 5000 < gamma:             0.05
+        for the check is provided. For example, if the probability listed is
+        (5, 1), then for the first five transcriptions there is a 100% probability
+        that their transcription will be posted to the channel. If the probability
+        listed reads something like (100, 0.2), then there is a 1 in 5 chance
+        (20%) of their transcription being posted. The chance will get lower as
+        the volunteer gains more experience, as the entire point of this system
+        is to verify that they are continuing to do a good job, not to constantly
+        be looking over their shoulder.
 
         :param volunteer:   the volunteer for which the post should be checked
         :return:            whether the post should be checked
         """
         probabilities = [
             (5, 1),
-            (50, 0.8),
-            (100, 0.7),
-            (250, 0.6),
-            (500, 0.5),
-            (1000, 0.3),
-            (5000, 0.1),
+            (50, 0.4),
+            (100, 0.2),
+            (250, 0.1),
+            (500, 0.05),
+            (1000, 0.02),
+            (5000, 0.01),
         ]
         for (gamma, probability) in probabilities:
             if volunteer.gamma <= gamma:
@@ -283,7 +281,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                     return True
                 else:
                     return False
-        return random.random() < 0.05
+        return random.random() < 0.0005
 
     def _send_transcription_to_slack(
         self,
