@@ -315,8 +315,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             msg = ":rotating_light: First transcription! :rotating_light: " + msg
 
         slack.chat_postMessage(
-            channel="#transcription_check",
-            text=msg,
+            channel="#transcription_check", text=msg,
         )
 
     def _check_for_rank_up(
