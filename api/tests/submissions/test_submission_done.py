@@ -245,6 +245,30 @@ class TestSubmissionDone:
                 == slack_client.chat_postMessage.call_args_list[-1]
             )
 
+    def test_removed_transcription_not_sent(self, client: Client) -> None:
+        """Verify that a removed transcription is not sent to Slack."""
+        # Mock both the gamma property and the random.random function.
+        with patch(
+            "authentication.models.BlossomUser.gamma", new_callable=PropertyMock
+        ) as mock:
+            mock.return_value = 0
+            # Mock the Slack client to catch the sent messages by the function under test.
+            slack_client.chat_postMessage = MagicMock()
+
+            client, headers, user = setup_user_client(client)
+            submission = create_submission(tor_url="asdf", claimed_by=user)
+            create_transcription(submission, user, url=None, removed_from_reddit=True)
+
+            result = client.patch(
+                reverse("submission-done", args=[submission.id]),
+                json.dumps({"username": user.username}),
+                content_type="application/json",
+                **headers,
+            )
+
+            assert result.status_code == status.HTTP_201_CREATED
+            assert len(slack_client.chat_postMessage.call_args_list) == 0
+
     def test_check_for_rank_up(self, client: Client) -> None:
         """Verify that a slack message fires when a volunteer ranks up."""
         client, headers, user = setup_user_client(client)
