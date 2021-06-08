@@ -13,8 +13,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import logging
 import os
 
+import bugsnag
 import dotenv
 from django.urls import reverse_lazy
+
+from blossom import __version__
 
 dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
@@ -253,3 +256,5 @@ if DATABASES["default"].get("PASSWORD") == default_db_password:
 
 if OCR_API_KEY == "helloworld":
     settings_err("Using default OCR API key, not ours!")
+
+bugsnag.configure(app_version=__version__)
