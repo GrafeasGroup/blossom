@@ -4,9 +4,9 @@ services:
   db:
     image: postgres:11.5-alpine
     environment:
-      POSTGRES_DB: 'mydb'
-      POSTGRES_PASSWORD: 'hunter2'
-      POSTGRES_USER: 'roto_rooter'
+      POSTGRES_DB: 'local_blossom'
+      POSTGRES_PASSWORD: 'this-is-not-prod-so-why-do-we-care'
+      POSTGRES_USER: 'blossom_is_the_best'
     volumes:
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
@@ -22,9 +22,9 @@ services:
       ENVIRONMENT: local
       PORT: '8000'
       BLOSSOM_SECRET_KEY: 'imhenrytheeigthiam.henrytheeigthiamiam.igotmarriedtothewidownextdoor.shesbeenmarriedseventimesbefore'
-      BLOSSOM_DB_DATABASE: 'mydb'
-      BLOSSOM_DB_USERNAME: 'roto_rooter'
-      BLOSSOM_DB_PASSWORD: 'hunter2'
+      BLOSSOM_DB_DATABASE: 'local_blossom'
+      BLOSSOM_DB_USERNAME: 'blossom_is_the_best'
+      BLOSSOM_DB_PASSWORD: 'this-is-not-prod-so-why-do-we-care'
       BLOSSOM_DB_HOST: db  # Funky DNS stuff with docker-compose. See above service.
       BLOSSOM_DB_PORT: '5432'
       DJANGO_LOG_LEVEL: INFO
