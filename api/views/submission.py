@@ -281,7 +281,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                     return True
                 else:
                     return False
-        return random.random() < 0.0005
+        return random.random() < 0.005
 
     def _send_transcription_to_slack(
         self,

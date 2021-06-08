@@ -145,7 +145,7 @@ class TestSubmissionDone:
             (0.1, 1001, False, None, None),
             (0.0099, 5000, True, None, None),
             (0.05, 5001, False, None, None),
-            (0.0499, 10000, True, None, None),
+            (0.00499, 10000, True, None, None),
             (0, 1, True, "url", None),
             (0, 1, True, "tor_url", "trans_url"),
         ],
@@ -186,7 +186,7 @@ class TestSubmissionDone:
             if message:
                 assert (
                     call(channel="#transcription_check", text=slack_message)
-                    == slack_client.chat_postMessage.call_args_list[0]
+                    in slack_client.chat_postMessage.call_args_list
                 )
             else:
                 assert slack_client.chat_postMessage.call_count == 0
