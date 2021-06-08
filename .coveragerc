@@ -17,3 +17,4 @@ omit =
   blossom/social_auth/*,
   blossom/conftest.py,
   blossom/docs/*
+  blossom/instrumentation.py

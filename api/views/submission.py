@@ -391,9 +391,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
 
             if self._should_check_transcription(user):
-                self._send_transcription_to_slack(
-                    transcription, submission, user, slack
-                )
+                if not transcription.removed_from_reddit:
+                    self._send_transcription_to_slack(
+                        transcription, submission, user, slack
+                    )
 
         submission.completed_by = user
         submission.complete_time = timezone.now()
