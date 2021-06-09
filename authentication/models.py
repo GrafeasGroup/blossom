@@ -15,6 +15,9 @@ class BlossomUser(AbstractUser):
     status of the user and the roles they fulfill.
     """
 
+    class Meta:
+        indexes = [models.Index(fields=["username", "email"])]
+
     # The backend class which is used to authenticate the BlossomUser.
     backend = "authentication.backends.EmailBackend"
 
