@@ -524,7 +524,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return_limit = self._get_limit_value(request)
         queryset = Submission.objects.filter(
             source=source_obj,
-            id__in=Submission.objects.filter(transcription__author=transcribot),
+            transcription__author=transcribot,
             transcription__original_id__isnull=True,
             removed_from_queue=False,
             cannot_ocr=False,
