@@ -27,7 +27,7 @@
             <tr>
                 <th scope="row"><a href="{{ p.get_absolute_url }}edit">{{ p.id }}</a></th>
                 <td><a href="{{ p.get_absolute_url }}edit">{{ p.title }}</a></td>
-                <td>{{ p.published }}</td>
+                <td>{% if p.published %}✓{% else %}✗{% endif %}</td>
                 <td>{{ p.date }}</td>
             </tr>
         {% endfor %}
