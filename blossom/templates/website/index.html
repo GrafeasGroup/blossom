@@ -14,10 +14,11 @@
     {% for p in posts %}
         <p>
         <h1><a href="{% get_absolute_uri p %}">{{ p.title }}</a></h1>
+        <span class="text-muted">Published {{ p.date }}</span>
         </p>
         <div class="underline-links">
             <p>
-                {{ p.body|safe }}
+                {{ p.body|safe|truncatewords:80 }}
             </p>
         </div>
         <hr>

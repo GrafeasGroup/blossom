@@ -6,6 +6,10 @@
     {% endif %}
     <p>
     <h1>{{ post.title }}</h1>
+    {% if not post.standalone_section %}
+        {# so that we don't show the date on things in the header bar, like the donation page #}
+        <span class="text-muted">Published {{ post.date }}</span>
+    {% endif %}
     </p>
     <div class="underline-links">
         <p>
