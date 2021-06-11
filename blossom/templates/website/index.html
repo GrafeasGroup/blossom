@@ -18,7 +18,7 @@
         </p>
         <div class="underline-links">
             <p>
-                {{ p.body|safe }}
+                {{ p.body|safe|truncatewords:80 }}
             </p>
         </div>
         <hr>
