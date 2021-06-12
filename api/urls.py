@@ -1,11 +1,43 @@
 """URL configuration for the API application."""
+from typing import Any, Dict, Tuple
+
 from django.conf.urls import include, url
 from django.urls import path
 from drf_yasg import openapi
+from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions, routers
 
 from api.views import misc, slack, source, submission, transcription, volunteer
+
+
+class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
+    """Custom schema generator required for Swagger to point the requests to the correct URL.
+
+    See https://github.com/axnsan12/drf-yasg/issues/146#issuecomment-478757552.
+    """
+
+    def get_schema(
+        self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]
+    ) -> openapi.Swagger:
+        """Generate a :class:`.Swagger` object representing the API schema.
+
+        :param request: the request used for filtering accessible endpoints and finding
+        the spec URI
+        :type request: rest_framework.request.Request or None
+        :param bool public: if True, all endpoints are included regardless of access
+        through `request`
+        :param args: the args for the schema
+        :param kwargs: the kwargs for the schema
+
+        :return: the generated Swagger specification
+        :rtype: openapi.Swagger
+        """
+        schema = super().get_schema(*args, **kwargs)
+        # This makes sure that Swagger points to the /api/ endpoint.
+        schema.basePath = "/api"
+        return schema
+
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -19,6 +51,7 @@ schema_view = get_schema_view(
     public=True,
     permission_classes=(permissions.AllowAny,),
     urlconf="api.urls",
+    generator_class=CustomOpenAPISchemaGenerator,
 )
 
 # automatically build URLs, as recommended by django-rest-framework docs
