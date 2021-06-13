@@ -1,4 +1,7 @@
 """Models used within the Authentication application."""
+import datetime
+from typing import Optional
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
@@ -57,6 +60,23 @@ class BlossomUser(AbstractUser):
         if self.blacklisted:
             return 0  # see https://github.com/GrafeasGroup/blossom/issues/15
         return Submission.objects.filter(completed_by=self).count()
+
+    @property
+    def first_active(self) -> Optional[datetime.datetime]:
+        """
+        Return the date when the user was first active.
+
+        Usually, this is the date of their first transcription.
+
+        :return: the date when the user was first active or None if they haven't
+        transcribed yet.
+        """
+        return (
+            Submission.objects.filter(claimed_by=self)
+            .order_by("claim_time")
+            .first()
+            .claim_time
+        )
 
     def __str__(self) -> str:
         return self.username

@@ -26,7 +26,7 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
             "id",
             "username",
             "gamma",
-            "date_joined",
+            "first_active",
             "last_login",
             "last_update_time",
             "accepted_coc",
