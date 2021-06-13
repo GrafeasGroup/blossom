@@ -62,6 +62,7 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
             "source",
             "url",
             "tor_url",
+            "content_url",
             "has_ocr_transcription",
             "transcription_set",
             "archived",
