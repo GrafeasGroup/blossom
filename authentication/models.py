@@ -71,12 +71,10 @@ class BlossomUser(AbstractUser):
         :return: the date when the user was first active or None if they haven't
         transcribed yet.
         """
-        return (
-            Submission.objects.filter(claimed_by=self)
-            .order_by("claim_time")
-            .first()
-            .claim_time
+        first_claim = (
+            Submission.objects.filter(claimed_by=self).order_by("claim_time").first()
         )
+        return None if first_claim is None else first_claim.claim_time
 
     def __str__(self) -> str:
         return self.username

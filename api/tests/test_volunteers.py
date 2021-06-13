@@ -1,17 +1,14 @@
 """Tests to validate the behavior of the VolunteerViewSet."""
+import datetime
 import json
 
+import pytz
 from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
 from api.models import Submission, Transcription
-from api.tests.helpers import (
-    create_submission,
-    create_transcription,
-    create_user,
-    setup_user_client,
-)
+from api.tests.helpers import create_submission, create_user, setup_user_client
 from authentication.models import BlossomUser
 
 
@@ -273,3 +270,81 @@ class TestVolunteerCoCAcceptance:
         assert result.status_code == status.HTTP_409_CONFLICT
         user.refresh_from_db()
         assert user.accepted_coc is True
+
+
+class TestVolunteerFirstActive:
+    def test_first_active_one_claim(self, client: Client) -> None:
+        """Test that first_activity returns date of single claim."""
+        client, headers, user = setup_user_client(client)
+
+        time = datetime.datetime(
+            2021, 6, 2, 13, 20, tzinfo=pytz.timezone("UTC")
+        )  # 2021-06-02 13:20
+        create_submission(claimed_by=user, claim_time=time)
+
+        other_time = datetime.datetime(
+            2021, 5, 2, 13, 20, tzinfo=pytz.timezone("UTC")
+        )  # 2021-05-02 13:20
+        other_user = create_user(username="other")
+        create_submission(claimed_by=other_user, claim_time=other_time)
+
+        user.refresh_from_db()
+        assert user.first_active == time
+
+    def test_first_active_multiple_claims(self, client: Client) -> None:
+        """Test that first_activity returns date of first claim."""
+        client, headers, user = setup_user_client(client)
+
+        times = [
+            datetime.datetime(
+                2021, 6, 2, 13, 20, tzinfo=pytz.timezone("UTC")
+            ),  # 2021-06-02 13:20
+            datetime.datetime(
+                2021, 6, 3, 12, 30, tzinfo=pytz.timezone("UTC")
+            ),  # 2021-06-03 12:30
+            datetime.datetime(
+                2021, 6, 4, 3, 10, tzinfo=pytz.timezone("UTC")
+            ),  # 2021-06-04 03:10
+            datetime.datetime(
+                2021, 6, 5, 22, 5, tzinfo=pytz.timezone("UTC")
+            ),  # 2021-06-05 22:05
+        ]
+
+        for time in times:
+            create_submission(claimed_by=user, claim_time=time)
+
+        other_user = create_user(username="other")
+
+        other_times = [
+            datetime.datetime(
+                2021, 5, 2, 13, 20, tzinfo=pytz.timezone("UTC")
+            ),  # 2021-05-02 13:20
+            datetime.datetime(
+                2021, 5, 3, 12, 30, tzinfo=pytz.timezone("UTC")
+            ),  # 2021-05-03 12:30
+            datetime.datetime(
+                2021, 5, 4, 3, 10, tzinfo=pytz.timezone("UTC")
+            ),  # 2021-05-04 03:10
+            datetime.datetime(
+                2021, 5, 5, 22, 5, tzinfo=pytz.timezone("UTC")
+            ),  # 2021-05-05 22:05
+        ]
+
+        for time in other_times:
+            create_submission(claimed_by=other_user, claim_time=time)
+
+        user.refresh_from_db()
+        assert user.first_active == times[0]
+
+    def test_first_active_no_claim(self, client: Client) -> None:
+        """Test that first_activity returns None if nothing has been claimed."""
+        client, headers, user = setup_user_client(client)
+
+        other_time = datetime.datetime(
+            2021, 6, 2, 13, 20, tzinfo=pytz.timezone("UTC")
+        )  # 2021-06-02 13:20
+        other_user = create_user(username="other")
+        create_submission(claimed_by=other_user, claim_time=other_time)
+
+        user.refresh_from_db()
+        assert user.first_active is None
