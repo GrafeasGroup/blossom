@@ -2,7 +2,7 @@ from typing import Dict
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpRequest, HttpResponse
-from django.shortcuts import HttpResponseRedirect, redirect, render
+from django.shortcuts import HttpResponseRedirect, redirect, render, reverse
 from django.views.generic import DetailView, TemplateView, UpdateView
 
 from authentication.mixins import GrafeasStaffRequired
@@ -29,7 +29,6 @@ class PostDetail(DetailView):
     """Render a specific post on the website."""
 
     model = Post
-    query_pk_and_slug = True
     template_name = "website/post_detail.html"
 
     def get_context_data(self, **kwargs: object) -> Dict:
@@ -39,11 +38,15 @@ class PostDetail(DetailView):
         return context
 
 
+def post_view_redirect(request: HttpRequest, pk: int, slug: str) -> HttpResponse:
+    """Compatibility layer to take in old-style PK+slug urls and return slug only."""
+    return HttpResponseRedirect(reverse("post_detail", kwargs={"slug": slug}))
+
+
 class PostUpdate(GrafeasStaffRequired, UpdateView):
     """Modify a post on the website."""
 
     model = Post
-    query_pk_and_slug = True
     fields = [
         "title",
         "body",

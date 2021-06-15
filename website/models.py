@@ -31,7 +31,7 @@ class Post(models.Model):
 
     def get_absolute_url(self) -> str:
         """Return the full url of a given post."""
-        kwargs = {"pk": self.id, "slug": self.slug}
+        kwargs = {"slug": self.slug}
         return reverse("post_detail", kwargs=kwargs)
 
     def save(self, *args: object, **kwargs: object) -> None:
