@@ -35,7 +35,7 @@
     <meta name="twitter:card" content="summary">
     <meta name="twitter:creator" content="@grafeas">
     <meta name="twitter:site" content="@grafeas">
-    <meta name="twitter:image:src" content="https://grafeas.org/static/images/logo.svg">
+    <meta name="twitter:image:src" content="https://grafeas.org/static/images/logo.png">
     <meta name="twitter:image:width" content="280">
     <meta name="twitter:image:height" content="150">
     <meta name="twitter:image:alt"
@@ -48,7 +48,7 @@
     {% endblock %}
 
     {# facebook #}
-    <meta property="og:image" content="https://grafeas.org/static/images/logo.svg">
+    <meta property="og:image" content="https://grafeas.org/static/images/logo.png">
     <meta name="og:image:width" content="280">
     <meta name="og:image:height" content="150">
     {% block socialmediafacebook %}
