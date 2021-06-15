@@ -1,5 +1,17 @@
 {% extends 'website/partials/base.partial' %}
 
+{% block socialmediatwitter %}
+    <meta name="twitter:title"
+          content="Grafeas Group - {{ post.title }}">
+    <meta name="twitter:description"
+          content="{{ post.body|safe|truncatechars:200 }}">
+{% endblock %}
+
+{% block socialmediafacebook %}
+    <meta property="og:title"
+          content="Grafeas Group - {{ post.title }}">
+{% endblock %}
+
 {% block content %}
     {% if request.user.is_authenticated %}
         <a class="btn btn-primary" href="edit/">Edit!</a>

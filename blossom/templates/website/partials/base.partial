@@ -31,6 +31,31 @@
     <link rel="stylesheet" href="{% static "css/main.css" %}">
     <script defer data-domain="grafeas.org" src="https://plausible.io/js/plausible.js"></script>
 
+    {# twitter #}
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:creator" content="@grafeas">
+    <meta name="twitter:site" content="@grafeas">
+    <meta name="twitter:image:src" content="https://grafeas.org/static/images/logo.svg">
+    <meta name="twitter:image:width" content="280">
+    <meta name="twitter:image:height" content="150">
+    <meta name="twitter:image:alt"
+          content="The logo of the Grafeas Group. It is made of two capital Gs, one upright and the other mirrored and upside-down, and connected by the vertical 'bar' of the two Gs. the letters are centered over the outline of a quill pen.">
+    {% block socialmediatwitter %}
+        <meta name="twitter:title"
+              content="The Grafeas Group - Digital Scribes for Accessibility!">
+        <meta name="twitter:description"
+              content="The Grafeas Group is a 501(c)(3) working on increasing accessibility on the internet though crowdsourcing and gamification.">
+    {% endblock %}
+
+    {# facebook #}
+    <meta property="og:image" content="https://grafeas.org/static/images/logo.svg">
+    <meta name="og:image:width" content="280">
+    <meta name="og:image:height" content="150">
+    {% block socialmediafacebook %}
+        <meta property="og:title"
+              content="The Grafeas Group - Digital Scribes for Accessibility!">
+    {% endblock %}
+
     <title>Grafeas Group, Ltd.</title>
 </head>
 
