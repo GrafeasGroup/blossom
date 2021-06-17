@@ -1,6 +1,8 @@
 """Views that specifically relate to volunteers."""
 import uuid
 
+from django.db.models import Count
+from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django_filters.rest_framework import DjangoFilterBackend
@@ -53,6 +55,30 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         """Get information on the volunteer with the provided username."""
         user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
         return Response(self.serializer_class(user).data)
+
+    @swagger_auto_schema(
+        manual_parameters=[Parameter("username", "query", type="string")],
+        responses={
+            400: 'No "username" as a query parameter.',
+            404: "No volunteer with the specified username.",
+        },
+    )
+    @action(detail=False, methods=["get"])
+    @validate_request(query_params={"username"})
+    def rate(self, request: Request, username: str = None) -> Response:
+        """Get the rate of transcriptions the volunteer made."""
+        user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
+
+        # https://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
+        rate = (
+            Transcription.objects.filter(author=user)
+            .annotate(date=TruncDate("create_time"))
+            .values("date")
+            .annotate(count=Count("id"))
+            .values("date", "count")
+        )
+
+        return Response(rate)
 
     @swagger_auto_schema(
         request_body=no_body, responses={404: "No volunteer with the specified ID."}
