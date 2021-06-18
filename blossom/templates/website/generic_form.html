@@ -137,8 +137,8 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function (event) {
-            const inputs = document.querySelectorAll('.inputfile');
-            Array.prototype.forEach.call(inputs, function (input) {
+            const inputs = Array.from(document.getElementsByClassName('inputfile'));
+            inputs.forEach(function (input) {
                 let label = input.previousElementSibling
 
                 input.addEventListener('change', function (e) {
@@ -149,28 +149,38 @@
                     label.innerText = fileName ? fileName : "browse";
                 });
             });
+
             // from https://www.tjvantoll.com/2012/08/05/html5-form-validation-showing-all-error-messages/
-            const createAllErrors = function () {
-                let form = $(this)
-                let errorList = $(".errorMessages");
+            const forms = Array.from(document.getElementsByName("form"));
+
+            forms.forEach(function (form) {
+                let errorList = form.getElementsByClassName("errorMessages")[0];
 
                 const showAllErrorMessages = function () {
                     errorList.innerHTML = "";
 
                     // Find all invalid fields within the form.
-                    form.find(":invalid").each(function (index, node) {
-
+                    form.querySelectorAll(":invalid").forEach(function (index, node) {
                         // Find the field's corresponding label
-                        let label = $("label[for=" + node.id + "] "),
+                        let label = form.querySelector("label[for=" + node.id + "] "),
                             // Opera incorrectly does not fill the validationMessage property.
                             message = node.validationMessage || 'Invalid value.';
 
-                        // jquery won't add the same class multiple times, so we can have
-                        // addClass run for each loop.
-                        errorList.addClass("mt-3");
-                        errorList.append(
-                            '<div class="alert alert-danger" role="alert">\n' + label.html() + " " + message + '\n</div>'
-                        )
+                        if (!errorList.classList.contains("mt-3")) {
+                            errorList.addClass("mt-3");
+                        }
+
+                        const errorMessage = document.createElement("span");
+                        errorMessage.innerText = message;
+
+                        const errorElement = document.createElement("div");
+                        errorElement.classList.add("alert");
+                        errorElement.classList.add("alert-danger");
+                        errorElement.role = "alert";
+                        errorElement.appendChild(label);
+                        errorElement.appendChild(errorMessage);
+
+                        errorList.appendChild(errorElement);
                     });
                 };
 
@@ -192,9 +202,7 @@
                         showAllErrorMessages();
                     }
                 });
-            };
-
-            $("form").each(createAllErrors);
+            });
         })
     </script>
 
