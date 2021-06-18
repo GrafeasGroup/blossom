@@ -136,7 +136,7 @@
     </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function (event) {
+        document.addEventListener("DOMContentLoaded", function () {
             const inputs = Array.from(document.getElementsByClassName('inputfile'));
             inputs.forEach(function (input) {
                 let label = input.previousElementSibling
@@ -150,67 +150,75 @@
                 });
             });
 
-            // from https://www.tjvantoll.com/2012/08/05/html5-form-validation-showing-all-error-messages/
-            const forms = Array.from(document.getElementsByName("form"));
+            // Adapted from https://www.tjvantoll.com/2012/08/05/html5-form-validation-showing-all-error-messages/
+            const forms = Array.from(document.getElementsByTagName("form"));
 
             forms.forEach(function (form) {
-                let errorList = form.getElementsByClassName("errorMessages")[0];
+                const errorLists = form.getElementsByClassName("errorMessages");
 
-                const showAllErrorMessages = function () {
-                    errorList.innerHTML = "";
+                if (errorLists.length > 0) {
+                    const errorList = errorLists[0];
 
-                    // Find all invalid fields within the form.
-                    form.querySelectorAll(":invalid").forEach(function (index, node) {
-                        // Find the field's corresponding label
-                        let label = form.querySelector("label[for=" + node.id + "] "),
+                    const showAllErrorMessages = function () {
+                        console.debug("Showing error messages")
+                        errorList.innerHTML = "";
+
+                        // Find all invalid fields within the form.
+                        form.querySelectorAll(":invalid").forEach(function (node) {
+                            // Find the field's corresponding label
+                            const label = form.querySelector('label[for="' + node.id + '"]');
                             // Opera incorrectly does not fill the validationMessage property.
-                            message = node.validationMessage || 'Invalid value.';
+                            const message = node.validationMessage || 'Invalid value.';
 
-                        if (!errorList.classList.contains("mt-3")) {
-                            errorList.addClass("mt-3");
+                            if (!errorList.classList.contains("mt-3")) {
+                                errorList.classList.add("mt-3");
+                            }
+
+                            // Add the error message to the list
+                            const errorMessage = document.createElement("span");
+                            errorMessage.innerText = " " + message;
+
+                            const errorElement = document.createElement("div");
+                            errorElement.classList.add("alert");
+                            errorElement.classList.add("alert-danger");
+                            errorElement.role = "alert";
+                            if (label) {
+                                errorElement.appendChild(label);
+                            }
+                            errorElement.appendChild(errorMessage);
+
+                            errorList.appendChild(errorElement);
+                        });
+                    };
+
+                    // Support Safari
+                    form.addEventListener("submit", function (event) {
+                        console.debug(`Submit event`);
+                        if (this.checkValidity && !this.checkValidity()) {
+                            const firstInvalid = form.querySelector(":invalid");
+                            if (firstInvalid) {
+                                firstInvalid.focus();
+                            }
+                            event.preventDefault();
                         }
-
-                        const errorMessage = document.createElement("span");
-                        errorMessage.innerText = message;
-
-                        const errorElement = document.createElement("div");
-                        errorElement.classList.add("alert");
-                        errorElement.classList.add("alert-danger");
-                        errorElement.role = "alert";
-                        errorElement.appendChild(label);
-                        errorElement.appendChild(errorMessage);
-
-                        errorList.appendChild(errorElement);
                     });
-                };
 
-                // Support Safari
-                form.on("submit", function (event) {
-                    if (this.checkValidity && !this.checkValidity()) {
-                        const firstInvalid = form.querySelector(":invalid");
-                        if (firstInvalid) {
-                            firstInvalid.focus();
-                        }
-                        event.preventDefault();
+                    const submitButton = form.querySelector("input[type=submit], button:not([type=button])");
+                    if (submitButton) {
+                        submitButton.addEventListener("click", showAllErrorMessages);
                     }
-                });
 
-                const submitButton = form.querySelector("input[type=submit], button:not([type=button])");
-                if (submitButton) {
-                    submitButton.on("click", showAllErrorMessages);
-                }
-
-                const inputElems = Array.from(form.getElementsByTagName("input"));
-                inputElems.forEach(function (inputElem) {
-                    inputElem.on("keypress", function (event) {
-                        let type = inputElem.type;
-                        const checkedTypes = ["date", "email", "month", "number", "search", "tel", "text", "time", "url", "week"]
-                        if (checkedTypes.contains(type)
-                            && event.keyCode === 13) {
-                            showAllErrorMessages();
-                        }
+                    const inputElems = Array.from(form.getElementsByTagName("input"));
+                    inputElems.forEach(function (inputElem) {
+                        inputElem.addEventListener("keypress", function (event) {
+                            const checkedTypes = ["date", "email", "month", "number", "search", "tel", "text", "time", "url", "week"]
+                            if (checkedTypes.includes(inputElem.type)
+                                && event.code === "Enter") {
+                                showAllErrorMessages();
+                            }
+                        });
                     });
-                });
+                }
             });
         })
     </script>
