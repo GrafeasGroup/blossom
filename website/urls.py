@@ -25,6 +25,7 @@ urlpatterns = [
     path(
         "admin/", grafeas_staff_required(views.AdminView.as_view()), name="admin_view"
     ),
+    path("testform", views.testform, name="homepage"),
 ]
 
 urlpatterns += auth_urls
