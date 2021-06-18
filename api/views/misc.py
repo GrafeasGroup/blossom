@@ -1,6 +1,7 @@
 """Views that don't fit in any of the other view files."""
 from typing import Dict
 
+from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.openapi import Response as DocResponse
 from drf_yasg.openapi import Schema
 from drf_yasg.utils import swagger_auto_schema
@@ -44,6 +45,7 @@ class SummaryView(APIView):
 
     permission_classes = (AdminApiKeyCustomCheck,)
 
+    @csrf_exempt
     @swagger_auto_schema(
         responses={
             200: DocResponse(
@@ -69,6 +71,7 @@ class PingView(APIView):
 
     permission_classes = (AllowAny,)
 
+    @csrf_exempt
     @swagger_auto_schema(
         responses={
             200: DocResponse(

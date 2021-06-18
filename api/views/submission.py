@@ -8,6 +8,7 @@ from django.db.models.functions import Length
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.openapi import Parameter
 from drf_yasg.openapi import Response as DocResponse
@@ -55,6 +56,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         "redis_id",
     ]
 
+    @csrf_exempt
     @swagger_auto_schema(
         manual_parameters=[
             Parameter("ctq", "query", type="boolean"),
@@ -99,6 +101,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         )
         return Response(self.get_serializer(queryset[:100], many=True).data)
 
+    @csrf_exempt
     @swagger_auto_schema(
         manual_parameters=[Parameter("hours", "query", type="integer")],
         required=["source"],
@@ -136,6 +139,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         )
         return Response(self.get_serializer(queryset[:100], many=True).data)
 
+    @csrf_exempt
     @swagger_auto_schema(
         responses={200: DocResponse("Successful operation", schema=serializer_class)},
         required=["source"],
@@ -161,6 +165,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         )
         return Response(data=self.get_serializer(queryset[:100], many=True).data)
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=Schema(
             type="object", properties={"username": Schema(type="string")}
@@ -206,6 +211,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=Schema(
             type="object", properties={"username": Schema(type="string")}
@@ -338,6 +344,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 ),
             )
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
@@ -414,6 +421,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
@@ -486,6 +494,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             else:
                 return default
 
+    @csrf_exempt
     @swagger_auto_schema(
         responses={
             200: DocResponse("Successful operation", schema=serializer_class),
@@ -533,6 +542,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             data=self.get_serializer(queryset[:return_limit], many=True).data
         )
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
@@ -576,6 +586,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         return Response(status=status.HTTP_200_OK, data={"total_yeeted": yeeted})
 
+    @csrf_exempt
     @action(detail=False, methods=["post"])
     def bulkcheck(self, request: Request) -> Response:
         """Start with of a list of IDs, then return which ones are new to us."""
