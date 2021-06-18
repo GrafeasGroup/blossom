@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.forms",
     "django.contrib.staticfiles",
     # additional functionality
     "widget_tweaks",
@@ -108,6 +109,7 @@ TEMPLATES = [
         },
     },
 ]
+FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 WSGI_APPLICATION = "blossom.wsgi.application"
 

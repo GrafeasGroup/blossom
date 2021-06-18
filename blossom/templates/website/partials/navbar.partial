@@ -1,50 +1,54 @@
 {% load static %}
+{% load i18n %}
 
-<nav
-        class="navbar navbar-expand-lg navbar-light"
-        {% if request.host.name == 'engineeringblog' %}
-        style="background-color: #ccc6ba;"
+<nav class="navbar navbar-expand-lg navbar-light" style="background-color: #eae4da;">
+    <div class="container-fluid">
+        {% if 'engineering' in request.path %}
+        <a class="navbar-brand" href="{% url 'blog_index' %}">
         {% else %}
-        style="background-color: #eae4da;"
+            <a class="navbar-brand" href="{% url 'homepage' %}">
         {% endif %}
->
-    <div class="container">
-        <a class="navbar-brand" href="{% url 'homepage' %}">
-            <img src="{% static "images/logo.svg" %}" width="30px" id="navbar-logo" alt="Logo">Grafeas Group
+            <img src="{% static 'images/logo.svg' %}" width="30px" id="navbar-logo" alt="Logo">
+            {% if 'engineering' in request.path %}
+                Grafeas Group Engineering
+            {% else %}
+                Grafeas Group
+            {% endif %}
         </a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item active">
                     <a class="nav-link" href="/">News</a>
                 </li>
                 {% for item in n %}
-                    <li class="nav-item active">
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ item.get_absolute_url }}">{{ item.title }}</a>
                     </li>
                 {% endfor %}
-                <li class="nav-item active">
+                <li class="nav-item">
                     <a class="nav-link" rel="noreferrer" target="_blank"
                        href="https://github.com/GrafeasGroup/">Github</a>
                 </li>
-                <li class="nav-item active">
+                <li class="nav-item">
                     <a class="nav-link" rel="noreferrer" target="_blank"
                        href="https://www.etsy.com/shop/GrafeasGroup">Merch</a>
                 </li>
             </ul>
             {% if request.user.is_authenticated %}
-                <ul class="navbar-nav my-2 my-lg-0">
-                    <li class="nav-item active">
-                        <a id="adminView" class="nav-link" href="{% url 'admin_view' %}">Admin Panel</a>
-                    </li>
-                    <li class="nav-item active">
-                        <a id="logoutButton" class="nav-link" href="{% url 'logout' %}">Logout</a>
-                    </li>
-                </ul>
+                <div class="navbar-nav">
+                    <ul class="navbar-nav my-2 my-lg-0">
+                        <li class="nav-item active">
+                            <a id="adminView" class="nav-link" href="{% url 'admin_view' %}">Admin Panel</a>
+                        </li>
+                        <li class="nav-item active">
+                            <a id="logoutButton" class="nav-link" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    </ul>
+                </div>
             {% endif %}
         </div>
     </div>

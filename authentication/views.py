@@ -1,6 +1,6 @@
 from django.contrib.auth import login, logout
 from django.http.response import HttpResponse
-from django.shortcuts import HttpResponseRedirect, render
+from django.shortcuts import HttpResponseRedirect, render, reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
@@ -8,6 +8,7 @@ from rest_framework.request import Request
 
 from authentication.backends import EmailBackend
 from website.forms import LoginForm
+from website.helpers import get_additional_context
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -15,7 +16,8 @@ class LoginView(TemplateView):
     def get(self, request: Request, *args: object, **kwargs: object) -> HttpResponse:
         """Retrieve the rendered login form."""
         form = LoginForm()
-        return render(request, "website/generic_form.html", {"form": form})
+        context = get_additional_context({"form": form, "slim_form": True})
+        return render(request, "website/generic_form.html", context)
 
     def post(
         self, request: Request, *args: object, **kwargs: object
@@ -41,4 +43,4 @@ class LoginView(TemplateView):
 def logout_view(request: Request) -> HttpResponseRedirect:
     """Log out the user who has sent the request."""
     logout(request)
-    return HttpResponseRedirect("/")
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", reverse("homepage")))

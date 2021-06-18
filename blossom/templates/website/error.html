@@ -1,0 +1,18 @@
+{% extends 'website/partials/base.partial' %}
+
+{% block content %}
+    <div class="my-5">
+        <div class="text-center">
+            <h1 class="mb-5">{{ error_message }}</h1>
+            <div class="row">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <div class="d-grid">
+                        <a href="{% url 'homepage' %}" class="btn btn-primary">Back to safety!</a>
+                    </div>
+                </div>
+                <div class="col-md-2"></div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

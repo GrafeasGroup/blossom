@@ -2,8 +2,7 @@
 {% load static %}
 
 {% block content %}
-    <link rel="stylesheet" href="//cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
-
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@latest/dist/style.css" rel="stylesheet" type="text/css">
     <h1>
         Admin Panel - Posts
     </h1>
@@ -13,32 +12,32 @@
 
     <a href="{% url 'post_create' %}" class="btn btn-primary">Create new post</a>
     <p></p>
-    <table class="table table-hover" id="postTable">
-        <thead>
-        <tr>
-            <th scope="col">#</th>
-            <th scope="col">Title</th>
-            <th scope="col">Published?</th>
-            <th scope="col">Date</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for p in posts %}
+    <div class="table-responsive">
+        <table class="table table-hover" id="postTable">
+            <thead>
             <tr>
-                <th scope="row"><a href="{{ p.get_absolute_url }}edit">{{ p.id }}</a></th>
-                <td><a href="{{ p.get_absolute_url }}edit">{{ p.title }}</a></td>
-                <td>{% if p.published %}✓{% else %}✗{% endif %}</td>
-                <td>{{ p.date }}</td>
+                <th scope="col">#</th>
+                <th scope="col">Title</th>
+                <th scope="col">Published?</th>
+                <th scope="col">Date</th>
             </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+            {% for p in posts %}
+                <tr>
+                    <th scope="row"><a href="{{ p.get_absolute_url }}edit">{{ p.id }}</a></th>
+                    <td><a href="{{ p.get_absolute_url }}edit">{{ p.title }}</a></td>
+                    <td>{% if p.published %}✓{% else %}✗{% endif %}</td>
+                    <td>{{ p.date }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/simple-datatables@latest" type="text/javascript"></script>
 
-    <script src="//cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
     <script>
-        $(document).ready(function () {
-            $('#postTable').DataTable();
-        });
+        const dataTable = new simpleDatatables.DataTable("#postTable")
     </script>
 
 {% endblock %}

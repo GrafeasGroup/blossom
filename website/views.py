@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpRequest, HttpResponse
@@ -113,7 +113,7 @@ class AdminView(GrafeasStaffRequired, TemplateView):
         self, request: HttpRequest, *args: object, **kwargs: object
     ) -> HttpResponse:
         """Render the admin view."""
-        context = {"posts": Post.objects.all(), "fullwidth_view": True}
+        context = {"posts": Post.objects.all()}
         context = get_additional_context(context)
         return render(request, "website/admin.html", context)
 
@@ -131,6 +131,30 @@ def user_create(request: HttpRequest) -> HttpResponse:
     else:
         form = AddUserForm()
 
-    context = {"form": form, "header": "Create New User", "fullwidth_view": True}
+    context = {"form": form, "header": "Create New User"}
 
     return render(request, "website/generic_form.html", context)
+
+
+def handler404(request: HttpRequest, exception: Any) -> HttpResponse:
+    """View to handle 404 errors."""
+    context = get_additional_context(
+        {
+            "error_message": (
+                "Hm... that page doesn't seem to exist. Try a different link?"
+            )
+        }
+    )
+    return render(request, "website/error.html", context)
+
+
+def handler500(request: HttpRequest) -> HttpResponse:
+    """View to handle 500 errors."""
+    context = get_additional_context(
+        {
+            "error_message": (
+                "Something went wrong and the site broke. Try your action again?"
+            )
+        }
+    )
+    return render(request, "website/error.html", context)
