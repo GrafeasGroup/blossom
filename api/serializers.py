@@ -97,11 +97,3 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
             "text",
             "removed_from_reddit",
         )
-
-
-class RateSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        fields = (
-            "day",
-            "count",
-        )

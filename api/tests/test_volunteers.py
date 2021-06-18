@@ -1,12 +1,18 @@
 """Tests to validate the behavior of the VolunteerViewSet."""
 import json
+from datetime import datetime
 
 from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
 from api.models import Submission, Transcription
-from api.tests.helpers import create_submission, create_user, setup_user_client
+from api.tests.helpers import (
+    create_submission,
+    create_transcription,
+    create_user,
+    setup_user_client,
+)
 from authentication.models import BlossomUser
 
 
@@ -63,6 +69,60 @@ class TestVolunteerSummary:
         )
 
         assert result.json()["gamma"] == 3
+
+
+class TestVolunteerRate:
+    """Tests to validate the behavior of the rate calculation."""
+
+    def test_rate_count_aggregation(self, client: Client) -> None:
+        """Test if the number of transcriptions per day is aggregated correctly."""
+        client, headers, user = setup_user_client(client)
+
+        test_user = create_user(username="testuser")
+
+        create_transcription(
+            create_submission(), test_user, create_time=datetime(2021, 6, 15, 9)
+        )
+        create_transcription(
+            create_submission(), test_user, create_time=datetime(2021, 6, 15, 9)
+        )
+        create_transcription(
+            create_submission(), test_user, create_time=datetime(2021, 6, 16, 9)
+        )
+        create_transcription(
+            create_submission(), test_user, create_time=datetime(2021, 6, 16, 10)
+        )
+        create_transcription(
+            create_submission(), test_user, create_time=datetime(2021, 6, 16, 14)
+        )
+        create_transcription(
+            create_submission(), test_user, create_time=datetime(2021, 6, 16, 20)
+        )
+        create_transcription(
+            create_submission(), test_user, create_time=datetime(2021, 6, 17, 20)
+        )
+
+        result = client.get(
+            reverse("volunteer-rate") + "?username=testuser",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        rates = result.json()
+        assert len(rates) == 3
+        assert rates[0] == {
+            "count": 2,
+            "date": "2021-06-15",
+        }
+        assert rates[1] == {
+            "count": 4,
+            "date": "2021-06-16",
+        }
+        assert rates[2] == {
+            "count": 1,
+            "date": "2021-06-17",
+        }
 
 
 class TestVolunteerAssortedFunctions:

@@ -66,7 +66,11 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     @validate_request(query_params={"username"})
     def rate(self, request: Request, username: str = None) -> Response:
-        """Get the rate of transcriptions the volunteer made."""
+        """Get the number of transcriptions the volunteer made per UTC day.
+
+        IMPORTANT: To reduce the number of entries, this does not
+        include days on which the user did not make any transcriptions!
+        """
         user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
 
         # https://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
