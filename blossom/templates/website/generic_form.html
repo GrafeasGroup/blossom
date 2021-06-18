@@ -187,20 +187,29 @@
                 // Support Safari
                 form.on("submit", function (event) {
                     if (this.checkValidity && !this.checkValidity()) {
-                        $(this).find(":invalid").first().focus();
+                        const firstInvalid = form.querySelector(":invalid");
+                        if (firstInvalid) {
+                            firstInvalid.focus();
+                        }
                         event.preventDefault();
                     }
                 });
 
-                $("input[type=submit], button:not([type=button])", form)
-                    .on("click", showAllErrorMessages);
+                const submitButton = form.querySelector("input[type=submit], button:not([type=button])");
+                if (submitButton) {
+                    submitButton.on("click", showAllErrorMessages);
+                }
 
-                $("input", form).on("keypress", function (event) {
-                    let type = $(this).attr("type");
-                    if (/date|email|month|number|search|tel|text|time|url|week/.test(type)
-                        && event.keyCode === 13) {
-                        showAllErrorMessages();
-                    }
+                const inputElems = Array.from(form.getElementsByTagName("input"));
+                inputElems.forEach(function (inputElem) {
+                    inputElem.on("keypress", function (event) {
+                        let type = inputElem.type;
+                        const checkedTypes = ["date", "email", "month", "number", "search", "tel", "text", "time", "url", "week"]
+                        if (checkedTypes.contains(type)
+                            && event.keyCode === 13) {
+                            showAllErrorMessages();
+                        }
+                    });
                 });
             });
         })
