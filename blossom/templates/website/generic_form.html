@@ -144,7 +144,7 @@
 
                 if (errorList) {
                     const showAllErrorMessages = function () {
-                        errorList.innerHTML = "";
+                        errorList.textContent = "";
 
                         // Find all invalid fields within the form.
                         form.querySelectorAll(":invalid").forEach(function (node) {
