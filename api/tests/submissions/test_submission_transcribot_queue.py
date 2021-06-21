@@ -20,9 +20,9 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
-        assert len(result.data) == 0  # there are no posts to work on
+        assert len(result["data"]) == 0  # there are no posts to work on
 
         submission = create_submission(source="reddit")
 
@@ -30,20 +30,20 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
         # now there's a submission without a transcribot transcription
-        assert len(result.data) == 0
+        assert len(result["data"]) == 0
         create_transcription(submission, transcribot, original_id=None)
 
         result = client.get(
             reverse("submission-get-transcribot-queue") + "?source=reddit",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
         # now the submission has a transcribot entry
-        assert len(result.data) == 1
+        assert len(result["data"]) == 1
 
     def test_completed_ocr_transcriptions(
         self, client: Client, setup_site: Any
@@ -58,9 +58,9 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
-        assert len(result.data) == 0
+        assert len(result["data"]) == 0
 
         transcription = create_transcription(submission, transcribot, original_id=None)
 
@@ -68,10 +68,10 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
         # now there's a transcription that needs work
-        assert len(result.data) == 1
+        assert len(result["data"]) == 1
 
         # transcribot works on it
         transcription.original_id = "AAA"
@@ -81,10 +81,10 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
         # Queue goes back to 0.
-        assert len(result.data) == 0
+        assert len(result["data"]) == 0
 
     def test_normal_transcriptions_dont_affect_ocr_queue(
         self, client: Client, setup_site: Any
@@ -97,9 +97,9 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
-        assert len(result.data) == 0
+        assert len(result["data"]) == 0
 
         create_transcription(submission, user)
 
@@ -107,10 +107,10 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
         # there should be no change to the OCR queue
-        assert len(result.data) == 0
+        assert len(result["data"]) == 0
 
     def test_transcribot_limit_param(self, client: Client, setup_site: Any) -> None:
         """Verify that adding the `limit` QSP modifies the results."""
@@ -130,18 +130,18 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit&limit=none",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
-        assert len(result.data) == 3
+        assert len(result["data"]) == 3
 
         result = client.get(
             reverse("submission-get-transcribot-queue") + "?source=reddit&limit=1",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
-        assert len(result.data) == 1
-        assert result.json()[0]["id"] == submission1.id
+        assert len(result["data"]) == 1
+        assert result["data"][0]["id"] == submission1.id
 
     def test_verify_no_removed_posts(self, client: Client, setup_site: Any) -> None:
         """Verify that a post removed from the queue is not sent to transcribot."""
@@ -163,9 +163,9 @@ class TestSubmissionTranscribotQueue:
             reverse("submission-get-transcribot-queue") + "?source=reddit&limit=none",
             content_type="application/json",
             **headers,
-        )
+        ).json()
 
-        assert len(result.data) == 2
+        assert len(result["data"]) == 2
 
 
 def test_get_limit() -> None:
