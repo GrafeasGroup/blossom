@@ -231,6 +231,14 @@ class Submission(models.Model):
 
 
 class Transcription(models.Model):
+    class Meta:
+        indexes = [
+            models.Index(fields=["author"], name="author_idx"),
+            models.Index(fields=["submission"], name="submission_idx"),
+            models.Index(fields=["original_id"], name="original_id_idx"),
+            models.Index(fields=["url"], name="url_idx"),
+        ]
+
     # The Submission for which the Transcription is made.
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
 
