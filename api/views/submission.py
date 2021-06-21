@@ -535,9 +535,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             :return_limit
         ]
         return JsonResponse({"data": list(queryset)})
-        # return Response(
-        #     data=self.get_serializer(queryset[:return_limit], many=True).data
-        # )
 
     @swagger_auto_schema(
         request_body=Schema(
