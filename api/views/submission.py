@@ -5,6 +5,7 @@ from typing import Union
 
 from django.conf import settings
 from django.db.models.functions import Length
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -503,7 +504,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     )
     @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
-    def get_transcribot_queue(self, request: Request, source: str = None) -> Response:
+    def get_transcribot_queue(
+        self, request: Request, source: str = None
+    ) -> JsonResponse:
         """
         Get the submissions that still need to be attempted by transcribot.
 
@@ -537,10 +540,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             transcription__original_id__isnull=True,
             removed_from_queue=False,
             cannot_ocr=False,
-        )
-        return Response(
-            data=self.get_serializer(queryset[:return_limit], many=True).data
-        )
+        ).values("id", "tor_url", "transcription__id", "transcription__text")[
+            :return_limit
+        ]
+        return JsonResponse({"data": list(queryset)})
 
     @csrf_exempt
     @swagger_auto_schema(
