@@ -166,7 +166,7 @@
                             errorElement.classList.add("alert-danger");
                             errorElement.role = "alert";
                             if (label) {
-                                errorElement.appendChild(label);
+                                errorElement.appendChild(label.cloneNode(true));
                             }
                             errorElement.appendChild(errorMessage);
 
