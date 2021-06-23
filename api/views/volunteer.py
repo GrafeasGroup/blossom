@@ -92,6 +92,8 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             .annotate(count=Count("id"))
             # Return the values
             .values("day", "hour", "count")
+            # Order by day first, then hour
+            .order_by("day", "hour")
         )
 
         return Response(heatmap)
