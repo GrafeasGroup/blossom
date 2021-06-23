@@ -1,6 +1,8 @@
 """Views that specifically relate to volunteers."""
 import uuid
 
+from django.db.models import Count
+from django.db.models.functions import ExtractHour, ExtractWeekDay
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -55,6 +57,44 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         """Get information on the volunteer with the provided username."""
         user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
         return Response(self.serializer_class(user).data)
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        manual_parameters=[Parameter("username", "query", type="string")],
+        responses={
+            400: 'No "username" as a query parameter.',
+            404: "No volunteer with the specified username.",
+        },
+    )
+    @action(detail=False, methods=["get"])
+    @validate_request(query_params={"username"})
+    def heatmap(self, request: Request, username: str = None) -> Response:
+        """Get the data to generate a heatmap for the volunteer.
+
+        This includes one entry for every weekday and every hour containing the
+        number of transcriptions made in that time slot.
+        For example, there will be an entry for Sundays at 13:00 UTC, counting
+        how many transcriptions the volunteer made in that time.
+
+        The week days are numbered Sunday=1 through Saturday=7 (blame Django for that).
+        """
+        user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
+        heatmap = (
+            # Get the transcriptions made by the user
+            Transcription.objects.filter(author=user)
+            # Extract the day of the week and the hour the transcription was made in
+            .annotate(
+                day=ExtractWeekDay("create_time"), hour=ExtractHour("create_time")
+            )
+            # Group by the day and hour
+            .values("day", "hour")
+            # Count the transcription made in each time slot
+            .annotate(count=Count("id"))
+            # Return the values
+            .values("day", "hour", "count")
+        )
+
+        return Response(heatmap)
 
     @csrf_exempt
     @swagger_auto_schema(
