@@ -76,34 +76,32 @@ class TestVolunteerRate:
 
     def test_rate_count_aggregation(self, client: Client) -> None:
         """Test if the number of transcriptions per day is aggregated correctly."""
-        client, headers, user = setup_user_client(client)
-
-        test_user = create_user(username="testuser")
+        client, headers, user = setup_user_client(client, id=123456)
 
         create_transcription(
-            create_submission(), test_user, create_time=datetime(2021, 6, 15, 9)
+            create_submission(), user, create_time=datetime(2021, 6, 15, 9)
         )
         create_transcription(
-            create_submission(), test_user, create_time=datetime(2021, 6, 15, 9)
+            create_submission(), user, create_time=datetime(2021, 6, 15, 9)
         )
         create_transcription(
-            create_submission(), test_user, create_time=datetime(2021, 6, 16, 9)
+            create_submission(), user, create_time=datetime(2021, 6, 16, 9)
         )
         create_transcription(
-            create_submission(), test_user, create_time=datetime(2021, 6, 16, 10)
+            create_submission(), user, create_time=datetime(2021, 6, 16, 10)
         )
         create_transcription(
-            create_submission(), test_user, create_time=datetime(2021, 6, 16, 14)
+            create_submission(), user, create_time=datetime(2021, 6, 16, 14)
         )
         create_transcription(
-            create_submission(), test_user, create_time=datetime(2021, 6, 16, 20)
+            create_submission(), user, create_time=datetime(2021, 6, 16, 20)
         )
         create_transcription(
-            create_submission(), test_user, create_time=datetime(2021, 6, 17, 20)
+            create_submission(), user, create_time=datetime(2021, 6, 17, 20)
         )
 
         result = client.get(
-            reverse("volunteer-rate") + "?username=testuser",
+            reverse("volunteer-rate", kwargs={"pk": 123456}),
             content_type="application/json",
             **headers,
         )

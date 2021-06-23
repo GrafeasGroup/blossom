@@ -56,22 +56,15 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
         return Response(self.serializer_class(user).data)
 
-    @swagger_auto_schema(
-        manual_parameters=[Parameter("username", "query", type="string")],
-        responses={
-            400: 'No "username" as a query parameter.',
-            404: "No volunteer with the specified username.",
-        },
-    )
-    @action(detail=False, methods=["get"])
-    @validate_request(query_params={"username"})
-    def rate(self, request: Request, username: str = None) -> Response:
+    @swagger_auto_schema(responses={404: "No volunteer with the specified ID."},)
+    @action(detail=True, methods=["get"])
+    def rate(self, request: Request, pk: int) -> Response:
         """Get the number of transcriptions the volunteer made per UTC day.
 
         IMPORTANT: To reduce the number of entries, this does not
         include days on which the user did not make any transcriptions!
         """
-        user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
+        user = get_object_or_404(BlossomUser, id=pk, is_volunteer=True)
 
         # https://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
         rate = (
