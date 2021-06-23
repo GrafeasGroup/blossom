@@ -6,17 +6,9 @@ from django.shortcuts import HttpResponseRedirect, redirect, render, reverse
 from django.views.generic import DetailView, TemplateView, UpdateView
 
 from authentication.mixins import GrafeasStaffRequired
-from website.forms import AddUserForm, PostAddForm, TestForm
+from website.forms import AddUserForm, PostAddForm
 from website.helpers import get_additional_context
 from website.models import Post
-
-
-def testform(request: HttpRequest) -> HttpResponse:
-    """Simple view for testing form behavior."""
-    form = TestForm()
-    return render(
-        request, "website/generic_form.html", get_additional_context({"form": form})
-    )
 
 
 def index(request: HttpRequest) -> HttpResponse:

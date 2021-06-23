@@ -10,15 +10,6 @@ class LoginForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput)
 
 
-class TestForm(forms.Form):
-    string = forms.CharField()
-    integer = forms.IntegerField()
-    fileinput = forms.FileField()
-    textfield = forms.CharField(widget=forms.Textarea)
-    datefield = forms.DateField()
-    passwordfield = forms.CharField(widget=forms.PasswordInput)
-
-
 class PostAddForm(forms.ModelForm):
     class Meta:
         model = Post
