@@ -2,7 +2,7 @@
 import uuid
 
 from django.db.models import Count
-from django.db.models.functions import ExtractHour, ExtractWeekDay
+from django.db.models.functions import ExtractHour, ExtractIsoWeekDay
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -76,7 +76,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         For example, there will be an entry for Sundays at 13:00 UTC, counting
         how many transcriptions the volunteer made in that time.
 
-        The week days are numbered Sunday=1 through Saturday=7 (blame Django for that).
+        The week days are numbered Monday=1 through Sunday=7.
         """
         user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
         heatmap = (
@@ -84,7 +84,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             Transcription.objects.filter(author=user)
             # Extract the day of the week and the hour the transcription was made in
             .annotate(
-                day=ExtractWeekDay("create_time"), hour=ExtractHour("create_time")
+                day=ExtractIsoWeekDay("create_time"), hour=ExtractHour("create_time")
             )
             # Group by the day and hour
             .values("day", "hour")

@@ -311,10 +311,14 @@ class TestHeatmap:
         assert result.status_code == status.HTTP_200_OK
 
         expected_heatmap = [
-            {"day": 1, "hour": 15, "count": 1},
-            {"day": 4, "hour": 3, "count": 1},
-            {"day": 5, "hour": 14, "count": 1},
-            {"day": 7, "hour": 21, "count": 1},
+            # Wednesday 03 h
+            {"day": 3, "hour": 3, "count": 1},
+            # Thursday 14 h
+            {"day": 4, "hour": 14, "count": 1},
+            # Saturday 21 h
+            {"day": 6, "hour": 21, "count": 1},
+            # Sunday 15 h
+            {"day": 7, "hour": 15, "count": 1},
         ]
         heatmap = result.json()
         assert heatmap == expected_heatmap
@@ -359,9 +363,12 @@ class TestHeatmap:
         assert result.status_code == status.HTTP_200_OK
 
         expected_heatmap = [
-            {"day": 1, "hour": 15, "count": 2},
-            {"day": 1, "hour": 16, "count": 1},
-            {"day": 5, "hour": 14, "count": 3},
+            # Thursday 14 h
+            {"day": 4, "hour": 14, "count": 3},
+            # Sunday 15 h
+            {"day": 7, "hour": 15, "count": 2},
+            # Sunday 16 h
+            {"day": 7, "hour": 16, "count": 1},
         ]
         heatmap = result.json()
         assert heatmap == expected_heatmap
