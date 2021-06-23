@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.openapi import Parameter
 from drf_yasg.openapi import Response as DocResponse
@@ -38,6 +39,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         "removed_from_reddit",
     ]
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=Schema(
             type="object",
@@ -131,6 +133,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
             status=status.HTTP_201_CREATED,
         )
 
+    @csrf_exempt
     @swagger_auto_schema(
         manual_parameters=[Parameter("submission_id", "query", type="string")],
         responses={400: 'Query parameter "submission_id" not present'},
@@ -156,6 +159,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
             ).data
         )
 
+    @csrf_exempt
     @swagger_auto_schema(
         responses={
             200: DocResponse(

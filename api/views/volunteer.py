@@ -5,6 +5,7 @@ from django.db.models import Count
 from django.db.models.functions import TruncDate
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.openapi import Parameter
 from drf_yasg.openapi import Response as DocResponse
@@ -42,6 +43,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["id", "username", "is_volunteer", "accepted_coc", "blacklisted"]
 
+    @csrf_exempt
     @swagger_auto_schema(
         manual_parameters=[Parameter("username", "query", type="string")],
         responses={
@@ -77,6 +79,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
 
         return Response(rate)
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=no_body, responses={404: "No volunteer with the specified ID."}
     )
@@ -102,6 +105,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         )
         return Response(self.serializer_class(user).data)
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=Schema(
             type="object", properties={"username": Schema(type="string")}
@@ -127,6 +131,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             self.serializer_class(user).data, status=status.HTTP_201_CREATED
         )
 
+    @csrf_exempt
     @swagger_auto_schema(
         request_body=no_body,
         responses={
