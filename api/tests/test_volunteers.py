@@ -1,5 +1,6 @@
 """Tests to validate the behavior of the VolunteerViewSet."""
 import json
+from datetime import datetime
 
 from django.test import Client
 from django.urls import reverse
@@ -273,3 +274,101 @@ class TestVolunteerCoCAcceptance:
         assert result.status_code == status.HTTP_409_CONFLICT
         user.refresh_from_db()
         assert user.accepted_coc is True
+
+
+class TestHeatmap:
+    """Tests to validate that the heatmap data is generated correctly."""
+
+    def test_heatmap_time_slots(self, client: Client) -> None:
+        """Test that the time slots are assigned as expected."""
+        client, headers, user = setup_user_client(
+            client, accepted_coc=True, username="test_user"
+        )
+
+        # Thursday 14 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2020, 7, 16, 14, 3, 55)
+        )
+        # Sunday 15 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2021, 6, 20, 15, 10, 5)
+        )
+        # Wednesday 03 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2021, 6, 23, 3, 16, 30)
+        )
+        # Saturday 21 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2021, 6, 26, 21, 1, 10)
+        )
+
+        result = client.get(
+            reverse("volunteer-heatmap") + "?username=test_user",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+
+        expected_heatmap = [
+            # Wednesday 03 h
+            {"day": 3, "hour": 3, "count": 1},
+            # Thursday 14 h
+            {"day": 4, "hour": 14, "count": 1},
+            # Saturday 21 h
+            {"day": 6, "hour": 21, "count": 1},
+            # Sunday 15 h
+            {"day": 7, "hour": 15, "count": 1},
+        ]
+        heatmap = result.json()
+        assert heatmap == expected_heatmap
+
+    def test_heatmap_aggregation(self, client: Client) -> None:
+        """Test that transcriptions in the same slot are aggregated."""
+        client, headers, user = setup_user_client(
+            client, accepted_coc=True, username="test_user"
+        )
+
+        # Thursday 14 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2020, 7, 16, 14, 3, 55)
+        )
+        # Thursday 14 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2020, 7, 16, 14, 59, 55)
+        )
+        # Sunday 15 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2021, 6, 20, 15, 10, 5)
+        )
+        # Sunday 15 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2021, 6, 20, 15, 42, 10)
+        )
+        # Sunday 16 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2021, 6, 20, 16, 5, 5)
+        )
+        # Thursday 14 h
+        create_transcription(
+            create_submission(), user, create_time=datetime(2021, 6, 24, 14, 30, 30)
+        )
+
+        result = client.get(
+            reverse("volunteer-heatmap") + "?username=test_user",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+
+        expected_heatmap = [
+            # Thursday 14 h
+            {"day": 4, "hour": 14, "count": 3},
+            # Sunday 15 h
+            {"day": 7, "hour": 15, "count": 2},
+            # Sunday 16 h
+            {"day": 7, "hour": 16, "count": 1},
+        ]
+        heatmap = result.json()
+        assert heatmap == expected_heatmap
