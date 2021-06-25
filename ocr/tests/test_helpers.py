@@ -16,6 +16,8 @@ from ocr.helpers import _is_shortlink, escape_reddit_links, replace_shortlinks
         ("http://aaaaaaaaaaaaaaaa.com/aaa", False),
         ("https://aa.com/aaaaaaaaaaaaaaaaaaaaaaaa", False),
         ("http://aaaaa.com/aaa/a/a/a/a/aa/aa/a/", False),
+        ("http://aaaaaaaaaaaa.com/aaa/", False),
+        ("http://aaaaaaaaaaaa.com/aaa", False),
         ("http://aaa.com/a", True),
         ("http://aaa.com/aaaaaaaaaaaaa", False),
         ("http://aaa.com/a/b/c/", False),

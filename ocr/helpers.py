@@ -179,12 +179,6 @@ def _is_shortlink(url: str) -> bool:
     if len(url.path) == 0 or url.path == "/":
         return False
 
-    # Is it a complicated URL? https://a.com/b/c/d/?
-    if len(url.path.split("/")) == 3:
-        # check the difference between a.com/b/c and a.com/b/
-        # black fights flake8 on formatting here, so black wins
-        return len(url.path[url.path.rfind("/") :]) <= 1  # noqa: E203
-
     if len(url.path.split("/")) > 3:
         return False
 
@@ -195,6 +189,12 @@ def _is_shortlink(url: str) -> bool:
     # how long is the host? http://asdfasdfasdfasdf.com isn't short.
     if len(url.netloc[: url.netloc.index(".")]) > 10:
         return False
+
+    # Is it a complicated URL? https://a.com/b/c/d/?
+    if len(url.path.split("/")) == 3:
+        # check the difference between a.com/b/c and a.com/b/
+        # black fights flake8 on formatting here, so black wins
+        return len(url.path[url.path.rfind("/") :]) <= 1  # noqa: E203
 
     return True
 
