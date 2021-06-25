@@ -31,21 +31,24 @@ class AddUserForm(forms.Form):
     is_superuser = forms.BooleanField(label="Is this user a superuser?", required=False)
 
     # the clean functions will be run automatically on save
-    def clean_username(self):
+    def clean_username(self) -> str:
+        """Validate username."""
         username = self.cleaned_data["username"].lower()
-        r = BlossomUser.objects.filter(username=username)
-        if r.count():
+        resp = BlossomUser.objects.filter(username=username)
+        if resp.count():
             raise ValidationError("Username already exists")
         return username
 
-    def clean_email(self):
+    def clean_email(self) -> str:
+        """Validate email."""
         email = self.cleaned_data["email"].lower()
-        r = BlossomUser.objects.filter(email=email)
-        if r.count():
+        resp = BlossomUser.objects.filter(email=email)
+        if resp.count():
             raise ValidationError("Email already exists")
         return email
 
-    def save(self, commit=True):
+    def save(self, commit: bool = True) -> BlossomUser:
+        """Save the instance."""
         user = BlossomUser.objects.create_user(
             self.cleaned_data["username"],
             self.cleaned_data["email"],
