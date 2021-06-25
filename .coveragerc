@@ -12,6 +12,7 @@ omit =
   */wsgi.py,
   blossom/management/commands/*,
   blossom/middleware.py,
+  blossom/instrumentation.py,
   blossom/settings/*,
   bootstrap/*,
   blossom/social_auth/*,

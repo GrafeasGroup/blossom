@@ -1,9 +1,12 @@
 """Tests to validate the behavior of the VolunteerViewSet."""
 import json
 from datetime import datetime
+from typing import Dict, List, Union
 
+import pytest
 from django.test import Client
 from django.urls import reverse
+from django.utils.timezone import make_aware
 from rest_framework import status
 
 from api.models import Submission, Transcription
@@ -74,53 +77,90 @@ class TestVolunteerSummary:
 class TestVolunteerRate:
     """Tests to validate the behavior of the rate calculation."""
 
-    def test_rate_count_aggregation(self, client: Client) -> None:
+    @pytest.mark.parametrize(
+        "data,url_additions,different_result",
+        [
+            (
+                [
+                    {"count": 2, "date": "2021-06-15"},
+                    {"count": 4, "date": "2021-06-16"},
+                    {"count": 1, "date": "2021-06-17"},
+                ],
+                None,
+                None,
+            ),
+            (
+                [
+                    {"count": 20, "date": "2021-06-15"},
+                    {"count": 40, "date": "2021-06-16"},
+                    {"count": 10, "date": "2021-06-17"},
+                ],
+                None,
+                None,
+            ),
+            (
+                [
+                    {"count": 2, "date": "2021-06-10"},
+                    {"count": 2, "date": "2021-06-11"},
+                ],
+                "?per_page=1",
+                [{"count": 2, "date": "2021-06-10"}],
+            ),
+            (
+                [
+                    {"count": 1, "date": "2021-06-10"},
+                    {"count": 2, "date": "2021-06-11"},
+                    {"count": 3, "date": "2021-06-12"},
+                ],
+                "?per_page=1&page=2",
+                [{"count": 2, "date": "2021-06-11"}],
+            ),
+            (
+                [
+                    {"count": 1, "date": "2021-06-10"},
+                    {"count": 2, "date": "2021-06-11"},
+                    {"count": 3, "date": "2021-06-12"},
+                ],
+                "?per_page=2&page=1",
+                [
+                    {"count": 1, "date": "2021-06-10"},
+                    {"count": 2, "date": "2021-06-11"},
+                ],
+            ),
+        ],
+    )
+    def test_rate_count_aggregation(
+        self,
+        client: Client,
+        data: List[Dict[str, Union[str, int]]],
+        url_additions: str,
+        different_result: List[Dict],
+    ) -> None:
         """Test if the number of transcriptions per day is aggregated correctly."""
         client, headers, user = setup_user_client(client, id=123456)
 
-        create_transcription(
-            create_submission(), user, create_time=datetime(2021, 6, 15, 9)
-        )
-        create_transcription(
-            create_submission(), user, create_time=datetime(2021, 6, 15, 9)
-        )
-        create_transcription(
-            create_submission(), user, create_time=datetime(2021, 6, 16, 9)
-        )
-        create_transcription(
-            create_submission(), user, create_time=datetime(2021, 6, 16, 10)
-        )
-        create_transcription(
-            create_submission(), user, create_time=datetime(2021, 6, 16, 14)
-        )
-        create_transcription(
-            create_submission(), user, create_time=datetime(2021, 6, 16, 20)
-        )
-        create_transcription(
-            create_submission(), user, create_time=datetime(2021, 6, 17, 20)
-        )
-
+        for obj in data:
+            for _ in range(obj.get("count")):
+                create_transcription(
+                    create_submission(),
+                    user,
+                    create_time=make_aware(
+                        datetime.strptime(obj.get("date"), "%Y-%m-%d")
+                    ),
+                )
+        if not url_additions:
+            url_additions = ""
         result = client.get(
-            reverse("volunteer-rate", kwargs={"pk": 123456}),
+            reverse("volunteer-rate", kwargs={"pk": 123456}) + url_additions,
             content_type="application/json",
             **headers,
         )
-
         assert result.status_code == status.HTTP_200_OK
-        rates = result.json()
-        assert len(rates) == 3
-        assert rates[0] == {
-            "count": 2,
-            "date": "2021-06-15",
-        }
-        assert rates[1] == {
-            "count": 4,
-            "date": "2021-06-16",
-        }
-        assert rates[2] == {
-            "count": 1,
-            "date": "2021-06-17",
-        }
+        rates = result.json()["data"]
+        if different_result:
+            assert rates == different_result
+        else:
+            assert rates == data
 
 
 class TestVolunteerAssortedFunctions:

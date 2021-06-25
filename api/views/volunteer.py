@@ -1,8 +1,10 @@
 """Views that specifically relate to volunteers."""
 import uuid
 
+from django.core.paginator import Paginator
 from django.db.models import Count
 from django.db.models.functions import TruncDate
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -60,7 +62,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
 
     @swagger_auto_schema(responses={404: "No volunteer with the specified ID."},)
     @action(detail=True, methods=["get"])
-    def rate(self, request: Request, pk: int) -> Response:
+    def rate(self, request: Request, pk: int) -> JsonResponse:
         """Get the number of transcriptions the volunteer made per UTC day.
 
         IMPORTANT: To reduce the number of entries, this does not
@@ -75,9 +77,19 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             .values("date")
             .annotate(count=Count("id"))
             .values("date", "count")
+            .order_by("date")
         )
-
-        return Response(rate)
+        per_page = request.GET.get("per_page", 50)
+        page_number = request.GET.get("page", 1)
+        paginator = Paginator(rate, per_page)
+        page_obj = paginator.get_page(page_number)
+        return JsonResponse(
+            {
+                "page_num": page_obj.number,
+                "data": list(page_obj.object_list),
+                "total_pages": page_obj.paginator.num_pages,
+            }
+        )
 
     @csrf_exempt
     @swagger_auto_schema(
