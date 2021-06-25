@@ -9,6 +9,9 @@ from website.views import user_create
 admin.autodiscover()
 admin.site.login = LoginView.as_view()
 
+handler404 = "website.views.handler404"
+handler500 = "website.views.handler500"
+
 urlpatterns = [
     path("superadmin/newuser", user_create, name="user_create"),
     path("superadmin/", admin.site.urls),

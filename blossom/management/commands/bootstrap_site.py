@@ -75,19 +75,19 @@ GIVING_PAGE = """
         <div class="row">
             <div class="col-lg-3">
                 <div class="input-group input-group-lg needs-validation mb-3">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text">$</span>
-                    </div>
+                    <span class="input-group-text" id="donationAmountLabel">$</span>
                     <input type="text" id="donationAmount" class="form-control" value="10"
-                           aria-label="Amount (to the nearest dollar)">
+                           aria-label="Amount (to the nearest dollar)" aria-describedby="donationAmountLabel">
                 </div>
                 <div class="invalid-feedback">
                     Please provide a valid number.
                 </div>
             </div>
             <div class="col-lg-9">
-                <button class="btn btn-block btn-outline-secondary btn-lg shadow" id="checkout-button">Donate!
-                </button>
+                <div class="d-grid">
+                    <button class="btn btn-block btn-outline-secondary btn-lg shadow" id="checkout-button">Donate!
+                    </button>
+                </div>
             </div>
         </div>
         <div class="card-footer">

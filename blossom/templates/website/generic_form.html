@@ -1,14 +1,59 @@
 {% extends 'website/partials/base.partial' %}
 {% load widget_tweaks %}
 {% load static %}
+{% load string_helpers %}
 
 {% block content %}
-    <h1>{{ header }}</h1>
-    <h4>{{ subheader }}</h4>
+    <div class="container mt-4">
+        {% if slim_form %}
+            <div class="row">
+            <div class="col-sm-0 col-md-2 col-lg-3"></div>
+            <div class="col-sm-0 col-md-8 col-lg-6">
+        {% endif %}
 
-    <div class="container">
-        {# Lifted from https://simpleisbetterthancomplex.com/article/2017/08/19/how-to-render-django-form-manually.html#}
-        <form method="post">
+        <h1>{{ header }}</h1>
+        <h4>{{ subheader }}</h4>
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ message }}
+                    </div>
+                {% else %}
+                    <div class="alert alert-dark" role="alert">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        {% if header_js_buttons or header_link_buttons %}
+            <div class="row">
+                {% for item in header_js_buttons %}
+                    <div class="col mt-2">
+                        <button class="btn btn-info btn-block"
+                                onclick="{{ item.onclick }}">{{ item.text }}</button>
+                    </div>
+                {% endfor %}
+                {% for item in header_link_buttons %}
+                    <div class="col mt-2">
+                        <a href="{% url item.reverse_url %}"
+                           class="btn btn-info btn-block">{{ item.text }}</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="container mt-3">
+            {# Lifted from https://simpleisbetterthancomplex.com/article/2017/08/19/how-to-render-django-form-manually.html#}
+            {% if form.is_multipart %}
+                {# properly handle the file uploads #}
+                <form novalidate enctype="multipart/form-data" method="post" action="">
+            {% else %}
+                <form novalidate method="post" action="">
+            {% endif %}
+            <div class="errorMessages"></div>
             {% csrf_token %}
             {% for hidden_field in form.hidden_fields %}
                 {{ hidden_field }}
@@ -24,8 +69,6 @@
 
             {% for field in form.visible_fields %}
                 <div class="form-group">
-                    {{ field.label_tag }}
-
                     {% if form.is_bound %}
                         {% if field.errors %}
                             {% render_field field class="form-control is-invalid" %}
@@ -35,10 +78,26 @@
                                 </div>
                             {% endfor %}
                         {% else %}
+                            {{ field.label_tag }}
                             {% render_field field class="form-control is-valid" %}
                         {% endif %}
                     {% else %}
-                        {% render_field field class="form-control" %}
+                        {% if field.field.widget.input_type == 'file' %}
+                            {{ field.label_tag }}
+                            <div class="btn-group-toggle">
+                                <label for="{{ field.auto_id }}"
+                                       class="form-control-file btn btn-secondary">browse</label>
+                                {% render_field field class="inputfile" style="visibility:hidden;margin-top:-30px" %}
+                            </div>
+                        {% elif field.field.widget.input_type == 'checkbox' %}
+                            <div class="form-check form-switch">
+                                {{ field.label_tag|trim_label:1 }}
+                                {% render_field field class="form-check-input" %}
+                            </div>
+                        {% else %}
+                            {{ field.label_tag }}
+                            {% render_field field class="form-control" %}
+                        {% endif %}
                     {% endif %}
 
                     {% if field.help_text %}
@@ -46,9 +105,104 @@
                     {% endif %}
                 </div>
             {% endfor %}
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
+
+            <div class="row mt-3">
+                <div class="col-md-1 col-lg-2"></div>
+                <div class="col-md-10 col-lg-8">
+                    <div class="d-grid gap-1">
+                        <button type="submit" class="btn btn-primary mt-3">Submit</button>
+                    </div>
+                </div>
+                <div class="col-md-1 col-lg-2"></div>
+            </div>
+            </form>
+        </div>
+        {% if slim_form %}
+            </div>
+            <div class="col-sm-0 col-md-2 col-lg-3"></div>
+            </div>
+        {% endif %}
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.inputfile').forEach(function (input) {
+                let label = input.previousElementSibling
+
+                input.addEventListener('change', function (e) {
+                    let fileName = '';
+
+                    fileName = e.target.value.split('\\').pop();
+
+                    label.innerText = fileName ? fileName : "browse";
+                });
+            });
+
+            // Adapted from https://www.tjvantoll.com/2012/08/05/html5-form-validation-showing-all-error-messages/
+            document.querySelectorAll("form").forEach(function (form) {
+                const errorList = form.querySelector(".errorMessages");
+
+                if (errorList) {
+                    const showAllErrorMessages = function () {
+                        errorList.textContent = "";
+
+                        // Find all invalid fields within the form.
+                        form.querySelectorAll(":invalid").forEach(function (node) {
+                            // Find the field's corresponding label
+                            const label = form.querySelector(`label[for="${node.id}"]`);
+                            // Opera incorrectly does not fill the validationMessage property.
+                            const message = node.validationMessage || 'Invalid value.';
+
+                            if (!errorList.classList.contains("mt-3")) {
+                                errorList.classList.add("mt-3");
+                            }
+
+                            // Add the error message to the list
+                            const errorMessage = document.createElement("span");
+                            errorMessage.innerText = " " + message;
+
+                            const errorElement = document.createElement("div");
+                            errorElement.classList.add("alert");
+                            errorElement.classList.add("alert-danger");
+                            errorElement.role = "alert";
+                            if (label) {
+                                errorElement.appendChild(label.cloneNode(true));
+                            }
+                            errorElement.appendChild(errorMessage);
+
+                            errorList.appendChild(errorElement);
+                        });
+                    };
+
+                    // Support Safari
+                    form.addEventListener("submit", function (event) {
+                        if (this.checkValidity && !this.checkValidity()) {
+                            const firstInvalid = form.querySelector(":invalid");
+                            if (firstInvalid) {
+                                firstInvalid.focus();
+                            }
+                            event.preventDefault();
+                        }
+                    });
+
+                    const submitButton = form.querySelector("input[type=submit], button:not([type=button])");
+                    if (submitButton) {
+                        submitButton.addEventListener("click", showAllErrorMessages);
+                    }
+
+                    form.querySelectorAll("input").forEach(function (inputElem) {
+                        inputElem.addEventListener("keypress", function (event) {
+                            const checkedTypes = ["date", "email", "month", "number", "search", "tel", "text", "time", "url", "week"]
+                            if (checkedTypes.includes(inputElem.type)
+                                && event.code === "Enter") {
+                                showAllErrorMessages();
+                            }
+                        });
+                    });
+                }
+            });
+        })
+    </script>
 
     {% if enable_trumbowyg %}
         {# base #}
