@@ -162,6 +162,23 @@ class TestVolunteerRate:
         else:
             assert rates == data
 
+    def test_pagination(self, client: Client) -> None:
+        """Verify that pagination parameters properly change response."""
+        client, headers, user = setup_user_client(client, id=123456)
+        for _ in range(1, 4):
+            create_transcription(
+                create_submission(), user, create_time=make_aware(datetime(2021, 6, _)),
+            )
+        result = client.get(
+            reverse("volunteer-rate", kwargs={"pk": 123456}) + "?per_page=1&page=1",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        response = result.json()
+        assert response["page_num"] == 1
+        assert response["total_pages"] == 3
+
 
 class TestVolunteerAssortedFunctions:
     """Tests to validate the behavior of miscellaneous functions."""

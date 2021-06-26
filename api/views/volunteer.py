@@ -60,7 +60,20 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
         return Response(self.serializer_class(user).data)
 
-    @swagger_auto_schema(responses={404: "No volunteer with the specified ID."},)
+    @swagger_auto_schema(
+        operation_summary=(
+            "Retrieve a count of transcriptions for a volunteer per UTC day."
+        ),
+        operation_description=(
+            "A paginated endpoint. Pass per_page to control number of results"
+            " returned, page to select a different block."
+        ),
+        responses={404: "No volunteer with the specified ID."},
+        manual_parameters=[
+            Parameter("per_page", "query", type="number"),
+            Parameter("page", "query", type="number"),
+        ],
+    )
     @action(detail=True, methods=["get"])
     def rate(self, request: Request, pk: int) -> JsonResponse:
         """Get the number of transcriptions the volunteer made per UTC day.
