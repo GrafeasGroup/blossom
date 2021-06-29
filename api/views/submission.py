@@ -22,6 +22,7 @@ from rest_framework.response import Response
 from slack import WebClient
 
 from api.authentication import BlossomApiPermission
+from api.filters import TimeFilter
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
@@ -36,14 +37,34 @@ from authentication.models import BlossomUser
         " submission if specified.",
         operation_description="Include the original_id as a query to filter"
         " the submissions on the specified ID.",
-        manual_parameters=[Parameter("original_id", "query", type="string")],
+        manual_parameters=[
+            Parameter("original_id", "query", type="string"),
+            Parameter(
+                "from",
+                "query",
+                type="string",
+                description=(
+                    "Date to use as the start of the returned values."
+                    " Example: from=2021-06-01 will return everything after that date."
+                ),
+            ),
+            Parameter(
+                "until",
+                "query",
+                type="string",
+                description=(
+                    "Date to use as the end of the returned values. Example:"
+                    " until=2021-06-05 will return everything from before that date."
+                ),
+            ),
+        ],
     ),
 )
 class SubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = SubmissionSerializer
     permission_classes = (BlossomApiPermission,)
     queryset = Submission.objects.order_by("id")
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [TimeFilter, DjangoFilterBackend]
     filterset_fields = [
         "id",
         "original_id",
