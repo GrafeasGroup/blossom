@@ -183,7 +183,7 @@ class TestSubmissionGet:
         assert len(result.json()["results"]) == 1
 
         result = client.get(
-            reverse("submission-list") + "?from=aaaaaaaaaa",
+            reverse("submission-list") + "?from=aaaaaaaaaa&until=aaaaaaaaa",
             content_type="application/json",
             **headers,
         )
