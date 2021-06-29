@@ -168,6 +168,13 @@ class TestSubmissionGet:
         assert len(result.json()["results"]) == 2
 
         result = client.get(
+            reverse("submission-list") + "?from=day+before+yesterday",
+            content_type="application/json",
+            **headers,
+        )
+        assert len(result.json()["results"]) == 2
+
+        result = client.get(
             reverse("submission-list")
             + "?from=day%20before%20yesterday&until=yesterday",
             content_type="application/json",
