@@ -1,10 +1,8 @@
 """Views that specifically relate to volunteers."""
 import uuid
 
-from django.core.paginator import Paginator
 from django.db.models import Count
 from django.db.models.functions import ExtractHour, ExtractIsoWeekDay, TruncDate
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -21,6 +19,7 @@ from rest_framework.response import Response
 from api.authentication import BlossomApiPermission
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
+from api.pagination import StandardResultsSetPagination
 from api.serializers import VolunteerSerializer
 from authentication.models import BlossomUser
 
@@ -70,12 +69,12 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         ),
         responses={404: "No volunteer with the specified ID."},
         manual_parameters=[
-            Parameter("per_page", "query", type="number"),
+            Parameter("page_size", "query", type="number"),
             Parameter("page", "query", type="number"),
         ],
     )
     @action(detail=True, methods=["get"])
-    def rate(self, request: Request, pk: int) -> JsonResponse:
+    def rate(self, request: Request, pk: int) -> Response:
         """Get the number of transcriptions the volunteer made per UTC day.
 
         IMPORTANT: To reduce the number of entries, this does not
@@ -92,17 +91,10 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             .values("date", "count")
             .order_by("date")
         )
-        per_page = request.GET.get("per_page", 50)
-        page_number = request.GET.get("page", 1)
-        paginator = Paginator(rate, per_page)
-        page_obj = paginator.get_page(page_number)
-        return JsonResponse(
-            {
-                "page_num": page_obj.number,
-                "data": list(page_obj.object_list),
-                "total_pages": page_obj.paginator.num_pages,
-            }
-        )
+
+        pagination = StandardResultsSetPagination()
+        page = pagination.paginate_queryset(rate, request)
+        return pagination.get_paginated_response(page)
 
     @csrf_exempt
     @swagger_auto_schema(

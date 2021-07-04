@@ -103,7 +103,7 @@ class TestVolunteerRate:
                     {"count": 2, "date": "2021-06-10"},
                     {"count": 2, "date": "2021-06-11"},
                 ],
-                "?per_page=1",
+                "?page_size=1",
                 [{"count": 2, "date": "2021-06-10"}],
             ),
             (
@@ -112,7 +112,7 @@ class TestVolunteerRate:
                     {"count": 2, "date": "2021-06-11"},
                     {"count": 3, "date": "2021-06-12"},
                 ],
-                "?per_page=1&page=2",
+                "?page_size=1&page=2",
                 [{"count": 2, "date": "2021-06-11"}],
             ),
             (
@@ -121,7 +121,7 @@ class TestVolunteerRate:
                     {"count": 2, "date": "2021-06-11"},
                     {"count": 3, "date": "2021-06-12"},
                 ],
-                "?per_page=2&page=1",
+                "?page_size=2&page=1",
                 [
                     {"count": 1, "date": "2021-06-10"},
                     {"count": 2, "date": "2021-06-11"},
@@ -156,7 +156,7 @@ class TestVolunteerRate:
             **headers,
         )
         assert result.status_code == status.HTTP_200_OK
-        rates = result.json()["data"]
+        rates = result.json()["results"]
         if different_result:
             assert rates == different_result
         else:
@@ -165,19 +165,23 @@ class TestVolunteerRate:
     def test_pagination(self, client: Client) -> None:
         """Verify that pagination parameters properly change response."""
         client, headers, user = setup_user_client(client, id=123456)
-        for _ in range(1, 4):
+        for day in range(1, 4):
             create_transcription(
-                create_submission(), user, create_time=make_aware(datetime(2021, 6, _)),
+                create_submission(),
+                user,
+                create_time=make_aware(datetime(2021, 6, day)),
             )
         result = client.get(
-            reverse("volunteer-rate", kwargs={"pk": 123456}) + "?per_page=1&page=1",
+            reverse("volunteer-rate", kwargs={"pk": 123456}) + "?page_size=1&page=2",
             content_type="application/json",
             **headers,
         )
         assert result.status_code == status.HTTP_200_OK
         response = result.json()
-        assert response["page_num"] == 1
-        assert response["total_pages"] == 3
+        assert len(response["results"]) == 1
+        assert response["results"][0]["date"] == "2021-06-02"
+        assert response["previous"] is not None
+        assert response["next"] is not None
 
 
 class TestVolunteerAssortedFunctions:
