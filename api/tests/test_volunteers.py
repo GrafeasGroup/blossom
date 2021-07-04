@@ -183,6 +183,121 @@ class TestVolunteerRate:
         assert response["previous"] is not None
         assert response["next"] is not None
 
+    @pytest.mark.parametrize(
+        "time_frame,dates,results",
+        [
+            (
+                "hour",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12, 10),
+                    datetime(2021, 6, 1, 12, 20),
+                    datetime(2021, 6, 1, 12, 25),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 7, 1, 12),
+                ],
+                [
+                    {"count": 1, "date": "2021-06-01T11:00:00Z"},
+                    {"count": 3, "date": "2021-06-01T12:00:00Z"},
+                    {"count": 1, "date": "2022-06-01T10:00:00Z"},
+                    {"count": 1, "date": "2022-07-01T12:00:00Z"},
+                ],
+            ),
+            (
+                "day",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 7, 1, 12),
+                ],
+                [
+                    {"count": 2, "date": "2021-06-01"},
+                    {"count": 1, "date": "2022-06-01"},
+                    {"count": 1, "date": "2022-07-01"},
+                ],
+            ),
+            (
+                "week",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12),
+                    datetime(2021, 6, 3, 12),
+                    datetime(2021, 6, 6, 12),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 7, 1, 12),
+                ],
+                [
+                    {"count": 4, "date": "2021-05-31T00:00:00Z"},
+                    {"count": 1, "date": "2022-05-30T00:00:00Z"},
+                    {"count": 1, "date": "2022-06-27T00:00:00Z"},
+                ],
+            ),
+            (
+                "month",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12),
+                    datetime(2021, 6, 3, 12),
+                    datetime(2021, 6, 6, 12),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 6, 10, 10),
+                    datetime(2022, 6, 25, 10),
+                    datetime(2022, 6, 30, 10),
+                    datetime(2022, 7, 1, 12),
+                ],
+                [
+                    {"count": 4, "date": "2021-06-01T00:00:00Z"},
+                    {"count": 4, "date": "2022-06-01T00:00:00Z"},
+                    {"count": 1, "date": "2022-07-01T00:00:00Z"},
+                ],
+            ),
+            (
+                "year",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12),
+                    datetime(2021, 6, 3, 12),
+                    datetime(2021, 6, 6, 12),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 6, 10, 10),
+                    datetime(2022, 6, 25, 10),
+                    datetime(2022, 6, 30, 10),
+                    datetime(2022, 7, 1, 12),
+                    datetime(2022, 10, 1, 12),
+                ],
+                [
+                    {"count": 4, "date": "2021-01-01T00:00:00Z"},
+                    {"count": 6, "date": "2022-01-01T00:00:00Z"},
+                ],
+            ),
+        ],
+    )
+    def test_time_frames(
+        self,
+        client: Client,
+        time_frame: str,
+        dates: List[datetime],
+        results: List[Dict[str, Union[str, int]]],
+    ) -> None:
+        """Verify that the time_frame parameter properly changes the response."""
+        client, headers, user = setup_user_client(client, id=123456)
+
+        for date in dates:
+            create_transcription(
+                create_submission(), user, create_time=make_aware(date),
+            )
+
+        result = client.get(
+            reverse("volunteer-rate", kwargs={"pk": 123456})
+            + f"?time_frame={time_frame}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        response = result.json()
+        assert response["results"] == results
+
 
 class TestVolunteerAssortedFunctions:
     """Tests to validate the behavior of miscellaneous functions."""

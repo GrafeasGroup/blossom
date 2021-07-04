@@ -101,6 +101,8 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         trunc_dict = {
             "hour": TruncHour,
             "day": TruncDate,
+            # Unfortunately weeks starts on Sunday for this.
+            # There doesn't seem to be an ISO week equivalent :(
             "week": TruncWeek,
             "month": TruncMonth,
             "year": TruncYear,
