@@ -2,7 +2,15 @@
 import uuid
 
 from django.db.models import Count
-from django.db.models.functions import ExtractHour, ExtractIsoWeekDay, TruncDate
+from django.db.models.functions import (
+    ExtractHour,
+    ExtractIsoWeekDay,
+    TruncDate,
+    TruncHour,
+    TruncMonth,
+    TruncWeek,
+    TruncYear,
+)
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -64,11 +72,17 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             "Retrieve a count of transcriptions for a volunteer per UTC day."
         ),
         operation_description=(
-            "A paginated endpoint. Pass per_page to control number of results"
+            "A paginated endpoint. Pass page_size to control number of results"
             " returned, page to select a different block."
         ),
         responses={404: "No volunteer with the specified ID."},
         manual_parameters=[
+            Parameter(
+                "time_frame",
+                "query",
+                type="string",
+                enum=["hour", "day", "week", "month", "year"],
+            ),
             Parameter("page_size", "query", type="number"),
             Parameter("page", "query", type="number"),
         ],
@@ -82,10 +96,22 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         """
         user = get_object_or_404(BlossomUser, id=pk, is_volunteer=True)
 
+        time_frame = request.GET.get("time_frame", "day")
+
+        trunc_dict = {
+            "hour": TruncHour,
+            "day": TruncDate,
+            "week": TruncWeek,
+            "month": TruncMonth,
+            "year": TruncYear,
+        }
+
+        trunc_class = trunc_dict.get(time_frame, TruncDate)
+
         # https://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
         rate = (
             Transcription.objects.filter(author=user)
-            .annotate(date=TruncDate("create_time"))
+            .annotate(date=trunc_class("create_time"))
             .values("date")
             .annotate(count=Count("id"))
             .values("date", "count")
