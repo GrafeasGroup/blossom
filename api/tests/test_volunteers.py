@@ -1,9 +1,12 @@
 """Tests to validate the behavior of the VolunteerViewSet."""
 import json
 from datetime import datetime
+from typing import Dict, List, Union
 
+import pytest
 from django.test import Client
 from django.urls import reverse
+from django.utils.timezone import make_aware
 from rest_framework import status
 
 from api.models import Submission, Transcription
@@ -69,6 +72,248 @@ class TestVolunteerSummary:
         )
 
         assert result.json()["gamma"] == 3
+
+
+class TestVolunteerRate:
+    """Tests to validate the behavior of the rate calculation."""
+
+    @pytest.mark.parametrize(
+        "data,url_additions,different_result",
+        [
+            (
+                [
+                    {"count": 2, "date": "2021-06-15T00:00:00Z"},
+                    {"count": 4, "date": "2021-06-16T00:00:00Z"},
+                    {"count": 1, "date": "2021-06-17T00:00:00Z"},
+                ],
+                None,
+                None,
+            ),
+            (
+                [
+                    {"count": 20, "date": "2021-06-15T00:00:00Z"},
+                    {"count": 40, "date": "2021-06-16T00:00:00Z"},
+                    {"count": 10, "date": "2021-06-17T00:00:00Z"},
+                ],
+                None,
+                None,
+            ),
+            (
+                [
+                    {"count": 2, "date": "2021-06-10T00:00:00Z"},
+                    {"count": 2, "date": "2021-06-11T00:00:00Z"},
+                ],
+                "?page_size=1",
+                [{"count": 2, "date": "2021-06-10T00:00:00Z"}],
+            ),
+            (
+                [
+                    {"count": 1, "date": "2021-06-10T00:00:00Z"},
+                    {"count": 2, "date": "2021-06-11T00:00:00Z"},
+                    {"count": 3, "date": "2021-06-12T00:00:00Z"},
+                ],
+                "?page_size=1&page=2",
+                [{"count": 2, "date": "2021-06-11T00:00:00Z"}],
+            ),
+            (
+                [
+                    {"count": 1, "date": "2021-06-10T00:00:00Z"},
+                    {"count": 2, "date": "2021-06-11T00:00:00Z"},
+                    {"count": 3, "date": "2021-06-12T00:00:00Z"},
+                ],
+                "?page_size=2&page=1",
+                [
+                    {"count": 1, "date": "2021-06-10T00:00:00Z"},
+                    {"count": 2, "date": "2021-06-11T00:00:00Z"},
+                ],
+            ),
+        ],
+    )
+    def test_rate_count_aggregation(
+        self,
+        client: Client,
+        data: List[Dict[str, Union[str, int]]],
+        url_additions: str,
+        different_result: List[Dict],
+    ) -> None:
+        """Test if the number of transcriptions per day is aggregated correctly."""
+        client, headers, user = setup_user_client(client, id=123456)
+
+        for obj in data:
+            for _ in range(obj.get("count")):
+                create_transcription(
+                    create_submission(),
+                    user,
+                    create_time=make_aware(
+                        datetime.strptime(obj.get("date"), "%Y-%m-%dT%H:%M:%SZ")
+                    ),
+                )
+        if not url_additions:
+            url_additions = ""
+        result = client.get(
+            reverse("volunteer-rate", kwargs={"pk": 123456}) + url_additions,
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        rates = result.json()["results"]
+        if different_result:
+            assert rates == different_result
+        else:
+            assert rates == data
+
+    def test_pagination(self, client: Client) -> None:
+        """Verify that pagination parameters properly change response."""
+        client, headers, user = setup_user_client(client, id=123456)
+        for day in range(1, 4):
+            create_transcription(
+                create_submission(),
+                user,
+                create_time=make_aware(datetime(2021, 6, day)),
+            )
+        result = client.get(
+            reverse("volunteer-rate", kwargs={"pk": 123456}) + "?page_size=1&page=2",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        response = result.json()
+        assert len(response["results"]) == 1
+        assert response["results"][0]["date"] == "2021-06-02T00:00:00Z"
+        assert response["previous"] is not None
+        assert response["next"] is not None
+
+    @pytest.mark.parametrize(
+        "time_frame,dates,results",
+        [
+            (
+                "none",
+                [
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 6, 1, 11, 13, 16),
+                    datetime(2022, 6, 1, 11, 13, 14),
+                    datetime(2022, 7, 1, 11, 10, 14),
+                ],
+                [
+                    {"count": 1, "date": "2021-06-01T11:13:14Z"},
+                    {"count": 1, "date": "2021-06-01T11:13:15Z"},
+                    {"count": 1, "date": "2021-06-01T11:13:16Z"},
+                    {"count": 1, "date": "2022-06-01T11:13:14Z"},
+                    {"count": 1, "date": "2022-07-01T11:10:14Z"},
+                ],
+            ),
+            (
+                "hour",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12, 10),
+                    datetime(2021, 6, 1, 12, 20),
+                    datetime(2021, 6, 1, 12, 25),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 7, 1, 12),
+                ],
+                [
+                    {"count": 1, "date": "2021-06-01T11:00:00Z"},
+                    {"count": 3, "date": "2021-06-01T12:00:00Z"},
+                    {"count": 1, "date": "2022-06-01T10:00:00Z"},
+                    {"count": 1, "date": "2022-07-01T12:00:00Z"},
+                ],
+            ),
+            (
+                "day",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 7, 1, 12),
+                ],
+                [
+                    {"count": 2, "date": "2021-06-01T00:00:00Z"},
+                    {"count": 1, "date": "2022-06-01T00:00:00Z"},
+                    {"count": 1, "date": "2022-07-01T00:00:00Z"},
+                ],
+            ),
+            (
+                "week",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12),
+                    datetime(2021, 6, 3, 12),
+                    datetime(2021, 6, 6, 12),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 7, 1, 12),
+                ],
+                [
+                    {"count": 4, "date": "2021-05-31T00:00:00Z"},
+                    {"count": 1, "date": "2022-05-30T00:00:00Z"},
+                    {"count": 1, "date": "2022-06-27T00:00:00Z"},
+                ],
+            ),
+            (
+                "month",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12),
+                    datetime(2021, 6, 3, 12),
+                    datetime(2021, 6, 6, 12),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 6, 10, 10),
+                    datetime(2022, 6, 25, 10),
+                    datetime(2022, 6, 30, 10),
+                    datetime(2022, 7, 1, 12),
+                ],
+                [
+                    {"count": 4, "date": "2021-06-01T00:00:00Z"},
+                    {"count": 4, "date": "2022-06-01T00:00:00Z"},
+                    {"count": 1, "date": "2022-07-01T00:00:00Z"},
+                ],
+            ),
+            (
+                "year",
+                [
+                    datetime(2021, 6, 1, 11),
+                    datetime(2021, 6, 1, 12),
+                    datetime(2021, 6, 3, 12),
+                    datetime(2021, 6, 6, 12),
+                    datetime(2022, 6, 1, 10),
+                    datetime(2022, 6, 10, 10),
+                    datetime(2022, 6, 25, 10),
+                    datetime(2022, 6, 30, 10),
+                    datetime(2022, 7, 1, 12),
+                    datetime(2022, 10, 1, 12),
+                ],
+                [
+                    {"count": 4, "date": "2021-01-01T00:00:00Z"},
+                    {"count": 6, "date": "2022-01-01T00:00:00Z"},
+                ],
+            ),
+        ],
+    )
+    def test_time_frames(
+        self,
+        client: Client,
+        time_frame: str,
+        dates: List[datetime],
+        results: List[Dict[str, Union[str, int]]],
+    ) -> None:
+        """Verify that the time_frame parameter properly changes the response."""
+        client, headers, user = setup_user_client(client, id=123456)
+
+        for date in dates:
+            create_transcription(
+                create_submission(), user, create_time=make_aware(date),
+            )
+
+        result = client.get(
+            reverse("volunteer-rate", kwargs={"pk": 123456})
+            + f"?time_frame={time_frame}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        response = result.json()
+        assert response["results"] == results
 
 
 class TestVolunteerAssortedFunctions:
