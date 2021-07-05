@@ -6,8 +6,10 @@ from django.db.models.functions import (
     ExtractHour,
     ExtractIsoWeekDay,
     TruncDate,
+    TruncDay,
     TruncHour,
     TruncMonth,
+    TruncSecond,
     TruncWeek,
     TruncYear,
 )
@@ -82,6 +84,10 @@ class VolunteerViewSet(viewsets.ModelViewSet):
                 "query",
                 type="string",
                 enum=["hour", "day", "week", "month", "year"],
+                description="The time interval to calculate the rate by. "
+                'Must be one of "none", "hour", "day", "week", "month" or "year".'
+                'For example, "none" will return the date of every transcription '
+                'separately, while "day" will return the daily transcribing rate.',
             ),
             Parameter("page_size", "query", type="number"),
             Parameter("page", "query", type="number"),
@@ -99,8 +105,11 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         time_frame = request.GET.get("time_frame", "day")
 
         trunc_dict = {
+            # Don't group the transcriptions at all
+            # TODO: Make this a true noop for transcriptions posted in the same second
+            "none": TruncSecond,
             "hour": TruncHour,
-            "day": TruncDate,
+            "day": TruncDay,
             # Unfortunately weeks starts on Sunday for this.
             # There doesn't seem to be an ISO week equivalent :(
             "week": TruncWeek,
@@ -108,12 +117,12 @@ class VolunteerViewSet(viewsets.ModelViewSet):
             "year": TruncYear,
         }
 
-        trunc_class = trunc_dict.get(time_frame, TruncDate)
+        trunc_fn = trunc_dict.get(time_frame, TruncDate)
 
         # https://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
         rate = (
             Transcription.objects.filter(author=user)
-            .annotate(date=trunc_class("create_time"))
+            .annotate(date=trunc_fn("create_time"))
             .values("date")
             .annotate(count=Count("id"))
             .values("date", "count")

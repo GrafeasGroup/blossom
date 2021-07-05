@@ -82,49 +82,49 @@ class TestVolunteerRate:
         [
             (
                 [
-                    {"count": 2, "date": "2021-06-15"},
-                    {"count": 4, "date": "2021-06-16"},
-                    {"count": 1, "date": "2021-06-17"},
+                    {"count": 2, "date": "2021-06-15T00:00:00Z"},
+                    {"count": 4, "date": "2021-06-16T00:00:00Z"},
+                    {"count": 1, "date": "2021-06-17T00:00:00Z"},
                 ],
                 None,
                 None,
             ),
             (
                 [
-                    {"count": 20, "date": "2021-06-15"},
-                    {"count": 40, "date": "2021-06-16"},
-                    {"count": 10, "date": "2021-06-17"},
+                    {"count": 20, "date": "2021-06-15T00:00:00Z"},
+                    {"count": 40, "date": "2021-06-16T00:00:00Z"},
+                    {"count": 10, "date": "2021-06-17T00:00:00Z"},
                 ],
                 None,
                 None,
             ),
             (
                 [
-                    {"count": 2, "date": "2021-06-10"},
-                    {"count": 2, "date": "2021-06-11"},
+                    {"count": 2, "date": "2021-06-10T00:00:00Z"},
+                    {"count": 2, "date": "2021-06-11T00:00:00Z"},
                 ],
                 "?page_size=1",
-                [{"count": 2, "date": "2021-06-10"}],
+                [{"count": 2, "date": "2021-06-10T00:00:00Z"}],
             ),
             (
                 [
-                    {"count": 1, "date": "2021-06-10"},
-                    {"count": 2, "date": "2021-06-11"},
-                    {"count": 3, "date": "2021-06-12"},
+                    {"count": 1, "date": "2021-06-10T00:00:00Z"},
+                    {"count": 2, "date": "2021-06-11T00:00:00Z"},
+                    {"count": 3, "date": "2021-06-12T00:00:00Z"},
                 ],
                 "?page_size=1&page=2",
-                [{"count": 2, "date": "2021-06-11"}],
+                [{"count": 2, "date": "2021-06-11T00:00:00Z"}],
             ),
             (
                 [
-                    {"count": 1, "date": "2021-06-10"},
-                    {"count": 2, "date": "2021-06-11"},
-                    {"count": 3, "date": "2021-06-12"},
+                    {"count": 1, "date": "2021-06-10T00:00:00Z"},
+                    {"count": 2, "date": "2021-06-11T00:00:00Z"},
+                    {"count": 3, "date": "2021-06-12T00:00:00Z"},
                 ],
                 "?page_size=2&page=1",
                 [
-                    {"count": 1, "date": "2021-06-10"},
-                    {"count": 2, "date": "2021-06-11"},
+                    {"count": 1, "date": "2021-06-10T00:00:00Z"},
+                    {"count": 2, "date": "2021-06-11T00:00:00Z"},
                 ],
             ),
         ],
@@ -145,7 +145,7 @@ class TestVolunteerRate:
                     create_submission(),
                     user,
                     create_time=make_aware(
-                        datetime.strptime(obj.get("date"), "%Y-%m-%d")
+                        datetime.strptime(obj.get("date"), "%Y-%m-%dT%H:%M:%SZ")
                     ),
                 )
         if not url_additions:
@@ -179,13 +179,30 @@ class TestVolunteerRate:
         assert result.status_code == status.HTTP_200_OK
         response = result.json()
         assert len(response["results"]) == 1
-        assert response["results"][0]["date"] == "2021-06-02"
+        assert response["results"][0]["date"] == "2021-06-02T00:00:00Z"
         assert response["previous"] is not None
         assert response["next"] is not None
 
     @pytest.mark.parametrize(
         "time_frame,dates,results",
         [
+            (
+                "none",
+                [
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 6, 1, 11, 13, 16),
+                    datetime(2022, 6, 1, 11, 13, 14),
+                    datetime(2022, 7, 1, 11, 10, 14),
+                ],
+                [
+                    {"count": 1, "date": "2021-06-01T11:13:14Z"},
+                    {"count": 1, "date": "2021-06-01T11:13:15Z"},
+                    {"count": 1, "date": "2021-06-01T11:13:16Z"},
+                    {"count": 1, "date": "2022-06-01T11:13:14Z"},
+                    {"count": 1, "date": "2022-07-01T11:10:14Z"},
+                ],
+            ),
             (
                 "hour",
                 [
@@ -212,9 +229,9 @@ class TestVolunteerRate:
                     datetime(2022, 7, 1, 12),
                 ],
                 [
-                    {"count": 2, "date": "2021-06-01"},
-                    {"count": 1, "date": "2022-06-01"},
-                    {"count": 1, "date": "2022-07-01"},
+                    {"count": 2, "date": "2021-06-01T00:00:00Z"},
+                    {"count": 1, "date": "2022-06-01T00:00:00Z"},
+                    {"count": 1, "date": "2022-07-01T00:00:00Z"},
                 ],
             ),
             (
