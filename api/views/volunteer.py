@@ -83,7 +83,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
                 "time_frame",
                 "query",
                 type="string",
-                enum=["hour", "day", "week", "month", "year"],
+                enum=["none", "hour", "day", "week", "month", "year"],
                 description="The time interval to calculate the rate by. "
                 'Must be one of "none", "hour", "day", "week", "month" or "year".'
                 'For example, "none" will return the date of every transcription '
