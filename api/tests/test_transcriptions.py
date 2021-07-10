@@ -1,8 +1,12 @@
 """Tests to validate the behavior of the Transcription View."""
 import json
+from datetime import datetime
+from typing import List
 
+import pytest
 from django.test import Client
 from django.urls import reverse
+from django.utils.timezone import make_aware
 from rest_framework import status
 
 from api.models import Source, Transcription
@@ -337,6 +341,73 @@ class TestTranscriptionSearch:
         )
 
         assert result.status_code == status.HTTP_400_BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        "ordering,create_times,expected_times",
+        [
+            (
+                "create_time",
+                [
+                    datetime(2021, 12, 1, 11, 13, 16),
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 5, 1, 11, 13, 14),
+                    datetime(2021, 7, 1, 11, 10, 14),
+                ],
+                [
+                    datetime(2021, 5, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 7, 1, 11, 10, 14),
+                    datetime(2021, 12, 1, 11, 13, 16),
+                ],
+            ),
+            (
+                "-create_time",
+                [
+                    datetime(2021, 12, 1, 11, 13, 16),
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 5, 1, 11, 13, 14),
+                    datetime(2021, 7, 1, 11, 10, 14),
+                ],
+                [
+                    datetime(2021, 12, 1, 11, 13, 16),
+                    datetime(2021, 7, 1, 11, 10, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 5, 1, 11, 13, 14),
+                ],
+            ),
+        ],
+    )
+    def test_search_with_ordering_filter(
+        self,
+        client: Client,
+        ordering: str,
+        create_times: List[datetime],
+        expected_times: List[datetime],
+    ) -> None:
+        """Verify that listing items with specified orderings works correctly."""
+        client, headers, user = setup_user_client(client)
+
+        for time in create_times:
+            create_transcription(
+                create_time=make_aware(time), submission=create_submission(), user=user
+            )
+
+        result = client.get(
+            reverse("transcription-list") + f"?ordering={ordering}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+
+        result_times = [
+            datetime.strptime(obj.get("create_time"), "%Y-%m-%dT%H:%M:%SZ")
+            for obj in result.json()["results"]
+        ]
+        assert result_times == expected_times
 
 
 class TestTranscriptionRandom:
