@@ -1,8 +1,11 @@
-import datetime
+from datetime import datetime
+from typing import List
 
+import pytest
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.timezone import make_aware
 from rest_framework import status
 
 from api.models import Source
@@ -105,18 +108,10 @@ class TestSubmissionGet:
         """Verify that listing submissions using time filters works correctly."""
         client, headers, _ = setup_user_client(client)
 
-        create_submission(
-            complete_time=timezone.make_aware(datetime.datetime(2021, 1, 1))
-        )
-        create_submission(
-            complete_time=timezone.make_aware(datetime.datetime(2021, 1, 2))
-        )
-        create_submission(
-            complete_time=timezone.make_aware(datetime.datetime(2021, 1, 3))
-        )
-        create_submission(
-            complete_time=timezone.make_aware(datetime.datetime(2021, 1, 4))
-        )
+        create_submission(complete_time=timezone.make_aware(datetime(2021, 1, 1)))
+        create_submission(complete_time=timezone.make_aware(datetime(2021, 1, 2)))
+        create_submission(complete_time=timezone.make_aware(datetime(2021, 1, 3)))
+        create_submission(complete_time=timezone.make_aware(datetime(2021, 1, 4)))
 
         result = client.get(
             reverse("submission-list") + "?from=2021-01-02,1pm",
@@ -188,3 +183,68 @@ class TestSubmissionGet:
             **headers,
         )
         assert len(result.json()["results"]) == 5
+
+    @pytest.mark.parametrize(
+        "ordering,complete_times,expected_times",
+        [
+            (
+                "complete_time",
+                [
+                    datetime(2021, 12, 1, 11, 13, 16),
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 5, 1, 11, 13, 14),
+                    datetime(2021, 7, 1, 11, 10, 14),
+                ],
+                [
+                    datetime(2021, 5, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 7, 1, 11, 10, 14),
+                    datetime(2021, 12, 1, 11, 13, 16),
+                ],
+            ),
+            (
+                "-complete_time",
+                [
+                    datetime(2021, 12, 1, 11, 13, 16),
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 5, 1, 11, 13, 14),
+                    datetime(2021, 7, 1, 11, 10, 14),
+                ],
+                [
+                    datetime(2021, 12, 1, 11, 13, 16),
+                    datetime(2021, 7, 1, 11, 10, 14),
+                    datetime(2021, 6, 1, 11, 13, 15),
+                    datetime(2021, 6, 1, 11, 13, 14),
+                    datetime(2021, 5, 1, 11, 13, 14),
+                ],
+            ),
+        ],
+    )
+    def test_list_with_ordering_filter(
+        self,
+        client: Client,
+        ordering: str,
+        complete_times: List[datetime],
+        expected_times: List[datetime],
+    ) -> None:
+        """Verify that listing items with specified orderings works correctly."""
+        client, headers, _ = setup_user_client(client)
+
+        for time in complete_times:
+            create_submission(complete_time=make_aware(time))
+
+        result = client.get(
+            reverse("submission-list") + f"?ordering={ordering}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+
+        result_times = [
+            datetime.strptime(obj.get("complete_time"), "%Y-%m-%dT%H:%M:%SZ")
+            for obj in result.json()["results"]
+        ]
+        assert result_times == expected_times
