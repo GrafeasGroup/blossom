@@ -17,6 +17,7 @@ from drf_yasg.openapi import Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
 from rest_framework.request import Request
 from rest_framework.response import Response
 from slack import WebClient
@@ -64,7 +65,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = SubmissionSerializer
     permission_classes = (BlossomApiPermission,)
     queryset = Submission.objects.order_by("id")
-    filter_backends = [TimeFilter, DjangoFilterBackend]
+    filter_backends = [TimeFilter, OrderingFilter, DjangoFilterBackend]
     filterset_fields = [
         "id",
         "original_id",
@@ -76,6 +77,13 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         "archived",
         "content_url",
         "redis_id",
+    ]
+    ordering_fields = [
+        "id",
+        "create_time",
+        "last_update_time",
+        "claim_time",
+        "complete_time",
     ]
 
     @csrf_exempt
