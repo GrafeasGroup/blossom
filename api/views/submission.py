@@ -65,7 +65,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = SubmissionSerializer
     permission_classes = (BlossomApiPermission,)
     queryset = Submission.objects.order_by("id")
-    filter_backends = [TimeFilter, OrderingFilter, DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, TimeFilter, OrderingFilter]
     filterset_fields = [
         "id",
         "original_id",

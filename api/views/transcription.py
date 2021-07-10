@@ -12,6 +12,7 @@ from drf_yasg.openapi import Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -28,7 +29,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
     queryset = Transcription.objects.all().order_by("-create_time")
     serializer_class = TranscriptionSerializer
     permission_classes = (BlossomApiPermission,)
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = [
         "id",
         "submission",
@@ -37,6 +38,11 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         "source",
         "url",
         "removed_from_reddit",
+    ]
+    ordering_fields = [
+        "id",
+        "create_time",
+        "last_update_time",
     ]
 
     @csrf_exempt
