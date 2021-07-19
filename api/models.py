@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
+from django_cte import CTEManager
 
 from ocr.errors import OCRError
 from ocr.helpers import escape_reddit_links, process_image, replace_shortlinks
@@ -72,6 +73,10 @@ class Submission(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["url", "tor_url"])]
+
+    # Needed for calculating the ranks of users
+    # https://stackoverflow.com/questions/65046994/keeping-annotated-rank-when-filtering-django
+    objects = CTEManager()
 
     # The ID of the Submission on the "source" platform.
     # Note that this field is not used as a primary key; an underlying
