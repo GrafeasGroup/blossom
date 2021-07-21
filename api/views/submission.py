@@ -255,9 +255,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             400: "The volunteer username is not provided",
             403: "The volunteer has not accepted the Code of Conduct",
             404: "The specified volunteer or submission is not found",
-            409: "The submission is already claimed "
-            "or the user has already claimed too many posts",
+            409: "The submission is already claimed ",
             423: "The user is blacklisted",
+            460: "The volunteer has already claimed too many posts",
         },
     )
     @validate_request(data_params={"username"})
@@ -288,7 +288,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         for claim_restriction in reversed(MAX_CLAIMS):
             if user.gamma >= claim_restriction["gamma"]:
                 if claimed_count >= claim_restriction["claims"]:
-                    return Response(status=status.HTTP_409_CONFLICT)
+                    return Response(status=460)
                 break
 
         submission.claimed_by = user

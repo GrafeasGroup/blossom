@@ -134,7 +134,7 @@ class TestSubmissionClaim:
             content_type="application/json",
             **headers,
         )
-        assert result.status_code == status.HTTP_409_CONFLICT
+        assert result.status_code == 460
 
     def test_claim_no_coc(self, client: Client) -> None:
         """Test that a claim cannot be completed without accepting the CoC."""
