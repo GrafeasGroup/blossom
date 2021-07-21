@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 
 from api.authentication import AdminApiKeyCustomCheck
 from api.helpers import get_time_since_open
-from api.models import Transcription
+from api.models import Submission
 from authentication.models import BlossomUser
 
 
@@ -35,7 +35,9 @@ class Summary(object):
         return {
             "volunteer_count": BlossomUser.objects.filter(is_volunteer=True).count()
             - 2,
-            "transcription_count": Transcription.objects.count(),
+            "transcription_count": Submission.objects.filter(
+                completed_by__isnull=False
+            ).count(),
             "days_since_inception": get_time_since_open(days=True),
         }
 
