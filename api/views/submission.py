@@ -30,6 +30,10 @@ from api.serializers import SubmissionSerializer
 from api.views.slack_helpers import client as slack
 from authentication.models import BlossomUser
 
+# The maximum number of posts a user can claim
+# depending on their current gamma score
+MAX_CLAIMS = [{"gamma": 0, "claims": 1}, {"gamma": 100, "claims": 2}]
+
 
 @method_decorator(
     name="list",
@@ -251,7 +255,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             400: "The volunteer username is not provided",
             403: "The volunteer has not accepted the Code of Conduct",
             404: "The specified volunteer or submission is not found",
-            409: "The submission is already claimed",
+            409: "The submission is already claimed "
+            "or the user has already claimed too many posts",
             423: "The user is blacklisted",
         },
     )
@@ -274,6 +279,17 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         if submission.claimed_by is not None:
             return Response(status=status.HTTP_409_CONFLICT)
+
+        # Determine how many submissions the user has already claimed
+        claimed_count = Submission.objects.filter(
+            claimed_by=user, archived=False, completed_by__isnull=True
+        ).count()
+
+        for claim_restriction in reversed(MAX_CLAIMS):
+            if user.gamma >= claim_restriction["gamma"]:
+                if claimed_count >= claim_restriction["claims"]:
+                    return Response(status=status.HTTP_409_CONFLICT)
+                break
 
         submission.claimed_by = user
         submission.claim_time = timezone.now()
