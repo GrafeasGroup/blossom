@@ -26,6 +26,50 @@ class TestSubmissionClaim:
         assert result.json()["id"] == submission.id
         assert submission.claimed_by == user
 
+    def test_claim_with_other_archived_claim(self, client: Client) -> None:
+        """Test whether a user can claim a submission when another claim has been archived.
+
+        The claim limit should not consider submissions that are already archived.
+        """
+        client, headers, user = setup_user_client(client)
+        create_submission(claimed_by=user, archived=True)
+        submission = create_submission()
+
+        data = {"username": user.username}
+
+        result = client.patch(
+            reverse("submission-claim", args=[submission.id]),
+            data,
+            content_type="application/json",
+            **headers,
+        )
+        submission.refresh_from_db()
+        assert result.status_code == status.HTTP_201_CREATED
+        assert result.json()["id"] == submission.id
+        assert submission.claimed_by == user
+
+    def test_claim_with_other_completed_claim(self, client: Client) -> None:
+        """Test whether a user can claim a submission when another claim has been completed.
+
+        The claim limit should not consider submissions that are already completed.
+        """
+        client, headers, user = setup_user_client(client)
+        create_submission(claimed_by=user, completed_by=user)
+        submission = create_submission()
+
+        data = {"username": user.username}
+
+        result = client.patch(
+            reverse("submission-claim", args=[submission.id]),
+            data,
+            content_type="application/json",
+            **headers,
+        )
+        submission.refresh_from_db()
+        assert result.status_code == status.HTTP_201_CREATED
+        assert result.json()["id"] == submission.id
+        assert submission.claimed_by == user
+
     def test_claim_invalid_original_id(self, client: Client) -> None:
         """Test whether a claim with an invalid submission id is successfully caught."""
         client, headers, user = setup_user_client(client)
@@ -66,6 +110,22 @@ class TestSubmissionClaim:
         """Test whether a claim on a Submission already claimed is successfully caught."""
         client, headers, user = setup_user_client(client)
         submission = create_submission(claimed_by=user)
+        data = {"username": user.username}
+
+        result = client.patch(
+            reverse("submission-claim", args=[submission.id]),
+            json.dumps(data),
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_409_CONFLICT
+
+    def test_claim_too_many_claimed(self, client: Client) -> None:
+        """Test whether a user who already has claims can claim another post."""
+        client, headers, user = setup_user_client(client)
+        create_submission(claimed_by=user)
+        submission = create_submission()
+
         data = {"username": user.username}
 
         result = client.patch(
