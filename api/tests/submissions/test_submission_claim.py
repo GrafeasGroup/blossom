@@ -123,8 +123,8 @@ class TestSubmissionClaim:
     def test_claim_too_many_claimed(self, client: Client) -> None:
         """Test whether a user who already has claims can claim another post."""
         client, headers, user = setup_user_client(client)
-        create_submission(claimed_by=user)
-        submission = create_submission()
+        create_submission(claimed_by=user, id=1)
+        submission = create_submission(id=2)
 
         data = {"username": user.username}
 
@@ -135,6 +135,9 @@ class TestSubmissionClaim:
             **headers,
         )
         assert result.status_code == 460
+        claimed_submissions = result.json()
+        assert len(claimed_submissions) == 1
+        assert claimed_submissions[0]["id"] == 1
 
     def test_claim_no_coc(self, client: Client) -> None:
         """Test that a claim cannot be completed without accepting the CoC."""

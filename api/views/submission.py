@@ -281,14 +281,21 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_409_CONFLICT)
 
         # Determine how many submissions the user has already claimed
-        claimed_count = Submission.objects.filter(
+        claimed_submissions = Submission.objects.filter(
             claimed_by=user, archived=False, completed_by__isnull=True
-        ).count()
+        )
+        claimed_count = claimed_submissions.count()
 
         for claim_restriction in reversed(MAX_CLAIMS):
             if user.gamma >= claim_restriction["gamma"]:
                 if claimed_count >= claim_restriction["claims"]:
-                    return Response(status=460)
+                    # The user has already claimed too many submissions
+                    return Response(
+                        data=self.get_serializer(
+                            claimed_submissions, context={"request": request}, many=True
+                        ).data,
+                        status=460,
+                    )
                 break
 
         submission.claimed_by = user
