@@ -28,7 +28,6 @@ from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.serializers import SubmissionSerializer
 from api.views.slack_helpers import client as slack
-from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
 
 
@@ -274,12 +273,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         if submission.claimed_by is not None:
-            return Response(
-                data=VolunteerViewSet.serializer_class(
-                    submission.claimed_by, context={"request": request}
-                ).data,
-                status=status.HTTP_409_CONFLICT,
-            )
+            return Response(status=status.HTTP_409_CONFLICT)
 
         submission.claimed_by = user
         submission.claim_time = timezone.now()
