@@ -255,7 +255,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             400: "The volunteer username is not provided",
             403: "The volunteer has not accepted the Code of Conduct",
             404: "The specified volunteer or submission is not found",
-            409: "The submission is already claimed ",
+            409: "The submission is already claimed",
             423: "The user is blacklisted",
             460: "The volunteer has already claimed too many posts",
         },
