@@ -16,6 +16,7 @@ urlpatterns = [
     path("superadmin/newuser", user_create, name="user_create"),
     path("superadmin/", admin.site.urls),
     path("api/", include("api.urls")),
+    path("app/", include("app.urls")),
     path("payments/", include("payments.urls")),
     path("engineering/", include("engineeringblog.urls")),
     path("", include("website.urls")),

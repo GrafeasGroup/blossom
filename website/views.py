@@ -1,12 +1,11 @@
-from typing import Any, Dict, Union
+from typing import Any, Dict
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import HttpResponseRedirect, redirect, render, reverse
-from django.views.generic import DetailView, TemplateView, UpdateView, View
+from django.views.generic import DetailView, TemplateView, UpdateView
 
-from api.models import Transcription
-from utils.mixins import CSRFExemptMixin, GrafeasStaffRequired
+from utils.mixins import GrafeasStaffRequired
 from website.forms import AddUserForm, PostAddForm
 from website.helpers import get_additional_context
 from website.models import Post
@@ -107,60 +106,6 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
             new_post.author = request.user
             new_post.save()
             return HttpResponseRedirect(f"{new_post.get_absolute_url()}edit")
-
-
-class PracticeTranscription(CSRFExemptMixin, View):
-    """
-    A page to practice writing transcriptions.
-
-    This view consists of three pages:
-    * the welcome page where you can set how long of a transcription that
-        you want to attempt
-    * the writing page with the content to transcribe
-    * the original transcription so that folks can look at the differences
-
-    QSP:
-    &transcription_id -- the source transcription with practice page
-    &new -- get a new transcription and re-render page
-
-    Example urls:
-    * GET /practice/ -> welcome page
-    * GET /practice/?transcription_id=4 -> practice page
-    * POST /practice/?transcription_id=4 -> show attempt and original
-    """
-
-    def get_preapproved_transcription(self) -> Union[Transcription, None]:
-        """Return a specific transcription for use."""
-        PREAPPROVED = [
-            15372,  # image description
-            15373,  # text messages
-            101816,  # youtube comment
-            21400,  # twitter
-            20085,  # image of text
-            102619,  # twitter
-        ]
-        # TODO: actually write this logic instead of making the linter happy
-        PREAPPROVED[0]
-
-    def get(self, request: HttpRequest) -> HttpResponse:
-        """Choose appropriate practice page and render it."""
-        context = get_additional_context()
-
-        # if transcription_id := request.GET.get('transcription_id'):
-        #     # convert the page to the version with the text fields
-        #     transcription = get_object_or_404(Transcription, id=transcription_id)
-        #     context.update(
-        #         {
-        #             'transcription': transcription,
-        #             'source_url': transcription.submission.content_url
-        #         }
-        #     )
-
-        return render(request, "website/practice.html", context)
-
-    def post(self, request: HttpRequest) -> None:
-        """Post things."""
-        ...
 
 
 class AdminView(GrafeasStaffRequired, TemplateView):

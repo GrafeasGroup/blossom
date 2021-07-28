@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     # blossom internal apps
     "blossom",
+    "app",
     "api",
     "authentication",
     "engineeringblog",

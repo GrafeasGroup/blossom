@@ -15,7 +15,6 @@ urlpatterns = [
     path("posts/<str:slug>/", views.PostDetail.as_view(), name="post_detail"),
     path("newpost", views.PostAdd.as_view(), name="post_create"),
     path("posts/<str:slug>/edit/", views.PostUpdate.as_view(), name="post_update",),
-    path("practice/", views.PracticeTranscription.as_view(), name="practice"),
     path("admin/", views.AdminView.as_view(), name="admin_view"),
 ]
 

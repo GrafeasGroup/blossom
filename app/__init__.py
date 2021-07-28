@@ -1,0 +1,1 @@
+"""The transcription app."""
