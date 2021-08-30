@@ -1,10 +1,30 @@
 """Models used within the Authentication application."""
-from django.contrib.auth.models import AbstractUser
+from typing import Any
+
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.db.models import QuerySet
 from django.utils import timezone
 from rest_framework_api_key.models import APIKey
 
 from api.models import Submission
+
+
+class BlossomUserManager(UserManager):
+    # https://stackoverflow.com/a/7774039
+    def filter(self, **kwargs: Any) -> QuerySet:
+        """Override `filter` to make usernames case insensitive."""
+        if "username" in kwargs:
+            kwargs["username__iexact"] = kwargs["username"]
+            del kwargs["username"]
+        return super().filter(**kwargs)
+
+    def get(self, **kwargs: Any) -> QuerySet:
+        """Override `get` to make usernames case insensitive."""
+        if "username" in kwargs:
+            kwargs["username__iexact"] = kwargs["username"]
+            del kwargs["username"]
+        return super().get(**kwargs)
 
 
 class BlossomUser(AbstractUser):
@@ -43,6 +63,8 @@ class BlossomUser(AbstractUser):
     # Whether the user is blacklisted; if so, all bots will refuse to interact
     # with this user.
     blacklisted = models.BooleanField(default=False)
+
+    objects = BlossomUserManager()
 
     @property
     def gamma(self) -> int:
