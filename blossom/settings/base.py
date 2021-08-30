@@ -35,7 +35,7 @@ SECRET_KEY = os.environ.get("BLOSSOM_SECRET_KEY", default_secret_key)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["staging.grafeas.org", ".grafeas.org", "grafeas.org"]
+ALLOWED_HOSTS = ["staging.grafeas.org", ".grafeas.org", "grafeas.org", "170.187.156.84"]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
