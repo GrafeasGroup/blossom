@@ -340,7 +340,7 @@ class TestVolunteerAssortedFunctions:
         assert result.json()["results"][1]["username"] == "AAA"
 
     def test_list_with_filters(self, client: Client) -> None:
-        """Verify that listing all submissions works correctly."""
+        """Verify that listing all volunteers works correctly."""
         client, headers, user = setup_user_client(client)
 
         create_user(username="A")
@@ -373,6 +373,22 @@ class TestVolunteerAssortedFunctions:
 
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == 0
+
+    def test_case_insensitive_list_with_filter(self, client: Client) -> None:
+        """Verify that listing all volunteers really works correctly."""
+        client, headers, user = setup_user_client(client)
+
+        create_user(username="A")
+
+        result = client.get(
+            reverse("volunteer-list") + "?username=a",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 1
+        assert result.json()["results"][0]["username"] == "A"
 
     def test_edit_volunteer(self, client: Client) -> None:
         """Test whether an edit of a user is propagated correctly."""

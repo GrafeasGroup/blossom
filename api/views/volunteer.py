@@ -27,6 +27,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from api.authentication import BlossomApiPermission
+from api.filters import CaseInsensitiveUsernameFilter
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.pagination import StandardResultsSetPagination
@@ -51,8 +52,8 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     serializer_class = VolunteerSerializer
     basename = "volunteer"
     permission_classes = (BlossomApiPermission,)
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["id", "username", "is_volunteer", "accepted_coc", "blacklisted"]
+    filter_backends = [CaseInsensitiveUsernameFilter, DjangoFilterBackend]
+    filterset_fields = ["id", "is_volunteer", "accepted_coc", "blacklisted"]
 
     @csrf_exempt
     @swagger_auto_schema(

@@ -30,3 +30,13 @@ class TimeFilter(BaseFilterBackend):
                 pass
 
         return queryset.filter(filters)
+
+
+class CaseInsensitiveUsernameFilter(BaseFilterBackend):
+    def filter_queryset(
+        self, request: Request, queryset: QuerySet, view: View
+    ) -> QuerySet:
+        """Filter by username using the __iexact query method."""
+        if username := request.query_params.get("username"):
+            queryset = queryset.filter(username__iexact=username)
+        return queryset
