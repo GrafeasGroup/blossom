@@ -77,6 +77,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         "claimed_by",
         "completed_by",
         "source",
+        "title",
         "url",
         "tor_url",
         "archived",
@@ -85,6 +86,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     ]
     ordering_fields = [
         "id",
+        "title",
         "create_time",
         "last_update_time",
         "claim_time",
