@@ -1,10 +1,11 @@
+import json
 import time
 from datetime import datetime
 from typing import Dict, List, Optional, TypedDict
 
 from psaw import PushshiftAPI
 
-BATCH_SIZE = 20
+from bootstrap import BATCH_SIZE, REDIS_DATA_PATH, USER_BLACKLIST, USER_WHITELIST
 
 push = PushshiftAPI()
 
@@ -28,7 +29,7 @@ class SubmissionData(TypedDict):
     url: str
 
 
-class DataEntry(TypedDict):
+class RedditEntry(TypedDict):
     done_comment: Optional[CommentData]
     tor_submission: Optional[SubmissionData]
     partner_submission: Optional[SubmissionData]
@@ -37,7 +38,24 @@ class DataEntry(TypedDict):
     transcriptions: Optional[List[CommentData]]
 
 
-Data = Dict[str, DataEntry]
+RedditData = Dict[str, RedditEntry]
+
+
+class RedisEntry(TypedDict):
+    username: str
+    transcriptions: int
+    posts_completed: List[str]
+
+
+RedisData = Dict[str, RedisEntry]
+
+
+def main():
+    redis_data = get_redis_data()
+    done_ids = []
+    for user in redis_data:
+        done_ids += redis_data[user]["posts_completed"]
+    process_done_ids(done_ids)
 
 
 def process_done_ids(done_ids: List[str]):
@@ -59,8 +77,27 @@ def process_done_ids(done_ids: List[str]):
     print(f"DONE in {dur:.2f} s ({dur/len(done_ids):.2f} s avg).")
 
 
+def get_redis_data() -> RedisData:
+    """Get the Redis data to process."""
+    with open(REDIS_DATA_PATH, "r") as redis_file:
+        # Load the redis data
+        redis_text = redis_file.read()
+        redis_data: RedisData = json.loads(redis_text)
+
+        # Filter the data
+        if USER_WHITELIST is not None:
+            redis_data = {k: v for k, v in redis_data.items() if k in USER_WHITELIST}
+        if USER_BLACKLIST is not None:
+            redis_data = {
+                k: v for k, v in redis_data.items() if k not in USER_BLACKLIST
+            }
+
+        return redis_data
+
+
 def process_done_batch(done_ids: List[str]):
-    data: Dict[str, DataEntry] = {}
+    print(f"Processing {', '.join(done_ids)}")
+    data: Dict[str, RedditEntry] = {}
     for done_id in done_ids:
         data[done_id] = {
             "done_comment": None,
@@ -81,7 +118,7 @@ def process_done_batch(done_ids: List[str]):
     fetch_transcriptions(data)
 
 
-def fetch_done_comments(data: Data) -> Data:
+def fetch_done_comments(data: RedditData) -> RedditData:
     print("Fetching done comments...", end=" ")
     start = time.time()
     done_ids = [done_id for done_id in data]
@@ -100,7 +137,7 @@ def fetch_done_comments(data: Data) -> Data:
     return data
 
 
-def fetch_tor_submissions(data: Data) -> Data:
+def fetch_tor_submissions(data: RedditData) -> RedditData:
     print("Fetching ToR submissions...", end=" ")
     start = time.time()
     done_comments = [data[done_id]["done_comment"] for done_id in data]
@@ -128,7 +165,7 @@ def fetch_tor_submissions(data: Data) -> Data:
     return data
 
 
-def fetch_partner_submissions(data: Data) -> Data:
+def fetch_partner_submissions(data: RedditData) -> RedditData:
     print("Fetching partner submissions...", end=" ")
     start = time.time()
     partner_submissions = [data[done_id]["tor_submission"] for done_id in data]
@@ -165,7 +202,7 @@ def fetch_partner_submissions(data: Data) -> Data:
     return data
 
 
-def fetch_claim_comment(data: Data) -> Data:
+def fetch_claim_comment(data: RedditData) -> RedditData:
     print("Fetching claim comment...", end=" ")
     start = time.time()
     found_count = 0
@@ -195,7 +232,7 @@ def fetch_claim_comment(data: Data) -> Data:
     return data
 
 
-def fetch_ocr_transcriptions(data: Data) -> Data:
+def fetch_ocr_transcriptions(data: RedditData) -> RedditData:
     print("Fetching OCR transcriptions...", end=" ")
     start = time.time()
     found_count = 0
@@ -224,7 +261,7 @@ def fetch_ocr_transcriptions(data: Data) -> Data:
     return data
 
 
-def fetch_transcriptions(data: Data) -> Data:
+def fetch_transcriptions(data: RedditData) -> RedditData:
     print("Fetching transcriptions...", end=" ")
     start = time.time()
     found_count = 0
@@ -280,181 +317,4 @@ def extract_submission_id_from_url(url: str) -> str:
     return url.split("/")[6]
 
 
-process_done_ids(
-    [
-        "eje5ndq",
-        "eje65me",
-        "eje6f1y",
-        "eje743p",
-        "eje7tsx",
-        "eje8fjf",
-        "ejeb6r8",
-        "ejebabk",
-        "ejebfcb",
-        "ejebnh0",
-        "ejebs30",
-        "ejebwk5",
-        "ejec2c6",
-        "ejec8ik",
-        "ejgeoqa",
-        "ejgewef",
-        "ejgffh7",
-        "ejgfrn5",
-        "ejh30n1",
-        "ejh36hq",
-        "ejh3edh",
-        "ejh3pgj",
-        "ejh3vdb",
-        "ejh4bso",
-        "ejj6lda",
-        "ejj6sam",
-        "ejj6xp4",
-        "ejj71gw",
-        "ejj78i3",
-        "ejj7k2x",
-        "ejj7ujj",
-        "ejjgasl",
-        "ejjghwm",
-        "ejjgqra",
-        "ejm5uca",
-        "ejm696s",
-        "ejm6fw2",
-        "ejm6nqc",
-        "ejm6u1m",
-        "ejm74g0",
-        "ejm7bap",
-        "ejm7fxs",
-        "ejm7mhs",
-        "ejm7sta",
-        "ejmsa4f",
-        "ejmsfjs",
-        "ejmskpm",
-        "ejmsunp",
-        "ejmsz59",
-        "ejmt35a",
-        "ejmtn3e",
-        "ejmts2u",
-        "ejp3sen",
-        "ejp3x05",
-        "ejp4155",
-        "ejpnmld",
-        "ejpnpkn",
-        "ejpnwsc",
-        "ejpo29e",
-        "ejpoh2a",
-        "ejpon0x",
-        "ejpoq6h",
-        "ejpospn",
-        "ejpouu7",
-        "ejpp0ex",
-        "ejpp5gp",
-        "ejpt7j9",
-        "ejptcvo",
-        "ejptjg0",
-        "ejptmcu",
-        "ejptp5q",
-        "ejpts42",
-        "ejptubk",
-        "ejptxuk",
-        "ejpu3q2",
-        "ejpu7vp",
-        "ejpubj0",
-        "ejpufcf",
-        "ejpukrr",
-        "ejpun2d",
-        "ejpupy3",
-        "ejpurnw",
-        "ejpuup7",
-        "ejpuxkq",
-        "ejpv0ju",
-        "ejpv28f",
-        "ejpv4l8",
-        "ejpv8zm",
-        "ejpvddj",
-        "ejpvfsu",
-        "ejpvgvf",
-        "ejpvkt0",
-        "ejpvni9",
-        "ejpvoaz",
-        "ejpvy1g",
-        "ejpvz8u",
-        "ejpw2d1",
-        "ejpw6zq",
-        "ejpwbue",
-        "ejpweaf",
-        "ejpwg7u",
-        "ejpwj5p",
-        "ejpwk3x",
-        "ejpwmb3",
-        "ejpwoa6",
-        "ejpwpm0",
-        "ejqnl2z",
-        "ejqnqzo",
-        "ejqo1lt",
-        "ejqofgt",
-        "ejqojs9",
-        "ejqoqle",
-        "ejqoudb",
-        "ejqp04m",
-        "ejqpahd",
-        "ejqpipw",
-        "ejqpndj",
-        "ejqpxvo",
-        "ejqq2ad",
-        "ejqq9jy",
-        "ejqqgj2",
-        "ejqqm3p",
-        "ejqqqa2",
-        "ejqqwy0",
-        "ejqr1d3",
-        "ejqrb3t",
-        "ejqrhgv",
-        "ejqrkdp",
-        "ejqrq9p",
-        "ejqruh5",
-        "ejqrz3p",
-        "ejqs2cq",
-        "ejqs6fw",
-        "ejqs9w6",
-        "ejqshg1",
-        "ejqsm8p",
-        "ejqsrwp",
-        "ejqt2nv",
-        "ejqt7b0",
-        "ejqtblx",
-        "ejqtjej",
-        "ejqu6t8",
-        "ejqyafq",
-        "ejqyfy5",
-        "ejqyisf",
-        "ejqyn1b",
-        "ejqyv97",
-        "ejqz18x",
-        "ejqz8e3",
-        "ejqzjd4",
-        "ejr3623",
-        "ejr39bb",
-        "ejr3e6w",
-        "ejr3mdm",
-        "ejr3q0d",
-        "ejr4ydl",
-        "ejr5396",
-        "ejr57ow",
-        "ejr5eq0",
-        "ejr5q4o",
-        "ejr5t8l",
-        "ejr85r7",
-        "ejr88vd",
-        "ejr8fgi",
-        "ejr8mt7",
-        "ejr9d4w",
-        "ejr9h4y",
-        "ejritq8",
-        "ejrivh5",
-        "ejrizhx",
-        "ejrj4dk",
-        "ejrj9n7",
-        "ejrjel3",
-        "ejrjib9",
-    ]
-)
+main()
