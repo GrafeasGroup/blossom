@@ -32,7 +32,8 @@ class DataEntry(TypedDict):
     done_comment: Optional[CommentData]
     tor_submission: Optional[SubmissionData]
     partner_submission: Optional[SubmissionData]
-    tor_comments: Optional[List[CommentData]]
+    claim_comment: Optional[CommentData]
+    ocr_transcriptions: Optional[List[CommentData]]
     transcriptions: Optional[List[CommentData]]
 
 
@@ -65,7 +66,8 @@ def process_done_batch(done_ids: List[str]):
             "done_comment": None,
             "tor_submission": None,
             "partner_submission": None,
-            "tor_comments": None,
+            "claim_comment": None,
+            "ocr_transcriptions": None,
             "transcriptions": None,
         }
 
@@ -74,7 +76,8 @@ def process_done_batch(done_ids: List[str]):
     fetch_tor_submissions(data)
     fetch_partner_submissions(data)
     # Next we need to do the individual calls
-    fetch_tor_comments(data)
+    fetch_claim_comment(data)
+    fetch_ocr_transcriptions(data)
     fetch_transcriptions(data)
 
 
@@ -162,8 +165,8 @@ def fetch_partner_submissions(data: Data) -> Data:
     return data
 
 
-def fetch_tor_comments(data: Data) -> Data:
-    print("Fetching ToR comments...", end=" ")
+def fetch_claim_comment(data: Data) -> Data:
+    print("Fetching claim comment...", end=" ")
     start = time.time()
     found_count = 0
     not_found_count = 0
@@ -171,12 +174,47 @@ def fetch_tor_comments(data: Data) -> Data:
         done = data[done_id]["done_comment"]
         if done is None:
             continue
-        tor_comments = list(
-            push.search_comments(link_id=done["link_id"], filter=comment_filter)
+        claim_comments = list(
+            push.search_comments(
+                link_id=done["link_id"],
+                author=done["author"],
+                q="claim",
+                limit=1,
+                filter=comment_filter,
+            )
         )
-        tor_comments = [dict_from_comment(tor_com) for tor_com in tor_comments]
-        if len(tor_comments) > 0:
-            data[done_id]["tor_comments"] = tor_comments
+        claim_comments = [dict_from_comment(claim) for claim in claim_comments]
+        if len(claim_comments) > 0:
+            data[done_id]["claim_comment"] = claim_comments[0]
+            found_count += 1
+        else:
+            not_found_count += 1
+
+    dur = time.time() - start
+    print(f"{found_count}/{found_count + not_found_count} found in {dur:.2f} s.")
+    return data
+
+
+def fetch_ocr_transcriptions(data: Data) -> Data:
+    print("Fetching OCR transcriptions...", end=" ")
+    start = time.time()
+    found_count = 0
+    not_found_count = 0
+    for done_id in data:
+        done = data[done_id]["done_comment"]
+        if done is None:
+            continue
+        ocr_transcriptions = list(
+            push.search_comments(
+                link_id=done["link_id"],
+                author="transcribot",
+                q='-"It looks like there\'s text in this image."',
+                filter=comment_filter,
+            )
+        )
+        ocr_transcriptions = [dict_from_comment(ocr) for ocr in ocr_transcriptions]
+        if len(ocr_transcriptions) > 0:
+            data[done_id]["ocr_transcriptions"] = ocr_transcriptions
             found_count += 1
         else:
             not_found_count += 1
