@@ -160,15 +160,19 @@ def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
     return filtered_ids
 
 
-def submit_data(data: RedditData):
+def submit_data_to_blossom(data: RedditData):
     """Submit the fetched data to Blossom."""
     grouped_data = group_data_by_author(data)
     for username in grouped_data:
         user_data = grouped_data[username]
+        user_data_list = [v for k, v in user_data.items()]
         dummy_subs = get_dummy_submissions(username, len(user_data))
+        for blossom_submission, entry in zip(dummy_subs, user_data_list):
+            submit_entry_to_blossom(blossom_submission, entry)
 
 
-def submit_entry(blossom_submission: Dict, entry: RedditEntry):
+def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
+    """Submit a single data entry to Blossom."""
     blossom_id = blossom_submission["id"]
 
     claim = entry["claim_comment"]
