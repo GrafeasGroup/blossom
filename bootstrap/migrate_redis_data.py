@@ -1,7 +1,7 @@
 import json
 import time
 from datetime import datetime
-from typing import Dict, List, Optional, TypedDict
+from typing import Dict, List, Optional, Tuple, TypedDict, Union
 
 from blossom_wrapper import BlossomStatus
 from psaw import PushshiftAPI
@@ -37,6 +37,7 @@ class SubmissionData(TypedDict):
 
 
 class RedditEntry(TypedDict):
+    username: str
     done_comment: Optional[CommentData]
     tor_submission: Optional[SubmissionData]
     partner_submission: Optional[SubmissionData]
@@ -56,16 +57,21 @@ class RedisEntry(TypedDict):
 
 RedisData = Dict[str, RedisEntry]
 
+# A tuple of username and done ID
+DoneData = Tuple[str, str]
+
 
 def main():
     redis_data = get_redis_data()
-    done_ids = []
+    done_data: List[DoneData] = []
     for user in redis_data:
-        done_ids += redis_data[user]["posts_completed"]
-    process_done_ids(done_ids)
+        done_data += [
+            (user, done_id) for done_id in redis_data[user]["posts_completed"]
+        ]
+    process_done_ids(done_data)
 
 
-def process_done_ids(done_ids: List[str]):
+def process_done_ids(done_data: List[DoneData]):
     """Process the list of IDs saved in Redis.
 
     Every ID belongs to a Reddit "done" comment.
@@ -73,19 +79,19 @@ def process_done_ids(done_ids: List[str]):
     all_start = time.time()
     cur_index = 0
     # Process the comments in batches (we merge some of the API calls)
-    while cur_index < len(done_ids):
-        print(f"====== {cur_index}/{len(done_ids)} ======")
-        cur_batch = done_ids[cur_index : cur_index + BATCH_SIZE]
+    while cur_index < len(done_data):
+        print(f"====== {cur_index}/{len(done_data)} ======")
+        cur_batch = done_data[cur_index : cur_index + BATCH_SIZE]
         start = time.time()
         process_done_batch(cur_batch)
         dur = time.time() - start
-        avg_dur = dur / (min(len(done_ids), cur_index + BATCH_SIZE) - cur_index)
+        avg_dur = dur / (min(len(done_data), cur_index + BATCH_SIZE) - cur_index)
         print(f"Done in {dur:.2f} s ({avg_dur:.2f} s avg).")
         cur_index += BATCH_SIZE
 
     dur = time.time() - all_start
-    print(f"====== {len(done_ids)}/{len(done_ids)} ======")
-    print(f"DONE in {dur:.2f} s ({dur/len(done_ids):.2f} s avg).")
+    print(f"====== {len(done_data)}/{len(done_data)} ======")
+    print(f"DONE in {dur:.2f} s ({dur/len(done_data):.2f} s avg).")
 
 
 def get_redis_data() -> RedisData:
@@ -106,15 +112,16 @@ def get_redis_data() -> RedisData:
         return redis_data
 
 
-def process_done_batch(done_ids: List[str]):
+def process_done_batch(done_data: List[DoneData]):
     """Process a batch of IDs saved in Redis.
 
     Every ID is the Reddit ID of a "done" comment.
     """
-    done_ids = filter_processed_ids(done_ids)
+    done_data = filter_processed_ids(done_data)
     data: Dict[str, RedditEntry] = {}
-    for done_id in done_ids:
+    for username, done_id in done_data:
         data[done_id] = {
+            "username": username,
             "done_comment": None,
             "tor_submission": None,
             "partner_submission": None,
@@ -133,7 +140,7 @@ def process_done_batch(done_ids: List[str]):
     fetch_transcriptions(data)
 
 
-def filter_processed_ids(done_ids: List[str]) -> List[str]:
+def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
     """Filters out the IDs that have already been processed before.
 
     This can be determined by checking if a submission already has
@@ -141,15 +148,45 @@ def filter_processed_ids(done_ids: List[str]) -> List[str]:
     """
     print("Skipping processed IDs...", end=" ")
     start = time.time()
-    filtered_ids = []
-    for done_id in done_ids:
+    filtered_ids: List[DoneData] = []
+    for username, done_id in done_data:
         response = blossom.get_submission(redis_id=done_id)
         if response.status == BlossomStatus.not_found:
-            filtered_ids.append(done_id)
+            filtered_ids.append((username, done_id))
 
     dur = time.time() - start
-    print(f"{len(filtered_ids)}/{len(done_ids)} need processing in {dur:.2f} s.")
+    print(f"{len(filtered_ids)}/{len(done_data)} need processing in {dur:.2f} s.")
     return filtered_ids
+
+
+def submit_data(data: RedditData):
+    """Submit the fetched data to Blossom."""
+    pass
+
+
+BlossomSubmission = Dict[str, Union[str, bool, int]]
+
+
+def get_dummy_submissions(author: str, count: int) -> List[BlossomSubmission]:
+    """Get the given number of dummy submissions for the given author."""
+    # Get the author ID
+    author_response = blossom.get_user(author)
+    if author_response.status != BlossomStatus.ok:
+        return []
+    author_id = author_response.data["id"]
+
+    # Get dummy submissions from the author
+    example_url = "https://example.com"
+    dummy_response = blossom.get_submission(
+        completed_by=author_id,
+        url=example_url,
+        tor_url=example_url,
+        content_url=example_url,
+        page_size=count,
+    )
+    if dummy_response.status != BlossomStatus.ok:
+        return []
+    return dummy_response.data
 
 
 def fetch_done_comments(data: RedditData) -> RedditData:
