@@ -16,7 +16,7 @@ from bootstrap import (
 
 push = PushshiftAPI()
 
-comment_filter = ["author", "body", "created_utc", "id", "link_id"]
+comment_filter = ["author", "body", "created_utc", "id", "link_id", "permalink"]
 submission_filter = ["created_utc", "id", "permalink", "title", "url"]
 
 
@@ -26,6 +26,7 @@ class CommentData(TypedDict):
     created_utc: datetime
     id: str
     link_id: str
+    permalink: str
 
 
 class SubmissionData(TypedDict):
@@ -168,11 +169,14 @@ def submit_data(data: RedditData):
 
 
 def submit_entry(blossom_submission: Dict, entry: RedditEntry):
+    blossom_id = blossom_submission["id"]
+
     claim = entry["claim_comment"]
     done = entry["done_comment"]
     tor_sub = entry["tor_submission"]
     partner_sub = entry["partner_submission"]
-    ocr_transcription = entry["ocr_transcriptions"]
+    transcriptions = entry["transcriptions"]
+    ocr_transcriptions = entry["ocr_transcriptions"]
 
     if done is None:
         return
@@ -181,7 +185,7 @@ def submit_entry(blossom_submission: Dict, entry: RedditEntry):
     original_id = (
         partner_sub["id"]
         if partner_sub
-        else extract_submission_id_from_url(tor_sub["url"])
+        else extract_id_from_reddit_url(tor_sub["url"])
         if tor_sub
         else None
     )
@@ -194,20 +198,20 @@ def submit_entry(blossom_submission: Dict, entry: RedditEntry):
     )
     claim_time = claim["created_utc"] if claim else done["created_utc"]
     complete_time = done["created_utc"]
-    url = f'https://reddit.com/{partner_sub["permalink"]}' if partner_sub else None
-    tor_url = f'https://reddit.com/{tor_sub["permalink"]}' if tor_sub else None
+    url = "https://reddit.com/" + partner_sub["permalink"] if partner_sub else None
+    tor_url = "https://reddit.com/" + tor_sub["permalink"] if tor_sub else None
     content_url = partner_sub["url"] if partner_sub else None
     archived = True
-    cannot_ocr = ocr_transcription is None
+    cannot_ocr = ocr_transcriptions is None or len(ocr_transcriptions) == 0
     redis_id = done["id"]
 
     blossom.patch(
-        f'submission/{blossom_submission["id"]}',
+        f"submission/{blossom_id}",
         {
             "original_id": original_id,
-            "create_time": create_time,
-            "claim_time": claim_time,
-            "complete_time": complete_time,
+            "create_time": create_time.isoformat(),
+            "claim_time": claim_time.isoformat(),
+            "complete_time": complete_time.isoformat(),
             "url": url,
             "tor_url": tor_url,
             "content_url": content_url,
@@ -216,6 +220,45 @@ def submit_entry(blossom_submission: Dict, entry: RedditEntry):
             "redis_id": redis_id,
         },
     )
+
+    if transcriptions and len(transcriptions) > 0:
+        # Patch/Create the transcription too
+        transcription_text = "\n\n".join([tr["body"] for tr in transcriptions])
+
+        ocr_data = {
+            "author": entry["username"],
+            "submission": blossom_id,
+            "create_time": transcriptions[0]["created_utc"].isoformat(),
+            "original_id": transcriptions[0]["id"],
+            "url": "https://reddit.com/" + transcriptions[0]["permalink"],
+            "text": transcription_text,
+            "removed_from_reddit": False,
+        }
+
+        if len(blossom_submission["transcription_set"]) > 0:
+            # We already have a dummy transcription, patch it
+            transcription_id = extract_id_from_grafeas_url(
+                blossom_submission["transcription_set"][0]
+            )
+            blossom.patch(f"transcription/{transcription_id}", data=ocr_data)
+        else:
+            # No transcription yet, create a new one
+            blossom.post("transcription", data=ocr_data)
+
+    if ocr_transcriptions and len(ocr_transcriptions) > 0:
+        # Create the OCR transcription too
+        ocr_text = "\n\n".join([ocr["body"] for ocr in ocr_transcriptions])
+
+        ocr_data = {
+            "submission": blossom_id,
+            "create_time": ocr_transcriptions[0]["created_utc"].isoformat(),
+            "original_id": ocr_transcriptions[0]["id"],
+            "url": "https://reddit.com/" + ocr_transcriptions[0]["permalink"],
+            "text": ocr_text,
+            "removed_from_reddit": False,
+        }
+
+        blossom.post("transcription", data=ocr_data)
 
 
 GroupedRedditData = Dict[str, RedditData]
@@ -331,7 +374,7 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
         sub["url"] for sub in partner_submissions if sub is not None
     ]
     partner_submission_ids = [
-        extract_submission_id_from_url(url) for url in partner_submission_urls
+        extract_id_from_reddit_url(url) for url in partner_submission_urls
     ]
     partner_submissions = list(
         push.search_submissions(
@@ -348,7 +391,7 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
         matching_subs = [
             p_sub
             for p_sub in partner_submissions
-            if p_sub["id"] == extract_submission_id_from_url(tor_sub["url"])
+            if p_sub["id"] == extract_id_from_reddit_url(tor_sub["url"])
         ]
         if len(matching_subs) > 0:
             data[done_id]["partner_submission"] = matching_subs[0]
@@ -480,6 +523,7 @@ def dict_from_comment(comment) -> CommentData:
         "created_utc": datetime.utcfromtimestamp(comment[2]),
         "id": comment[3],
         "link_id": comment[4],
+        "permalink": comment[5],
     }
 
 
@@ -499,8 +543,19 @@ def dict_from_submission(submission) -> SubmissionData:
     }
 
 
-def extract_submission_id_from_url(url: str) -> str:
-    """Extracts the Reddit ID from a submission URL.
+def extract_id_from_grafeas_url(url: str) -> str:
+    """Extract the ID from a Grafeas URL.
+
+    An URL looks like this:
+    https://grafeas.org/api/transcription/1957/
+    This ID of this URL would be 1957.
+    """
+    return url.split("/")[-2]
+
+
+def extract_id_from_reddit_url(url: str) -> str:
+    """Extract the Reddit ID from a submission URL.
+
     An URL looks like this:
     https://reddit.com/r/CuratedTumblr/comments/nybt3m/medieval_medicines_and_superbugs/
     The ID of this URL would be "nybt3m".
