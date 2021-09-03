@@ -171,6 +171,21 @@ def submit_data_to_blossom(data: RedditData):
             submit_entry_to_blossom(blossom_submission, entry)
 
 
+def extract_title_from_tor_title(tor_title: str) -> Optional[str]:
+    """Extract the submission title from the title of the ToR submission.
+
+    Example of a ToR title:
+        AreTheStraightsOK | Image | "This straight dude is not okay / found on fb"
+    The submission title would be the following:
+        This straight dude is not okay / found on fb
+    """
+    parts = tor_title.split("|")
+    if len(parts) != 3:
+        return None
+    # Remove spaces and the quotation marks
+    return parts[2].strip(' "')
+
+
 def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
     """Submit a single data entry to Blossom."""
     blossom_id = blossom_submission["id"]
@@ -199,6 +214,13 @@ def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
         else tor_sub["created_utc"]
         if tor_sub
         else done["created_utc"]
+    )
+    title = (
+        partner_sub["title"]
+        if partner_sub
+        else extract_title_from_tor_title(tor_sub["title"])
+        if tor_sub
+        else None
     )
     claim_time = claim["created_utc"] if claim else done["created_utc"]
     complete_time = done["created_utc"]
