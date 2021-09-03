@@ -66,6 +66,10 @@ def main():
 
 
 def process_done_ids(done_ids: List[str]):
+    """Process the list of IDs saved in Redis.
+
+    Every ID belongs to a Reddit "done" comment.
+    """
     all_start = time.time()
     cur_index = 0
     # Process the comments in batches (we merge some of the API calls)
@@ -103,6 +107,10 @@ def get_redis_data() -> RedisData:
 
 
 def process_done_batch(done_ids: List[str]):
+    """Process a batch of IDs saved in Redis.
+
+    Every ID is the Reddit ID of a "done" comment.
+    """
     done_ids = filter_processed_ids(done_ids)
     data: Dict[str, RedditEntry] = {}
     for done_id in done_ids:
@@ -145,6 +153,12 @@ def filter_processed_ids(done_ids: List[str]) -> List[str]:
 
 
 def fetch_done_comments(data: RedditData) -> RedditData:
+    """Fetch the done comment from Pushshift.
+
+    We can fetch multiple comments at the same time.
+    Example:
+    https://api.pushshift.io/reddit/comment/search?ids=h1jacqk&fields=author,body,link_id,created_utc
+    """
     print("Fetching done comments...", end=" ")
     start = time.time()
     done_ids = [done_id for done_id in data]
@@ -164,6 +178,12 @@ def fetch_done_comments(data: RedditData) -> RedditData:
 
 
 def fetch_tor_submissions(data: RedditData) -> RedditData:
+    """Fetch the ToR submission from Pushshift.
+
+    We can fetch multiple submissions at the same time.
+    Example:
+    https://api.pushshift.io/reddit/submission/search?ids=t3_nybvr3&fields=id,url,created_utc,permalink
+    """
     print("Fetching ToR submissions...", end=" ")
     start = time.time()
     done_comments = [data[done_id]["done_comment"] for done_id in data]
@@ -192,6 +212,12 @@ def fetch_tor_submissions(data: RedditData) -> RedditData:
 
 
 def fetch_partner_submissions(data: RedditData) -> RedditData:
+    """Fetches the partner submission from Pushshift.
+
+    We can fetch multiple submissions at the same time.
+    Example:
+    https://api.pushshift.io/reddit/submission/search?ids=nybt3m&fields=id,url,title,created_utc,permalink
+    """
     print("Fetching partner submissions...", end=" ")
     start = time.time()
     partner_submissions = [data[done_id]["tor_submission"] for done_id in data]
@@ -229,6 +255,13 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
 
 
 def fetch_claim_comment(data: RedditData) -> RedditData:
+    """Fetch the claim comment from Pushshift.
+
+    A claim comment is a comment made on the ToR submission by the author of the done
+    and contains the phrase "claim".
+    Example:
+    https://api.pushshift.io/reddit/comment/search?link_id=t3_nybvr3&author=Tim3303&fields=author,body,link_id,created_utc&q=claim
+    """
     print("Fetching claim comment...", end=" ")
     start = time.time()
     found_count = 0
@@ -259,6 +292,13 @@ def fetch_claim_comment(data: RedditData) -> RedditData:
 
 
 def fetch_ocr_transcriptions(data: RedditData) -> RedditData:
+    """Fetch the OCR transcription from Pushshift.
+
+    An OCR transcription is a comment on the ToR submission which is made by u/transcribot
+    and doesn't contain the phrase "It looks like there's text in this image".
+    Example:
+    https://api.pushshift.io/reddit/comment/search?link_id=t3_nybvr3&author=transcribot&fields=author,body,link_id,created_utc&q=-%22It%20looks%20like%20there%27s%20text%20in%20this%20image.%22
+    """
     print("Fetching OCR transcriptions...", end=" ")
     start = time.time()
     found_count = 0
@@ -288,6 +328,13 @@ def fetch_ocr_transcriptions(data: RedditData) -> RedditData:
 
 
 def fetch_transcriptions(data: RedditData) -> RedditData:
+    """Fetch the transcription comments from Pushshift.
+
+    Transcription comments are comments made on the partner submission by the
+    author of the done comment. They have to contain the link to the ToR FAQ.
+    Example:
+    https://api.pushshift.io/reddit/comment/search?link_id=nybt3m&author=Tim3303&fields=author,body,link_id,created_utc&q=https://www.reddit.com/r/TranscribersOfReddit/wiki
+    """
     print("Fetching transcriptions...", end=" ")
     start = time.time()
     found_count = 0
@@ -315,6 +362,12 @@ def fetch_transcriptions(data: RedditData) -> RedditData:
 
 
 def dict_from_comment(comment) -> CommentData:
+    """Convert the Pushshift data of a comment to a dict.
+
+    We get a tuple-like struct with the keys of the fields sorted alphabetically.
+    There is probably an easier way to access the data, but the documentation
+    is minimal.
+    """
     return {
         "author": comment[0],
         "body": comment[1],
@@ -325,6 +378,12 @@ def dict_from_comment(comment) -> CommentData:
 
 
 def dict_from_submission(submission) -> SubmissionData:
+    """Convert the Pushshift data of a submission to a dict.
+
+    We get a tuple-like struct with the keys of the fields sorted alphabetically.
+    There is probably an easier way to access the data, but the documentation
+    is minimal.
+    """
     return {
         "created_utc": datetime.utcfromtimestamp(submission[0]),
         "id": submission[1],
