@@ -3,9 +3,16 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional, TypedDict
 
+from blossom_wrapper import BlossomStatus
 from psaw import PushshiftAPI
 
-from bootstrap import BATCH_SIZE, REDIS_DATA_PATH, USER_BLACKLIST, USER_WHITELIST
+from bootstrap import (
+    BATCH_SIZE,
+    REDIS_DATA_PATH,
+    USER_BLACKLIST,
+    USER_WHITELIST,
+    blossom,
+)
 
 push = PushshiftAPI()
 
@@ -96,7 +103,7 @@ def get_redis_data() -> RedisData:
 
 
 def process_done_batch(done_ids: List[str]):
-    print(f"Processing {', '.join(done_ids)}")
+    done_ids = filter_processed_ids(done_ids)
     data: Dict[str, RedditEntry] = {}
     for done_id in done_ids:
         data[done_id] = {
@@ -116,6 +123,25 @@ def process_done_batch(done_ids: List[str]):
     fetch_claim_comment(data)
     fetch_ocr_transcriptions(data)
     fetch_transcriptions(data)
+
+
+def filter_processed_ids(done_ids: List[str]) -> List[str]:
+    """Filters out the IDs that have already been processed before.
+
+    This can be determined by checking if a submission already has
+    the ID as redis_id attribute in Blossom.
+    """
+    print("Skipping processed IDs...", end=" ")
+    start = time.time()
+    filtered_ids = []
+    for done_id in done_ids:
+        response = blossom.get_submission(redis_id=done_id)
+        if response.status == BlossomStatus.not_found:
+            filtered_ids.append(done_id)
+
+    dur = time.time() - start
+    print(f"{len(filtered_ids)}/{len(done_ids)} need processing in {dur:.2f} s.")
+    return filtered_ids
 
 
 def fetch_done_comments(data: RedditData) -> RedditData:

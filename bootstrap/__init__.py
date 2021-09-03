@@ -7,7 +7,7 @@ from praw import Reddit
 
 dotenv.load_dotenv()
 
-blossom = (
+blossom: BlossomAPI = (
     BlossomAPI(
         email=os.environ.get("BLOSSOM_EMAIL"),
         password=os.environ.get("BLOSSOM_PASSWORD"),
