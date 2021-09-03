@@ -161,7 +161,76 @@ def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
 
 def submit_data(data: RedditData):
     """Submit the fetched data to Blossom."""
-    pass
+    grouped_data = group_data_by_author(data)
+    for username in grouped_data:
+        user_data = grouped_data[username]
+        dummy_subs = get_dummy_submissions(username, len(user_data))
+
+
+def submit_entry(blossom_submission: Dict, entry: RedditEntry):
+    claim = entry["claim_comment"]
+    done = entry["done_comment"]
+    tor_sub = entry["tor_submission"]
+    partner_sub = entry["partner_submission"]
+    ocr_transcription = entry["ocr_transcriptions"]
+
+    if done is None:
+        return
+
+    # Assemble all the data that we could get
+    original_id = (
+        partner_sub["id"]
+        if partner_sub
+        else extract_submission_id_from_url(tor_sub["url"])
+        if tor_sub
+        else None
+    )
+    create_time = (
+        partner_sub["created_utc"]
+        if partner_sub
+        else tor_sub["created_utc"]
+        if tor_sub
+        else done["created_utc"]
+    )
+    claim_time = claim["created_utc"] if claim else done["created_utc"]
+    complete_time = done["created_utc"]
+    url = f'https://reddit.com/{partner_sub["permalink"]}' if partner_sub else None
+    tor_url = f'https://reddit.com/{tor_sub["permalink"]}' if tor_sub else None
+    content_url = partner_sub["url"] if partner_sub else None
+    archived = True
+    cannot_ocr = ocr_transcription is None
+    redis_id = done["id"]
+
+    blossom.patch(
+        f'submission/{blossom_submission["id"]}',
+        {
+            "original_id": original_id,
+            "create_time": create_time,
+            "claim_time": claim_time,
+            "complete_time": complete_time,
+            "url": url,
+            "tor_url": tor_url,
+            "content_url": content_url,
+            "archived": archived,
+            "cannot_ocr": cannot_ocr,
+            "redis_id": redis_id,
+        },
+    )
+
+
+GroupedRedditData = Dict[str, RedditData]
+
+
+def group_data_by_author(data: RedditData) -> GroupedRedditData:
+    """Group the reddit data by author."""
+    grouped_data: GroupedRedditData = {}
+    for done_id in data:
+        entry = data[done_id]
+        username = entry["username"]
+        if grouped_data[username] is None:
+            grouped_data[username] = {}
+        grouped_data[username][done_id] = entry
+    return grouped_data
 
 
 BlossomSubmission = Dict[str, Union[str, bool, int]]
