@@ -1,2 +1,4 @@
-# Data to process
+# Data files and caches
 *.data.json
+# Logs
+*.log

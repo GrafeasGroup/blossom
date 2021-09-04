@@ -30,7 +30,10 @@ REDDIT = (
     if os.getenv("REDDIT_CLIENT_ID")
     else None
 )
-
+# The path to the log file
+LOG_FILE_PATH: str = os.environ.get("LOG_FILE_PATH") or os.path.join(
+    os.path.dirname(__file__), "migrate_redis_data.log"
+)
 # The path to the JSON file containing the Redis data
 REDIS_DATA_PATH: str = os.environ.get("REDIS_DATA_PATH") or os.path.join(
     os.path.dirname(__file__), "redis.data.json"

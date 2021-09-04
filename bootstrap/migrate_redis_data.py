@@ -12,6 +12,7 @@ from bootstrap import (
     BATCH_SIZE,
     CACHE_DATA_PATH,
     INCOMPLETE_DATA_PATH,
+    LOG_FILE_PATH,
     REDIS_DATA_PATH,
     USER_BLACKLIST,
     USER_WHITELIST,
@@ -19,7 +20,9 @@ from bootstrap import (
 )
 
 logging.basicConfig(
-    format="%(asctime)s [%(levelname)s] %(message)s", level=logging.INFO
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    level=logging.INFO,
+    handlers=[logging.FileHandler(LOG_FILE_PATH), logging.StreamHandler()],
 )
 
 push = PushshiftAPI()
