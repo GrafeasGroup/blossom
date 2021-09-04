@@ -9,6 +9,7 @@ from psaw import PushshiftAPI
 
 from bootstrap import (
     BATCH_SIZE,
+    CACHE_DATA_PATH,
     INCOMPLETE_DATA_PATH,
     REDIS_DATA_PATH,
     USER_BLACKLIST,
@@ -124,7 +125,9 @@ def process_done_batch(done_data: List[DoneData]):
 
     Every ID is the Reddit ID of a "done" comment.
     """
+    done_data = filter_cached_ids(done_data)
     done_data = filter_processed_ids(done_data)
+
     data: Dict[str, RedditEntry] = {}
     for username, done_id in done_data:
         default_entry: RedditEntry = {
@@ -152,8 +155,24 @@ def process_done_batch(done_data: List[DoneData]):
     fetch_transcriptions(data)
     # Submit the data to Blossom
     submit_data_to_blossom(data)
-    # Save entries where we couldn't get all data
+    # Cache data
+    cache_entries(data)
     save_incomplete_entries(data)
+
+
+def filter_cached_ids(done_data: List[DoneData]) -> List[DoneData]:
+    """Filters out the IDs that have already been cached."""
+    print("Skipping cached IDs...", end=" ")
+    start = time.time()
+    filtered_ids: List[DoneData] = []
+    cache = get_data_file_dict(CACHE_DATA_PATH)
+    for username, done_id in done_data:
+        if username not in cache or done_id not in cache[username]:
+            filtered_ids.append((username, done_id))
+
+    dur = time.time() - start
+    print(f"{len(filtered_ids)}/{len(done_data)} not cached in {dur:.2f} s.")
+    return filtered_ids
 
 
 def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
@@ -197,29 +216,53 @@ def submit_data_to_blossom(data: RedditData) -> RedditData:
     return data
 
 
-def save_incomplete_entries(data: RedditData):
-    """Save all entries that we couldn't get all data for."""
-    if not os.path.exists(INCOMPLETE_DATA_PATH):
+def get_data_file_dict(file_path: str) -> Dict:
+    """Get the dict stored in a data file."""
+    if not os.path.exists(file_path):
         # Create the file if it doesn't exist
-        open(INCOMPLETE_DATA_PATH, "w")
+        open(file_path, "w")
 
-    with open(INCOMPLETE_DATA_PATH, "r+") as f:
+    with open(file_path, "r") as f:
         content = f.read()
         if content.strip() == "":
             content = "{}"
-        cur_cache = json.loads(content)
+        return json.loads(content)
 
-        for done_id, entry in data.items():
-            if not should_be_saved(entry):
-                continue
 
-            username = entry["username"]
+def cache_entries(data: RedditData):
+    """Cache the entries so that they don't need to be fetched again."""
+    cur_cache = get_data_file_dict(CACHE_DATA_PATH)
 
-            if username not in cur_cache:
-                cur_cache[username] = {}
+    for done_id, entry in data.items():
+        username = entry["username"]
 
-            cur_cache[username][done_id] = get_incomplete_data_dict(entry)
+        if username not in cur_cache:
+            cur_cache[username] = []
 
+        cur_entries = cur_cache[username]
+        cur_entries.append(done_id)
+        cur_cache[username] = cur_entries
+
+    with open(CACHE_DATA_PATH, "w") as f:
+        f.write(json.dumps(cur_cache, indent=2))
+
+
+def save_incomplete_entries(data: RedditData):
+    """Save all entries that we couldn't get all data for."""
+    cur_cache = get_data_file_dict(INCOMPLETE_DATA_PATH)
+
+    for done_id, entry in data.items():
+        if not should_be_saved(entry):
+            continue
+
+        username = entry["username"]
+
+        if username not in cur_cache:
+            cur_cache[username] = {}
+
+        cur_cache[username][done_id] = get_incomplete_data_dict(entry)
+
+    with open(INCOMPLETE_DATA_PATH, "w") as f:
         f.write(json.dumps(cur_cache, indent=2))
 
 
