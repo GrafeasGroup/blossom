@@ -139,6 +139,8 @@ def process_done_batch(done_data: List[DoneData]):
     fetch_claim_comment(data)
     fetch_ocr_transcriptions(data)
     fetch_transcriptions(data)
+    # Submit the data to Blossom
+    submit_data_to_blossom(data)
 
 
 def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
@@ -164,11 +166,19 @@ def submit_data_to_blossom(data: RedditData):
     """Submit the fetched data to Blossom."""
     grouped_data = group_data_by_author(data)
     for username in grouped_data:
+        print(f"Submitting data for {username}...", end=" ")
+        start = time.time()
+
         user_data = grouped_data[username]
         user_data_list = [v for k, v in user_data.items()]
         dummy_subs = get_dummy_submissions(username, len(user_data))
         for blossom_submission, entry in zip(dummy_subs, user_data_list):
             submit_entry_to_blossom(blossom_submission, entry)
+
+        dur = time.time() - start
+        print(
+            f"{len(dummy_subs)}/{len(user_data_list)} dummy submissions patched {dur:.2f} s."
+        )
 
 
 def extract_title_from_tor_title(tor_title: str) -> Optional[str]:
@@ -296,7 +306,7 @@ def group_data_by_author(data: RedditData) -> GroupedRedditData:
     for done_id in data:
         entry = data[done_id]
         username = entry["username"]
-        if grouped_data[username] is None:
+        if username not in grouped_data:
             grouped_data[username] = {}
         grouped_data[username][done_id] = entry
     return grouped_data
