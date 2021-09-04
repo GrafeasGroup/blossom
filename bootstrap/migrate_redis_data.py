@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 from datetime import datetime
@@ -15,6 +16,10 @@ from bootstrap import (
     USER_BLACKLIST,
     USER_WHITELIST,
     blossom,
+)
+
+logging.basicConfig(
+    format="%(asctime)s [%(levelname)s] %(message)s", level=logging.INFO
 )
 
 push = PushshiftAPI()
@@ -88,18 +93,18 @@ def process_done_ids(done_data: List[DoneData]):
     cur_index = 0
     # Process the comments in batches (we merge some of the API calls)
     while cur_index < len(done_data):
-        print(f"====== {cur_index}/{len(done_data)} ======")
+        logging.info(f"====== {cur_index}/{len(done_data)} ======")
         cur_batch = done_data[cur_index : cur_index + BATCH_SIZE]
         start = time.time()
         process_done_batch(cur_batch)
         dur = time.time() - start
         avg_dur = dur / (min(len(done_data), cur_index + BATCH_SIZE) - cur_index)
-        print(f"Done in {dur:.2f} s ({avg_dur:.2f} s avg).")
+        logging.info(f"Done in {dur:.2f} s ({avg_dur:.2f} s avg).")
         cur_index += BATCH_SIZE
 
     dur = time.time() - all_start
-    print(f"====== {len(done_data)}/{len(done_data)} ======")
-    print(f"DONE in {dur:.2f} s ({dur/len(done_data):.2f} s avg).")
+    logging.info(f"====== {len(done_data)}/{len(done_data)} ======")
+    logging.info(f"DONE in {dur:.2f} s ({dur/len(done_data):.2f} s avg).")
 
 
 def get_redis_data() -> RedisData:
@@ -162,7 +167,6 @@ def process_done_batch(done_data: List[DoneData]):
 
 def filter_cached_ids(done_data: List[DoneData]) -> List[DoneData]:
     """Filters out the IDs that have already been cached."""
-    print("Skipping cached IDs...", end=" ")
     start = time.time()
     filtered_ids: List[DoneData] = []
     cache = get_data_file_dict(CACHE_DATA_PATH)
@@ -171,7 +175,9 @@ def filter_cached_ids(done_data: List[DoneData]) -> List[DoneData]:
             filtered_ids.append((username, done_id))
 
     dur = time.time() - start
-    print(f"{len(filtered_ids)}/{len(done_data)} not cached in {dur:.2f} s.")
+    logging.info(
+        f"Checked cache, {len(filtered_ids)}/{len(done_data)} need processing in {dur:.2f} s."
+    )
     return filtered_ids
 
 
@@ -181,7 +187,6 @@ def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
     This can be determined by checking if a submission already has
     the ID as redis_id attribute in Blossom.
     """
-    print("Skipping processed IDs...", end=" ")
     start = time.time()
     filtered_ids: List[DoneData] = []
     for username, done_id in done_data:
@@ -190,7 +195,9 @@ def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
             filtered_ids.append((username, done_id))
 
     dur = time.time() - start
-    print(f"{len(filtered_ids)}/{len(done_data)} need processing in {dur:.2f} s.")
+    logging.info(
+        f"Checked Blossom, {len(filtered_ids)}/{len(done_data)} need processing in {dur:.2f} s."
+    )
     return filtered_ids
 
 
@@ -198,9 +205,7 @@ def submit_data_to_blossom(data: RedditData) -> RedditData:
     """Submit the fetched data to Blossom."""
     grouped_data = group_data_by_author(data)
     for username in grouped_data:
-        print(f"Submitting data for {username}...", end=" ")
         start = time.time()
-
         user_data = grouped_data[username]
         user_data_list = [v for k, v in user_data.items()]
         dummy_subs = get_dummy_submissions(username, len(user_data))
@@ -209,8 +214,8 @@ def submit_data_to_blossom(data: RedditData) -> RedditData:
             data[entry["done_comment"]["id"]] = new_entry
 
         dur = time.time() - start
-        print(
-            f"{len(dummy_subs)}/{len(user_data_list)} dummy submissions patched {dur:.2f} s."
+        logging.info(
+            f"Submitting data for {username} {len(dummy_subs)}/{len(user_data_list)} dummy submissions patched {dur:.2f} s."
         )
 
     return data
@@ -495,7 +500,6 @@ def fetch_done_comments(data: RedditData) -> RedditData:
     Example:
     https://api.pushshift.io/reddit/comment/search?ids=h1jacqk&fields=author,body,link_id,created_utc
     """
-    print("Fetching done comments...", end=" ")
     start = time.time()
     done_ids = [done_id for done_id in data]
     done_comments = list(
@@ -509,7 +513,9 @@ def fetch_done_comments(data: RedditData) -> RedditData:
             data[done_id]["done_comment"] = matching_comments[0]
 
     dur = time.time() - start
-    print(f"{len(done_comments)}/{len(done_ids)} found in {dur:.2f} s.")
+    logging.info(
+        f"Fetched done comments {len(done_comments)}/{len(done_ids)} found in {dur:.2f} s."
+    )
     return data
 
 
@@ -520,7 +526,6 @@ def fetch_tor_submissions(data: RedditData) -> RedditData:
     Example:
     https://api.pushshift.io/reddit/submission/search?ids=t3_nybvr3&fields=id,url,created_utc,permalink
     """
-    print("Fetching ToR submissions...", end=" ")
     start = time.time()
     done_comments = [data[done_id]["done_comment"] for done_id in data]
     tor_submission_ids = [done["link_id"] for done in done_comments if done is not None]
@@ -543,7 +548,9 @@ def fetch_tor_submissions(data: RedditData) -> RedditData:
             data[done_id]["tor_submission"] = matching_subs[0]
 
     dur = time.time() - start
-    print(f"{len(tor_submissions)}/{len(tor_submission_ids)} found in {dur:.2f} s.")
+    logging.info(
+        f"Fetched ToR submissions {len(tor_submissions)}/{len(tor_submission_ids)} found in {dur:.2f} s."
+    )
     return data
 
 
@@ -554,7 +561,6 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
     Example:
     https://api.pushshift.io/reddit/submission/search?ids=nybt3m&fields=id,url,title,created_utc,permalink
     """
-    print("Fetching partner submissions...", end=" ")
     start = time.time()
     partner_submissions = [data[done_id]["tor_submission"] for done_id in data]
     partner_submission_urls = [
@@ -584,8 +590,8 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
             data[done_id]["partner_submission"] = matching_subs[0]
 
     dur = time.time() - start
-    print(
-        f"{len(partner_submissions)}/{len(partner_submission_ids)} found in {dur:.2f} s."
+    logging.info(
+        f"Fetched partner submissions {len(partner_submissions)}/{len(partner_submission_ids)} found in {dur:.2f} s."
     )
     return data
 
@@ -598,7 +604,6 @@ def fetch_claim_comment(data: RedditData) -> RedditData:
     Example:
     https://api.pushshift.io/reddit/comment/search?link_id=t3_nybvr3&author=Tim3303&fields=author,body,link_id,created_utc&q=claim
     """
-    print("Fetching claim comment...", end=" ")
     start = time.time()
     found_count = 0
     not_found_count = 0
@@ -623,7 +628,9 @@ def fetch_claim_comment(data: RedditData) -> RedditData:
             not_found_count += 1
 
     dur = time.time() - start
-    print(f"{found_count}/{found_count + not_found_count} found in {dur:.2f} s.")
+    logging.info(
+        f"Fetched claim comment {found_count}/{found_count + not_found_count} found in {dur:.2f} s."
+    )
     return data
 
 
@@ -635,7 +642,6 @@ def fetch_ocr_transcriptions(data: RedditData) -> RedditData:
     Example:
     https://api.pushshift.io/reddit/comment/search?link_id=t3_nybvr3&author=transcribot&fields=author,body,link_id,created_utc&q=-%22It%20looks%20like%20there%27s%20text%20in%20this%20image.%22
     """
-    print("Fetching OCR transcriptions...", end=" ")
     start = time.time()
     found_count = 0
     not_found_count = 0
@@ -659,7 +665,9 @@ def fetch_ocr_transcriptions(data: RedditData) -> RedditData:
             not_found_count += 1
 
     dur = time.time() - start
-    print(f"{found_count}/{found_count + not_found_count} found in {dur:.2f} s.")
+    logging.info(
+        f"Fetched OCR transcriptions {found_count}/{found_count + not_found_count} found in {dur:.2f} s."
+    )
     return data
 
 
@@ -671,7 +679,6 @@ def fetch_transcriptions(data: RedditData) -> RedditData:
     Example:
     https://api.pushshift.io/reddit/comment/search?link_id=nybt3m&author=Tim3303&fields=author,body,link_id,created_utc&q=https://www.reddit.com/r/TranscribersOfReddit/wiki
     """
-    print("Fetching transcriptions...", end=" ")
     start = time.time()
     found_count = 0
     not_found_count = 0
@@ -693,7 +700,9 @@ def fetch_transcriptions(data: RedditData) -> RedditData:
             not_found_count += 1
 
     dur = time.time() - start
-    print(f"{found_count}/{found_count + not_found_count} found in {dur:.2f} s.")
+    logging.info(
+        f"Fetched transcriptions {found_count}/{found_count + not_found_count} found in {dur:.2f} s."
+    )
     return data
 
 
