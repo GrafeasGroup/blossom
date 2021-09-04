@@ -47,7 +47,6 @@ class SubmissionData(TypedDict):
 
 class RedditEntry(TypedDict):
     username: str
-    done_id: str
     done_comment: Optional[CommentData]
     tor_submission: Optional[SubmissionData]
     partner_submission: Optional[SubmissionData]
@@ -137,7 +136,6 @@ def process_done_batch(done_data: List[DoneData]):
     for username, done_id in done_data:
         default_entry: RedditEntry = {
             "username": username,
-            "done_id": done_id,
             "done_comment": None,
             "tor_submission": None,
             "partner_submission": None,
