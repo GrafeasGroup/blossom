@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, TypedDict, Union
@@ -8,6 +9,7 @@ from psaw import PushshiftAPI
 
 from bootstrap import (
     BATCH_SIZE,
+    INCOMPLETE_DATA_PATH,
     REDIS_DATA_PATH,
     USER_BLACKLIST,
     USER_WHITELIST,
@@ -39,12 +41,16 @@ class SubmissionData(TypedDict):
 
 class RedditEntry(TypedDict):
     username: str
+    done_id: str
     done_comment: Optional[CommentData]
     tor_submission: Optional[SubmissionData]
     partner_submission: Optional[SubmissionData]
     claim_comment: Optional[CommentData]
     ocr_transcriptions: Optional[List[CommentData]]
     transcriptions: Optional[List[CommentData]]
+    submission_saved: Optional[bool]
+    transcription_saved: Optional[bool]
+    ocr_saved: Optional[bool]
 
 
 RedditData = Dict[str, RedditEntry]
@@ -121,15 +127,20 @@ def process_done_batch(done_data: List[DoneData]):
     done_data = filter_processed_ids(done_data)
     data: Dict[str, RedditEntry] = {}
     for username, done_id in done_data:
-        data[done_id] = {
+        default_entry: RedditEntry = {
             "username": username,
+            "done_id": done_id,
             "done_comment": None,
             "tor_submission": None,
             "partner_submission": None,
             "claim_comment": None,
             "ocr_transcriptions": None,
             "transcriptions": None,
+            "submission_saved": False,
+            "transcription_saved": False,
+            "ocr_saved": False,
         }
+        data[done_id] = default_entry
 
     # First, do all the calls that we can do in batches
     fetch_done_comments(data)
@@ -141,6 +152,8 @@ def process_done_batch(done_data: List[DoneData]):
     fetch_transcriptions(data)
     # Submit the data to Blossom
     submit_data_to_blossom(data)
+    # Save entries where we couldn't get all data
+    save_incomplete_entries(data)
 
 
 def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
@@ -162,7 +175,7 @@ def filter_processed_ids(done_data: List[DoneData]) -> List[DoneData]:
     return filtered_ids
 
 
-def submit_data_to_blossom(data: RedditData):
+def submit_data_to_blossom(data: RedditData) -> RedditData:
     """Submit the fetched data to Blossom."""
     grouped_data = group_data_by_author(data)
     for username in grouped_data:
@@ -173,12 +186,82 @@ def submit_data_to_blossom(data: RedditData):
         user_data_list = [v for k, v in user_data.items()]
         dummy_subs = get_dummy_submissions(username, len(user_data))
         for blossom_submission, entry in zip(dummy_subs, user_data_list):
-            submit_entry_to_blossom(blossom_submission, entry)
+            new_entry = submit_entry_to_blossom(blossom_submission, entry)
+            data[entry["done_comment"]["id"]] = new_entry
 
         dur = time.time() - start
         print(
             f"{len(dummy_subs)}/{len(user_data_list)} dummy submissions patched {dur:.2f} s."
         )
+
+    return data
+
+
+def save_incomplete_entries(data: RedditData):
+    """Save all entries that we couldn't get all data for."""
+    if not os.path.exists(INCOMPLETE_DATA_PATH):
+        # Create the file if it doesn't exist
+        open(INCOMPLETE_DATA_PATH, "w")
+
+    with open(INCOMPLETE_DATA_PATH, "r+") as f:
+        content = f.read()
+        if content.strip() == "":
+            content = "{}"
+        cur_cache = json.loads(content)
+
+        for done_id, entry in data.items():
+            if not should_be_saved(entry):
+                continue
+
+            username = entry["username"]
+
+            if username not in cur_cache:
+                cur_cache[username] = {}
+
+            cur_cache[username][done_id] = get_incomplete_data_dict(entry)
+
+        f.write(json.dumps(cur_cache, indent=2))
+
+
+def should_be_saved(entry: RedditEntry) -> bool:
+    return (
+        entry["done_comment"] is None
+        or entry["claim_comment"] is None
+        or entry["tor_submission"] is None
+        or entry["partner_submission"] is None
+        or entry["transcriptions"] is None
+        or len(entry["transcriptions"]) == 0
+        or entry["submission_saved"] is False
+        or entry["transcription_saved"] is False
+        or entry["ocr_saved"] is False
+    )
+
+
+def get_incomplete_data_dict(entry: RedditEntry) -> Dict:
+    """Get a dict from the entry that can be saved to a JSON file."""
+    data_dict = {
+        "done_comment": entry["done_comment"]["id"] if entry["done_comment"] else None,
+        "claim_comment": entry["claim_comment"]["id"]
+        if entry["claim_comment"]
+        else None,
+        "tor_submission": entry["tor_submission"]["id"]
+        if entry["tor_submission"]
+        else None,
+        "partner_submission": entry["partner_submission"]["id"]
+        if entry["partner_submission"]
+        else None,
+        "transcriptions": [tr["id"] for tr in entry["transcriptions"]]
+        if entry["transcriptions"] and len(entry["transcriptions"]) > 0
+        else None,
+        "ocr_transcriptions": [ocr["id"] for ocr in entry["ocr_transcriptions"]]
+        if entry["ocr_transcriptions"] and len(entry["ocr_transcriptions"]) > 0
+        else None,
+        "submission_saved": entry["submission_saved"],
+        "transcription_saved": entry["transcription_saved"],
+        "ocr_saved": entry["ocr_saved"],
+    }
+    # Delete None entries
+    return {k: v for k, v in data_dict.items() if v is not None}
 
 
 def extract_title_from_tor_title(tor_title: str) -> Optional[str]:
@@ -196,7 +279,9 @@ def extract_title_from_tor_title(tor_title: str) -> Optional[str]:
     return parts[2].strip(' "')
 
 
-def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
+def submit_entry_to_blossom(
+    blossom_submission: Dict, entry: RedditEntry
+) -> RedditEntry:
     """Submit a single data entry to Blossom."""
     blossom_id = blossom_submission["id"]
 
@@ -208,7 +293,11 @@ def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
     ocr_transcriptions = entry["ocr_transcriptions"]
 
     if done is None:
-        return
+        # There is nothing to submit
+        entry["submission_saved"] = None
+        entry["transcription_saved"] = None
+        entry["ocr_saved"] = None
+        return entry
 
     # Assemble all the data that we could get
     original_id = (
@@ -241,7 +330,7 @@ def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
     cannot_ocr = ocr_transcriptions is None or len(ocr_transcriptions) == 0
     redis_id = done["id"]
 
-    blossom.patch(
+    sub_response = blossom.patch(
         f"submission/{blossom_id}",
         {
             "original_id": original_id,
@@ -249,6 +338,7 @@ def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
             "claim_time": claim_time.isoformat(),
             "complete_time": complete_time.isoformat(),
             "url": url,
+            "title": title,
             "tor_url": tor_url,
             "content_url": content_url,
             "archived": archived,
@@ -256,6 +346,8 @@ def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
             "redis_id": redis_id,
         },
     )
+    if sub_response.ok:
+        entry["submission_saved"] = True
 
     if transcriptions and len(transcriptions) > 0:
         # Patch/Create the transcription too
@@ -276,10 +368,19 @@ def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
             transcription_id = extract_id_from_grafeas_url(
                 blossom_submission["transcription_set"][0]
             )
-            blossom.patch(f"transcription/{transcription_id}", data=ocr_data)
+            tr_response = blossom.patch(
+                f"transcription/{transcription_id}", data=ocr_data
+            )
+            if tr_response.ok:
+                entry["transcription_saved"] = True
         else:
             # No transcription yet, create a new one
-            blossom.post("transcription", data=ocr_data)
+            tr_response = blossom.post("transcription", data=ocr_data)
+            if tr_response.ok:
+                entry["transcription_saved"] = True
+    else:
+        # There is no transcription to save
+        entry["transcription_saved"] = None
 
     if ocr_transcriptions and len(ocr_transcriptions) > 0:
         # Create the OCR transcription too
@@ -294,7 +395,14 @@ def submit_entry_to_blossom(blossom_submission: Dict, entry: RedditEntry):
             "removed_from_reddit": False,
         }
 
-        blossom.post("transcription", data=ocr_data)
+        ocr_response = blossom.post("transcription", data=ocr_data)
+        if ocr_response.ok:
+            entry["ocr_saved"] = True
+    else:
+        # There is no OCR to save
+        entry["ocr_saved"] = None
+
+    return entry
 
 
 GroupedRedditData = Dict[str, RedditData]

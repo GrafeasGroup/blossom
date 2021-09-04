@@ -35,6 +35,10 @@ REDDIT = (
 REDIS_DATA_PATH: str = os.environ.get("REDIS_DATA_PATH") or os.path.join(
     os.path.dirname(__file__), "redis.data.json"
 )
+# The path to the JSON file caching incomplete data
+INCOMPLETE_DATA_PATH: str = os.environ.get("INCOMPLETE_DATA_PATH") or os.path.join(
+    os.path.dirname(__file__), "incomplete.data.json"
+)
 # The allowed users to process. None means all users are allowed
 USER_WHITELIST: Optional[List[str]] = os.environ.get("USER_WHITELIST").split(
     ","
