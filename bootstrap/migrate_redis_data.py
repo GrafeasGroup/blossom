@@ -394,6 +394,12 @@ def submit_entry_to_blossom(
     )
     if sub_response.ok:
         entry["submission_saved"] = True
+    else:
+        logging.warning(
+            "Failed to patch submission %s of done %s to Blossom!",
+            original_id,
+            done["id"],
+        )
 
     if transcriptions and len(transcriptions) > 0:
         # Patch/Create the transcription too
@@ -419,11 +425,23 @@ def submit_entry_to_blossom(
             )
             if tr_response.ok:
                 entry["transcription_saved"] = True
+            else:
+                logging.warning(
+                    "Failed to patch transcription %s of done %s to Blossom!",
+                    transcriptions[0]["id"],
+                    done["id"],
+                )
         else:
             # No transcription yet, create a new one
             tr_response = blossom.post("transcription", data=ocr_data)
             if tr_response.ok:
                 entry["transcription_saved"] = True
+            else:
+                logging.warning(
+                    "Failed to create transcription %s of done %s to Blossom!",
+                    transcriptions[0]["id"],
+                    done["id"],
+                )
     else:
         # There is no transcription to save
         entry["transcription_saved"] = None
@@ -444,6 +462,12 @@ def submit_entry_to_blossom(
         ocr_response = blossom.post("transcription", data=ocr_data)
         if ocr_response.ok:
             entry["ocr_saved"] = True
+        else:
+            logging.warning(
+                "Failed to create OCR %s of done %s to Blossom!",
+                ocr_transcriptions[0]["id"],
+                done["id"],
+            )
     else:
         # There is no OCR to save
         entry["ocr_saved"] = None
