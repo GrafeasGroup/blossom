@@ -426,51 +426,68 @@ def submit_entry_to_blossom(
         entry["submission_saved"] = True
     else:
         logging.warning(
-            "Failed to patch submission %s of done %s to Blossom!",
+            "Failed to patch submission %s of done %s to Blossom (%s)!\n%s",
             original_id,
             done["id"],
+            sub_response.status_code,
+            sub_response.text,
         )
 
     if transcriptions and len(transcriptions) > 0:
         # Patch/Create the transcription too
         transcription_text = "\n\n".join([tr["body"] for tr in transcriptions])
 
-        ocr_data = {
-            "author": entry["username"],
-            "submission": blossom_id,
-            "create_time": transcriptions[0]["created_utc"].isoformat(),
-            "original_id": transcriptions[0]["id"],
-            "url": "https://reddit.com/" + transcriptions[0]["permalink"],
-            "text": transcription_text,
-            "removed_from_reddit": False,
-        }
-
         if len(blossom_submission["transcription_set"]) > 0:
             # We already have a dummy transcription, patch it
+            tr_data = {
+                "submission": f"https://grafeas.org/api/submission/{blossom_id}/",
+                "create_time": transcriptions[0]["created_utc"].isoformat(),
+                "original_id": transcriptions[0]["id"],
+                "source": "https://grafeas.org/api/source/reddit/",
+                "url": "https://reddit.com/" + transcriptions[0]["permalink"],
+                "text": transcription_text,
+                "removed_from_reddit": False,
+            }
+
             transcription_id = extract_id_from_grafeas_url(
                 blossom_submission["transcription_set"][0]
             )
             tr_response = blossom.patch(
-                f"transcription/{transcription_id}", data=ocr_data
+                f"transcription/{transcription_id}", data=tr_data
             )
             if tr_response.ok:
                 entry["transcription_saved"] = True
             else:
                 logging.warning(
-                    "Failed to patch transcription %s of done %s to Blossom!",
+                    "Failed to patch transcription %s of done %s to Blossom (%s)!\n%s",
                     transcriptions[0]["id"],
                     done["id"],
+                    tr_response.status_code,
+                    tr_response.text,
                 )
         else:
             # No transcription yet, create a new one
-            tr_response = blossom.post("transcription", data=ocr_data)
+            tr_data = {
+                "username": entry["username"],
+                "submission_id": blossom_id,
+                "source": "reddit",
+                "create_time": transcriptions[0]["created_utc"].isoformat(),
+                "original_id": transcriptions[0]["id"],
+                "url": "https://reddit.com/" + transcriptions[0]["permalink"],
+                "text": transcription_text,
+                "removed_from_reddit": False,
+            }
+
+            tr_response = blossom.post("transcription", data=tr_data)
             if tr_response.ok:
                 entry["transcription_saved"] = True
             else:
                 logging.warning(
-                    "Failed to create transcription %s of done %s to Blossom!",
+                    "Failed to create transcription %s of done %s to Blossom (%s)!\n%s",
                     transcriptions[0]["id"],
                     done["id"],
+                    tr_response.status_code,
+                    tr_response.text,
                 )
     else:
         # There is no transcription to save
@@ -481,7 +498,9 @@ def submit_entry_to_blossom(
         ocr_text = "\n\n".join([ocr["body"] for ocr in ocr_transcriptions])
 
         ocr_data = {
-            "submission": blossom_id,
+            "username": "transcribot",
+            "submission_id": blossom_id,
+            "source": "reddit",
             "create_time": ocr_transcriptions[0]["created_utc"].isoformat(),
             "original_id": ocr_transcriptions[0]["id"],
             "url": "https://reddit.com/" + ocr_transcriptions[0]["permalink"],
@@ -494,9 +513,11 @@ def submit_entry_to_blossom(
             entry["ocr_saved"] = True
         else:
             logging.warning(
-                "Failed to create OCR %s of done %s to Blossom!",
+                "Failed to create OCR %s of done %s to Blossom (%s)!\n%s",
                 ocr_transcriptions[0]["id"],
                 done["id"],
+                ocr_response.status_code,
+                ocr_response.text,
             )
     else:
         # There is no OCR to save
