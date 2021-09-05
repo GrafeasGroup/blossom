@@ -11,6 +11,8 @@ from psaw import PushshiftAPI
 from bootstrap import (
     BATCH_SIZE,
     CACHE_DATA_PATH,
+    ID_BLACKLIST,
+    ID_WHITELIST,
     INCOMPLETE_DATA_PATH,
     LOG_FILE_PATH,
     REDIS_DATA_PATH,
@@ -78,11 +80,14 @@ DoneData = Tuple[str, str]
 
 def main():
     redis_data = get_redis_data()
+    redis_data = filter_by_user(redis_data)
     done_data: List[DoneData] = []
     for user in redis_data:
-        done_data += [
-            (user, done_id) for done_id in redis_data[user]["posts_completed"]
-        ]
+        if "posts_completed" in redis_data[user]:
+            done_data += [
+                (user, done_id) for done_id in redis_data[user]["posts_completed"]
+            ]
+    done_data = filter_by_id(done_data)
     process_done_ids(done_data)
 
 
@@ -116,15 +121,37 @@ def get_redis_data() -> RedisData:
         redis_text = redis_file.read()
         redis_data: RedisData = json.loads(redis_text)
 
-        # Filter the data
-        if USER_WHITELIST is not None:
-            redis_data = {k: v for k, v in redis_data.items() if k in USER_WHITELIST}
-        if USER_BLACKLIST is not None:
-            redis_data = {
-                k: v for k, v in redis_data.items() if k not in USER_BLACKLIST
-            }
-
         return redis_data
+
+
+def filter_by_user(redis_data: RedisData) -> RedditData:
+    """Filter out unwanted users."""
+    old_count = len(redis_data)
+    if USER_WHITELIST is not None:
+        redis_data = {k: v for k, v in redis_data.items() if k in USER_WHITELIST}
+    if USER_BLACKLIST is not None:
+        redis_data = {k: v for k, v in redis_data.items() if k not in USER_BLACKLIST}
+    new_count = len(redis_data)
+    logging.info("Filtered users, %s/%s allowed.", new_count, old_count)
+    return redis_data
+
+
+def filter_by_id(done_data: List[DoneData]) -> List[DoneData]:
+    """Filter out unwanted done IDs."""
+    old_count = len(done_data)
+    if ID_WHITELIST is not None:
+        done_data = [
+            (user, done_id) for user, done_id in done_data if done_id in ID_WHITELIST
+        ]
+    if ID_BLACKLIST is not None:
+        done_data = [
+            (user, done_id)
+            for user, done_id in done_data
+            if done_id not in ID_BLACKLIST
+        ]
+    new_count = len(done_data)
+    logging.info("Filtered IDs, %s/%s allowed.", new_count, old_count)
+    return done_data
 
 
 def process_done_batch(done_data: List[DoneData]):

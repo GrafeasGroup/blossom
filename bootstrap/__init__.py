@@ -30,30 +30,47 @@ REDDIT = (
     if os.getenv("REDDIT_CLIENT_ID")
     else None
 )
+
 # The path to the log file
 LOG_FILE_PATH: str = os.environ.get("LOG_FILE_PATH") or os.path.join(
     os.path.dirname(__file__), "migrate_redis_data.log"
 )
+
 # The path to the JSON file containing the Redis data
 REDIS_DATA_PATH: str = os.environ.get("REDIS_DATA_PATH") or os.path.join(
     os.path.dirname(__file__), "redis.data.json"
 )
+
 # The path to the JSON file caching processed data
 CACHE_DATA_PATH: str = os.environ.get("CACHE_DATA_PATH") or os.path.join(
     os.path.dirname(__file__), "cache.data.json"
 )
+
 # The path to the JSON file caching incomplete data
 INCOMPLETE_DATA_PATH: str = os.environ.get("INCOMPLETE_DATA_PATH") or os.path.join(
     os.path.dirname(__file__), "incomplete.data.json"
 )
+
 # The allowed users to process. None means all users are allowed
 USER_WHITELIST: Optional[List[str]] = os.environ.get("USER_WHITELIST").split(
     ","
 ) if os.environ.get("USER_WHITELIST") else None
+
 # The users not allowed to process. None means no users are disallowed
 USER_BLACKLIST: List[str] = os.environ.get("USER_BLACKLIST").split(
     ","
 ) if os.environ.get("USER_BLACKLIST") else None
+
+# The allowed IDs to process. None means all IDs are allowed
+ID_WHITELIST: Optional[List[str]] = os.environ.get("ID_WHITELIST").split(
+    ","
+) if os.environ.get("ID_WHITELIST") else None
+
+# The IDs not allowed to process. None means no IDs are disallowed
+ID_BLACKLIST: List[str] = os.environ.get("ID_BLACKLIST").split(",") if os.environ.get(
+    "ID_BLACKLIST"
+) else None
+
 # Batch size
 BATCH_SIZE: int = int(os.environ.get("BATCH_SIZE")) if os.environ.get(
     "BATCH_SIZE"
