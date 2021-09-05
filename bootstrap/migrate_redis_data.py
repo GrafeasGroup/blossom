@@ -495,7 +495,9 @@ def submit_entry_to_blossom(
 
     if ocr_transcriptions and len(ocr_transcriptions) > 0:
         # Create the OCR transcription too
-        ocr_text = "\n\n".join([ocr["body"] for ocr in ocr_transcriptions])
+        ocr_text = "\n\n".join(
+            [remove_ocr_footer(ocr["body"]) for ocr in ocr_transcriptions]
+        )
 
         ocr_data = {
             "username": "transcribot",
@@ -524,6 +526,14 @@ def submit_entry_to_blossom(
         entry["ocr_saved"] = None
 
     return entry
+
+
+def remove_ocr_footer(ocr_text: str) -> str:
+    """Remove the bot footer from OCR transcriptions."""
+    parts = ocr_text.split("---")
+    if len(parts) < 2:
+        return ocr_text
+    return "---".join(parts[:-1]).strip()
 
 
 GroupedRedditData = Dict[str, RedditData]
