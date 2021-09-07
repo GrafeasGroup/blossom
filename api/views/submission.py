@@ -6,6 +6,8 @@ from typing import Union
 from django.conf import settings
 from django.db.models import Count
 from django.db.models.functions import (
+    ExtractHour,
+    ExtractIsoWeekDay,
     Length,
     TruncDate,
     TruncDay,
@@ -273,6 +275,53 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         pagination = StandardResultsSetPagination()
         page = pagination.paginate_queryset(rate, request)
         return pagination.get_paginated_response(page)
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        manual_parameters=[Parameter("username", "query", type="string")],
+        responses={
+            400: 'No "username" as a query parameter.',
+            404: "No volunteer with the specified username.",
+        },
+    )
+    @action(detail=False, methods=["get"])
+    @validate_request(query_params={"username"})
+    def summary(self, request: Request, username: str = None) -> Response:
+        """Get information on the volunteer with the provided username."""
+        user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
+        return Response(self.serializer_class(user).data)
+
+    @csrf_exempt
+    @swagger_auto_schema()
+    @action(detail=False, methods=["get"])
+    def heatmap(self, request: Request) -> Response:
+        """Get the data to generate a heatmap for the volunteer.
+
+        This includes one entry for every weekday and every hour containing the
+        number of transcriptions made in that time slot.
+        For example, there will be an entry for Sundays at 13:00 UTC, counting
+        how many transcriptions the volunteer made in that time.
+
+        The week days are numbered Monday=1 through Sunday=7.
+        """
+        heatmap = (
+            self.queryset.filter(complete_time__isnull=False)
+            # Extract the day of the week and the hour the transcription was made in
+            .annotate(
+                day=ExtractIsoWeekDay("complete_time"),
+                hour=ExtractHour("complete_time"),
+            )
+            # Group by the day and hour
+            .values("day", "hour")
+            # Count the transcription made in each time slot
+            .annotate(count=Count("id"))
+            # Return the values
+            .values("day", "hour", "count")
+            # Order by day first, then hour
+            .order_by("day", "hour")
+        )
+
+        return Response(heatmap)
 
     @csrf_exempt
     @swagger_auto_schema(
