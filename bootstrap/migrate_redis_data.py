@@ -399,8 +399,8 @@ def submit_entry_to_blossom(
     )
     claim_time = claim["created_utc"] if claim else done["created_utc"]
     complete_time = done["created_utc"]
-    url = "https://reddit.com/" + partner_sub["permalink"] if partner_sub else None
-    tor_url = "https://reddit.com/" + tor_sub["permalink"] if tor_sub else None
+    url = "https://reddit.com" + partner_sub["permalink"] if partner_sub else None
+    tor_url = "https://reddit.com" + tor_sub["permalink"] if tor_sub else None
     content_url = partner_sub["url"] if partner_sub else None
     archived = True
     cannot_ocr = ocr_transcriptions is None or len(ocr_transcriptions) == 0
@@ -418,6 +418,7 @@ def submit_entry_to_blossom(
             "tor_url": tor_url,
             "content_url": content_url,
             "archived": archived,
+            "has_ocr_transcription": not cannot_ocr,
             "cannot_ocr": cannot_ocr,
             "redis_id": redis_id,
         },
@@ -444,7 +445,7 @@ def submit_entry_to_blossom(
                 "create_time": transcriptions[0]["created_utc"].isoformat(),
                 "original_id": transcriptions[0]["id"],
                 "source": "https://grafeas.org/api/source/reddit/",
-                "url": "https://reddit.com/" + transcriptions[0]["permalink"],
+                "url": "https://reddit.com" + transcriptions[0]["permalink"],
                 "text": transcription_text,
                 "removed_from_reddit": False,
             }
@@ -473,7 +474,7 @@ def submit_entry_to_blossom(
                 "source": "reddit",
                 "create_time": transcriptions[0]["created_utc"].isoformat(),
                 "original_id": transcriptions[0]["id"],
-                "url": "https://reddit.com/" + transcriptions[0]["permalink"],
+                "url": "https://reddit.com" + transcriptions[0]["permalink"],
                 "text": transcription_text,
                 "removed_from_reddit": False,
             }
@@ -505,7 +506,7 @@ def submit_entry_to_blossom(
             "source": "reddit",
             "create_time": ocr_transcriptions[0]["created_utc"].isoformat(),
             "original_id": ocr_transcriptions[0]["id"],
-            "url": "https://reddit.com/" + ocr_transcriptions[0]["permalink"],
+            "url": "https://reddit.com" + ocr_transcriptions[0]["permalink"],
             "text": ocr_text,
             "removed_from_reddit": False,
         }
