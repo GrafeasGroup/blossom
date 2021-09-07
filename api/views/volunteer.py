@@ -2,17 +2,7 @@
 import uuid
 
 from django.db.models import Count
-from django.db.models.functions import (
-    ExtractHour,
-    ExtractIsoWeekDay,
-    TruncDate,
-    TruncDay,
-    TruncHour,
-    TruncMonth,
-    TruncSecond,
-    TruncWeek,
-    TruncYear,
-)
+from django.db.models.functions import ExtractHour, ExtractIsoWeekDay
 from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -30,7 +20,6 @@ from api.authentication import BlossomApiPermission
 from api.filters import CaseInsensitiveUsernameFilter
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
-from api.pagination import StandardResultsSetPagination
 from api.serializers import VolunteerSerializer
 from authentication.models import BlossomUser
 
@@ -69,70 +58,6 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         """Get information on the volunteer with the provided username."""
         user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
         return Response(self.serializer_class(user).data)
-
-    @swagger_auto_schema(
-        operation_summary=(
-            "Retrieve a count of transcriptions for a volunteer per UTC day."
-        ),
-        operation_description=(
-            "A paginated endpoint. Pass page_size to control number of results"
-            " returned, page to select a different block."
-        ),
-        responses={404: "No volunteer with the specified ID."},
-        manual_parameters=[
-            Parameter(
-                "time_frame",
-                "query",
-                type="string",
-                enum=["none", "hour", "day", "week", "month", "year"],
-                description="The time interval to calculate the rate by. "
-                'Must be one of "none", "hour", "day", "week", "month" or "year".'
-                'For example, "none" will return the date of every transcription '
-                'separately, while "day" will return the daily transcribing rate.',
-            ),
-            Parameter("page_size", "query", type="number"),
-            Parameter("page", "query", type="number"),
-        ],
-    )
-    @action(detail=True, methods=["get"])
-    def rate(self, request: Request, pk: int) -> Response:
-        """Get the number of transcriptions the volunteer made per UTC day.
-
-        IMPORTANT: To reduce the number of entries, this does not
-        include days on which the user did not make any transcriptions!
-        """
-        user = get_object_or_404(BlossomUser, id=pk, is_volunteer=True)
-
-        time_frame = request.GET.get("time_frame", "day")
-
-        trunc_dict = {
-            # Don't group the transcriptions at all
-            # TODO: Make this a true noop for transcriptions posted in the same second
-            "none": TruncSecond,
-            "hour": TruncHour,
-            "day": TruncDay,
-            # Unfortunately weeks starts on Sunday for this.
-            # There doesn't seem to be an ISO week equivalent :(
-            "week": TruncWeek,
-            "month": TruncMonth,
-            "year": TruncYear,
-        }
-
-        trunc_fn = trunc_dict.get(time_frame, TruncDate)
-
-        # https://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
-        rate = (
-            Transcription.objects.filter(author=user)
-            .annotate(date=trunc_fn("create_time"))
-            .values("date")
-            .annotate(count=Count("id"))
-            .values("date", "count")
-            .order_by("date")
-        )
-
-        pagination = StandardResultsSetPagination()
-        page = pagination.paginate_queryset(rate, request)
-        return pagination.get_paginated_response(page)
 
     @csrf_exempt
     @swagger_auto_schema(
