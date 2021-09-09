@@ -94,3 +94,46 @@ class TestHeatmap:
         ]
         heatmap = result.json()
         assert heatmap == expected_heatmap
+
+    def test_heatmap_filtering(self, client: Client) -> None:
+        """Verify that filters can be applied to the submissions."""
+        client, headers, user = setup_user_client(client, accepted_coc=True, id=123456)
+
+        dates = [
+            # Thursday 14 h
+            datetime(2020, 7, 16, 14, 3, 55),
+            # Thursday 14 h
+            datetime(2020, 7, 16, 14, 59, 55),
+            # Sunday 15 h
+            datetime(2021, 6, 20, 15, 10, 5),
+            # Sunday 15 h
+            datetime(2021, 6, 20, 15, 42, 10),
+            # Sunday 16 h
+            datetime(2021, 6, 20, 16, 5, 5),
+            # Thursday 14 h
+            datetime(2021, 6, 24, 14, 30, 30),
+        ]
+
+        for date in dates:
+            create_transcription(
+                create_submission(completed_by=user, complete_time=make_aware(date)),
+                user,
+                create_time=make_aware(date),
+            )
+
+        result = client.get(
+            reverse("submission-heatmap") + "?from=2021-06-19&until=2021-06-21",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+
+        expected_heatmap = [
+            # Sunday 15 h
+            {"day": 7, "hour": 15, "count": 2},
+            # Sunday 16 h
+            {"day": 7, "hour": 16, "count": 1},
+        ]
+        heatmap = result.json()
+        assert heatmap == expected_heatmap

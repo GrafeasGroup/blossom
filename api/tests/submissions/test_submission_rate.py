@@ -254,3 +254,41 @@ class TestSubmissionRate:
         assert result.status_code == status.HTTP_200_OK
         response = result.json()
         assert response["results"] == results
+
+    def test_rate_filtering(self, client: Client,) -> None:
+        """Verify that filters can be applied to the submissions."""
+        client, headers, user = setup_user_client(client, id=123456)
+
+        dates = [
+            # Thursday 14 h
+            datetime(2020, 7, 16, 14, 3, 55),
+            # Thursday 14 h
+            datetime(2020, 7, 16, 14, 59, 55),
+            # Sunday 15 h
+            datetime(2021, 6, 20, 15, 10, 5),
+            # Sunday 15 h
+            datetime(2021, 6, 20, 15, 42, 10),
+            # Sunday 16 h
+            datetime(2021, 6, 20, 16, 5, 5),
+            # Thursday 14 h
+            datetime(2021, 6, 24, 14, 30, 30),
+        ]
+
+        for date in dates:
+            create_transcription(
+                create_submission(completed_by=user, complete_time=date),
+                user,
+                create_time=make_aware(date),
+            )
+
+        result = client.get(
+            reverse("submission-rate")
+            + "?time_frame=day&completed_by=123456&from=2021-06-01&until=2021-06-21",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        response = result.json()
+        assert response["results"] == [
+            {"count": 3, "date": "2021-06-20T00:00:00Z"},
+        ]

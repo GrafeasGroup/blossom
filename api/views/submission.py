@@ -264,7 +264,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         # https://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
         rate = (
-            self.queryset.filter(complete_time__isnull=False)
+            self.filter_queryset(Submission.objects)
+            .filter(complete_time__isnull=False)
             .annotate(date=trunc_fn("complete_time"))
             .values("date")
             .annotate(count=Count("id"))
@@ -305,7 +306,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         The week days are numbered Monday=1 through Sunday=7.
         """
         heatmap = (
-            self.queryset.filter(complete_time__isnull=False)
+            self.filter_queryset(Submission.objects).filter(complete_time__isnull=False)
             # Extract the day of the week and the hour the transcription was made in
             .annotate(
                 day=ExtractIsoWeekDay("complete_time"),
