@@ -278,21 +278,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return pagination.get_paginated_response(page)
 
     @csrf_exempt
-    @swagger_auto_schema(
-        manual_parameters=[Parameter("username", "query", type="string")],
-        responses={
-            400: 'No "username" as a query parameter.',
-            404: "No volunteer with the specified username.",
-        },
-    )
-    @action(detail=False, methods=["get"])
-    @validate_request(query_params={"username"})
-    def summary(self, request: Request, username: str = None) -> Response:
-        """Get information on the volunteer with the provided username."""
-        user = get_object_or_404(BlossomUser, username=username, is_volunteer=True)
-        return Response(self.serializer_class(user).data)
-
-    @csrf_exempt
     @swagger_auto_schema()
     @action(detail=False, methods=["get"])
     def heatmap(self, request: Request) -> Response:
