@@ -1,6 +1,8 @@
 """Views that don't fit in any of the other view files."""
+import datetime
 from typing import Dict
 
+import pytz
 from django.views.decorators.csrf import csrf_exempt
 from drf_yasg.openapi import Response as DocResponse
 from drf_yasg.openapi import Schema
@@ -32,9 +34,17 @@ class Summary(object):
 
         :return: A dictionary containing the three key-value pairs as described
         """
+        date_minus_two_weeks = datetime.datetime.now(tz=pytz.utc) - datetime.timedelta(
+            weeks=2
+        )
         return {
             "volunteer_count": BlossomUser.objects.filter(is_volunteer=True).count()
             - 2,
+            "active_volunteer_count": Submission.objects.filter(
+                completed_by__isnull=False, complete_time__gte=date_minus_two_weeks,
+            )
+            .values("completed_by")
+            .count(),
             "transcription_count": Submission.objects.filter(
                 completed_by__isnull=False
             ).count(),
