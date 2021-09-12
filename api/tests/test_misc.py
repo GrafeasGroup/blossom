@@ -55,6 +55,30 @@ def test_active_volunteer_count(client: Client) -> None:
     assert result.json()["active_volunteer_count"] == 2
 
 
+def test_active_volunteer_count_aggregation(client: Client) -> None:
+    """Test whether the active volunteer count is aggregated correctly.
+
+    Multiple transcriptions from the same user should only count as one volunteer.
+    """
+    client, headers, user_1 = setup_user_client(client, id=123, username="user_1")
+    user_2 = create_user(id=456, username="user_2")
+
+    now = datetime.datetime.now(tz=pytz.utc)
+    two_days_ago = now - datetime.timedelta(days=2)
+    three_weeks_ago = now - datetime.timedelta(weeks=3)
+
+    create_submission(completed_by=user_1, complete_time=two_days_ago)
+    create_submission(completed_by=user_1, complete_time=two_days_ago)
+    create_submission(completed_by=user_1, complete_time=two_days_ago)
+    create_submission(completed_by=user_1, complete_time=three_weeks_ago)
+    create_submission(completed_by=user_2, complete_time=two_days_ago)
+
+    result = client.get(reverse("summary"), content_type="application/json", **headers,)
+
+    assert result.status_code == status.HTTP_200_OK
+    assert result.json()["active_volunteer_count"] == 2
+
+
 def test_days_since_open() -> None:
     """Test whether the the output for both paths in function are the same."""
     datetuple = get_time_since_open()

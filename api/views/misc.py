@@ -44,6 +44,7 @@ class Summary(object):
                 completed_by__isnull=False, complete_time__gte=date_minus_two_weeks,
             )
             .values("completed_by")
+            .distinct()
             .count(),
             "transcription_count": Submission.objects.filter(
                 completed_by__isnull=False
