@@ -275,7 +275,9 @@ def submit_data_to_blossom(data: RedditData) -> RedditData:
         if user is None:
             continue
         user_data = grouped_data[username]
-        user_data_list = [v for k, v in user_data.items()]
+        user_data_list = [
+            v for k, v in user_data.items() if v["done_comment"] is not None
+        ]
         dummy_subs = get_dummy_submissions(username, len(user_data))
         for blossom_submission, entry in zip(dummy_subs, user_data_list):
             new_entry = submit_entry_to_blossom(user, blossom_submission, entry)
