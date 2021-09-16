@@ -82,12 +82,13 @@ RedisData = Dict[str, RedisEntry]
 # A tuple of username and done ID
 DoneData = Tuple[str, str]
 
-user_cache: Dict[str, int] = {
-    "transcribot": 3,
-}
+user_cache: Dict[str, int] = {}
 
 
 def main():
+    if blossom is None:
+        logging.error("No Blossom login data provided!")
+        return
     redis_data = get_redis_data()
     redis_data = filter_by_user(redis_data)
     done_data: List[DoneData] = []

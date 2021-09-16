@@ -12,6 +12,7 @@ blossom: BlossomAPI = (
         email=os.environ.get("BLOSSOM_EMAIL"),
         password=os.environ.get("BLOSSOM_PASSWORD"),
         api_key=os.environ.get("BLOSSOM_API_KEY"),
+        # Set this to https://grafeas.org/api/ if using in production
         api_base_url=os.environ.get("BLOSSOM_API_BASE_URL")
         or "http://localhost:8000/api/",
     )
