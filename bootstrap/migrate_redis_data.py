@@ -116,9 +116,11 @@ def get_user(username: str) -> Optional[User]:
     if response.status == BlossomStatus.ok:
         logging.info("Fetched user %s from Blossom.", username)
         user = response.data
+        user_id = user["id"]
+        user_cache[username] = user_id
         return {
-            "id": user["id"],
-            "username": user["username"],
+            "id": user_id,
+            "username": username,
         }
 
     # User not found
