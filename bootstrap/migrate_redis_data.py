@@ -33,6 +33,11 @@ comment_filter = ["author", "body", "created_utc", "id", "link_id", "permalink"]
 submission_filter = ["created_utc", "id", "permalink", "title", "url"]
 
 
+class User(TypedDict):
+    id: int
+    username: str
+
+
 class CommentData(TypedDict):
     author: str
     body: str
@@ -77,6 +82,10 @@ RedisData = Dict[str, RedisEntry]
 # A tuple of username and done ID
 DoneData = Tuple[str, str]
 
+user_cache: Dict[str, int] = {
+    "transcribot": 3,
+}
+
 
 def main():
     redis_data = get_redis_data()
@@ -89,6 +98,31 @@ def main():
             ]
     done_data = filter_by_id(done_data)
     process_done_ids(done_data)
+
+
+def get_user(username: str) -> Optional[User]:
+    """Try to get the user data for the given username."""
+    # First try to find it in the cache
+    for name, user_id in user_cache.items():
+        if username == name:
+            return {
+                "id": user_id,
+                "username": name,
+            }
+
+    # It's not cached yet, fetch it from Blossom
+    response = blossom.get_user(username)
+    if response.status == BlossomStatus.ok:
+        logging.info("Fetched user %s from Blossom.", username)
+        user = response.data
+        return {
+            "id": user["id"],
+            "username": user["username"],
+        }
+
+    # User not found
+    logging.warning("User %s not found in Blossom!", username)
+    return None
 
 
 def process_done_ids(done_data: List[DoneData]):
@@ -111,7 +145,7 @@ def process_done_ids(done_data: List[DoneData]):
 
     dur = time.time() - all_start
     logging.info(f"====== {len(done_data)}/{len(done_data)} ======")
-    logging.info(f"DONE in {dur:.2f} s ({dur/len(done_data):.2f} s avg).")
+    logging.info(f"DONE in {dur:.2f} s ({dur / len(done_data):.2f} s avg).")
 
 
 def get_redis_data() -> RedisData:
@@ -234,11 +268,14 @@ def submit_data_to_blossom(data: RedditData) -> RedditData:
     grouped_data = group_data_by_author(data)
     for username in grouped_data:
         start = time.time()
+        user = get_user(username)
+        if user is None:
+            continue
         user_data = grouped_data[username]
         user_data_list = [v for k, v in user_data.items()]
         dummy_subs = get_dummy_submissions(username, len(user_data))
         for blossom_submission, entry in zip(dummy_subs, user_data_list):
-            new_entry = submit_entry_to_blossom(blossom_submission, entry)
+            new_entry = submit_entry_to_blossom(user, blossom_submission, entry)
             data[entry["done_comment"]["id"]] = new_entry
 
         dur = time.time() - start
@@ -356,7 +393,7 @@ def extract_title_from_tor_title(tor_title: str) -> Optional[str]:
 
 
 def submit_entry_to_blossom(
-    blossom_submission: Dict, entry: RedditEntry
+    user: User, blossom_submission: Dict, entry: RedditEntry
 ) -> RedditEntry:
     """Submit a single data entry to Blossom."""
     blossom_id = blossom_submission["id"]
@@ -434,99 +471,102 @@ def submit_entry_to_blossom(
             sub_response.text,
         )
 
-    if transcriptions and len(transcriptions) > 0:
-        # Patch/Create the transcription too
-        transcription_text = "\n\n".join([tr["body"] for tr in transcriptions])
+    entry["transcription_saved"] = patch_or_create_transcription(
+        done_id=done["id"],
+        blossom_submission_id=blossom_id,
+        user=user,
+        transcriptions=transcriptions,
+        source="reddit",
+        remove_footer=False,
+    )
 
-        if len(blossom_submission["transcription_set"]) > 0:
-            # We already have a dummy transcription, patch it
-            tr_data = {
-                "submission": f"https://grafeas.org/api/submission/{blossom_id}/",
-                "create_time": transcriptions[0]["created_utc"].isoformat(),
-                "original_id": transcriptions[0]["id"],
-                "source": "https://grafeas.org/api/source/reddit/",
-                "url": "https://reddit.com" + transcriptions[0]["permalink"],
-                "text": transcription_text,
-                "removed_from_reddit": False,
-            }
+    ocr_bot: User = get_user("transcribot")
+    entry["ocr_saved"] = patch_or_create_transcription(
+        done_id=done["id"],
+        blossom_submission_id=blossom_id,
+        user=ocr_bot,
+        transcriptions=ocr_transcriptions,
+        source="blossom",
+        remove_footer=True,
+    )
 
-            transcription_id = extract_id_from_grafeas_url(
-                blossom_submission["transcription_set"][0]
-            )
-            tr_response = blossom.patch(
-                f"transcription/{transcription_id}", data=tr_data
-            )
-            if tr_response.ok:
-                entry["transcription_saved"] = True
-            else:
-                logging.warning(
-                    "Failed to patch transcription %s of done %s to Blossom (%s)!\n%s",
-                    transcriptions[0]["id"],
-                    done["id"],
-                    tr_response.status_code,
-                    tr_response.text,
-                )
+    return entry
+
+
+def patch_or_create_transcription(
+    done_id: str,
+    blossom_submission_id: int,
+    user: User,
+    transcriptions: Optional[List[CommentData]],
+    source: str,
+    remove_footer: bool,
+) -> Optional[bool]:
+    """Patch or create the transcription by the user for the submission."""
+    if transcriptions is None or len(transcriptions) == 0:
+        # There is no transcription to submit
+        return None
+
+    # We have a transcription, patch or create it
+    transcription_texts = [tr["body"] for tr in transcriptions]
+    if remove_footer:
+        transcription_texts = [remove_ocr_footer(tr) for tr in transcription_texts]
+    transcription_text = "\n\n".join(transcription_texts)
+
+    # Try to find an existing transcription by the user for this submission
+    blossom_tr_response = blossom.get_transcription(
+        submission=blossom_submission_id, author=user["id"]
+    )
+    if (
+        blossom_tr_response.status == BlossomStatus.ok
+        and len(blossom_tr_response.data) > 0
+    ):
+        # We already have a dummy transcription, patch it
+        blossom_tr_id: int = blossom_tr_response.data[0]["id"]
+
+        tr_data = {
+            "submission": f"https://grafeas.org/api/submission/{blossom_submission_id}/",
+            "create_time": transcriptions[0]["created_utc"].isoformat(),
+            "original_id": transcriptions[0]["id"],
+            "source": f"https://grafeas.org/api/source/{source}/",
+            "url": "https://reddit.com" + transcriptions[0]["permalink"],
+            "text": transcription_text,
+            "removed_from_reddit": False,
+        }
+        tr_response = blossom.patch(f"transcription/{blossom_tr_id}", data=tr_data)
+        if tr_response.ok:
+            return True
         else:
-            # No transcription yet, create a new one
-            tr_data = {
-                "username": entry["username"],
-                "submission_id": blossom_id,
-                "source": "reddit",
-                "create_time": transcriptions[0]["created_utc"].isoformat(),
-                "original_id": transcriptions[0]["id"],
-                "url": "https://reddit.com" + transcriptions[0]["permalink"],
-                "text": transcription_text,
-                "removed_from_reddit": False,
-            }
-
-            tr_response = blossom.post("transcription", data=tr_data)
-            if tr_response.ok:
-                entry["transcription_saved"] = True
-            else:
-                logging.warning(
-                    "Failed to create transcription %s of done %s to Blossom (%s)!\n%s",
-                    transcriptions[0]["id"],
-                    done["id"],
-                    tr_response.status_code,
-                    tr_response.text,
-                )
+            logging.warning(
+                "Failed to patch transcription %s of done %s to Blossom (%s)!\n%s",
+                transcriptions[0]["id"],
+                done_id,
+                tr_response.status_code,
+                tr_response.text,
+            )
     else:
-        # There is no transcription to save
-        entry["transcription_saved"] = None
-
-    if ocr_transcriptions and len(ocr_transcriptions) > 0:
-        # Create the OCR transcription too
-        ocr_text = "\n\n".join(
-            [remove_ocr_footer(ocr["body"]) for ocr in ocr_transcriptions]
-        )
-
-        ocr_data = {
-            "username": "transcribot",
-            "submission_id": blossom_id,
-            "source": "reddit",
-            "create_time": ocr_transcriptions[0]["created_utc"].isoformat(),
-            "original_id": ocr_transcriptions[0]["id"],
-            "url": "https://reddit.com" + ocr_transcriptions[0]["permalink"],
-            "text": ocr_text,
+        # No transcription yet, create a new one
+        tr_data = {
+            "username": user["username"],
+            "submission_id": blossom_submission_id,
+            "source": source,
+            "create_time": transcriptions[0]["created_utc"].isoformat(),
+            "original_id": transcriptions[0]["id"],
+            "url": "https://reddit.com" + transcriptions[0]["permalink"],
+            "text": transcription_text,
             "removed_from_reddit": False,
         }
 
-        ocr_response = blossom.post("transcription", data=ocr_data)
-        if ocr_response.ok:
-            entry["ocr_saved"] = True
+        tr_response = blossom.post("transcription", data=tr_data)
+        if tr_response.ok:
+            return True
         else:
             logging.warning(
-                "Failed to create OCR %s of done %s to Blossom (%s)!\n%s",
-                ocr_transcriptions[0]["id"],
-                done["id"],
-                ocr_response.status_code,
-                ocr_response.text,
+                "Failed to create transcription %s of done %s to Blossom (%s)!\n%s",
+                transcriptions[0]["id"],
+                done_id,
+                tr_response.status_code,
+                tr_response.text,
             )
-    else:
-        # There is no OCR to save
-        entry["ocr_saved"] = None
-
-    return entry
 
 
 def remove_ocr_footer(ocr_text: str) -> str:
