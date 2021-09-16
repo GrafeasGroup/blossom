@@ -627,8 +627,12 @@ def fetch_done_comments(data: RedditData) -> RedditData:
     """
     start = time.time()
     done_ids = [done_id for done_id in data]
-    done_comments = list(
-        push.search_comments(ids=done_ids, limit=BATCH_SIZE, filter=comment_filter,)
+    done_comments = (
+        list(
+            push.search_comments(ids=done_ids, limit=BATCH_SIZE, filter=comment_filter,)
+        )
+        if len(done_ids) > 0
+        else []
     )
     done_comments = [dict_from_comment(done) for done in done_comments]
 
@@ -654,10 +658,14 @@ def fetch_tor_submissions(data: RedditData) -> RedditData:
     start = time.time()
     done_comments = [data[done_id]["done_comment"] for done_id in data]
     tor_submission_ids = [done["link_id"] for done in done_comments if done is not None]
-    tor_submissions = list(
-        push.search_submissions(
-            ids=tor_submission_ids, limit=BATCH_SIZE, filter=submission_filter,
+    tor_submissions = (
+        list(
+            push.search_submissions(
+                ids=tor_submission_ids, limit=BATCH_SIZE, filter=submission_filter,
+            )
         )
+        if len(tor_submission_ids) > 0
+        else []
     )
     tor_submissions = [dict_from_submission(tor_sub) for tor_sub in tor_submissions]
     for done_id in data:
@@ -694,10 +702,14 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
     partner_submission_ids = [
         extract_id_from_reddit_url(url) for url in partner_submission_urls
     ]
-    partner_submissions = list(
-        push.search_submissions(
-            ids=partner_submission_ids, limit=BATCH_SIZE, filter=submission_filter,
+    partner_submissions = (
+        list(
+            push.search_submissions(
+                ids=partner_submission_ids, limit=BATCH_SIZE, filter=submission_filter,
+            )
         )
+        if len(partner_submission_ids) > 0
+        else []
     )
     partner_submissions = [
         dict_from_submission(partner_sub) for partner_sub in partner_submissions
