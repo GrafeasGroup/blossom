@@ -1,4 +1,5 @@
 """Views that specifically relate to submissions."""
+import logging
 import random
 from datetime import timedelta
 from typing import Union
@@ -34,6 +35,7 @@ from authentication.models import BlossomUser
 # The maximum number of posts a user can claim
 # depending on their current gamma score
 MAX_CLAIMS = [{"gamma": 0, "claims": 1}, {"gamma": 100, "claims": 2}]
+logger = logging.getLogger("api.views.submission")
 
 
 @method_decorator(
@@ -377,9 +379,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if user.gamma == 0:
             msg = ":rotating_light: First transcription! :rotating_light: " + msg
 
-        slack.chat_postMessage(
-            channel="#transcription_check", text=msg,
-        )
+        try:
+            slack.chat_postMessage(
+                channel="#transcription_check", text=msg,
+            )
+        except:  # noqa
+            logger.warning(f"Cannot post message to slack. Msg: {msg}")
 
     def _check_for_rank_up(
         self, user: BlossomUser, submission: Submission = None
@@ -395,13 +400,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         current_rank = user.get_rank()
         if user.get_rank(override=user.gamma - 1) != current_rank:
-            slack.chat_postMessage(
-                channel="#new_volunteers_meta",
-                text=(
-                    f"Congrats to {user.username} on achieving the rank"
-                    f" of {current_rank}!! {submission.tor_url}"
-                ),
+            msg = (
+                f"Congrats to {user.username} on achieving the rank of {current_rank}!!"
+                f" {submission.tor_url}"
             )
+            try:
+                slack.chat_postMessage(channel="#new_volunteers_meta", text=msg)
+            except:  # noqa
+                logger.warning(f"Cannot post message to slack. Msg: {msg}")
+                pass
 
     @csrf_exempt
     @swagger_auto_schema(
