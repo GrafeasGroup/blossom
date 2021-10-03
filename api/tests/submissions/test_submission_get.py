@@ -104,7 +104,18 @@ class TestSubmissionGet:
         assert "AAA" in result.json()["results"][0]["source"]  # it will be a full link
         assert result.json()["results"][0]["id"] == 1
 
-    def test_list_with_time_filters(self, client: Client) -> None:
+    @pytest.mark.parametrize(
+        "time_query,result_count",
+        [
+            ("from=2021-01-02,1pm", 2),
+            ("from=2021-01-03", 1),
+            ("from=2020-12-31&until=2021-01-05", 4),
+            ("from=2021-01-01T12:00&until=2021-01-03T12:00", 2),
+        ],
+    )
+    def test_list_with_time_filters(
+        self, client: Client, time_query: str, result_count: int
+    ) -> None:
         """Verify that listing submissions using time filters works correctly."""
         client, headers, _ = setup_user_client(client)
 
@@ -114,26 +125,12 @@ class TestSubmissionGet:
         create_submission(complete_time=timezone.make_aware(datetime(2021, 1, 4)))
 
         result = client.get(
-            reverse("submission-list") + "?from=2021-01-02,1pm",
+            reverse("submission-list") + f"?{time_query}",
             content_type="application/json",
             **headers,
         )
         assert result.status_code == status.HTTP_200_OK
-        assert len(result.json()["results"]) == 2
-
-        result = client.get(
-            reverse("submission-list") + "?from=2021-01-03",
-            content_type="application/json",
-            **headers,
-        )
-        assert len(result.json()["results"]) == 1
-
-        result = client.get(
-            reverse("submission-list") + "?from=2020-12-31&until=2021-01-05",
-            content_type="application/json",
-            **headers,
-        )
-        assert len(result.json()["results"]) == 4
+        assert len(result.json()["results"]) == result_count
 
     def test_list_with_advanced_time_filters(self, client: Client) -> None:
         """Verify that listing items with English time filters works properly."""
