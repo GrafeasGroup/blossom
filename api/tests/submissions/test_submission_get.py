@@ -248,3 +248,53 @@ class TestSubmissionGet:
             for obj in result.json()["results"]
         ]
         assert result_times == expected_times
+
+    @pytest.mark.parametrize(
+        "filter_str,result_count",
+        [
+            ("claimed_by__isnull=true", 1),
+            ("claimed_by__isnull=false", 1),
+            ("completed_by__isnull=true", 1),
+            ("completed_by__isnull=false", 1),
+            ("claim_time__isnull=true", 1),
+            ("claim_time__isnull=false", 1),
+            ("complete_time__isnull=true", 1),
+            ("complete_time__isnull=false", 1),
+            ("title__isnull=true", 1),
+            ("title__isnull=false", 1),
+            ("url__isnull=true", 1),
+            ("url__isnull=false", 1),
+            ("tor_url__isnull=true", 1),
+            ("tor_url__isnull=false", 1),
+            ("content_url__isnull=true", 1),
+            ("content_url__isnull=false", 1),
+        ],
+    )
+    def test_list_with_null_filters(
+        self, client: Client, filter_str: str, result_count: int
+    ) -> None:
+        """Verify that attributes can be filtered by null."""
+        client, headers, user = setup_user_client(client, id=123)
+        today = timezone.now()
+
+        create_submission(
+            id=1,
+            claimed_by=user,
+            completed_by=user,
+            claim_time=today,
+            complete_time=today,
+            title="Test Submission",
+            url="https://example.org",
+            tor_url="https://example.org",
+            content_url="https://example.org",
+            redis_id="abc",
+        )
+        create_submission(id=2)
+
+        result = client.get(
+            reverse("submission-list") + f"?{filter_str}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == result_count
