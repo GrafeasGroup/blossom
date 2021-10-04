@@ -85,6 +85,45 @@ class TestTranscriptionCreation:
         assert "AAA" in result.json()["results"][0]["source"]  # it will be a full link
         assert result.json()["results"][0]["id"] == 1
 
+    @pytest.mark.parametrize(
+        "filter_str,result_count",
+        [
+            ("original_id__isnull=true", 1),
+            ("original_id__isnull=false", 1),
+            ("url__isnull=true", 1),
+            ("url__isnull=false", 1),
+            ("text__isnull=true", 1),
+            ("text__isnull=false", 1),
+        ],
+    )
+    def test_list_with_null_filters(
+        self, client: Client, filter_str: str, result_count: int
+    ) -> None:
+        """Verify that filtering for null works correctly."""
+        client, headers, user = setup_user_client(client, id=123)
+
+        submission = create_submission(id=1)
+
+        create_transcription(
+            submission,
+            user,
+            id=2,
+            original_id="abc",
+            url="https://example.org",
+            text="Test Transcription",
+        )
+        create_transcription(
+            submission, user, id=3, original_id=None, url=None, text=None
+        )
+
+        result = client.get(
+            reverse("transcription-list") + f"?{filter_str}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == result_count
+
     def test_create(self, client: Client) -> None:
         """Test whether the creation functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)

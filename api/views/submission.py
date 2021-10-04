@@ -86,19 +86,21 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     permission_classes = (BlossomApiPermission,)
     queryset = Submission.objects.order_by("id")
     filter_backends = [DjangoFilterBackend, TimeFilter, OrderingFilter]
-    filterset_fields = [
-        "id",
-        "original_id",
-        "claimed_by",
-        "completed_by",
-        "source",
-        "title",
-        "url",
-        "tor_url",
-        "archived",
-        "content_url",
-        "redis_id",
-    ]
+    filterset_fields = {
+        "id": ["exact"],
+        "original_id": ["exact"],
+        "claimed_by": ["exact", "isnull"],
+        "completed_by": ["exact", "isnull"],
+        "claim_time": ["isnull"],
+        "complete_time": ["isnull"],
+        "source": ["exact"],
+        "title": ["exact", "isnull"],
+        "url": ["exact", "isnull"],
+        "tor_url": ["exact", "isnull"],
+        "archived": ["exact"],
+        "content_url": ["exact", "isnull"],
+        "redis_id": ["exact", "isnull"],
+    }
     ordering_fields = [
         "id",
         "title",
