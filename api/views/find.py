@@ -38,7 +38,11 @@ def normalize_url(reddit_url_str: str) -> Optional[str]:
 
 def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     """Find the objects by a submission URL."""
-    submission = Submission.objects.get(**{url_type: url})
+    try:
+        submission = Submission.objects.get(**{url_type: url})
+    except Submission.DoesNotExist:
+        return None
+
     author = submission.completed_by
     if author is not None:
         transcription = submission.transcription_set.filter(author=author)[0]
