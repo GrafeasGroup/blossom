@@ -174,19 +174,16 @@ def process_coc_reset(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        if user := BlossomUser.objects.filter(
-            username__iexact=parsed_message[1]
-        ).first():
+        username = clean_links(parsed_message[1])
+        if user := BlossomUser.objects.filter(username__iexact=username).first():
             if user.accepted_coc:
                 user.accepted_coc = False
                 user.save()
-                msg = i18n["slack"]["reset_coc"]["success"].format(parsed_message[1])
+                msg = i18n["slack"]["reset_coc"]["success"].format(username)
             else:
                 user.accepted_coc = True
                 user.save()
-                msg = i18n["slack"]["reset_coc"]["success_undo"].format(
-                    parsed_message[1]
-                )
+                msg = i18n["slack"]["reset_coc"]["success_undo"].format(username)
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
 
