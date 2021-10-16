@@ -1,5 +1,6 @@
 import binascii
 import hmac
+import logging
 import os
 from typing import Any, Dict, List
 from unittest import mock
@@ -14,6 +15,8 @@ from api.serializers import VolunteerSerializer
 from api.views.misc import Summary
 from authentication.models import BlossomUser
 from blossom.strings import translation
+
+logger = logging.getLogger(__name__)
 
 if settings.ENABLE_SLACK is True:
     client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
@@ -126,6 +129,7 @@ def process_blacklist(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
+        logger.warning(parsed_message)
         if user := BlossomUser.objects.filter(
             username__iexact=parsed_message[1]
         ).first():
