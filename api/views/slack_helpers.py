@@ -1,7 +1,7 @@
 import binascii
 import hmac
-import logging
 import os
+import re
 from typing import Any, Dict, List
 from unittest import mock
 
@@ -16,8 +16,6 @@ from api.views.misc import Summary
 from authentication.models import BlossomUser
 from blossom.strings import translation
 
-logger = logging.getLogger(__name__)
-
 if settings.ENABLE_SLACK is True:
     client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
 else:
@@ -25,6 +23,23 @@ else:
     client = mock.Mock()
 
 i18n = translation()
+
+# find a link in the slack format, then strip out the text at the end.
+# they're formatted like this: <https://example.com|Text!>
+SLACK_TEXT_EXTRACTOR = re.compile(
+    r"<(?:https?://)?[\w-]+(?:\.[\w-]+)+\.?(?::\d+)?(?:/\S*)?\|([^>]+)>"
+)
+
+
+def clean_links(text: str) -> str:
+    """Strip link out of auto-generated slack fancy URLS and return the text only."""
+    results = [_ for _ in re.finditer(SLACK_TEXT_EXTRACTOR, text)]
+    # we'll replace things going backwards so that we don't mess up indexing
+    results.reverse()
+
+    for match in results:
+        text = text[: match.start()] + match.groups()[0] + text[match.end() :]
+    return text
 
 
 def dict_to_table(dictionary: Dict, titles: List = None, width: int = None) -> List:
@@ -129,20 +144,16 @@ def process_blacklist(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        logger.warning(parsed_message)
-        if user := BlossomUser.objects.filter(
-            username__iexact=parsed_message[1]
-        ).first():
+        username = clean_links(parsed_message[1])
+        if user := BlossomUser.objects.filter(username__iexact=username).first():
             if user.blacklisted:
                 user.blacklisted = False
                 user.save()
-                msg = i18n["slack"]["blacklist"]["success_undo"].format(
-                    parsed_message[1]
-                )
+                msg = i18n["slack"]["blacklist"]["success_undo"].format(username)
             else:
                 user.blacklisted = True
                 user.save()
-                msg = i18n["slack"]["blacklist"]["success"].format(parsed_message[1])
+                msg = i18n["slack"]["blacklist"]["success"].format(username)
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
     else:
@@ -163,19 +174,16 @@ def process_coc_reset(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        if user := BlossomUser.objects.filter(
-            username__iexact=parsed_message[1]
-        ).first():
+        username = clean_links(parsed_message[1])
+        if user := BlossomUser.objects.filter(username__iexact=username).first():
             if user.accepted_coc:
                 user.accepted_coc = False
                 user.save()
-                msg = i18n["slack"]["reset_coc"]["success"].format(parsed_message[1])
+                msg = i18n["slack"]["reset_coc"]["success"].format(username)
             else:
                 user.accepted_coc = True
                 user.save()
-                msg = i18n["slack"]["reset_coc"]["success_undo"].format(
-                    parsed_message[1]
-                )
+                msg = i18n["slack"]["reset_coc"]["success_undo"].format(username)
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
 

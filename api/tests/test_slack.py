@@ -237,6 +237,18 @@ def test_process_blacklist() -> None:
     ]["success_undo"].format(test_user.username)
 
 
+def test_process_blacklist_with_slack_link() -> None:
+    """Verify that messages with links in them are processed correctly."""
+    slack_client.chat_postMessage = MagicMock()
+
+    test_user = create_user()
+    assert test_user.blacklisted is False
+    message = f"blacklist <https://reddit.com/example|{test_user.username}>"
+    process_blacklist("", message)
+    test_user.refresh_from_db()
+    assert test_user.blacklisted is True
+
+
 @pytest.mark.parametrize(
     "message,response",
     [
@@ -278,6 +290,19 @@ def test_process_coc_reset() -> None:
     assert slack_client.chat_postMessage.call_args[1]["text"] == i18n["slack"][
         "reset_coc"
     ]["success_undo"].format(test_user.username)
+
+
+def test_process_coc_reset_with_slack_link() -> None:
+    """Verify that messages with links in them are processed correctly."""
+    slack_client.chat_postMessage = MagicMock()
+
+    test_user = create_user()
+    assert test_user.accepted_coc is True
+    message = f"reset <https://reddit.com/example|{test_user.username}>"
+    process_coc_reset("", message)
+    slack_client.chat_postMessage.assert_called_once()
+    test_user.refresh_from_db()
+    assert test_user.accepted_coc is False
 
 
 @pytest.mark.parametrize(
