@@ -32,7 +32,7 @@
                 {% endfor %}
                 <li class="nav-item">
                     <a class="nav-link" rel="noreferrer" target="_blank"
-                       href="https://github.com/GrafeasGroup/">Github</a>
+                       href="https://github.com/GrafeasGroup/">GitHub</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" rel="noreferrer" target="_blank"
