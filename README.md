@@ -42,12 +42,12 @@ CACHES = {
 # Just be aware of potential issues where sqlite3 and postgres do not play well
 # together -- namely, django migrations for sqlite3 will allow a field creation
 # and field alter call in the same transaction. Postgres... will not.
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
