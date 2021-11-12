@@ -6,3 +6,5 @@ max-complexity = 10
 max-line-length = 90
 use-varnames-strict-mode = true
 exclude =  .git,__pycache__,build,dist,.venv,bootstrap/*,*/migrations/,docker/*
+per-file-ignores =
+    blossom/settings/routing.py:F401,F403
