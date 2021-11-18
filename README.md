@@ -16,7 +16,7 @@ A Django app that serves our website, payment portal for donations, engineering 
 
 > For a quick and dirty method of testing blossom locally, run `docker-compose up -d` and point your browser to <http://localhost:8080/>
 
-Create a file under the top level `blossom` folder called `local_settings.py`. Populate it with the following:
+Create a file at the top level called `local_settings.py`. Populate it with the following:
 
 ```python
 # noinspection PyUnresolvedReferences
@@ -30,7 +30,6 @@ better_exceptions.MAX_LENGTH = None
 # change how the server runs.
 DEBUG = True
 ENABLE_SLACK = False
-ENABLE_OCR = False
 
 ALLOWED_HOSTS = ['*']
 CACHES = {
@@ -49,7 +48,6 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -71,6 +69,7 @@ LOGGING = {
 }
 
 OVERRIDE_API_AUTH = True
+ENABLE_OCR = False
 MIDDLEWARE = [i for i in MIDDLEWARE if "bugsnag" not in i]
 MIDDLEWARE = ["blossom.middleware.BetterExceptionsMiddleware"] + MIDDLEWARE
 ```
@@ -96,9 +95,9 @@ If an issue is detected when you run `git commit`, the action will be aborted an
 
 * Install dependencies with `poetry install`. Don't have Poetry? Info here: https://poetry.eustace.io/
 
-* Run `python manage.py makemigrations blossom` to build the migrations, then commit them to the database with `python manage.py migrate --settings=blossom.local_settings`.
+* Run `python manage.py makemigrations blossom` to build the migrations, then commit them to the database with `python manage.py migrate`.
 
-* Run `python manage.py bootstrap --settings=blossom.local_settings` to prepopulate the site with the base posts. This will also create a base user account that you can use to make another user for yourself.
+* Run `python manage.py bootstrap` to prepopulate the site with the base posts. This will also create a base user account that you can use to make another user for yourself.
 
   * username: `blossom@grafeas.org`
   * password: `asdf`
@@ -114,7 +113,7 @@ Next, we'll disable the default admin account.
 
 You are now the only admin for the site. Other users must be added through the original form that can be accessed through the link above. 
 
-Run the server with `python manage.py runserver --settings=blossom.local_settings` Any time you need to run a django command that will affect the database when running locally, always end it with `--settings=blossom.local_settings`.
+Run the server with `python manage.py runserver`. Note: you should see in your logs "Found local_settings.py -- loading and using!" _twice_. This is due to how Django's hot reloading feature works; it uses two threads, and each thread will trigger the message. This is expected.
 
 ## Preparing for deploy
 

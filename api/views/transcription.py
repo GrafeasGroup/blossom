@@ -30,15 +30,16 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
     serializer_class = TranscriptionSerializer
     permission_classes = (BlossomApiPermission,)
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = [
-        "id",
-        "submission",
-        "author",
-        "original_id",
-        "source",
-        "url",
-        "removed_from_reddit",
-    ]
+    filterset_fields = {
+        "id": ["exact"],
+        "submission": ["exact"],
+        "author": ["exact"],
+        "original_id": ["exact", "isnull"],
+        "source": ["exact"],
+        "url": ["exact", "isnull"],
+        "text": ["isnull"],
+        "removed_from_reddit": ["exact"],
+    }
     ordering_fields = [
         "id",
         "create_time",

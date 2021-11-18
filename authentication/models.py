@@ -1,10 +1,30 @@
 """Models used within the Authentication application."""
-from django.contrib.auth.models import AbstractUser
+from typing import Any
+
+from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.db.models import QuerySet
 from django.utils import timezone
 from rest_framework_api_key.models import APIKey
 
 from api.models import Submission
+
+
+class BlossomUserManager(UserManager):
+    # https://stackoverflow.com/a/7774039
+    def filter(self, **kwargs: Any) -> QuerySet:
+        """Override `filter` to make usernames case insensitive."""
+        if "username" in kwargs:
+            kwargs["username__iexact"] = kwargs["username"]
+            del kwargs["username"]
+        return super().filter(**kwargs)
+
+    def get(self, **kwargs: Any) -> QuerySet:
+        """Override `get` to make usernames case insensitive."""
+        if "username" in kwargs:
+            kwargs["username__iexact"] = kwargs["username"]
+            del kwargs["username"]
+        return super().get(**kwargs)
 
 
 class BlossomUser(AbstractUser):
@@ -44,6 +64,8 @@ class BlossomUser(AbstractUser):
     # with this user.
     blacklisted = models.BooleanField(default=False)
 
+    objects = BlossomUserManager()
+
     @property
     def gamma(self) -> int:
         """
@@ -61,7 +83,8 @@ class BlossomUser(AbstractUser):
     def __str__(self) -> str:
         return self.username
 
-    def get_rank(self, override: int = None) -> str:
+    # Disable complexity check, it's not really hard to understand
+    def get_rank(self, override: int = None) -> str:  # noqa: C901
         """
         Return the name of the volunteer's current rank.
 
@@ -69,7 +92,9 @@ class BlossomUser(AbstractUser):
         """
         gamma = override if override else self.gamma
 
-        if gamma >= 10000:
+        if gamma >= 20000:
+            return "Sapphire"
+        elif gamma >= 10000:
             return "Jade"
         elif gamma >= 5000:
             return "Topaz"
@@ -85,5 +110,7 @@ class BlossomUser(AbstractUser):
             return "Teal"
         elif gamma >= 50:
             return "Green"
+        elif gamma >= 25:
+            return "Pink"
         else:
             return "Initiate"

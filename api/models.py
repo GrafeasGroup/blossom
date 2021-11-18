@@ -124,6 +124,9 @@ class Submission(models.Model):
         Source, default=get_default_source, on_delete=models.CASCADE
     )
 
+    # The title of the submission.
+    title = models.CharField(max_length=300, blank=True, null=True)
+
     # The URL to the Submission directly on its source.
     url = models.URLField(null=True, blank=True)
 

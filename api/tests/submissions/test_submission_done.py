@@ -132,7 +132,7 @@ class TestSubmissionDone:
         "probability,gamma,message,tor_url,trans_url",
         [
             (1, 3, False, None, None),
-            (0.8, 25, False, None, None),
+            (0.8, 10, False, None, None),
             (0.3999, 50, True, None, None),
             (0.7, 51, False, None, None),
             (0.1999, 100, True, None, None),
@@ -248,13 +248,13 @@ class TestSubmissionDone:
     def test_check_for_rank_up(self, client: Client) -> None:
         """Verify that a slack message fires when a volunteer ranks up."""
         client, headers, user = setup_user_client(client)
-        for iteration in range(49):
+        for iteration in range(24):
             create_submission(claimed_by=user, completed_by=user)
 
         # Mock the Slack client to catch the sent messages by the function under test.
         slack_client.chat_postMessage = MagicMock()
 
-        submission = create_submission(claimed_by=user, original_id=50)
+        submission = create_submission(claimed_by=user, original_id=25)
 
         # patch out random so that the "check transcription" doesn't fire
         with patch("random.random", lambda: 1):
@@ -275,7 +275,7 @@ class TestSubmissionDone:
         )
 
         # now they do another transcription!
-        submission = create_submission(claimed_by=user, original_id=51)
+        submission = create_submission(claimed_by=user, original_id=26)
         create_transcription(submission, user)
 
         # now it shouldn't trigger on the next transcription
