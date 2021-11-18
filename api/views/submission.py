@@ -678,25 +678,34 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         user_data = None
         below_data = None
 
-        print(f"user_id: {user_id}")
-
-        print("Calculating cte...")
         rank_query = (
             # Apply the provided submission filters
-            self.filter_queryset(Submission.objects).filter(completed_by__isnull=False)
+            self.filter_queryset(Submission.objects)
+            .filter(completed_by__isnull=False)
             # Add author information
             .select_related("completed_by")
             # Group by author
-            .values("completed_by", "completed_by__username")
+            .values(
+                "completed_by", "completed_by__username", "completed_by__date_joined"
+            )
             # Count gamma
-            .annotate(gamma=Count("completed_by"), id=F("completed_by"), username=F("completed_by__username"))
+            .annotate(
+                gamma=Count("completed_by"),
+                id=F("completed_by"),
+                username=F("completed_by__username"),
+                date_joined=F("completed_by__date_joined"),
+            )
             # Add ranks
             .annotate(
                 # Add the rank of the user as field
                 # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
                 # TODO: Fix that the rank changes when the users get filtered
-                # RawSQL("RANK() OVER(ORDER BY gamma DESC)", [])
-                rank=Window(expression=DenseRank(), order_by=[F("gamma").desc()]),
+                # Orders by gamma first and date_joined second
+                # Newer users are ranked higher as they had less time to get gamma
+                rank=Window(
+                    expression=DenseRank(),
+                    order_by=[F("gamma").desc(), F("date_joined").desc()],
+                ),
             )
             .values("rank", "id", "username", "gamma")
         )
@@ -714,11 +723,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             user_index = [user["id"] for user in rank_list].index(user_id)
             user_data = rank_list[user_index]
             # Users with more gamma than the current user
-            above_data = rank_list[user_index - 1 - below_count:user_index]
+            above_data = rank_list[user_index - 1 - below_count : user_index]
             # Users with less gamma than the current user
-            below_data = rank_list[user_index + 1:user_index + 1 + above_count]
+            below_data = rank_list[user_index + 1 : user_index + 1 + above_count]
 
-        print("Putting data together")
         data = {
             "top": top_data,
             "above": above_data,
