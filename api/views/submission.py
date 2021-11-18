@@ -3,13 +3,15 @@ import random
 from datetime import timedelta
 from typing import Union
 
+from django.db.models import Count, F, Window
 from django.conf import settings
-from django.db.models.functions import Length
+from django.db.models.functions import Length, DenseRank
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django_cte import With
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.openapi import Parameter
 from drf_yasg.openapi import Response as DocResponse
@@ -631,3 +633,101 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 urls.pop(urls.index(submission.url))
 
         return Response(status=status.HTTP_200_OK, data=urls)
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        manual_parameters=[
+            Parameter(
+                "user_id",
+                "query",
+                type="number",
+                description="The user to center the leaderboard on.",
+            ),
+            Parameter(
+                "top_count",
+                "query",
+                type="number",
+                description="The number of users to show from the top leaderboard.",
+            ),
+            Parameter(
+                "above_count",
+                "query",
+                type="number",
+                description="The number of users to show above the given user.",
+            ),
+            Parameter(
+                "below_count",
+                "query",
+                type="number",
+                description="The number of users to show below the given user.",
+            ),
+        ],
+        responses={404: "No volunteer with the specified ID."},
+    )
+    @action(detail=False, methods=["get"])
+    def leaderboard(self, request: Request,) -> Response:
+        """Get the leaderboard for the given user."""
+        user_id = request.GET.get("user_id", None)
+        if user_id is not None:
+            user_id = int(user_id)
+        top_count = int(request.GET.get("top_count", 5))
+        above_count = int(request.GET.get("above_count", 5))
+        below_count = int(request.GET.get("below_count", 5))
+
+        above_data = None
+        user_data = None
+        below_data = None
+
+        print(f"user_id: {user_id}")
+
+        print("Calculating cte...")
+        rank_cte = With(
+            Submission.objects.exclude(completed_by=None)
+            .values("completed_by")
+            .annotate(gamma=Count("completed_by"), id=F("completed_by"),)
+            .annotate(
+                # Add the rank of the user as field
+                # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
+                # TODO: Fix that the rank changes when the users get filtered
+                # RawSQL("RANK() OVER(ORDER BY gamma DESC)", [])
+                rank=Window(expression=DenseRank(), order_by=[F("gamma").desc()]),
+            )
+            .values("id", "gamma", "rank")
+        )
+        print("Calculating queryset...")
+        # Using a CTE query to retain the rank even when filtering the selection
+        # https://stackoverflow.com/questions/65046994/keeping-annotated-rank-when-filtering-django
+        rank_queryset = rank_cte.queryset().with_cte(rank_cte)
+        print("Got queryset.")
+
+        top_data = rank_queryset[:top_count]
+        print(f"Top data {top_data.count()}")
+        print("Got top data")
+
+        if user_id is not None:
+            print("Getting user data...")
+            # TODO: Fix that the gamma drops down to one when doing this
+            # TODO: Fix that the rank goes to one when doing this
+            # (See above, when the select changes the rank changes too)
+            user_data = rank_queryset.filter(id=user_id)
+            print(f"User data: {user_data}")
+            user_rank = 2  # user_data["rank"]
+            print(f"User data {user_data.count()}")
+            print("Got user data")
+            # TODO: Fix that rank doesn't work with gt and lt
+            above_data = rank_queryset.filter(rank__gt=user_rank)[:above_count]
+            print(f"Above data {above_data.count()}")
+            print("Got above data")
+            below_data = rank_queryset.filter(rank__lt=user_rank)[:below_count]
+            print(f"Below data {below_data.count()}")
+            print("Got below data")
+
+        print("Putting data together")
+        data = {
+            "top": top_data,
+            "above": above_data,
+            "user": user_data,
+            "below": below_data,
+        }
+
+        return Response(data)
