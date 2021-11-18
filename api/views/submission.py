@@ -681,12 +681,16 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         print(f"user_id: {user_id}")
 
         print("Calculating cte...")
-        rank_cte = (
+        rank_query = (
+            # Apply the provided submission filters
             self.filter_queryset(Submission.objects).filter(completed_by__isnull=False)
+            # Add author information
             .select_related("completed_by")
-            # .annotate(username=F("completed_by__username"))
+            # Group by author
             .values("completed_by", "completed_by__username")
+            # Count gamma
             .annotate(gamma=Count("completed_by"), id=F("completed_by"), username=F("completed_by__username"))
+            # Add ranks
             .annotate(
                 # Add the rank of the user as field
                 # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
@@ -696,32 +700,23 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             )
             .values("rank", "id", "username", "gamma")
         )
-        print("Converting to list")
-        query_list = list(rank_cte)
-        print(query_list)
-        print("Got queryset.")
+        # We can't filter the query further, because we'd lose the rank annotations
+        # We convert the query into a list to extract the necessary entries
+        # TODO: This is very inefficient, maybe there's a better way to do this?
+        rank_list = list(rank_query)
 
-        # top_data = rank_queryset[:top_count]
-        # print(f"Top data {top_data.count()}")
-        # print("Got top data")
-        #
-        # if user_id is not None:
-        #     print("Getting user data...")
-        #     # TODO: Fix that the gamma drops down to one when doing this
-        #     # TODO: Fix that the rank goes to one when doing this
-        #     # (See above, when the select changes the rank changes too)
-        #     user_data = rank_queryset.filter(id=user_id)
-        #     print(f"User data: {user_data}")
-        #     user_rank = 2  # user_data["rank"]
-        #     print(f"User data {user_data.count()}")
-        #     print("Got user data")
-        #     # TODO: Fix that rank doesn't work with gt and lt
-        #     above_data = rank_queryset.filter(rank__gt=user_rank)[:above_count]
-        #     print(f"Above data {above_data.count()}")
-        #     print("Got above data")
-        #     below_data = rank_queryset.filter(rank__lt=user_rank)[:below_count]
-        #     print(f"Below data {below_data.count()}")
-        #     print("Got below data")
+        # Find the top users
+        top_data = rank_list[:top_count]
+
+        if user_id is not None:
+            # Find the queried user in the list
+            # TODO: Find a more efficient way to do this
+            user_index = [user["id"] for user in rank_list].index(user_id)
+            user_data = rank_list[user_index]
+            # Users with more gamma than the current user
+            above_data = rank_list[user_index - 1 - below_count:user_index]
+            # Users with less gamma than the current user
+            below_data = rank_list[user_index + 1:user_index + 1 + above_count]
 
         print("Putting data together")
         data = {

@@ -26,9 +26,9 @@ class TestSubmissionLeaderboard:
                     {"id": 3, "gamma": 15},
                 ],
                 [
-                    {"id": 3, "gamma": 15, "rank": 1},
-                    {"id": 1, "gamma": 10, "rank": 2},
-                    {"id": 2, "gamma": 4, "rank": 3},
+                    {"id": 3, "gamma": 15, "rank": 1, "username": "user-3"},
+                    {"id": 1, "gamma": 10, "rank": 2, "username": "user-1"},
+                    {"id": 2, "gamma": 4, "rank": 3, "username": "user-2"},
                 ],
             )
         ],
@@ -41,7 +41,7 @@ class TestSubmissionLeaderboard:
 
         for obj in data:
             user_id = obj.get("id")
-            cur_user = create_user(id=user_id, username=str(user_id), is_volunteer=True)
+            cur_user = create_user(id=user_id, username=f"user-{user_id}", is_volunteer=True)
             for _ in range(obj.get("gamma")):
                 create_submission(completed_by=cur_user)
 
@@ -65,9 +65,9 @@ class TestSubmissionLeaderboard:
                     {"id": 3, "gamma": 15},
                 ],
                 1,
-                [{"id": 3, "gamma": 15, "rank": 1}],
-                {"id": 1, "gamma": 10, "rank": 2},
-                [{"id": 2, "gamma": 4, "rank": 3}],
+                [{"id": 3, "gamma": 15, "rank": 1, "username": "user-3"}],
+                {"id": 1, "gamma": 10, "rank": 2, "username": "user-1"},
+                [{"id": 2, "gamma": 4, "rank": 3, "username": "user-2"}],
             )
         ],
     )
@@ -84,8 +84,8 @@ class TestSubmissionLeaderboard:
         client, headers, _ = setup_user_client(client, id=99999, is_volunteer=False)
 
         for obj in data:
-            user_id = obj.get("id")
-            cur_user = create_user(id=user_id, username=f"user-{user_id}", is_volunteer=True)
+            cur_user_id = obj.get("id")
+            cur_user = create_user(id=cur_user_id, username=f"user-{cur_user_id}", is_volunteer=True)
             for _ in range(obj.get("gamma")):
                 create_submission(completed_by=cur_user)
 
