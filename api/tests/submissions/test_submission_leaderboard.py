@@ -39,7 +39,7 @@ class TestSubmissionLeaderboard:
     def test_top_leaderboard(
         self, client: Client, data: List[UserData], expected: List[UserData],
     ) -> None:
-        """Test if the number of transcriptions per day is aggregated correctly."""
+        """Test if the top leaderboard is set up correctly."""
         client, headers, _ = setup_user_client(client, id=99999, is_volunteer=False)
 
         for obj in data:
@@ -89,7 +89,7 @@ class TestSubmissionLeaderboard:
         expected_user: UserData,
         expected_below: List[UserData],
     ) -> None:
-        """Test if the number of transcriptions per day is aggregated correctly."""
+        """Test if the user related leaderboard is set up correctly."""
         client, headers, _ = setup_user_client(client, id=99999, is_volunteer=False)
 
         for obj in data:
@@ -118,3 +118,35 @@ class TestSubmissionLeaderboard:
         assert actual_above == expected_above
         actual_below = results["below"]
         assert actual_below == actual_below
+
+    def test_filtered_leaderboard(self, client: Client,) -> None:
+        """Test if the submissions that the rate is calculated on are filtered correctly."""
+        client, headers, user = setup_user_client(
+            client, id=1, username="user-1", is_volunteer=False
+        )
+
+        # Submissions before filter
+        for _ in range(4):
+            create_submission(
+                completed_by=user, complete_time=make_aware(datetime(2021, 11, 3))
+            )
+        # Submissions after filter
+        for _ in range(7):
+            create_submission(
+                completed_by=user, complete_time=make_aware(datetime(2021, 11, 5))
+            )
+
+        results = client.get(
+            reverse("submission-leaderboard") + "?user_id=1&from=2021-11-04",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert results.status_code == status.HTTP_200_OK
+        results = results.json()
+        assert results["user"] == {
+            "id": 1,
+            "username": "user-1",
+            "gamma": 7,
+            "rank": 1,
+        }
