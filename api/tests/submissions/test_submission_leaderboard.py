@@ -120,7 +120,7 @@ class TestSubmissionLeaderboard:
         assert actual_below == actual_below
 
     def test_filtered_leaderboard(self, client: Client,) -> None:
-        """Test if the submissions that the rate is calculated on are filtered correctly."""
+        """Test if the submissions for the rate is calculated on are filtered."""
         client, headers, user = setup_user_client(
             client, id=1, username="user-1", is_volunteer=False
         )

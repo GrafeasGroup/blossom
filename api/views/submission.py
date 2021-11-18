@@ -4,13 +4,13 @@ import random
 from datetime import timedelta
 from typing import Union
 
-from django.db.models import Count, F, Window
 from django.conf import settings
+from django.db.models import Count, F, Window
 from django.db.models.functions import (
+    DenseRank,
     ExtractHour,
     ExtractIsoWeekDay,
     Length,
-    DenseRank,
     TruncDate,
     TruncDay,
     TruncHour,
