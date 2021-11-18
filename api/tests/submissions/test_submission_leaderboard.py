@@ -46,7 +46,7 @@ class TestSubmissionLeaderboard:
                 create_submission(completed_by=cur_user)
 
         result = client.get(
-            reverse("volunteer-leaderboard"),
+            reverse("submission-leaderboard"),
             content_type="application/json",
             **headers,
         )
@@ -85,12 +85,12 @@ class TestSubmissionLeaderboard:
 
         for obj in data:
             user_id = obj.get("id")
-            cur_user = create_user(id=user_id, username=str(user_id), is_volunteer=True)
+            cur_user = create_user(id=user_id, username=f"user-{user_id}", is_volunteer=True)
             for _ in range(obj.get("gamma")):
                 create_submission(completed_by=cur_user)
 
         result = client.get(
-            reverse("volunteer-leaderboard") + f"?user_id={user_id}",
+            reverse("submission-leaderboard") + f"?user_id={user_id}",
             content_type="application/json",
             **headers,
         )
@@ -101,4 +101,4 @@ class TestSubmissionLeaderboard:
         actual_above = result.json()["above"]
         assert actual_above == expected_above
         actual_below = result.json()["below"]
-        assert actual_user == actual_below
+        assert actual_below == actual_below

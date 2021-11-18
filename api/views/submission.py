@@ -681,10 +681,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         print(f"user_id: {user_id}")
 
         print("Calculating cte...")
-        rank_cte = With(
-            Submission.objects.exclude(completed_by=None)
-            .values("completed_by")
-            .annotate(gamma=Count("completed_by"), id=F("completed_by"),)
+        rank_cte = (
+            self.filter_queryset(Submission.objects).filter(completed_by__isnull=False)
+            .select_related("completed_by")
+            # .annotate(username=F("completed_by__username"))
+            .values("completed_by", "completed_by__username")
+            .annotate(gamma=Count("completed_by"), id=F("completed_by"), username=F("completed_by__username"))
             .annotate(
                 # Add the rank of the user as field
                 # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
@@ -692,35 +694,34 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 # RawSQL("RANK() OVER(ORDER BY gamma DESC)", [])
                 rank=Window(expression=DenseRank(), order_by=[F("gamma").desc()]),
             )
-            .values("id", "gamma", "rank")
+            .values("rank", "id", "username", "gamma")
         )
-        print("Calculating queryset...")
-        # Using a CTE query to retain the rank even when filtering the selection
-        # https://stackoverflow.com/questions/65046994/keeping-annotated-rank-when-filtering-django
-        rank_queryset = rank_cte.queryset().with_cte(rank_cte)
+        print("Converting to list")
+        query_list = list(rank_cte)
+        print(query_list)
         print("Got queryset.")
 
-        top_data = rank_queryset[:top_count]
-        print(f"Top data {top_data.count()}")
-        print("Got top data")
-
-        if user_id is not None:
-            print("Getting user data...")
-            # TODO: Fix that the gamma drops down to one when doing this
-            # TODO: Fix that the rank goes to one when doing this
-            # (See above, when the select changes the rank changes too)
-            user_data = rank_queryset.filter(id=user_id)
-            print(f"User data: {user_data}")
-            user_rank = 2  # user_data["rank"]
-            print(f"User data {user_data.count()}")
-            print("Got user data")
-            # TODO: Fix that rank doesn't work with gt and lt
-            above_data = rank_queryset.filter(rank__gt=user_rank)[:above_count]
-            print(f"Above data {above_data.count()}")
-            print("Got above data")
-            below_data = rank_queryset.filter(rank__lt=user_rank)[:below_count]
-            print(f"Below data {below_data.count()}")
-            print("Got below data")
+        # top_data = rank_queryset[:top_count]
+        # print(f"Top data {top_data.count()}")
+        # print("Got top data")
+        #
+        # if user_id is not None:
+        #     print("Getting user data...")
+        #     # TODO: Fix that the gamma drops down to one when doing this
+        #     # TODO: Fix that the rank goes to one when doing this
+        #     # (See above, when the select changes the rank changes too)
+        #     user_data = rank_queryset.filter(id=user_id)
+        #     print(f"User data: {user_data}")
+        #     user_rank = 2  # user_data["rank"]
+        #     print(f"User data {user_data.count()}")
+        #     print("Got user data")
+        #     # TODO: Fix that rank doesn't work with gt and lt
+        #     above_data = rank_queryset.filter(rank__gt=user_rank)[:above_count]
+        #     print(f"Above data {above_data.count()}")
+        #     print("Got above data")
+        #     below_data = rank_queryset.filter(rank__lt=user_rank)[:below_count]
+        #     print(f"Below data {below_data.count()}")
+        #     print("Got below data")
 
         print("Putting data together")
         data = {
