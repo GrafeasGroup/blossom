@@ -5,9 +5,8 @@ from datetime import timedelta
 from typing import Union
 
 from django.conf import settings
-from django.db.models import Count, F, Window
+from django.db.models import Count, F
 from django.db.models.functions import (
-    DenseRank,
     ExtractHour,
     ExtractIsoWeekDay,
     Length,
@@ -841,24 +840,18 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 username=F("completed_by__username"),
                 date_joined=F("completed_by__date_joined"),
             )
-            # Add ranks
-            .annotate(
-                # Add the rank of the user as field
-                # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
-                # TODO: Fix that the rank changes when the users get filtered
-                # Orders by gamma first and date_joined second
-                # Newer users are ranked higher as they had less time to get gamma
-                rank=Window(
-                    expression=DenseRank(),
-                    order_by=[F("gamma").desc(), F("date_joined").desc()],
-                ),
-            )
-            .values("rank", "id", "username", "gamma")
+            .values("id", "username", "gamma", "date_joined")
+            .order_by(F("gamma").desc(), F("date_joined").desc())
         )
         # We can't filter the query further, because we'd lose the rank annotations
         # We convert the query into a list to extract the necessary entries
         # TODO: This is very inefficient, maybe there's a better way to do this?
-        rank_list = list(rank_query)
+        query_list = list(rank_query)
+
+        # Originally we used window expressions to annotate the ranks directly
+        # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
+        # Unfortunately that is not supported on all backends
+        rank_list = [{**entry, "rank": i + 1} for i, entry in enumerate(query_list)]
 
         # Find the top users
         top_data = rank_list[:top_count]
