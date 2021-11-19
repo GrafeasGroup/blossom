@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Union, Any
+from typing import Any, Dict, List, Union
 
 import pytest
 import pytz
@@ -8,11 +8,7 @@ from django.urls import reverse
 from django.utils.timezone import make_aware
 from rest_framework import status
 
-from api.tests.helpers import (
-    create_submission,
-    create_user,
-    setup_user_client,
-)
+from api.tests.helpers import create_submission, create_user, setup_user_client
 
 
 def extract_ids(results: List[Dict[str, Any]]) -> List[int]:
