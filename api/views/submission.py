@@ -819,9 +819,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         above_count = int(request.GET.get("above_count", 5))
         below_count = int(request.GET.get("below_count", 5))
 
-        above_data = None
-        user_data = None
-        below_data = None
+        above_data = user_data = below_data = None
 
         rank_query = (
             # Apply the provided submission filters
@@ -843,15 +841,14 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             .values("id", "username", "gamma", "date_joined")
             .order_by(F("gamma").desc(), F("date_joined").desc())
         )
-        # We can't filter the query further, because we'd lose the rank annotations
-        # We convert the query into a list to extract the necessary entries
         # TODO: This is very inefficient, maybe there's a better way to do this?
-        query_list = list(rank_query)
-
         # Originally we used window expressions to annotate the ranks directly
         # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
         # Unfortunately that is not supported on all backends
-        rank_list = [{**entry, "rank": i + 1} for i, entry in enumerate(query_list)]
+        # Instead, we convert the query into a list and also add the ranks manually
+        rank_list = rank_list = [
+            {**entry, "rank": i + 1} for i, entry in enumerate(rank_query)
+        ]
 
         # Find the top users
         top_data = rank_list[:top_count]
