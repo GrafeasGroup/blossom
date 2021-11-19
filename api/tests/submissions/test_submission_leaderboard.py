@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Any
 
 import pytest
+import pytz
 from django.test import Client
 from django.urls import reverse
 from django.utils.timezone import make_aware
@@ -12,6 +13,11 @@ from api.tests.helpers import (
     create_user,
     setup_user_client,
 )
+
+
+def extract_ids(results: List[Dict[str, Any]]) -> List[int]:
+    """Extract the user IDs from the result set."""
+    return [res["id"] for res in results]
 
 
 class TestSubmissionLeaderboard:
@@ -28,11 +34,7 @@ class TestSubmissionLeaderboard:
                     {"id": 2, "gamma": 4},
                     {"id": 3, "gamma": 15},
                 ],
-                [
-                    {"id": 3, "gamma": 15, "rank": 1, "username": "user-3"},
-                    {"id": 1, "gamma": 10, "rank": 2, "username": "user-1"},
-                    {"id": 2, "gamma": 4, "rank": 3, "username": "user-2"},
-                ],
+                [3, 1, 2],
             )
         ],
     )
@@ -57,7 +59,7 @@ class TestSubmissionLeaderboard:
         )
 
         assert result.status_code == status.HTTP_200_OK
-        actual = result.json()["top"]
+        actual = extract_ids(result.json()["top"])
         assert actual == expected
 
     @pytest.mark.parametrize(
@@ -65,18 +67,21 @@ class TestSubmissionLeaderboard:
         [
             (
                 [
-                    {"id": 1, "gamma": 10},
+                    {"id": 1, "gamma": 10, "date_joined": datetime(2021, 11, 5)},
                     {"id": 2, "gamma": 4},
                     {"id": 3, "gamma": 15, "date_joined": datetime(2021, 11, 3)},
                     {"id": 4, "gamma": 15, "date_joined": datetime(2021, 11, 4)},
                 ],
                 1,
-                [
-                    {"id": 4, "gamma": 15, "rank": 1, "username": "user-4"},
-                    {"id": 3, "gamma": 15, "rank": 2, "username": "user-3"},
-                ],
-                {"id": 1, "gamma": 10, "rank": 3, "username": "user-1"},
-                [{"id": 2, "gamma": 4, "rank": 4, "username": "user-2"}],
+                [4, 3],
+                {
+                    "id": 1,
+                    "gamma": 10,
+                    "rank": 3,
+                    "username": "user-1",
+                    "date_joined": "2021-11-05T00:00:00Z",
+                },
+                [2],
             )
         ],
     )
@@ -85,9 +90,9 @@ class TestSubmissionLeaderboard:
         client: Client,
         data: List[UserData],
         user_id: int,
-        expected_above: List[UserData],
+        expected_above: List[int],
         expected_user: UserData,
-        expected_below: List[UserData],
+        expected_below: List[int],
     ) -> None:
         """Test if the user related leaderboard is set up correctly."""
         client, headers, _ = setup_user_client(client, id=99999, is_volunteer=False)
@@ -112,17 +117,15 @@ class TestSubmissionLeaderboard:
 
         assert results.status_code == status.HTTP_200_OK
         results = results.json()
-        actual_user = results["user"]
-        assert actual_user == expected_user
-        actual_above = results["above"]
-        assert actual_above == expected_above
-        actual_below = results["below"]
-        assert actual_below == actual_below
+        assert results["user"] == expected_user
+        assert extract_ids(results["above"]) == expected_above
+        assert extract_ids(results["below"]) == expected_below
 
     def test_filtered_leaderboard(self, client: Client,) -> None:
         """Test if the submissions for the rate is calculated on are filtered."""
+        date_joined = datetime(2021, 11, 3, tzinfo=pytz.UTC)
         client, headers, user = setup_user_client(
-            client, id=1, username="user-1", is_volunteer=False
+            client, id=1, username="user-1", date_joined=date_joined, is_volunteer=True
         )
 
         # Submissions before filter
@@ -149,4 +152,5 @@ class TestSubmissionLeaderboard:
             "username": "user-1",
             "gamma": 7,
             "rank": 1,
+            "date_joined": "2021-11-03T00:00:00Z",
         }
