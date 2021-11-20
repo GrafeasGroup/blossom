@@ -285,3 +285,37 @@ class TestSubmissionGet:
         )
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == result_count
+
+    @pytest.mark.parametrize(
+        "filter_str,result_count",
+        [
+            ("title__icontains=title", 3),
+            ("title__icontains=TITLE", 3),
+            ("title__icontains=This", 1),
+            ("title__icontains=this", 1),
+            ("title__icontains=hamburger", 0),
+        ],
+    )
+    def test_list_with_contains_filters(
+        self, client: Client, filter_str: str, result_count: int
+    ) -> None:
+        """Verify that the title can be searched."""
+        client, headers, user = setup_user_client(client, id=123)
+
+        create_submission(
+            id=1, title="This is a title",
+        )
+        create_submission(
+            id=2, title="Another title",
+        )
+        create_submission(
+            id=3, title="TITLE IS GOOD",
+        )
+
+        result = client.get(
+            reverse("submission-list") + f"?{filter_str}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == result_count
