@@ -94,7 +94,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         "claim_time": ["isnull"],
         "complete_time": ["isnull"],
         "source": ["exact"],
-        "title": ["exact", "isnull"],
+        "title": ["exact", "isnull", "icontains"],
         "url": ["exact", "isnull"],
         "tor_url": ["exact", "isnull"],
         "archived": ["exact"],

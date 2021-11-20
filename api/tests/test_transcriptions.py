@@ -124,6 +124,41 @@ class TestTranscriptionCreation:
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == result_count
 
+    @pytest.mark.parametrize(
+        "filter_str,result_count",
+        [
+            ("text__icontains=text", 2),
+            ("text__icontains=TEXT", 2),
+            ("text__icontains=This", 1),
+            ("text__icontains=this", 1),
+        ],
+    )
+    def test_list_with_contains_filters(
+        self, client: Client, filter_str: str, result_count: int
+    ) -> None:
+        """Test whether the transcription text can be searched."""
+        client, headers, user = setup_user_client(client, id=123)
+
+        submission = create_submission(id=1)
+
+        create_transcription(
+            submission, user, id=2, text="This is a very interesting text and such.",
+        )
+        create_transcription(
+            submission, user, id=3, text="A text is a form of literature.",
+        )
+        create_transcription(
+            submission, user, id=4, text="Bla bla bla bla.",
+        )
+
+        result = client.get(
+            reverse("transcription-list") + f"?{filter_str}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == result_count
+
     def test_create(self, client: Client) -> None:
         """Test whether the creation functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
