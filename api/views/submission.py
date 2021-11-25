@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Union
 
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, F
 from django.db.models.functions import (
     ExtractHour,
     ExtractIsoWeekDay,
@@ -778,3 +778,96 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 urls.pop(urls.index(submission.url))
 
         return Response(status=status.HTTP_200_OK, data=urls)
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        manual_parameters=[
+            Parameter(
+                "user_id",
+                "query",
+                type="number",
+                description="The user to center the leaderboard on.",
+            ),
+            Parameter(
+                "top_count",
+                "query",
+                type="number",
+                description="The number of users to show from the top leaderboard.",
+            ),
+            Parameter(
+                "above_count",
+                "query",
+                type="number",
+                description="The number of users to show above the given user.",
+            ),
+            Parameter(
+                "below_count",
+                "query",
+                type="number",
+                description="The number of users to show below the given user.",
+            ),
+        ],
+        responses={404: "No volunteer with the specified ID."},
+    )
+    @action(detail=False, methods=["get"])
+    def leaderboard(self, request: Request,) -> Response:
+        """Get the leaderboard for the given user."""
+        user_id = request.GET.get("user_id", None)
+        if user_id is not None:
+            user_id = int(user_id)
+        top_count = int(request.GET.get("top_count", 5))
+        above_count = int(request.GET.get("above_count", 5))
+        below_count = int(request.GET.get("below_count", 5))
+
+        above_data = user_data = below_data = None
+
+        rank_query = (
+            # Apply the provided submission filters
+            self.filter_queryset(Submission.objects)
+            .filter(completed_by__isnull=False)
+            # Add author information
+            .select_related("completed_by")
+            # Group by author
+            .values(
+                "completed_by", "completed_by__username", "completed_by__date_joined"
+            )
+            # Count gamma
+            .annotate(
+                gamma=Count("completed_by"),
+                id=F("completed_by"),
+                username=F("completed_by__username"),
+                date_joined=F("completed_by__date_joined"),
+            )
+            .values("id", "username", "gamma", "date_joined")
+            .order_by(F("gamma").desc(), F("date_joined").desc())
+        )
+        # TODO: This is very inefficient, maybe there's a better way to do this?
+        # Originally we used window expressions to annotate the ranks directly
+        # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
+        # Unfortunately that is not supported on all backends
+        # Instead, we convert the query into a list and also add the ranks manually
+        rank_list = rank_list = [
+            {**entry, "rank": i + 1} for i, entry in enumerate(rank_query)
+        ]
+
+        # Find the top users
+        top_data = rank_list[:top_count]
+
+        if user_id is not None:
+            # Find the queried user in the list
+            # TODO: Find a more efficient way to do this
+            user_index = [user["id"] for user in rank_list].index(user_id)
+            user_data = rank_list[user_index]
+            # Users with more gamma than the current user
+            above_data = rank_list[user_index - 1 - below_count : user_index]
+            # Users with less gamma than the current user
+            below_data = rank_list[user_index + 1 : user_index + 1 + above_count]
+
+        data = {
+            "top": top_data,
+            "above": above_data,
+            "user": user_data,
+            "below": below_data,
+        }
+
+        return Response(data)
