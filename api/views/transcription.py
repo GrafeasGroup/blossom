@@ -60,6 +60,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
             properties={
                 "original_id": Schema(type="string"),
                 "removed_from_reddit": Schema(type="string"),
+                "create_time": Schema(type="string"),
                 "source": Schema(type="string"),
                 "submission_id": Schema(type="string"),
                 "text": Schema(type="string"),
@@ -123,15 +124,19 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         if not user.accepted_coc:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        transcription = Transcription.objects.create(
-            submission=submission,
-            author=user,
-            original_id=original_id,
-            url=url,
-            source=source,
-            text=text,
-            removed_from_reddit=removed_from_reddit,
-        )
+        transcription_create_data = {
+            "submission": submission,
+            "author": user,
+            "original_id": original_id,
+            "url": url,
+            "source": source,
+            "text": text,
+            "removed_from_reddit": removed_from_reddit,
+        }
+        if create_time := request.data.get("create_time"):
+            transcription_create_data.update({"create_time": create_time})
+
+        transcription = Transcription.objects.create(**transcription_create_data)
         return Response(
             data=self.serializer_class(
                 transcription, context={"request": request}

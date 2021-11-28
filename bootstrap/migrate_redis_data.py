@@ -68,6 +68,8 @@ class RedditEntry(TypedDict):
     ocr_saved: Optional[bool]
 
 
+BlossomSubmission = Dict[str, Union[str, bool, int]]
+
 RedditData = Dict[str, RedditEntry]
 
 
@@ -220,7 +222,7 @@ def process_done_batch(done_data: List[DoneData]):
     fetch_tor_submissions(data)
     fetch_partner_submissions(data)
     # Next we need to do the individual calls
-    fetch_claim_comment(data)
+    fetch_claim_comments(data)
     fetch_ocr_transcriptions(data)
     fetch_transcriptions(data)
     # Submit the data to Blossom
@@ -597,9 +599,6 @@ def group_data_by_author(data: RedditData) -> GroupedRedditData:
     return grouped_data
 
 
-BlossomSubmission = Dict[str, Union[str, bool, int]]
-
-
 def get_dummy_submissions(author: str, count: int) -> List[BlossomSubmission]:
     """Get the given number of dummy submissions for the given author."""
     # Get the author ID
@@ -622,7 +621,7 @@ def get_dummy_submissions(author: str, count: int) -> List[BlossomSubmission]:
     return dummy_response.data
 
 
-def fetch_done_comments(data: RedditData) -> RedditData:
+def fetch_done_comments(data: RedditData) -> None:
     """Fetch the done comment from Pushshift.
 
     We can fetch multiple comments at the same time.
@@ -649,10 +648,9 @@ def fetch_done_comments(data: RedditData) -> RedditData:
     logging.info(
         f"Fetched done comments {len(done_comments)}/{len(done_ids)} found in {dur:.2f} s."
     )
-    return data
 
 
-def fetch_tor_submissions(data: RedditData) -> RedditData:
+def fetch_tor_submissions(data: RedditData) -> None:
     """Fetch the ToR submission from Pushshift.
 
     We can fetch multiple submissions at the same time.
@@ -688,7 +686,6 @@ def fetch_tor_submissions(data: RedditData) -> RedditData:
     logging.info(
         f"Fetched ToR submissions {len(tor_submissions)}/{len(tor_submission_ids)} found in {dur:.2f} s."
     )
-    return data
 
 
 def fetch_partner_submissions(data: RedditData) -> RedditData:
@@ -737,7 +734,7 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
     return data
 
 
-def fetch_claim_comment(data: RedditData) -> RedditData:
+def fetch_claim_comments(data: RedditData) -> RedditData:
     """Fetch the claim comment from Pushshift.
 
     A claim comment is a comment made on the ToR submission by the author of the done
