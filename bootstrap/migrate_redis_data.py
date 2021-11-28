@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, TypedDict, Union
 
+import pytz
 from blossom_wrapper import BlossomStatus
 from psaw import PushshiftAPI
 
@@ -450,13 +451,17 @@ def submit_entry_to_blossom(
     cannot_ocr = ocr_transcriptions is None or len(ocr_transcriptions) == 0
     redis_id = done["id"]
 
+    create_time = pytz.utc.localize(create_time).isoformat()
+    claim_time = pytz.utc.localize(claim_time).isoformat()
+    complete_time = pytz.utc.localize(complete_time).isoformat()
+
     sub_response = blossom.patch(
         f"submission/{blossom_id}",
         {
             "original_id": original_id,
-            "create_time": create_time.isoformat(),
-            "claim_time": claim_time.isoformat(),
-            "complete_time": complete_time.isoformat(),
+            "create_time": create_time,
+            "claim_time": claim_time,
+            "complete_time": complete_time,
             "url": url,
             "title": title,
             "tor_url": tor_url,
@@ -532,7 +537,9 @@ def patch_or_create_transcription(
 
         tr_data = {
             "submission": f"https://grafeas.org/api/submission/{blossom_submission_id}/",
-            "create_time": transcriptions[0]["created_utc"].isoformat(),
+            "create_time": pytz.utc.localize(
+                transcriptions[0]["created_utc"]
+            ).isoformat(),
             "original_id": transcriptions[0]["id"],
             "source": f"https://grafeas.org/api/source/{source}/",
             "url": "https://reddit.com" + transcriptions[0]["permalink"],
@@ -556,7 +563,9 @@ def patch_or_create_transcription(
             "username": user["username"],
             "submission_id": blossom_submission_id,
             "source": source,
-            "create_time": transcriptions[0]["created_utc"].isoformat(),
+            "create_time": pytz.utc.localize(
+                transcriptions[0]["created_utc"]
+            ).isoformat(),
             "original_id": transcriptions[0]["id"],
             "url": "https://reddit.com" + transcriptions[0]["permalink"],
             "text": transcription_text,
