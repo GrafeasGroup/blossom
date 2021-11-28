@@ -188,6 +188,33 @@ class TestTranscriptionCreation:
         assert transcription.url == data["url"]
         assert transcription.text == data["text"]
 
+    def test_create_with_tz_aware_timestamp(self, client: Client) -> None:
+        """Test whether the creation functions correctly when invoked correctly."""
+        # TODO: Remove me when we remove the ability to create with create_time variable
+        client, headers, user = setup_user_client(client)
+        submission = create_submission()
+        timestamp = "2021-11-28T13:00:05.985314+00:00"
+        data = {
+            "submission_id": submission.id,
+            "username": user.username,
+            "original_id": "ABC",
+            "create_time": timestamp,
+            "source": submission.source.name,
+            "url": "https://example.com",
+            "text": "test content",
+        }
+
+        result = client.post(
+            reverse("transcription-list"),
+            json.dumps(data),
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_201_CREATED
+        transcription = Transcription.objects.get(id=result.json()["id"])
+        assert transcription.create_time.isoformat() == timestamp
+
     def test_create_no_coc(self, client: Client) -> None:
         """Test that no transcription can be created without accepting the CoC."""
         client, headers, user = setup_user_client(client)
