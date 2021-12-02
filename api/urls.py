@@ -8,7 +8,15 @@ from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions, routers
 
-from api.views import misc, slack, source, submission, transcription, volunteer
+from api.views import (
+    misc,
+    plausible,
+    slack,
+    source,
+    submission,
+    transcription,
+    volunteer,
+)
 
 
 class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
@@ -86,4 +94,5 @@ urlpatterns = [
         slack.github_sponsors_endpoint,
         name="github_sponsors",
     ),
+    path("event", plausible.plausible_event),
 ]

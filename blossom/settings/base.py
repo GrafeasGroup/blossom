@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # additional functionality
     "widget_tweaks",
+    "ipware",
     # blossom internal apps
     "blossom",
     "api",

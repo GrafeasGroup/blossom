@@ -1,14 +1,18 @@
 """Test the functionality of the Summary and Ping view."""
 import datetime
+from unittest.mock import MagicMock
 
 import pytz
+import requests
 from django.test import Client
+from django.test.client import RequestFactory
 from django.urls import reverse
 from rest_framework import status
 
 from api.helpers import get_time_since_open
 from api.models import Source, get_default_source
 from api.tests.helpers import create_submission, create_user, setup_user_client
+from api.views.plausible import plausible_event
 
 
 def test_ping(client: Client) -> None:
@@ -95,3 +99,26 @@ def test_get_default_source() -> None:
     # if we call it again, it shouldn't create something again.
     assert get_default_source() == "reddit"
     assert Source.objects.count() == 1
+
+
+def test_plausible_forwarder(rf: RequestFactory) -> None:
+    """Verify that any request to the event endpoint gets forwarded to Plausible."""
+    requests.post = MagicMock()
+
+    request = rf.post(
+        "/api/event/",
+        data={"a": "b", "c": "d"},
+        content_type="application/json",
+        HTTP_USER_AGENT="AAA-BBB",
+        HTTP_X_FORWARDED_FOR="123.0.0.123",
+    )
+
+    plausible_event(request)
+
+    requests.post.assert_called_once()
+    assert requests.post.call_args.args[0] == "https://plausible.io/api/event"
+    assert requests.post.call_args.kwargs["headers"] == {
+        "user-agent": "AAA-BBB",
+        "x-forwarded-for": "123.0.0.123",
+    }
+    assert requests.post.call_args.kwargs["data"] == {"a": "b", "c": "d"}
