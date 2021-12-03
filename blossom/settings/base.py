@@ -17,7 +17,7 @@ import bugsnag
 import dotenv
 from django.urls import reverse_lazy
 
-from blossom import __version__
+from blossom import __version__  # noqa
 
 dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
@@ -106,6 +106,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
             ],
         },
     },
@@ -172,7 +174,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTHENTICATION_BACKENDS = [
     "authentication.backends.EmailBackend",
-    "blossom.social_auth.reddit.RedditOAuth2",
+    "social_core.backends.reddit.RedditOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
@@ -235,6 +237,21 @@ IMAGE_DOMAINS = [
     "puu.sh",
     "i.redditmedia.com",
 ]
+SOCIAL_AUTH_REDDIT_KEY = os.environ.get("SOCIAL_AUTH_REDDIT_KEY")
+SOCIAL_AUTH_REDDIT_SECRET = os.environ.get("SOCIAL_AUTH_REDDIT_SECRET")
+SOCIAL_AUTH_REDDIT_AUTH_EXTRA_ARGUMENTS = {"duration": "permanent"}
+SOCIAL_AUTH_REDDIT_SCOPE = ["submit"]
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "utils.pipeline.load_user",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "social_core.pipeline.user.user_details",
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

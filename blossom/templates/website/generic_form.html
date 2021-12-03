@@ -123,6 +123,9 @@
             </div>
         {% endif %}
     </div>
+    {% if 'login' in request.path %}
+        <a href="{% url "social:begin" "reddit" %}?next={{ request.path }}">Login with Reddit</a>
+    {% endif %}
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {

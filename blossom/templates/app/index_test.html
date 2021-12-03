@@ -1,0 +1,7 @@
+{% extends "website/partials/base.partial" %}
+
+{% block content %}
+    YOU ARE LOGGED IN AS: {{ request.user }}
+    <p></p>
+    YOUR REDDIT USERNAME ACCORDING TO PRAW IS: {{ reddit.user.me }}
+{% endblock %}

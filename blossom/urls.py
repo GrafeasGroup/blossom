@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
@@ -20,6 +21,7 @@ urlpatterns = [
     path("payments/", include("payments.urls")),
     path("engineering/", include("engineeringblog.urls")),
     path("", include("website.urls")),
+    url("", include("social_django.urls", namespace="social")),
 ]
 
 if settings.DEBUG:

@@ -1,12 +1,36 @@
 import random
 
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse, HttpResponseServerError
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import View
+from praw import Reddit
+from social_django.utils import load_strategy
 
 from api.models import Transcription
 from utils.mixins import CSRFExemptMixin
 from website.helpers import get_additional_context
+
+
+@login_required
+def index_test(request: HttpRequest) -> HttpResponse:
+    """Test stuff."""
+    strategy = load_strategy(request)
+    social = request.user.social_auth.filter(provider="reddit")[0]
+    social.refresh_token(
+        strategy=strategy, redirect_uri="http://localhost:8000/complete/reddit/"
+    )
+    asdf = Reddit(
+        client_id=settings.SOCIAL_AUTH_REDDIT_KEY,
+        client_secret=settings.SOCIAL_AUTH_REDDIT_SECRET,
+        refresh_token=request.user.social_auth.first().extra_data["refresh_token"],
+        user_agent="blossomtest - contact u/itsthejoker with questions",
+    )
+
+    # asdf.auth.authorize(request.user.social_auth.first().access_token)
+
+    return render(request, "app/index_test.html", {"reddit": asdf})
 
 
 class PracticeTranscription(CSRFExemptMixin, View):
