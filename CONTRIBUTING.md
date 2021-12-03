@@ -53,7 +53,7 @@ developing.
 
 ## Pull Requests
 
-If you're unfamiliar with the process, see [Github's helpful documentation](https://help.github.com/articles/about-pull-requests/)
+If you're unfamiliar with the process, see [GitHub's helpful documentation](https://help.github.com/articles/about-pull-requests/)
 on creating pull requests.
 
 We try to keep parity of at least one issue in each pull request. This is so we can discuss the
