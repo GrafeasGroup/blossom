@@ -46,6 +46,8 @@ class TestSubmissionCreation:
             "url": "http://example.com",
             "tor_url": "http://example.com/tor",
             "content_url": "http://a.com",
+            "title": "This is a Submission",
+            "nsfw": False,
         }
         result = client.post(
             reverse("submission-list"),
@@ -60,6 +62,8 @@ class TestSubmissionCreation:
         assert submission.url == data["url"]
         assert submission.tor_url == data["tor_url"]
         assert submission.content_url == data["content_url"]
+        assert submission.nsfw == data["nsfw"]
+        assert submission.title == data["title"]
 
     def test_create_no_source(self, client: Client) -> None:
         """Test whether a request without source is considered a bad request."""
