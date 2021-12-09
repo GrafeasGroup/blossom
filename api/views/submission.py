@@ -610,6 +610,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 "tor_url": Schema(type="string"),
                 "content_url": Schema(type="string"),
                 "cannot_ocr": Schema(type="boolean"),
+                "nsfw": Schema(type="boolean"),
+                "title": Schema(type="string"),
             },
         ),
         responses={
@@ -639,6 +641,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         tor_url = request.data.get("tor_url")
         # allows pre-marking submissions we know won't be able to make it through OCR
         cannot_ocr = request.data.get("cannot_ocr", "False") == "True"
+        nsfw = request.data.get("nsfw", "False") == "True"
+        title = request.data.get("title")
         submission = Submission.objects.create(
             original_id=original_id,
             source=source_obj,
@@ -646,6 +650,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             tor_url=tor_url,
             content_url=content_url,
             cannot_ocr=cannot_ocr,
+            nsfw=nsfw,
+            title=title,
         )
 
         return Response(
