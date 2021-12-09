@@ -641,7 +641,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         tor_url = request.data.get("tor_url")
         # allows pre-marking submissions we know won't be able to make it through OCR
         cannot_ocr = request.data.get("cannot_ocr", "False") == "True"
-        nsfw = request.data.get("nsfw", "False") == "True"  # maps to PRAW's `.over_18`
+        nsfw = request.data.get("nsfw", "False") == "True"
         title = request.data.get("title")
         submission = Submission.objects.create(
             original_id=original_id,
