@@ -135,6 +135,8 @@ class Submission(models.Model):
     # If this is an image, it is sent to ocr.space for automatic transcription.
     content_url = models.URLField(null=True, blank=True)
 
+    nsfw = models.BooleanField(null=True, blank=True)
+
     # We need to keep track of every submission that we come across, but there
     # will always be content that needs to be removed from the hands of our volunteers
     # because of various reasons (rule-breaking content on other subs, something that
@@ -217,7 +219,7 @@ class Submission(models.Model):
 
         self._create_ocr_transcription(text=result["text"])
 
-    def save(self, *args: Any, **kwargs: Any) -> None:
+    def save(self, *args: Any, skip_extras: bool = False, **kwargs: Any) -> None:
         """
         Save the submission object.
 
@@ -228,9 +230,21 @@ class Submission(models.Model):
         that relates to it.
         """
         super(Submission, self).save(*args, **kwargs)
-        if self.is_image and not self.has_ocr_transcription:
-            # TODO: This is a great candidate for a basic queue system
-            self.generate_ocr_transcription()
+        if not skip_extras:
+            if self.is_image and not self.has_ocr_transcription:
+                # TODO: This is a great candidate for a basic queue system
+                self.generate_ocr_transcription()
+
+    def get_subreddit_name(self) -> str:
+        """
+        Return the subreddit name.
+
+        Once we get everything transitioned to sources, this will continue to
+        work. In the meantime, we can pull the subreddit from the urls.
+        """
+        if self.source.name != "reddit":
+            return self.source.name
+        return f'/r/{self.url.split("/r/")[1].split("/")[0]}'
 
 
 class Transcription(models.Model):
