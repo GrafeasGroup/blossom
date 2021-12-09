@@ -1,36 +1,85 @@
 import random
+from datetime import timedelta
 
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.db.models.functions import Length
 from django.http import HttpRequest, HttpResponse, HttpResponseServerError
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
-from praw import Reddit
-from social_django.utils import load_strategy
 
-from api.models import Transcription
+from api.models import Submission, Transcription
+from app.permissions import require_coc, require_reddit_auth
 from utils.mixins import CSRFExemptMixin
 from website.helpers import get_additional_context
 
 
 @login_required
-def index_test(request: HttpRequest) -> HttpResponse:
-    """Test stuff."""
-    strategy = load_strategy(request)
-    social = request.user.social_auth.filter(provider="reddit")[0]
-    social.refresh_token(
-        strategy=strategy, redirect_uri="http://localhost:8000/complete/reddit/"
-    )
-    asdf = Reddit(
-        client_id=settings.SOCIAL_AUTH_REDDIT_KEY,
-        client_secret=settings.SOCIAL_AUTH_REDDIT_SECRET,
-        refresh_token=request.user.social_auth.first().extra_data["refresh_token"],
-        user_agent="blossomtest - contact u/itsthejoker with questions",
+@csrf_exempt
+def accept_coc(request: HttpRequest) -> HttpResponse:
+    """Show the Code of Conduct and ask the volunteer to accept it."""
+    if request.method == "POST":
+        request.user.accepted_coc = True
+        request.user.save()
+        return redirect(reverse("choose_transcription") + "?show_tutorial=1")
+    else:
+        return render(request, "app/accept_coc.html", get_additional_context())
+
+
+@login_required
+@require_coc
+@require_reddit_auth
+def choose_transcription(request: HttpRequest) -> HttpResponse:
+    """Provide a user with transcriptions to choose from."""
+    # time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+    time_delay = timezone.now() - timedelta(hours=60)
+    options = Submission.objects.annotate(original_id_len=Length("original_id")).filter(
+        original_id_len__lt=10,
+        completed_by=None,
+        claimed_by=None,
+        create_time__gte=time_delay,
     )
 
-    # asdf.auth.authorize(request.user.social_auth.first().access_token)
+    if options.count() > 3:
+        # we have more to choose from, so let's grab 3
+        temp = []
+        while len(temp) < 3:
+            submission = random.choice(options)
+            # todo: we want to eventually handle other types of content here, but
+            #  we simply aren't ready for it yet.
+            if submission not in temp and submission.is_image:
+                temp.append(submission)
+        options = temp
 
-    return render(request, "app/index_test.html", {"reddit": asdf})
+    for submission in options:
+        # todo: add check for source. This will need to happen after we convert
+        #  sources to the individual subreddits
+        if not submission.title:
+            # we have a lot of submissions that don't have a title, but we
+            # need it for this next page. Just grab the title and save it.
+            post = request.user.reddit.submission(url=submission.url)
+            submission.title = post.title
+            submission.nsfw = post.over_18
+            submission.save(skip_extras=True)
+
+    context = get_additional_context({"options": options, "fullwidth_view": True})
+
+    # messages.success(request, "You ranked up to Jade! Congrats!!")
+    # context.update({"show_confetti": True})
+    return render(request, "app/choose_transcription.html", context,)
+
+
+class TranscribeSubmission(View):
+    def get(self, request: HttpRequest, submission_id: int) -> HttpResponse:
+        """Provide the transcription view."""
+        context = get_additional_context({"fullwidth_view": True})
+        submission = get_object_or_404(Submission, id=submission_id)
+        context.update({"submission": submission})
+
+    def post(self, request: HttpRequest, submission_id: int) -> HttpResponse:
+        """Handle a submitted transcription."""
+        ...
 
 
 class PracticeTranscription(CSRFExemptMixin, View):

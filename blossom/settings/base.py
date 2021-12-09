@@ -35,7 +35,13 @@ SECRET_KEY = os.environ.get("BLOSSOM_SECRET_KEY", default_secret_key)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["staging.grafeas.org", ".grafeas.org", "grafeas.org"]
+ALLOWED_HOSTS = [
+    "staging.grafeas.org",
+    ".grafeas.org",
+    "grafeas.org",
+    "thetranscription.app",
+    ".thetranscription.app",
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -55,6 +61,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.humanize",
     "django.forms",
     "django.contrib.staticfiles",
     # additional functionality
@@ -87,6 +94,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "app.middleware.RedditMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -240,7 +248,7 @@ IMAGE_DOMAINS = [
 SOCIAL_AUTH_REDDIT_KEY = os.environ.get("SOCIAL_AUTH_REDDIT_KEY")
 SOCIAL_AUTH_REDDIT_SECRET = os.environ.get("SOCIAL_AUTH_REDDIT_SECRET")
 SOCIAL_AUTH_REDDIT_AUTH_EXTRA_ARGUMENTS = {"duration": "permanent"}
-SOCIAL_AUTH_REDDIT_SCOPE = ["submit"]
+SOCIAL_AUTH_REDDIT_SCOPE = ["submit", "read"]
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",

@@ -114,3 +114,8 @@ class BlossomUser(AbstractUser):
             return "Pink"
         else:
             return "Initiate"
+
+    @property
+    def ranked_up(self) -> bool:
+        """Determine whether the user has just ranked up."""
+        return self.get_rank(self.gamma) != self.get_rank(override=self.gamma - 1)

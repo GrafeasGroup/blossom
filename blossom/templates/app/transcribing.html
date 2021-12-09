@@ -1,0 +1,60 @@
+{% extends "website/partials/base.partial" %}
+{% load static %}
+
+
+{% block content %}
+    {% if source_url %}
+        <div class="row">
+            <div class="col-lg-6">
+                <p class="text-muted fs-6">Pinch, drag, or click around this image to make it easier to read!</p>
+                <div id="imageViewer"
+                     style="height: 650px; background: #a5a098 none repeat scroll 0 0; overflow: hidden; border-radius: 5px; touch-action: none"></div>
+                <p>Original post from {{ transcription.submission.source.name }}.</p>
+            </div>
+            <div class="col-lg-6">
+                <div class="mb-3">
+                    <label for="transcriptionTextArea" class="form-label mt-2">Transcription:</label>
+                    <textarea class="form-control" id="transcriptionTextArea" rows="3"></textarea>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    {% if source_url %}
+        <script src="{% static "js/openseadragon-bin-2.4.2/openseadragon.js" %}"></script>
+        <link rel="stylesheet" href="{% static "js/simplemde/simplemde.min.css" %}">
+        <script src="{% static "js/simplemde/simplemde.min.js" %}"></script>
+
+        <script type="text/javascript">
+            OpenSeadragon({
+                id: "imageViewer",
+                prefixUrl: "/static/js/openseadragon-bin-2.4.2/images/",
+                tileSources: {
+                    type: 'image',
+                    url: "{{ source_url }}",
+                    crossOriginPolicy: 'Anonymous',
+                    ajaxWithCredentials: false
+                }
+            });
+            var simplemde = new SimpleMDE(
+                {
+                    autosave: {
+                        enabled: true,
+                        uniqueId: "grafeasTranscriptionField",
+                        delay: 1000,
+                    },
+                    toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "|", "link", "code", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+                    element: document.getElementById("transcriptionTextArea"),
+                    renderingConfig: {
+                        codeSyntaxHighlighting: true
+                    }
+                }
+            );
+            simplemde.value("Image Transcription: {type}\n\n---\n\n{Put your transcription here!}\n\n---\n\n^^I'm&#32;a&#32;human&#32;volunteer&#32;content&#32;transcriber&#32;for&#32;Reddit&#32;and&#32;you&#32;could&#32;be&#32;too!&#32;[If&#32;you'd&#32;like&#32;more&#32;information&#32;on&#32;what&#32;we&#32;do&#32;and&#32;why&#32;we&#32;do&#32;it,&#32;click&#32;here!](https://www.reddit.com/r/TranscribersOfReddit/wiki/index)");
+        </script>
+        <script src="https://cdn.jsdelivr.net/highlight.js/latest/highlight.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/highlight.js/latest/styles/github.min.css">
+    {% endif %}
+{% endblock %}
