@@ -135,6 +135,11 @@ class Submission(models.Model):
     # If this is an image, it is sent to ocr.space for automatic transcription.
     content_url = models.URLField(null=True, blank=True)
 
+    # If this is from Reddit, then it mirrors the status on Reddit's side that we get
+    # from PRAW. Otherwise it can be set manually to mark something that shouldn't be
+    # shown without a cover.
+    nsfw = models.BooleanField(null=True, blank=True)  # maps to PRAW's `.over_18`
+
     # We need to keep track of every submission that we come across, but there
     # will always be content that needs to be removed from the hands of our volunteers
     # because of various reasons (rule-breaking content on other subs, something that
@@ -217,7 +222,7 @@ class Submission(models.Model):
 
         self._create_ocr_transcription(text=result["text"])
 
-    def save(self, *args: Any, **kwargs: Any) -> None:
+    def save(self, *args: Any, skip_extras: bool = False, **kwargs: Any) -> None:
         """
         Save the submission object.
 
@@ -226,11 +231,26 @@ class Submission(models.Model):
         the new transcription. This is an annoying bug to track down, so make
         sure that you save the submission before actually creating anything
         that relates to it.
+
+        If `skip_extras` is set, then it should bypass everything that is not
+        simply "save the object to the db".
         """
         super(Submission, self).save(*args, **kwargs)
-        if self.is_image and not self.has_ocr_transcription:
-            # TODO: This is a great candidate for a basic queue system
-            self.generate_ocr_transcription()
+        if not skip_extras:
+            if self.is_image and not self.has_ocr_transcription:
+                # TODO: This is a great candidate for a basic queue system
+                self.generate_ocr_transcription()
+
+    def get_subreddit_name(self) -> str:
+        """
+        Return the subreddit name.
+
+        Once we get everything transitioned to sources, this will continue to
+        work. In the meantime, we can pull the subreddit from the urls.
+        """
+        if self.source.name != "reddit":
+            return self.source.name
+        return f'/r/{self.url.split("/r/")[1].split("/")[0]}'
 
 
 class Transcription(models.Model):
