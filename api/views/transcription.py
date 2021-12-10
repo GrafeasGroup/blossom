@@ -39,6 +39,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         "url": ["exact", "isnull"],
         "text": ["isnull", "icontains"],
         "removed_from_reddit": ["exact"],
+        "create_time": ["gt", "gte", "lte", "lt"],
     }
     ordering_fields = [
         "id",
