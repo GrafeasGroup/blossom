@@ -159,6 +159,33 @@ class TestTranscriptionCreation:
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == result_count
 
+    def test_list_with_time_filters(self, client: Client) -> None:
+        """Verify that the transcriptions can be filtered by time."""
+        client, headers, user = setup_user_client(client)
+
+        dates = [
+            datetime(2021, 1, 1),
+            datetime(2021, 2, 1),
+            datetime(2021, 2, 3),
+            datetime(2021, 5, 10),
+        ]
+
+        for date in dates:
+            create_transcription(
+                create_submission(), user, create_time=make_aware(date)
+            )
+
+        result = client.get(
+            reverse("transcription-list")
+            + "?create_time__gte=2021-02-01T00:00:00Z"
+            + "&create_time__lte=2021-04-01T00:00:00Z",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 2
+
     def test_create(self, client: Client) -> None:
         """Test whether the creation functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
