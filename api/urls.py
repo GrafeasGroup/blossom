@@ -8,7 +8,16 @@ from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions, routers
 
-from api.views import misc, proxy, slack, source, submission, transcription, volunteer
+from api.views import (
+    misc,
+    plausible,
+    proxy,
+    slack,
+    source,
+    submission,
+    transcription,
+    volunteer,
+)
 
 
 class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
@@ -99,4 +108,5 @@ urlpatterns = [
         proxy.subreddit_json_proxy_view,
         name="subredditjsonproxy",
     ),
+    path("event", plausible.plausible_event),
 ]

@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from api.tests.helpers import create_submission, create_user, setup_user_client
+from authentication.models import BlossomUser
 
 
 class TestSubmissionClaim:
@@ -111,6 +112,7 @@ class TestSubmissionClaim:
 
         This should be prevented and return an error.
         """
+        BlossomUser.objects.all().delete()
         client, headers, user = setup_user_client(client, id=1, username="user_1")
         submission = create_submission(claimed_by=user)
         data = {"username": user.username}
@@ -134,6 +136,7 @@ class TestSubmissionClaim:
 
         This should be prevented and return an error.
         """
+        BlossomUser.objects.all().delete()
         client, headers, user = setup_user_client(client, id=1, username="user_1")
         other_user = create_user(id=2, username="user_2")
         submission = create_submission(claimed_by=other_user)

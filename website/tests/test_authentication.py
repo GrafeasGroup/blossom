@@ -52,10 +52,8 @@ def test_login_bad_user_info(client: Client) -> None:
     assert not response.wsgi_request.user.is_authenticated
 
 
-def test_logout(client: Client, setup_site: object) -> None:
+def test_logout(client: Client) -> None:
     """Assert that logging out successfully logs the user out."""
-    # the setup_site fixture just runs the bootstrap management command
-    # so `request()` will work
     user = create_test_user()
 
     client.force_login(user)
@@ -65,7 +63,7 @@ def test_logout(client: Client, setup_site: object) -> None:
     assert not client.request().context.get("user").is_authenticated
 
 
-def test_after_login_redirect(client: Client, setup_site: object) -> None:
+def test_after_login_redirect(client: Client) -> None:
     """Verify that users are redirected to the page they were attempting to reach."""
     create_test_user(is_grafeas_staff=True)
 
@@ -77,7 +75,7 @@ def test_after_login_redirect(client: Client, setup_site: object) -> None:
     assert response.wsgi_request.path == "/admin/"
 
 
-def test_login_page_request(client: Client, setup_site: object) -> None:
+def test_login_page_request(client: Client) -> None:
     """Verify that the LoginForm is served when visiting the login page."""
     response = client.get("/login/")
     assert response.status_code == 200

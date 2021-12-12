@@ -70,6 +70,7 @@ class TestVolunteerAssortedFunctions:
 
     def test_list(self, client: Client) -> None:
         """Verify that getting the list of users works correctly."""
+        BlossomUser.objects.all().delete()  # clear out system accounts for test
         client, headers, user = setup_user_client(client)
         result = client.get(
             reverse("volunteer-list"), content_type="application/json", **headers
@@ -90,6 +91,7 @@ class TestVolunteerAssortedFunctions:
 
     def test_list_with_filters(self, client: Client) -> None:
         """Verify that listing all volunteers works correctly."""
+        BlossomUser.objects.all().delete()  # clear out system accounts for test
         client, headers, user = setup_user_client(client)
 
         create_user(username="A")
@@ -144,7 +146,7 @@ class TestVolunteerAssortedFunctions:
         client, headers, user = setup_user_client(client)
         data = {"username": "naaaarf"}
         result = client.put(
-            reverse("volunteer-detail", args=[1]),
+            reverse("volunteer-detail", args=[5]),
             json.dumps(data),
             content_type="application/json",
             **headers,
@@ -237,6 +239,7 @@ class TestVolunteerCreation:
 
     def test_create_no_username(self, client: Client) -> None:
         """Test that no user is created when no username is provided."""
+        BlossomUser.objects.all().delete()  # clear out system accounts for test
         client, headers, _ = setup_user_client(client)
 
         result = client.post(

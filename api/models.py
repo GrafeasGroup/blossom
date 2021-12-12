@@ -135,7 +135,10 @@ class Submission(models.Model):
     # If this is an image, it is sent to ocr.space for automatic transcription.
     content_url = models.URLField(null=True, blank=True)
 
-    nsfw = models.BooleanField(null=True, blank=True)
+    # If this is from Reddit, then it mirrors the status on Reddit's side that we get
+    # from PRAW. Otherwise it can be set manually to mark something that shouldn't be
+    # shown without a cover.
+    nsfw = models.BooleanField(null=True, blank=True)  # maps to PRAW's `.over_18`
 
     # We need to keep track of every submission that we come across, but there
     # will always be content that needs to be removed from the hands of our volunteers
@@ -228,6 +231,9 @@ class Submission(models.Model):
         the new transcription. This is an annoying bug to track down, so make
         sure that you save the submission before actually creating anything
         that relates to it.
+
+        If `skip_extras` is set, then it should bypass everything that is not
+        simply "save the object to the db".
         """
         super(Submission, self).save(*args, **kwargs)
         if not skip_extras:

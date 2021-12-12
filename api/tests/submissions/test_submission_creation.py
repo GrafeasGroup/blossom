@@ -1,5 +1,4 @@
 import json
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -46,6 +45,8 @@ class TestSubmissionCreation:
             "url": "http://example.com",
             "tor_url": "http://example.com/tor",
             "content_url": "http://a.com",
+            "title": "This is a Submission",
+            "nsfw": False,
         }
         result = client.post(
             reverse("submission-list"),
@@ -60,6 +61,8 @@ class TestSubmissionCreation:
         assert submission.url == data["url"]
         assert submission.tor_url == data["tor_url"]
         assert submission.content_url == data["content_url"]
+        assert submission.nsfw == data["nsfw"]
+        assert submission.title == data["title"]
 
     def test_create_no_source(self, client: Client) -> None:
         """Test whether a request without source is considered a bad request."""
@@ -118,12 +121,7 @@ class TestSubmissionCreation:
         ],
     )
     def test_ocr_on_create(
-        self,
-        client: Client,
-        settings: SettingsWrapper,
-        setup_site: Any,
-        test_input: str,
-        output: str,
+        self, client: Client, settings: SettingsWrapper, test_input: str, output: str,
     ) -> None:
         """Verify that a new submission completes the OCR process."""
         settings.ENABLE_OCR = True
@@ -156,7 +154,7 @@ class TestSubmissionCreation:
         assert transcription.source == Source.objects.get(name="blossom")
 
     def test_ocr_on_create_with_cannot_ocr_flag(
-        self, client: Client, settings: SettingsWrapper, setup_site: Any
+        self, client: Client, settings: SettingsWrapper
     ) -> None:
         """Verify the OCR process exits early if the cannot_ocr flag is already set."""
         settings.ENABLE_OCR = True
@@ -187,7 +185,7 @@ class TestSubmissionCreation:
         assert Transcription.objects.count() == 0
 
     def test_failed_ocr_on_create(
-        self, client: Client, settings: SettingsWrapper, setup_site: Any
+        self, client: Client, settings: SettingsWrapper
     ) -> None:
         """Verify that a new submission completes the OCR process."""
         settings.ENABLE_OCR = True

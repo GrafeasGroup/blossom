@@ -20,7 +20,7 @@ def test_post_create(client: Client) -> None:
     assert Post.objects.filter(title="A").count() == 1
 
 
-def test_post_context(client: Client, setup_site: object) -> None:
+def test_post_context(client: Client) -> None:
     """Verify that the appropriate context is returned when viewing a post."""
     user = create_test_user()
     client.force_login(user)
@@ -33,7 +33,7 @@ def test_post_context(client: Client, setup_site: object) -> None:
     assert result.context["navbar"]
 
 
-def test_post_edit_context(client: Client, setup_site: object) -> None:
+def test_post_edit_context(client: Client) -> None:
     """Verify that the appropriate context is loaded when editing a post."""
     user = create_test_user(is_grafeas_staff=True)
     client.force_login(user)

@@ -3,8 +3,6 @@ from django.urls import path
 from engineeringblog import views
 from website.urls import urlpatterns as website_urls
 
-app_name = "engineeringblog"
-
 urlpatterns = [
     path("", views.index, name="blog_index"),
 ]

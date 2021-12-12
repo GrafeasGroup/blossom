@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blossom"
-version = "0.3.0"
+version = "0.4.0"
 description = "The site!"
 authors = ["Grafeas Group Ltd. <devs@grafeas.org>"]
 
@@ -33,6 +33,7 @@ dateparser = "^1.0.0"
 typed-ast = "^1.5.0"
 django-revproxy = {git = "https://github.com/hcpuk/django-revproxy.git"}
 Markdown = "^3.3.6"
+django-ipware = "^4.0.0"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"
