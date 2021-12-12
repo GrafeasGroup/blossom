@@ -121,8 +121,10 @@ class FindView(APIView):
         data = find_by_url(normalized_url)
         if data is None:
             return Response(
-                data="No submission or transcription found for the given URL.",
+                description="No submission or transcription found for the given URL.",
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        return Response(data=data, status=status.HTTP_200_OK)
+        return Response(
+            data=data, status=status.HTTP_200_OK, description="Found the post!"
+        )
