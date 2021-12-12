@@ -12,7 +12,7 @@ def generate_request_id() -> str:
     return "".join([random.choice(string.ascii_lowercase) for _ in range(6)])
 
 
-class iReddItProxyView(ProxyView):
+class iReddItProxyView(ProxyView):  # noqa: N801
     """
     Retrieve images for OpenSeaDragon from Reddit's image host.
 
