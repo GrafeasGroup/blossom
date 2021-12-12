@@ -17,6 +17,11 @@ from api.views.find import find_by_submission_url, normalize_url
             "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
             "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
         ),
+        # HTTP
+        (
+            "http://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
+            "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
+        ),
         # www prefix
         (
             "https://www.reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
