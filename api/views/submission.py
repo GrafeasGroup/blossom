@@ -391,6 +391,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if not user.accepted_coc:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        if submission.claimed_by == user:
+            return Response()
+
         if submission.claimed_by is not None:
             return Response(
                 data=VolunteerViewSet.serializer_class(

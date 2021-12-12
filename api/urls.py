@@ -8,7 +8,7 @@ from drf_yasg.generators import OpenAPISchemaGenerator
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions, routers
 
-from api.views import misc, slack, source, submission, transcription, volunteer
+from api.views import misc, proxy, slack, source, submission, transcription, volunteer
 
 
 class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
@@ -85,5 +85,18 @@ urlpatterns = [
         "slack/github/sponsors/",
         slack.github_sponsors_endpoint,
         name="github_sponsors",
+    ),
+    url(
+        r"^iredditproxy/(?P<path>.*)$",
+        proxy.iReddItProxyView.as_view(),
+        name="iredditproxy",
+    ),
+    url(
+        r"^imgurproxy/(?P<path>.*)$", proxy.ImgurProxyView.as_view(), name="imgurproxy"
+    ),
+    path(
+        "subredditjsonproxy/",
+        proxy.subreddit_json_proxy_view,
+        name="subredditjsonproxy",
     ),
 ]

@@ -48,17 +48,17 @@ def yeet_user(redis_user_obj: Dict) -> None:
         for _ in range(r_gamma - v["gamma"]):
             generate_dummy_post(v)
 
-    # v = get_or_create_user(r_username).data
-    # if r_gamma < v["gamma"]:
-    #     logger.warning(f"Found discrepancy. Redis: {r_gamma} | Blossom: {v['gamma']}")
-    #     response = blossom.post(
-    #         "submission/yeet/",
-    #         data={"username": r_username, "count": abs(r_gamma - v["gamma"])},
-    #     )
-    #     if response.status_code != 200:
-    #         logger.error(f"Received a {response.status_code} - {response.json()}")
-    #     else:
-    #         logger.info(response.json())
+    v = get_or_create_user(r_username).data
+    if r_gamma < v["gamma"]:
+        logger.warning(f"Found discrepancy. Redis: {r_gamma} | Blossom: {v['gamma']}")
+        response = blossom.post(
+            "submission/yeet/",
+            data={"username": r_username, "count": abs(r_gamma - v["gamma"])},
+        )
+        if response.status_code != 200:
+            logger.error(f"Received a {response.status_code} - {response.json()}")
+        else:
+            logger.info(response.json())
 
 
 def process_user(redis_user_obj: Dict):

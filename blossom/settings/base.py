@@ -17,7 +17,7 @@ import bugsnag
 import dotenv
 from django.urls import reverse_lazy
 
-from blossom import __version__  # noqa
+from blossom import __version__
 
 dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
@@ -80,6 +80,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework_api_key",
     "drf_yasg",
+    "revproxy",
     # Social authentication
     "social_django",
 ]

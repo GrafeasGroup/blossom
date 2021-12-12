@@ -16,7 +16,7 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
     """
     Handle post requests from Slack.
 
-    Slack plays a lot of games with its API and honestly it's one of the
+    Slack plays a lot of games with its API, and honestly it's one of the
     most frustrating things I've ever worked with. There are a couple of
     things that we'll need to do in this view:
 

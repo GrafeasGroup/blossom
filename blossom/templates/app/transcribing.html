@@ -3,58 +3,227 @@
 
 
 {% block content %}
-    {% if source_url %}
-        <div class="row">
-            <div class="col-lg-6">
-                <p class="text-muted fs-6">Pinch, drag, or click around this image to make it easier to read!</p>
-                <div id="imageViewer"
-                     style="height: 650px; background: #a5a098 none repeat scroll 0 0; overflow: hidden; border-radius: 5px; touch-action: none"></div>
-                <p>Original post from {{ transcription.submission.source.name }}.</p>
-            </div>
-            <div class="col-lg-6">
-                <div class="mb-3">
-                    <label for="transcriptionTextArea" class="form-label mt-2">Transcription:</label>
-                    <textarea class="form-control" id="transcriptionTextArea" rows="3"></textarea>
+    <div class="row">
+        <div class="col-lg-6">
+            <p class="text-muted fs-6">Pinch, drag, or click around this image to make it easier to read!</p>
+            <div id="imageViewer"
+                 style="height: 650px; background: #f8f9fa none repeat scroll 0 0; overflow: hidden; border-radius: 5px; touch-action: none"></div>
+            <div class="row">
+                <div class="col-12 col-lg-6">
+                    <div class="mt-2"><em>{{ submission.title }}</em></div>
+                    <div class="mt-2">Original post from <a href="{{ submission.url }}" target="_blank">
+                        {{ submission.get_subreddit_name }}</a>.
+                    </div>
+                </div>
+                <div class="col-12 col-lg-6 text-center">
+                    <div class="d-grid gap-2 mt-3">
+                        <div
+                                class="btn btn-outline-secondary mt-1"
+                                data-bs-toggle="modal" data-bs-target="#rulesModal"
+                        >View Rules
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    {% endif %}
+        <div class="container d-lg-none">
+            <hr>
+        </div>
+        <div class="col-lg-6">
+            <form id="theForm" method="post" action="" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label for="transcriptionTypeField" class="form-label">
+                        <strong>What is this?</strong>
+                    </label>
+                    <input type="text" class="form-control" id="transcriptionTypeField"
+                           aria-describedby="transcriptionTypeFieldHelp" name="transcription_type">
+                    <div id="transcriptionTypeFieldHelp" class="form-text">
+                        For example, Twitter post, Tumblr post, or Reddit comment. If it's not obvious
+                        where it's from, put Text, Photo, Meme, or something equally descriptive.
+                    </div>
+                </div>
+                <div class="mb-3" id="transcriptionBox">
+                    <label for="transcriptionTextArea" class="form-label mt-2">
+                        <strong>Transcription:</strong>
+                    </label>
+                    <textarea class="form-control" required name="transcription"
+                              aria-describedby="transcriptionFieldHelp"
+                              id="transcriptionTextArea" rows="3"></textarea>
+                    <div class="d-none" id="transcriptionErrorMessage" style="color: red">
+                        I don't see a transcription in here... put some text in and try again.
+                    </div>
+
+                    <div id="transcriptionFieldHelp" class="form-text">
+                        Put what you see in the image here! Try to be as descriptive as possible;
+                        your goal is that anyone who reads this transcription will be able to
+                        <em>understand</em> the image, not just know what is inside it.<br>
+                        Note: Been here a while? Don't worry about the header or footer, we'll handle
+                        it for you!
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-0 col-lg-1"></div>
+                    <div class="col-12 col-lg-7 mb-2">
+                        <div class="d-grid gap-2">
+                            <button
+                                    class="btn btn-primary"
+                                    type="button"
+                                    onclick="submitForm()"
+                            >Submit!
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-3 mb-3">
+                        <div class="d-grid gap-2">
+                            <button type="button"
+                                    class="btn btn-outline-danger"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#optionsModal"
+                            >
+                                Reroll
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-0 col-sm-1"></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% include 'app/partials/template_accordion.partial' %}
+
+    <div class="modal fade" id="optionsModal" tabindex="-1" aria-labelledby="optionsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="optionsModalLabel">Reroll Options</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    If this post isn't working for you, don't worry! Let us know why you're sending this one
+                    back so you can choose a new one.
+                </div>
+                <div class="d-grid gap-2 mx-2 mb-2">
+                    <a href="{% url 'app_unclaim' submission.id %}" class="btn btn-danger">Just want something
+                        different</a>
+                    <a href="{% url 'app_unclaim' submission.id %}?reason=rules" class="btn btn-outline-danger">
+                        Post breaks rules
+                    </a>
+                    <a href="{% url 'app_unclaim' submission.id %}?reason=removed" class="btn btn-outline-danger">
+                        Post was removed
+                    </a>
+                    <a href="{% url 'app_unclaim' submission.id %}?reason=op_transcribed"
+                       class="btn btn-outline-danger">
+                        OP already transcribed it
+                    </a>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="rulesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Rules for {{ submission.get_subreddit_name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="rulesModalBody">
+                    {# This will be filled dynamically through the POWAH OF JAVASCWIPT #}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block scripts %}
-    {% if source_url %}
-        <script src="{% static "js/openseadragon-bin-2.4.2/openseadragon.js" %}"></script>
-        <link rel="stylesheet" href="{% static "js/simplemde/simplemde.min.css" %}">
-        <script src="{% static "js/simplemde/simplemde.min.js" %}"></script>
+    <script src="{% static "js/openseadragon-bin-2.4.2/openseadragon.js" %}"></script>
+    <link rel="stylesheet" href="{% static "js/simplemde/simplemde.min.css" %}">
+    <script src="{% static "js/simplemde/simplemde.min.js" %}"></script>
 
-        <script type="text/javascript">
-            OpenSeadragon({
-                id: "imageViewer",
-                prefixUrl: "/static/js/openseadragon-bin-2.4.2/images/",
-                tileSources: {
-                    type: 'image',
-                    url: "{{ source_url }}",
-                    crossOriginPolicy: 'Anonymous',
-                    ajaxWithCredentials: false
+    <script type="text/javascript">
+        OpenSeadragon({
+            id: "imageViewer",
+            prefixUrl: "/static/js/openseadragon-bin-2.4.2/images/",
+            tileSources: {
+                type: 'image',
+                {% if ireddit_content_url %}
+                    url: "{% url 'iredditproxy' ireddit_content_url %}",
+                {% elif imgur_content_url %}
+                    url: "{% url 'imgurproxy' imgur_content_url %}",
+                {% else %}
+                    url: "{{ submission.content_url }}",
+                {% endif %}
+                crossOriginPolicy: 'Anonymous',
+                ajaxWithCredentials: false
+            },
+            minZoomImageRatio: 0.8,
+            maxZoomPixelRatio: 12,
+        });
+        const simplemde = new SimpleMDE(
+            {
+                autosave: {
+                    enabled: true,
+                    uniqueId: "grafeasTranscriptionField",
+                    delay: 1000,
+                },
+                toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "|", "link", "code", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
+                element: document.getElementById("transcriptionTextArea"),
+                renderingConfig: {
+                    codeSyntaxHighlighting: true
+                }
+            }
+        );
+        simplemde.value("Put your transcription here!");
+
+        fetch('{% url "subredditjsonproxy" %}?s={{ submission.get_subreddit_name }}')
+            .then(response => response.json())
+            .then(data => {
+                modal = document.getElementById('rulesModalBody');
+                let ul = document.createElement('ul');
+                if (Object.keys(data['rules']).length === 0) {
+                    let alert = document.createElement('div');
+                    alert.classList.add(..."alert alert-secondary text-center".split(" "));
+                    alert.setAttribute("role", "alert");
+                    alert.innerText = (
+                        "It looks like {{ submission.get_subreddit_name }} doesn't have any rules published."
+                    );
+                    modal.appendChild(alert);
+
+                } else {
+                    data['rules'].forEach((el) => {
+                        let li = document.createElement('li');
+                        li.classList.add('mt-2');
+                        let strong = document.createElement('strong');
+                        strong.innerText = `${el['violation_reason']}`;
+                        let span = document.createElement('span');
+                        span.innerText = ` - ${el['description']}`;
+                        li.appendChild(strong);
+                        li.appendChild(span);
+                        ul.appendChild(li);
+                    });
+                    modal.appendChild(ul);
                 }
             });
-            var simplemde = new SimpleMDE(
-                {
-                    autosave: {
-                        enabled: true,
-                        uniqueId: "grafeasTranscriptionField",
-                        delay: 1000,
-                    },
-                    toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "|", "link", "code", "|", "preview", "side-by-side", "fullscreen", "|", "guide"],
-                    element: document.getElementById("transcriptionTextArea"),
-                    renderingConfig: {
-                        codeSyntaxHighlighting: true
-                    }
-                }
-            );
-            simplemde.value("Image Transcription: {type}\n\n---\n\n{Put your transcription here!}\n\n---\n\n^^I'm&#32;a&#32;human&#32;volunteer&#32;content&#32;transcriber&#32;for&#32;Reddit&#32;and&#32;you&#32;could&#32;be&#32;too!&#32;[If&#32;you'd&#32;like&#32;more&#32;information&#32;on&#32;what&#32;we&#32;do&#32;and&#32;why&#32;we&#32;do&#32;it,&#32;click&#32;here!](https://www.reddit.com/r/TranscribersOfReddit/wiki/index)");
-        </script>
-        <script src="https://cdn.jsdelivr.net/highlight.js/latest/highlight.min.js"></script>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/highlight.js/latest/styles/github.min.css">
-    {% endif %}
+
+        function submitForm() {
+            if (simplemde.value() !== "") {
+                form = document.getElementById('theForm');
+                form.submit();
+            } else {
+                document.getElementById("transcriptionErrorMessage").classList.remove('d-none');
+                document.getElementById("transcriptionBox").classList.add(..."px-1 py-1 border border-2 border-danger rounded".split(" "))
+            }
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/highlight.js/latest/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/highlight.js/latest/styles/github.min.css">
 {% endblock %}

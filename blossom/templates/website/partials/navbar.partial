@@ -32,7 +32,8 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 {% if '/app/' in request.path %}
                     <li class="nav-item active">
-                        <a class="nav-link" id="tutorialToggleButton" data-bs-toggle="modal" href="#tutorialModal" role="button">Tutorial</a>
+                        <a class="nav-link" id="tutorialToggleButton" data-bs-toggle="modal" href="#tutorialModal"
+                           role="button">Tutorial</a>
                     </li>
                 {% endif %}
                 <li class="nav-item active">
@@ -54,6 +55,12 @@
             </ul>
             {% if request.user.is_authenticated %}
                 <div class="navbar-nav">
+                    {% if '/app/' in request.path %}
+                        <span class="navbar-text pe-3">
+                            u/{{ request.user.username }}
+                            <span class="badge bg-secondary fs-6">{{ request.user.gamma }} Γ · {{ request.user.get_rank }}</span>
+                        </span>
+                    {% endif %}
                     <ul class="navbar-nav my-2 my-lg-0">
                         {% if request.user.is_grafeas_staff %}
                             <li class="nav-item active">
