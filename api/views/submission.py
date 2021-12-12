@@ -1,10 +1,23 @@
 """Views that specifically relate to submissions."""
+import logging
 import random
 from datetime import timedelta
 from typing import Union
 
 from django.conf import settings
-from django.db.models.functions import Length
+from django.db.models import Count, F
+from django.db.models.functions import (
+    ExtractHour,
+    ExtractIsoWeekDay,
+    Length,
+    TruncDate,
+    TruncDay,
+    TruncHour,
+    TruncMonth,
+    TruncSecond,
+    TruncWeek,
+    TruncYear,
+)
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -26,6 +39,7 @@ from api.authentication import BlossomApiPermission
 from api.filters import TimeFilter
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
+from api.pagination import StandardResultsSetPagination
 from api.serializers import SubmissionSerializer
 from api.views.slack_helpers import client as slack
 from api.views.volunteer import VolunteerViewSet
@@ -34,6 +48,7 @@ from authentication.models import BlossomUser
 # The maximum number of posts a user can claim
 # depending on their current gamma score
 MAX_CLAIMS = [{"gamma": 0, "claims": 1}, {"gamma": 100, "claims": 2}]
+logger = logging.getLogger("api.views.submission")
 
 
 @method_decorator(
@@ -71,19 +86,21 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     permission_classes = (BlossomApiPermission,)
     queryset = Submission.objects.order_by("id")
     filter_backends = [DjangoFilterBackend, TimeFilter, OrderingFilter]
-    filterset_fields = [
-        "id",
-        "original_id",
-        "claimed_by",
-        "completed_by",
-        "source",
-        "title",
-        "url",
-        "tor_url",
-        "archived",
-        "content_url",
-        "redis_id",
-    ]
+    filterset_fields = {
+        "id": ["exact"],
+        "original_id": ["exact"],
+        "claimed_by": ["exact", "isnull"],
+        "completed_by": ["exact", "isnull"],
+        "claim_time": ["isnull"],
+        "complete_time": ["isnull"],
+        "source": ["exact"],
+        "title": ["exact", "isnull", "icontains"],
+        "url": ["exact", "isnull"],
+        "tor_url": ["exact", "isnull"],
+        "archived": ["exact"],
+        "content_url": ["exact", "isnull"],
+        "redis_id": ["exact", "isnull"],
+    }
     ordering_fields = [
         "id",
         "title",
@@ -201,6 +218,100 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             source=source_obj,
         )
         return Response(data=self.get_serializer(queryset[:100], many=True).data)
+
+    @swagger_auto_schema(
+        operation_summary=(
+            "Retrieve a count of transcriptions for a volunteer per time frame."
+        ),
+        operation_description=(
+            "A paginated endpoint. Pass page_size to control number of results"
+            " returned, page to select a different block."
+        ),
+        manual_parameters=[
+            Parameter(
+                "time_frame",
+                "query",
+                type="string",
+                enum=["none", "hour", "day", "week", "month", "year"],
+                description="The time interval to calculate the rate by. "
+                'Must be one of "none", "hour", "day", "week", "month" or "year".'
+                'For example, "none" will return the date of every transcription '
+                'separately, while "day" will return the daily transcribing rate.',
+            ),
+            Parameter("page_size", "query", type="number"),
+            Parameter("page", "query", type="number"),
+        ],
+    )
+    @action(detail=False, methods=["get"])
+    def rate(self, request: Request) -> Response:
+        """Get the number of transcriptions the volunteer made per time frame.
+
+        IMPORTANT: To reduce the number of entries, this does not
+        include days on which the user did not make any transcriptions!
+        """
+        time_frame = request.GET.get("time_frame", "day")
+
+        trunc_dict = {
+            # Don't group the transcriptions at all
+            # TODO: Make this a true noop for transcriptions posted in the same second
+            "none": TruncSecond,
+            "hour": TruncHour,
+            "day": TruncDay,
+            # Unfortunately weeks starts on Sunday for this.
+            # There doesn't seem to be an ISO week equivalent :(
+            "week": TruncWeek,
+            "month": TruncMonth,
+            "year": TruncYear,
+        }
+
+        trunc_fn = trunc_dict.get(time_frame, TruncDate)
+
+        # https://stackoverflow.com/questions/8746014/django-group-by-date-day-month-year
+        rate = (
+            self.filter_queryset(Submission.objects)
+            .filter(complete_time__isnull=False)
+            .annotate(date=trunc_fn("complete_time"))
+            .values("date")
+            .annotate(count=Count("id"))
+            .values("date", "count")
+            .order_by("date")
+        )
+
+        pagination = StandardResultsSetPagination()
+        page = pagination.paginate_queryset(rate, request)
+        return pagination.get_paginated_response(page)
+
+    @csrf_exempt
+    @swagger_auto_schema()
+    @action(detail=False, methods=["get"])
+    def heatmap(self, request: Request) -> Response:
+        """Get the data to generate a heatmap for the volunteer.
+
+        This includes one entry for every weekday and every hour containing the
+        number of transcriptions made in that time slot.
+        For example, there will be an entry for Sundays at 13:00 UTC, counting
+        how many transcriptions the volunteer made in that time.
+
+        The week days are numbered Monday=1 through Sunday=7.
+        """
+        heatmap = (
+            self.filter_queryset(Submission.objects).filter(complete_time__isnull=False)
+            # Extract the day of the week and the hour the transcription was made in
+            .annotate(
+                day=ExtractIsoWeekDay("complete_time"),
+                hour=ExtractHour("complete_time"),
+            )
+            # Group by the day and hour
+            .values("day", "hour")
+            # Count the transcription made in each time slot
+            .annotate(count=Count("id"))
+            # Return the values
+            .values("day", "hour", "count")
+            # Order by day first, then hour
+            .order_by("day", "hour")
+        )
+
+        return Response(heatmap)
 
     @csrf_exempt
     @swagger_auto_schema(
@@ -379,9 +490,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if user.gamma == 0:
             msg = ":rotating_light: First transcription! :rotating_light: " + msg
 
-        slack.chat_postMessage(
-            channel="#transcription_check", text=msg,
-        )
+        try:
+            slack.chat_postMessage(
+                channel="#transcription_check", text=msg,
+            )
+        except:  # noqa
+            logger.warning(f"Cannot post message to slack. Msg: {msg}")
 
     def _check_for_rank_up(
         self, user: BlossomUser, submission: Submission = None
@@ -397,13 +511,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         current_rank = user.get_rank()
         if user.get_rank(override=user.gamma - 1) != current_rank:
-            slack.chat_postMessage(
-                channel="#new_volunteers_meta",
-                text=(
-                    f"Congrats to {user.username} on achieving the rank"
-                    f" of {current_rank}!! {submission.tor_url}"
-                ),
+            msg = (
+                f"Congrats to {user.username} on achieving the rank of {current_rank}!!"
+                f" {submission.tor_url}"
             )
+            try:
+                slack.chat_postMessage(channel="#new_volunteers_meta", text=msg)
+            except:  # noqa
+                logger.warning(f"Cannot post message to slack. Msg: {msg}")
+                pass
 
     @csrf_exempt
     @swagger_auto_schema(
@@ -494,6 +610,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 "tor_url": Schema(type="string"),
                 "content_url": Schema(type="string"),
                 "cannot_ocr": Schema(type="boolean"),
+                "nsfw": Schema(type="boolean"),
+                "title": Schema(type="string"),
             },
         ),
         responses={
@@ -523,6 +641,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         tor_url = request.data.get("tor_url")
         # allows pre-marking submissions we know won't be able to make it through OCR
         cannot_ocr = request.data.get("cannot_ocr", "False") == "True"
+        nsfw = request.data.get("nsfw", "False") == "True"
+        title = request.data.get("title")
         submission = Submission.objects.create(
             original_id=original_id,
             source=source_obj,
@@ -530,6 +650,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             tor_url=tor_url,
             content_url=content_url,
             cannot_ocr=cannot_ocr,
+            nsfw=nsfw,
+            title=title,
         )
 
         return Response(
@@ -662,3 +784,96 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 urls.pop(urls.index(submission.url))
 
         return Response(status=status.HTTP_200_OK, data=urls)
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        manual_parameters=[
+            Parameter(
+                "user_id",
+                "query",
+                type="number",
+                description="The user to center the leaderboard on.",
+            ),
+            Parameter(
+                "top_count",
+                "query",
+                type="number",
+                description="The number of users to show from the top leaderboard.",
+            ),
+            Parameter(
+                "above_count",
+                "query",
+                type="number",
+                description="The number of users to show above the given user.",
+            ),
+            Parameter(
+                "below_count",
+                "query",
+                type="number",
+                description="The number of users to show below the given user.",
+            ),
+        ],
+        responses={404: "No volunteer with the specified ID."},
+    )
+    @action(detail=False, methods=["get"])
+    def leaderboard(self, request: Request,) -> Response:
+        """Get the leaderboard for the given user."""
+        user_id = request.GET.get("user_id", None)
+        if user_id is not None:
+            user_id = int(user_id)
+        top_count = int(request.GET.get("top_count", 5))
+        above_count = int(request.GET.get("above_count", 5))
+        below_count = int(request.GET.get("below_count", 5))
+
+        above_data = user_data = below_data = None
+
+        rank_query = (
+            # Apply the provided submission filters
+            self.filter_queryset(Submission.objects)
+            .filter(completed_by__isnull=False)
+            # Add author information
+            .select_related("completed_by")
+            # Group by author
+            .values(
+                "completed_by", "completed_by__username", "completed_by__date_joined"
+            )
+            # Count gamma
+            .annotate(
+                gamma=Count("completed_by"),
+                id=F("completed_by"),
+                username=F("completed_by__username"),
+                date_joined=F("completed_by__date_joined"),
+            )
+            .values("id", "username", "gamma", "date_joined")
+            .order_by(F("gamma").desc(), F("date_joined").desc())
+        )
+        # TODO: This is very inefficient, maybe there's a better way to do this?
+        # Originally we used window expressions to annotate the ranks directly
+        # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
+        # Unfortunately that is not supported on all backends
+        # Instead, we convert the query into a list and also add the ranks manually
+        rank_list = rank_list = [
+            {**entry, "rank": i + 1} for i, entry in enumerate(rank_query)
+        ]
+
+        # Find the top users
+        top_data = rank_list[:top_count]
+
+        if user_id is not None:
+            # Find the queried user in the list
+            # TODO: Find a more efficient way to do this
+            user_index = [user["id"] for user in rank_list].index(user_id)
+            user_data = rank_list[user_index]
+            # Users with more gamma than the current user
+            above_data = rank_list[user_index - 1 - below_count : user_index]
+            # Users with less gamma than the current user
+            below_data = rank_list[user_index + 1 : user_index + 1 + above_count]
+
+        data = {
+            "top": top_data,
+            "above": above_data,
+            "user": user_data,
+            "below": below_data,
+        }
+
+        return Response(data)

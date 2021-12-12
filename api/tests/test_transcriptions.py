@@ -85,6 +85,107 @@ class TestTranscriptionCreation:
         assert "AAA" in result.json()["results"][0]["source"]  # it will be a full link
         assert result.json()["results"][0]["id"] == 1
 
+    @pytest.mark.parametrize(
+        "filter_str,result_count",
+        [
+            ("original_id__isnull=true", 1),
+            ("original_id__isnull=false", 1),
+            ("url__isnull=true", 1),
+            ("url__isnull=false", 1),
+            ("text__isnull=true", 1),
+            ("text__isnull=false", 1),
+        ],
+    )
+    def test_list_with_null_filters(
+        self, client: Client, filter_str: str, result_count: int
+    ) -> None:
+        """Verify that filtering for null works correctly."""
+        client, headers, user = setup_user_client(client, id=123)
+
+        submission = create_submission(id=1)
+
+        create_transcription(
+            submission,
+            user,
+            id=2,
+            original_id="abc",
+            url="https://example.org",
+            text="Test Transcription",
+        )
+        create_transcription(
+            submission, user, id=3, original_id=None, url=None, text=None
+        )
+
+        result = client.get(
+            reverse("transcription-list") + f"?{filter_str}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == result_count
+
+    @pytest.mark.parametrize(
+        "filter_str,result_count",
+        [
+            ("text__icontains=text", 2),
+            ("text__icontains=TEXT", 2),
+            ("text__icontains=This", 1),
+            ("text__icontains=this", 1),
+        ],
+    )
+    def test_list_with_contains_filters(
+        self, client: Client, filter_str: str, result_count: int
+    ) -> None:
+        """Test whether the transcription text can be searched."""
+        client, headers, user = setup_user_client(client, id=123)
+
+        submission = create_submission(id=1)
+
+        create_transcription(
+            submission, user, id=2, text="This is a very interesting text and such.",
+        )
+        create_transcription(
+            submission, user, id=3, text="A text is a form of literature.",
+        )
+        create_transcription(
+            submission, user, id=4, text="Bla bla bla bla.",
+        )
+
+        result = client.get(
+            reverse("transcription-list") + f"?{filter_str}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == result_count
+
+    def test_list_with_time_filters(self, client: Client) -> None:
+        """Verify that the transcriptions can be filtered by time."""
+        client, headers, user = setup_user_client(client)
+
+        dates = [
+            datetime(2021, 1, 1),
+            datetime(2021, 2, 1),
+            datetime(2021, 2, 3),
+            datetime(2021, 5, 10),
+        ]
+
+        for date in dates:
+            create_transcription(
+                create_submission(), user, create_time=make_aware(date)
+            )
+
+        result = client.get(
+            reverse("transcription-list")
+            + "?create_time__gte=2021-02-01T00:00:00Z"
+            + "&create_time__lte=2021-04-01T00:00:00Z",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 2
+
     def test_create(self, client: Client) -> None:
         """Test whether the creation functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
@@ -113,6 +214,33 @@ class TestTranscriptionCreation:
         assert transcription.original_id == data["original_id"]
         assert transcription.url == data["url"]
         assert transcription.text == data["text"]
+
+    def test_create_with_tz_aware_timestamp(self, client: Client) -> None:
+        """Test whether the creation functions correctly when invoked correctly."""
+        # TODO: Remove me when we remove the ability to create with create_time variable
+        client, headers, user = setup_user_client(client)
+        submission = create_submission()
+        timestamp = "2021-11-28T13:00:05.985314+00:00"
+        data = {
+            "submission_id": submission.id,
+            "username": user.username,
+            "original_id": "ABC",
+            "create_time": timestamp,
+            "source": submission.source.name,
+            "url": "https://example.com",
+            "text": "test content",
+        }
+
+        result = client.post(
+            reverse("transcription-list"),
+            json.dumps(data),
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_201_CREATED
+        transcription = Transcription.objects.get(id=result.json()["id"])
+        assert transcription.create_time.isoformat() == timestamp
 
     def test_create_no_coc(self, client: Client) -> None:
         """Test that no transcription can be created without accepting the CoC."""

@@ -98,6 +98,12 @@ class User(object):
         self.user_data.update({"username": self.username})
         return self.user_data
 
+    def to_dict(self):
+        return self.user_data
+
+    def get_username(self):
+        return self.user_data.get("username")
+
 
 def get_transcribot_text(comments: List, post_id: str):
     # Try to pull the transcribot comment too
