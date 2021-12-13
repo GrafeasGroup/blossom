@@ -3,6 +3,24 @@
 
 
 {% block content %}
+    {% if issues %}
+        <h2>Hold up!</h2>
+        <p>
+            It looks like there are a few things that need to be adjusted before your
+            transcription fits all of our templates. The specific issues and their fixes
+            are listed below.
+        </p>
+        <p>
+            Once you get your transcription adjusted, just click "Submit" again!
+        </p>
+    {% endif %}
+    {% for issue in issues %}
+        <div class="container">
+            <div class="alert alert-danger">
+                {% include issue %}
+            </div>
+        </div>
+    {% endfor %}
     <div class="row">
         <div class="col-lg-6">
             <p class="text-muted fs-6">Pinch, drag, or click around this image to make it easier to read!</p>
@@ -36,7 +54,9 @@
                         <strong>What is this?</strong>
                     </label>
                     <input type="text" class="form-control" id="transcriptionTypeField"
-                           aria-describedby="transcriptionTypeFieldHelp" name="transcription_type">
+                           aria-describedby="transcriptionTypeFieldHelp" name="transcription_type"
+                           value="{{ heading }}"
+                    >
                     <div id="transcriptionTypeFieldHelp" class="form-text">
                         For example, Twitter post, Tumblr post, or Reddit comment. If it's not obvious
                         where it's from, put Text, Photo, Meme, or something equally descriptive.
@@ -182,7 +202,12 @@
                 }
             }
         );
-        simplemde.value("Put your transcription here!");
+
+        {% if not transcription %}
+            simplemde.value("Put your transcription here!");
+        {% else %}
+            simplemde.value(`{{ transcription }}`)
+        {% endif %}
 
         fetch('{% url "subredditjsonproxy" %}?s={{ submission.get_subreddit_name }}')
             .then(response => response.json())

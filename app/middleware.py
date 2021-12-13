@@ -7,6 +7,8 @@ from django.utils.functional import SimpleLazyObject
 from praw import Reddit
 from social_django.utils import load_strategy
 
+from blossom import __version__
+
 log = logging.getLogger(__name__)
 
 
@@ -26,7 +28,7 @@ def configure_reddit(request: HttpRequest) -> Reddit:
         client_secret=settings.SOCIAL_AUTH_REDDIT_SECRET,
         refresh_token=request.user.social_auth.first().extra_data["refresh_token"],
         user_agent=(
-            f"Python:Blossom:{settings.__version__} (by /u/itsthejoker),"
+            f"Python:Blossom:{__version__} (by /u/itsthejoker),"
             f" acting as {request.user.username}"
         ),
     )

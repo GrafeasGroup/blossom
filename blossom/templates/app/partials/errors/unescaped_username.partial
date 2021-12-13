@@ -1,0 +1,7 @@
+<p>
+    <strong>Unescaped username</strong>: It looks like there are unescaped usernames,
+    i.e. `u/username` or `/u/username`. Unfortunately, this gives the user a notification and might annoy them.
+</p>
+<p>
+   Please escape the username with a backslash (`\\`), for example `u\\/username` or `\\/u/username`.
+</p>

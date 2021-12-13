@@ -1,6 +1,7 @@
 import json
 import logging
 import random
+import uuid
 from datetime import timedelta
 
 import markdown
@@ -22,9 +23,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from rest_framework import status
 
-from api.models import Submission, Transcription
+from api.models import Source, Submission, Transcription
 from api.views.submission import SubmissionViewSet
 from app.permissions import require_coc, require_reddit_auth
+from app.reddit_actions import Flair, advertise, flair_post, submit_transcription
+from app.validation import (
+    check_for_fenced_code_block,
+    check_for_formatting_issues,
+    clean_fenced_code_block,
+)
 from utils.mixins import CSRFExemptMixin
 from utils.requests import convert_to_drf_request
 from utils.workers import send_to_worker
@@ -43,6 +50,20 @@ EXCITEMENT = [
     "High five!",
     "Congrats!",
 ]
+
+TRANSCRIPTION_TEMPLATE = (
+    "Image Transcription: {0}\n\n---\n\n{1}\n\n---\n\n"
+    "^^I'm&#32;a&#32;human&#32;volunteer&#32;content&#32;transcriber&#32;"
+    "for&#32;Reddit&#32;and&#32;you&#32;could&#32;be&#32;too!&#32;"
+    "[If&#32;you'd&#32;like&#32;more&#32;information&#32;on&#32;what&#32;"
+    "we&#32;do&#32;and&#32;why&#32;we&#32;do&#32;it,&#32;click&#32;here!]"
+    "(https://www.reddit.com/r/TranscribersOfReddit/wiki/index)"
+)
+
+
+def get_blossom_app_source() -> Source:
+    """Get the source object for transcriptions completed using the App."""
+    return Source.objects.get_or_create(name="TranscriptionApp")[0]
 
 
 @login_required
@@ -110,7 +131,9 @@ def choose_transcription(request: HttpRequest) -> HttpResponse:
 
 @method_decorator(require_coc, name="dispatch")
 class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
-    def get(self, request: HttpRequest, submission_id: int) -> HttpResponse:
+    def get(  # noqa: C901
+        self, request: HttpRequest, submission_id: int
+    ) -> HttpResponse:
         """Provide the transcription view."""
         drf_request = convert_to_drf_request(
             request, data={"username": request.user.username}
@@ -150,6 +173,8 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
             )
             return redirect("choose_transcription")
 
+        flair_post(Submission.objects.get(id=submission_id), Flair.in_progress)
+
         context = get_additional_context({"fullwidth_view": True})
         context.update({"submission": submission})
 
@@ -170,11 +195,113 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
             )
         elif "imgur.com" in submission.content_url:
             context.update({"imgur_content_url": submission.content_url.split("/")[-1]})
+
+        # if they posted a bad transcription and we want them to fix it, grab
+        # the stored values and add them to the current context, then delete them
+        # from the session so they don't get accidentally shown twice.
+        if s_id := request.session.get("submission_id"):
+            if s_id == submission_id:
+                # it's for the submission we're currently working on.
+                if transcription := request.session.get("transcription"):
+                    context.update({"transcription": transcription})
+
+                if heading := request.session.get("heading"):
+                    context.update({"heading": heading})
+
+                if issues := request.session.get("issues"):
+                    context.update(
+                        {
+                            "issues": [
+                                f"app/partials/errors/{issue}.partial"
+                                for issue in issues
+                            ]
+                        }
+                    )
+            else:
+                # it's old data. Nuke it.
+                del request.session["transcription"]
+                del request.session["heading"]
+                del request.session["issues"]
+                del request.session["submission_id"]
+
         return render(request, "app/transcribing.html", context)
 
     def post(self, request: HttpRequest, submission_id: int) -> HttpResponse:
         """Handle a submitted transcription."""
-        breakpoint()
+        transcription: str = request.POST.get("transcription")
+        transcription = transcription.replace("\r\n", "\n")
+
+        issues = check_for_formatting_issues(transcription)
+        if len(issues) > 0:
+            # stash the important stuff in the session so that we can
+            # retrieve it on the other side
+
+            # escape the backticks so that they can be rendered properly by the JS
+            # template literals in the html template
+            request.session["transcription"] = transcription.replace(
+                "`", "\`"  # noqa: W605
+            )
+            request.session["heading"] = request.POST.get("transcription_type")
+            request.session["issues"] = list(issues)
+            # store this one too so that we know which submission this information is for
+            request.session["submission_id"] = submission_id
+            return redirect("transcribe_submission", submission_id=submission_id)
+        else:
+            # we're good to go -- let's submit it!
+            if check_for_fenced_code_block(transcription):
+                transcription = clean_fenced_code_block(transcription)
+
+            text = TRANSCRIPTION_TEMPLATE.format(
+                request.POST.get("transcription_type"), transcription
+            )
+
+            submission_obj = Submission.objects.get(id=submission_id)
+            # We'll try and edit some of the fields after posting -- if posting fails,
+            # then this is the default set of options that we want to have.
+            transcription_obj = Transcription.objects.create(
+                original_id=uuid.uuid4(),
+                submission=submission_obj,
+                author=request.user,
+                url=None,
+                source=get_blossom_app_source(),
+                text=text,
+                removed_from_reddit=True,
+            )
+
+            drf_request = convert_to_drf_request(
+                request, data={"username": request.user.username}
+            )
+            viewset = SubmissionViewSet()
+            # prepare the viewset for handling this request
+            viewset.request = drf_request
+            # I don't know why this isn't autopopulated, but if we don't set it here then
+            # it explodes.
+            viewset.format_kwarg = None
+            response = viewset.done(drf_request, submission_id)
+
+            if response.status_code == status.HTTP_423_LOCKED:
+                messages.error(
+                    request,
+                    "There is a problem with your account. Please contact the mods.",
+                )
+                return redirect("logout")
+
+            if response.status_code == status.HTTP_409_CONFLICT:
+                messages.error(
+                    request,
+                    "This is marked as having been completed by someone else. Sorry!",
+                )
+                return redirect("choose_transcription")
+
+            flair_post(submission_obj, Flair.completed)
+            submit_transcription(request, transcription_obj, submission_obj)
+            advertise(submission_obj)
+
+            messages.success(
+                request, "Nice work! Thanks for helping make somebody's day better!"
+            )
+
+            return redirect("choose_transcription")
 
 
 class PracticeTranscription(CSRFExemptMixin, View):
@@ -286,5 +413,6 @@ def unclaim_submission(
             " one.",
         )
 
+    flair_post(Submission.objects.get(id=submission_id), Flair.unclaimed)
     ask_about_removing_post(request, submission_id)
     return redirect("choose_transcription")
