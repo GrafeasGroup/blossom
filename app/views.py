@@ -5,6 +5,7 @@ import uuid
 from datetime import timedelta
 
 import markdown
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -83,13 +84,15 @@ def accept_coc(request: HttpRequest) -> HttpResponse:
 @require_reddit_auth
 def choose_transcription(request: HttpRequest) -> HttpResponse:
     """Provide a user with transcriptions to choose from."""
-    # time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
-    time_delay = timezone.now() - timedelta(hours=130)
+    time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+    # todo: remove this when finished testing raw functionality
+    # time_delay = timezone.now() - timedelta(hours=130)
     options = Submission.objects.annotate(original_id_len=Length("original_id")).filter(
         original_id_len__lt=10,
         completed_by=None,
         claimed_by=None,
         create_time__gte=time_delay,
+        removed_from_queue=False,
     )
 
     if options.count() > 3:
