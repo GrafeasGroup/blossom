@@ -56,7 +56,4 @@ def flair_post(submission_obj: Submission, text: str) -> None:
 def advertise(submission_obj: Submission) -> None:
     """Post a message explaining how this submission was completed to r/ToR."""
     reddit_submission = REDDIT.submission(url=submission_obj.tor_url)
-    reddit_submission.reply(
-        "This post was completed using"
-        " [TheTranscription.App](https://thetranscription.app)!"
-    )
+    reddit_submission.reply("This post was completed using TheTranscription.App!")
