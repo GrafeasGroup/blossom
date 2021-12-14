@@ -295,21 +295,22 @@ def is_valid_github_request(request: HttpRequest) -> bool:
 def is_valid_slack_request(request: HttpRequest) -> bool:
     """Verify that a webhook from Slack is actually from them."""
     # adapted from https://api.slack.com/authentication/verifying-requests-from-slack
+    breakpoint()
     if (slack_signature := request.headers.get("X-Slack-Signature")) is None:
         return False
 
     timestamp = request.headers["X-Slack-Request-Timestamp"]
-    if abs(time.time() - timestamp) > 60 * 5:
+    if abs(time.time() - int(timestamp)) > 60 * 5:
         # The request timestamp is more than five minutes from local time.
         # It could be a replay attack, so let's ignore it.
         return False
 
-    sig_basestring = "v0:" + timestamp + ":" + request.body
+    sig_basestring = "v0:" + timestamp + ":" + request.body.decode()
 
     signature = (
         "v0="
         + hmac.new(
-            settings.SLACK_SIGNING_SECRET,
+            bytes(settings.SLACK_SIGNING_SECRET, "latin-1"),
             msg=bytes(sig_basestring, "latin-1"),
             digestmod=hashlib.sha256,
         ).hexdigest()

@@ -1,6 +1,8 @@
 import binascii
+import hashlib
 import hmac
 import json
+import time
 from typing import Dict
 from unittest.mock import MagicMock
 
@@ -38,12 +40,37 @@ i18n = translation()
 # try and ping modchat (if you're running locally) or explode if this is
 # running in the github actions pipeline.
 
+SLACK_SIGNING_SECRET = "12345"
 
-def test_challenge_request(client: Client) -> None:
+
+def get_slack_headers(body: dict, settings: SettingsWrapper) -> dict:
+    """Mock the headers required by slack validation."""
+    create_time = str(int(time.time()))
+
+    body = json.dumps(body)
+    sig_basestring = "v0:" + create_time + ":" + body
+    signature = (
+        "v0="
+        + hmac.new(
+            bytes(settings.SLACK_SIGNING_SECRET, "latin-1"),
+            msg=bytes(sig_basestring, "latin-1"),
+            digestmod=hashlib.sha256,
+        ).hexdigest()
+    )
+
+    return {
+        "HTTP_X-Slack-Signature": signature,
+        "HTTP_X-Slack-Request-Timestamp": create_time,
+    }
+
+
+def test_challenge_request(client: Client, settings: SettingsWrapper) -> None:
     """Test handling of Slack's new endpoint challenge message."""
+    settings.SLACK_SIGNING_SECRET = SLACK_SIGNING_SECRET
     data = {"challenge": "asdfasdfasdf"}
+    headers = get_slack_headers(data, settings)
     result = client.post(
-        reverse("slack"), json.dumps(data), content_type="application/json"
+        reverse("slack"), json.dumps(data), content_type="application/json", **headers
     )
     assert result.content == b"asdfasdfasdf"
 
