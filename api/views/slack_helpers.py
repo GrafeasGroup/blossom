@@ -295,7 +295,7 @@ def process_message(data: Dict) -> None:
         actions = data.get("actions")
         value = actions[0].get("value")
         client.chat_postMessage(
-            channel=data.get("channel"), text=f"retrieved value: {value}",
+            channel=data["channel"]["id"], text=f"retrieved value: {value}",
         )
         return
 
