@@ -2,7 +2,7 @@ import binascii
 import hmac
 import os
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from unittest import mock
 
 import requests
@@ -107,6 +107,59 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
         emote, action, username, sponsorlevel
     )
     client.chat_postMessage(channel="org_running", text=msg)
+
+
+def test_block_message(channel: str, data: dict) -> None:
+    """Verify block formatting works as expected."""
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    "This submission was reported -- please investigate and decide"
+                    " whether it should be removed."
+                ),
+            },
+        },
+        {"type": "divider"},
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    "Submission: <https://example.com|fakeredditlink>\nReport reason: "
+                ),
+            },
+        },
+        {"type": "divider"},
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Keep"},
+                    "value": "keep_submission_",
+                },
+                {
+                    "type": "button",
+                    "style": "danger",
+                    "text": {"type": "plain_text", "text": "Remove",},  # noqa: E231
+                    "value": "remove_submission_",
+                    "confirm": {
+                        "title": {"type": "plain_text", "text": "Are you sure?"},
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "This will remove the submission from the queue.",
+                        },
+                        "confirm": {"type": "plain_text", "text": "Nuke it"},
+                        "deny": {"type": "plain_text", "text": "Back"},
+                    },
+                },
+            ],
+        },
+    ]
+    client.chat_postMessage(channel=channel, blocks=blocks)
 
 
 def send_info(channel: str, message: str) -> None:
@@ -220,7 +273,7 @@ def dadjoke_target(channel: str, message: str, use_api: bool = True) -> None:
     client.chat_postMessage(channel=channel, text=msg, link_names=True)
 
 
-def get_message(data: Dict) -> str:
+def get_message(data: Dict) -> Optional[str]:
     """
     Pull message text out of slack event.
 
@@ -229,7 +282,10 @@ def get_message(data: Dict) -> str:
     """
     event = data.get("event")
     # Note: black and flake8 disagree on the formatting. Black wins.
-    return event["text"][event["text"].index(">") + 2 :].lower()  # noqa: E203
+    try:
+        return event["text"][event["text"].index(">") + 2 :].lower()  # noqa: E203
+    except IndexError:
+        return None
 
 
 @fire_and_forget
@@ -238,11 +294,19 @@ def process_message(data: Dict) -> None:
     e = data.get("event")  # noqa: VNE001
     channel = e.get("channel")
 
-    try:
-        message = get_message(data)
-    except IndexError:
+    message = get_message(data)
+    action = data.get("actions")
+
+    if not message and not action:
         client.chat_postMessage(
             channel=channel, text=i18n["slack"]["errors"]["message_parse_error"],
+        )
+        return
+
+    if action:
+        value = action[0].get("value")
+        client.chat_postMessage(
+            channel=channel, text=f"retrieved value: {value}",
         )
         return
 
@@ -250,10 +314,12 @@ def process_message(data: Dict) -> None:
         client.chat_postMessage(
             channel=channel, text=i18n["slack"]["errors"]["empty_message_error"],
         )
+        return
 
     # format: first word command -> function to call
     # Reformatted this way because E228 hates the if / elif routing tree.
     options = {
+        "asdf": test_block_message,
         "ping": pong,
         "help": send_help_message,
         "reset": process_coc_reset,
