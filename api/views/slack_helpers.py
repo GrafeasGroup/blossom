@@ -294,6 +294,8 @@ def process_message(data: Dict) -> None:
     e = data.get("event")  # noqa: VNE001
     channel = e.get("channel")
 
+    client.chat_postMessage(channel=channel, text=data)
+
     message = get_message(data)
     action = data.get("actions")
 
