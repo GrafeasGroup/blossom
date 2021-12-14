@@ -201,6 +201,7 @@ ARCHIVIST_COMPLETED_DELAY_TIME = 0.5
 # Global flag; if this is set to False, all slack calls will fail silently
 ENABLE_SLACK = True
 
+SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET", "")
 GITHUB_SPONSORS_SECRET_KEY = os.environ.get("GITHUB_SPONSORS_SECRET_KEY", "")
 
 # Global flag; if this is set to False, all calls to ocr.space will fail silently
