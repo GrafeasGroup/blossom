@@ -291,22 +291,23 @@ def get_message(data: Dict) -> Optional[str]:
 @fire_and_forget
 def process_message(data: Dict) -> None:
     """Identify the purpose of a slack message and route accordingly."""
+    if data.get("type") == "block_actions":
+        actions = data.get("actions")
+        value = actions[0].get("value")
+        client.chat_postMessage(
+            channel=data.get("channel"), text=f"retrieved value: {value}",
+        )
+        return
+
     e = data.get("event")  # noqa: VNE001
     channel = e.get("channel")
 
     message = get_message(data)
-    action = data.get("actions")
+    actions = data.get("actions")
 
-    if not message and not action:
+    if not message and not actions:
         client.chat_postMessage(
             channel=channel, text=i18n["slack"]["errors"]["message_parse_error"],
-        )
-        return
-
-    if action:
-        value = action[0].get("value")
-        client.chat_postMessage(
-            channel=channel, text=f"retrieved value: {value}",
         )
         return
 
