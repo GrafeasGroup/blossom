@@ -5,8 +5,6 @@ import queue
 import threading
 from typing import Any, Callable
 
-from api.views.slack_helpers import client
-
 
 def _worker() -> None:
     """Create worker for background tasks."""
@@ -16,6 +14,9 @@ def _worker() -> None:
             func(*args, **kwargs)
         except:  # noqa: E722
             import traceback
+
+            # prevent circular dependency
+            from api.views.slack_helpers import client
 
             details = traceback.format_exc()
             client.chat_postMessage(
