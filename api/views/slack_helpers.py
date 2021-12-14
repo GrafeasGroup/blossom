@@ -11,8 +11,10 @@ from django.conf import settings
 from django.http import HttpRequest
 
 from api.helpers import fire_and_forget
+from api.models import Submission
 from api.serializers import VolunteerSerializer
 from api.views.misc import Summary
+from app.reddit_actions import remove_post
 from authentication.models import BlossomUser
 from blossom.strings import translation
 
@@ -109,57 +111,37 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
     client.chat_postMessage(channel="org_running", text=msg)
 
 
-def test_block_message(channel: str, data: dict) -> None:
-    """Verify block formatting works as expected."""
-    blocks = [
-        {
+def process_submission_update(data: dict) -> None:
+    """Remove the submission from both reddit and app if it needs to be removed."""
+    value = data["actions"][0].get("value").split("_")
+    blocks = data["message"]["blocks"]
+    if value[0] == "keep":
+        blocks[-1] = {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "Thank you! This submission has been kept.",
+            },
+        }
+    else:
+        submission_obj = Submission.objects.get(id=int(value[2]))
+        submission_obj.removed_from_queue = True
+        submission_obj.save(skip_extras=True)
+        # pull the post out of the reddit queue
+        remove_post(submission_obj)
+        blocks[-1] = {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
                 "text": (
-                    "This submission was reported -- please investigate and decide"
-                    " whether it should be removed."
+                    f"Submission ID {submission_obj.id} has been removed from the queue."
                 ),
             },
-        },
-        {"type": "divider"},
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": (
-                    "Submission: <https://example.com|fakeredditlink>\nReport reason: "
-                ),
-            },
-        },
-        {"type": "divider"},
-        {
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Keep"},
-                    "value": "keep_submission_",
-                },
-                {
-                    "type": "button",
-                    "style": "danger",
-                    "text": {"type": "plain_text", "text": "Remove",},  # noqa: E231
-                    "value": "remove_submission_",
-                    "confirm": {
-                        "title": {"type": "plain_text", "text": "Are you sure?"},
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "This will remove the submission from the queue.",
-                        },
-                        "confirm": {"type": "plain_text", "text": "Nuke it"},
-                        "deny": {"type": "plain_text", "text": "Back"},
-                    },
-                },
-            ],
-        },
-    ]
-    client.chat_postMessage(channel=channel, blocks=blocks)
+        }
+
+    client.chat_update(
+        channel=data["channel"]["id"], ts=data["message"]["ts"], blocks=blocks
+    )
 
 
 def send_info(channel: str, message: str) -> None:
@@ -291,22 +273,26 @@ def get_message(data: Dict) -> Optional[str]:
 @fire_and_forget
 def process_message(data: Dict) -> None:
     """Identify the purpose of a slack message and route accordingly."""
+    if data.get("type") == "block_actions":
+        value = data["actions"][0].get("value")
+        if "keep" in value or "remove" in value:
+            process_submission_update(data)
+        else:
+            client.chat_postMessage(
+                channel=data["channel"]["id"],
+                text=i18n["slack"]["errors"]["unknown_payload"].format(value),
+            )
+        return
+
     e = data.get("event")  # noqa: VNE001
     channel = e.get("channel")
 
     message = get_message(data)
-    action = data.get("actions")
+    actions = data.get("actions")
 
-    if not message and not action:
+    if not message and not actions:
         client.chat_postMessage(
             channel=channel, text=i18n["slack"]["errors"]["message_parse_error"],
-        )
-        return
-
-    if action:
-        value = action[0].get("value")
-        client.chat_postMessage(
-            channel=channel, text=f"retrieved value: {value}",
         )
         return
 
@@ -319,7 +305,6 @@ def process_message(data: Dict) -> None:
     # format: first word command -> function to call
     # Reformatted this way because E228 hates the if / elif routing tree.
     options = {
-        "asdf": test_block_message,
         "ping": pong,
         "help": send_help_message,
         "reset": process_coc_reset,

@@ -68,6 +68,7 @@ github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
     no_user_by_that_name="Sorry, I wasn't able to find a user with that name."
     missing_username="I don't see a username in your request -- make sure you're formatting your request as \"@blossom {action} {argument}\". Example: \"@blossom dadjoke @itsthejoker\""
     unknown_username="No username like that on file; please check your spelling."
+    unknown_payload="Received unknown payload from Slack with key I don't recognize. Unknown key: {}"
 
     [slack.blacklist]
     success="User '{0}' blacklisted."

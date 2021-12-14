@@ -25,6 +25,7 @@ from django.views.generic import View
 from rest_framework import status
 
 from api.models import Source, Submission, Transcription
+from api.views.slack_helpers import client
 from api.views.submission import SubmissionViewSet
 from app.permissions import require_coc, require_reddit_auth
 from app.reddit_actions import Flair, advertise, flair_post, submit_transcription
@@ -378,10 +379,64 @@ class PracticeTranscription(CSRFExemptMixin, View):
 @send_to_worker
 def ask_about_removing_post(request: HttpRequest, submission: Submission) -> None:
     """Ask Slack if we want to remove a reported submission or not."""
-    # TODO: make this fire a block kit question to slack with the reported reason asking
-    #  if we want to remove it or not. The response should set `removed_from_queue` and
-    #  nuke the submission from the Reddit queue.
-    ...
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    "This submission was reported -- please investigate and decide"
+                    " whether it should be removed."
+                ),
+            },
+        },
+        {"type": "divider"},
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": ("Submission: <{url}|{title}>\nReport reason: {reason}"),
+            },
+        },
+        {"type": "divider"},
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Keep"},
+                    "value": "keep_submission_{}",
+                },
+                {
+                    "type": "button",
+                    "style": "danger",
+                    "text": {"type": "plain_text", "text": "Remove",},  # noqa: E231
+                    "value": "remove_submission_{}",
+                    "confirm": {
+                        "title": {"type": "plain_text", "text": "Are you sure?"},
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "This will remove the submission from the queue.",
+                        },
+                        "confirm": {"type": "plain_text", "text": "Nuke it"},
+                        "deny": {"type": "plain_text", "text": "Back"},
+                    },
+                },
+            ],
+        },
+    ]
+    blocks[2]["text"]["text"] = blocks[2]["text"]["text"].format(
+        url=submission.url, title=submission.title, reason=request.GET.get("reason")
+    )
+
+    blocks[-1]["elements"][0]["value"] = blocks[-1]["elements"][0]["value"].format(
+        submission.id
+    )
+    blocks[-1]["elements"][1]["value"] = blocks[-1]["elements"][1]["value"].format(
+        submission.id
+    )
+
+    client.chat_postMessage(channel="removed_posts", blocks=blocks)
 
 
 @login_required
