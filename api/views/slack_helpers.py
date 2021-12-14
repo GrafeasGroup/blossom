@@ -1,7 +1,9 @@
 import binascii
+import hashlib
 import hmac
 import os
 import re
+import time
 from typing import Any, Dict, List
 from unittest import mock
 
@@ -288,3 +290,29 @@ def is_valid_github_request(request: HttpRequest) -> bool:
 
     body_hex = f"sha1={body_hex}"
     return hmac.compare_digest(body_hex, github_signature)
+
+
+def is_valid_slack_request(request: HttpRequest) -> bool:
+    """Verify that a webhook from Slack is actually from them."""
+    # adapted from https://api.slack.com/authentication/verifying-requests-from-slack
+    if (slack_signature := request.headers.get("X-Slack-Signature")) is None:
+        return False
+
+    timestamp = request.headers["X-Slack-Request-Timestamp"]
+    if abs(time.time() - timestamp) > 60 * 5:
+        # The request timestamp is more than five minutes from local time.
+        # It could be a replay attack, so let's ignore it.
+        return False
+
+    sig_basestring = "v0:" + timestamp + ":" + request.body
+
+    signature = (
+        "v0="
+        + hmac.new(
+            settings.SLACK_SIGNING_SECRET,
+            msg=bytes(sig_basestring, "latin-1"),
+            digestmod=hashlib.sha256,
+        ).hexdigest()
+    )
+
+    return hmac.compare_digest(signature, slack_signature)

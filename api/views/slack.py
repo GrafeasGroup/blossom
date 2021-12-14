@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from api.views.slack_helpers import (
     is_valid_github_request,
+    is_valid_slack_request,
     process_message,
     send_github_sponsors_message,
 )
@@ -45,6 +46,8 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
     :param request: HttpRequest
     :return: HttpRequest
     """
+    if not is_valid_slack_request(request):
+        return HttpResponse(status=200)
     json_data = json.loads(request.body)
     if json_data.get("challenge"):
         # looks like we got hit with the magic handshake packet. Send it
