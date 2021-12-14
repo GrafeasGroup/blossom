@@ -1,6 +1,7 @@
 """Views that specifically relate to communication with Slack."""
 import json
 import logging
+from urllib.parse import unquote
 
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -48,8 +49,10 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
     :param request: HttpRequest
     :return: HttpRequest
     """
-    log.warning(request.body)
-    json_data = json.loads(request.body)
+    if request.body.decode().startswith("payload"):
+        json_data = json.loads(unquote(request.body.decode()).split("payload=")[1])
+    else:
+        json_data = json.loads(request.body)
     if json_data.get("challenge"):
         # looks like we got hit with the magic handshake packet. Send it
         # back to its maker.
