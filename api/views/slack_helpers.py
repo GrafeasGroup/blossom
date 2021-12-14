@@ -295,7 +295,6 @@ def is_valid_github_request(request: HttpRequest) -> bool:
 def is_valid_slack_request(request: HttpRequest) -> bool:
     """Verify that a webhook from Slack is actually from them."""
     # adapted from https://api.slack.com/authentication/verifying-requests-from-slack
-    breakpoint()
     if (slack_signature := request.headers.get("X-Slack-Signature")) is None:
         return False
 
