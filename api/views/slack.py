@@ -1,5 +1,6 @@
 """Views that specifically relate to communication with Slack."""
 import json
+import logging
 
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -9,6 +10,8 @@ from api.views.slack_helpers import (
     process_message,
     send_github_sponsors_message,
 )
+
+log = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -45,6 +48,7 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
     :param request: HttpRequest
     :return: HttpRequest
     """
+    log.warning(request.body)
     json_data = json.loads(request.body)
     if json_data.get("challenge"):
         # looks like we got hit with the magic handshake packet. Send it
