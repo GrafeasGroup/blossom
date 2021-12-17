@@ -379,6 +379,7 @@ class PracticeTranscription(CSRFExemptMixin, View):
 @send_to_worker
 def ask_about_removing_post(request: HttpRequest, submission: Submission) -> None:
     """Ask Slack if we want to remove a reported submission or not."""
+    # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
     blocks = [
         {
             "type": "section",
@@ -425,6 +426,7 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
             ],
         },
     ]
+
     blocks[2]["text"]["text"] = blocks[2]["text"]["text"].format(
         url=submission.url, title=submission.title, reason=request.GET.get("reason")
     )
