@@ -3,9 +3,12 @@ from urllib.parse import urlparse
 from urllib.request import Request
 
 from django.views.decorators.csrf import csrf_exempt
-from drf_yasg.openapi import Parameter, Response
+from drf_yasg.openapi import Parameter
+from drf_yasg.openapi import Response as DocResponse
+from drf_yasg.openapi import Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.models import Submission, Transcription
@@ -111,20 +114,34 @@ class FindView(APIView):
                 "Can be a submission URL, a ToR submission URL or a transcription URL.",
             ),
         ],
+        responses={
+            200: DocResponse(
+                "The URL has been found!",
+                schema=Schema(
+                    type="object",
+                    # TODO: Use the schemas of the corresponding models
+                    properties={
+                        "submission": Schema(type="object"),
+                        "transcription": Schema(type="object"),
+                        "author": Schema(type="object"),
+                    },
+                ),
+            ),
+            400: "The given URL has an invalid format.",
+            404: "The corresponding submission/transcription could not be found.",
+        },
     )
     def get(self, request: Request, url: str) -> Response:
-        """Get a summary of statistics on volunteers and transcriptions."""
+        """Find the submission/transcription corresponding to the URL."""
         normalized_url = normalize_url(url)
         if normalized_url is None:
-            return Response(data="Invalid URL.", status=status.HTTP_400_BAD_REQUEST)
+            return Response(data="Invalid URL.", status=status.HTTP_400_BAD_REQUEST,)
 
         data = find_by_url(normalized_url)
         if data is None:
             return Response(
-                description="No submission or transcription found for the given URL.",
+                data="No submission or transcription found for the given URL.",
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        return Response(
-            data=data, status=status.HTTP_200_OK, description="Found the post!"
-        )
+        return Response(data=data, status=status.HTTP_200_OK)
