@@ -155,13 +155,6 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
         self, request: HttpRequest, submission_id: int
     ) -> HttpResponse:
         """Provide the transcription view."""
-
-        def remove_session_data(request: HttpRequest) -> None:
-            del request.session["transcription"]
-            del request.session["heading"]
-            del request.session["issues"]
-            del request.session["submission_id"]
-
         drf_request = convert_to_drf_request(
             request, data={"username": request.user.username}
         )
@@ -257,8 +250,6 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
         """Handle a submitted transcription."""
         transcription: str = request.POST.get("transcription")
         transcription = transcription.replace("\r\n", "\n")
-
-        breakpoint()
 
         issues = check_for_formatting_issues(transcription)
         if len(issues) > 0:
