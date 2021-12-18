@@ -283,7 +283,9 @@ class TestSubmissionRate:
 
         result = client.get(
             reverse("submission-rate")
-            + "?time_frame=day&completed_by=123456&from=2021-06-01&until=2021-06-21",
+            + "?time_frame=day&completed_by=123456"
+            + "&complete_time__gte=2021-06-01T00:00:00Z"
+            + "&complete_time__lte=2021-06-21T00:00:00Z",
             content_type="application/json",
             **headers,
         )
