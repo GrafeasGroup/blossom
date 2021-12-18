@@ -122,7 +122,9 @@ class TestHeatmap:
             )
 
         result = client.get(
-            reverse("submission-heatmap") + "?from=2021-06-19&until=2021-06-21",
+            reverse("submission-heatmap")
+            + "?complete_time__gte=2021-06-19T00:00:00Z"
+            + "&complete_time__lte=2021-06-21T00:00:00Z",
             content_type="application/json",
             **headers,
         )

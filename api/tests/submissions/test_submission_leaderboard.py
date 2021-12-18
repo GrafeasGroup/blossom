@@ -136,7 +136,8 @@ class TestSubmissionLeaderboard:
             )
 
         results = client.get(
-            reverse("submission-leaderboard") + "?user_id=1&from=2021-11-04",
+            reverse("submission-leaderboard")
+            + "?user_id=1&complete_time__gte=2021-11-04T00:00:00Z",
             content_type="application/json",
             **headers,
         )
