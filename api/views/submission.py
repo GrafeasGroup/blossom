@@ -36,7 +36,6 @@ from rest_framework.response import Response
 from slack import WebClient
 
 from api.authentication import BlossomApiPermission
-from api.filters import TimeFilter
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.pagination import StandardResultsSetPagination
@@ -85,7 +84,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = SubmissionSerializer
     permission_classes = (BlossomApiPermission,)
     queryset = Submission.objects.order_by("id")
-    filter_backends = [DjangoFilterBackend, TimeFilter, OrderingFilter]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = {
         "id": ["exact"],
         "original_id": ["exact"],
