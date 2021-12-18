@@ -107,15 +107,32 @@ class TestSubmissionGet:
     @pytest.mark.parametrize(
         "time_query,result_count",
         [
-            ("from=2021-01-02,1pm", 2),
-            ("from=2021-01-03", 1),
-            ("from=2020-12-31&until=2021-01-05", 4),
-            ("from=2021-01-01T12:00&until=2021-01-03T12:00", 2),
-            ("from=2021-01-01T12:00:00&until=2021-01-03T12:00:00", 2),
-            ("from=2021-01-01T12:00:00Z&until=2021-01-03T12:00:00Z", 2),
-            ("from=2021-01-01T12:00:00Z&until=2021-01-03T12:00:00", 2),
-            ("from=2021-01-01T12:00:00%2b01:00&until=2021-01-03T12:00:00%2b01:00", 2),
-            ("from=2021-01-01T12:00:00%2b01:00&until=2021-01-03T12:00:00%2b05:00", 2),
+            ("complete_time__gt=2021-01-03T00:00:00Z", 1),
+            (
+                "complete_time__gte=2020-12-31T00:00:00Z"
+                "&complete_time__lte=2021-01-05T00:00:00Z",
+                4,
+            ),
+            (
+                "complete_time__gte=2021-01-01T12:00:00Z"
+                "&complete_time__lte=2021-01-03T12:00:00Z",
+                2,
+            ),
+            (
+                "complete_time__gte=2021-01-01T12:00:00Z"
+                "&complete_time__lte=2021-01-03T12:00:00Z",
+                2,
+            ),
+            (
+                "complete_time__gte=2021-01-01T12:00:00%2b01:00"
+                "&complete_time__lte=2021-01-03T12:00:00%2b01:00",
+                2,
+            ),
+            (
+                "complete_time__gte=2021-01-01T12:00:00%2b01:00"
+                "&complete_time__lte=2021-01-03T12:00:00%2b05:00",
+                2,
+            ),
         ],
     )
     def test_list_with_time_filters(
@@ -137,38 +154,6 @@ class TestSubmissionGet:
             **headers,
         )
         assert result.status_code == status.HTTP_200_OK
-        assert len(result.json()["results"]) == result_count
-
-    @pytest.mark.parametrize(
-        "time_query,result_count",
-        [
-            ("from=yesterday", 1),
-            ("from=day%20before%20yesterday", 2),
-            ("from=day+before+yesterday", 2),
-            ("from=day%20before%20yesterday&until=yesterday", 1),
-            ("from=aaaaaaaaaa&until=aaaaaaaaa", 5),
-        ],
-    )
-    def test_list_with_advanced_time_filters(
-        self, client: Client, time_query: str, result_count: int
-    ) -> None:
-        """Verify that listing items with English time filters works properly."""
-        client, headers, _ = setup_user_client(client)
-        today = timezone.now()
-
-        create_submission(complete_time=today - timezone.timedelta(hours=6))
-        create_submission(complete_time=today - timezone.timedelta(days=1))
-        create_submission(complete_time=today - timezone.timedelta(days=2))
-        create_submission(complete_time=today - timezone.timedelta(days=3))
-        create_submission(complete_time=today - timezone.timedelta(days=4))
-
-        result = client.get(
-            reverse("submission-list") + f"?{time_query}",
-            content_type="application/json",
-            **headers,
-        )
-        assert result.status_code == status.HTTP_200_OK
-        # should just be the one from 6 hours ago
         assert len(result.json()["results"]) == result_count
 
     @pytest.mark.parametrize(
