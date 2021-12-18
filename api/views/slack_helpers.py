@@ -113,6 +113,8 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
 
 def process_submission_update(data: dict) -> None:
     """Remove the submission from both reddit and app if it needs to be removed."""
+    # Blocks are created using the Slack Block Kit Builder
+    # https://app.slack.com/block-kit-builder/
     value = data["actions"][0].get("value").split("_")
     blocks = data["message"]["blocks"]
     if value[0] == "keep":

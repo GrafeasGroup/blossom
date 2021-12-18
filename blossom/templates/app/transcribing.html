@@ -225,15 +225,12 @@
 
                 } else {
                     data['rules'].forEach((el) => {
-                        let li = document.createElement('li');
-                        li.classList.add('mt-2');
-                        let strong = document.createElement('strong');
-                        strong.innerText = `${el['violation_reason']}`;
-                        let span = document.createElement('span');
-                        span.innerText = ` - ${el['description']}`;
-                        li.appendChild(strong);
-                        li.appendChild(span);
-                        ul.appendChild(li);
+                        let li = `
+                            <li class="mt-2">
+                                <strong>${el['violation_reason']}</strong> - ${el['description']}
+                            </li>
+                        `
+                        ul.insertAdjacentHTML("beforeend", li)
                     });
                     modal.appendChild(ul);
                 }

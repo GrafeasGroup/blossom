@@ -13,11 +13,24 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import logging
 import os
 
-import bugsnag
 import dotenv
 from django.urls import reverse_lazy
 
 from blossom import __version__
+
+"""
+***************************************************************************
+
+                                HEY YOU!
+
+   Only modify this file if changes need to apply in EVERY ENVIRONMENT!
+
+***************************************************************************
+
+Otherwise, please change the required other environment files in
+blossom/settings/!
+"""
+
 
 dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
@@ -31,6 +44,8 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # SECURITY WARNING: keep the secret key used in production secret!
 default_secret_key = "v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx"
 SECRET_KEY = os.environ.get("BLOSSOM_SECRET_KEY", default_secret_key)
+
+VERSION = __version__
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -89,7 +104,6 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "authentication.BlossomUser"
 
 MIDDLEWARE = [
-    "bugsnag.django.middleware.BugsnagMiddleware",
     "beeline.middleware.django.HoneyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -144,18 +158,15 @@ DATABASES = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "bugsnag": {"level": "ERROR", "class": "bugsnag.handlers.BugsnagHandler"},
-        "console": {"class": "logging.StreamHandler"},
-    },  # noqa: E231
+    "handlers": {"console": {"class": "logging.StreamHandler",},},  # noqa: E231
     "loggers": {
         "django": {
-            "handlers": ["console", "bugsnag"],
+            "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
         "blossom": {
-            "handlers": ["console", "bugsnag"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
     },
 }
@@ -285,5 +296,3 @@ if DATABASES["default"].get("PASSWORD") == default_db_password:
 
 if OCR_API_KEY == "helloworld":
     settings_err("Using default OCR API key, not ours!")
-
-bugsnag.configure(app_version=__version__)

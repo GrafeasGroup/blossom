@@ -5,12 +5,11 @@ import uuid
 from datetime import timedelta
 
 import markdown
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models.functions import Length
-from django.http import HttpRequest, HttpResponse, HttpResponseServerError
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import (
     HttpResponseRedirect,
     get_object_or_404,
@@ -32,8 +31,11 @@ from app.reddit_actions import Flair, advertise, flair_post, submit_transcriptio
 from app.validation import (
     check_for_fenced_code_block,
     check_for_formatting_issues,
+    check_for_unescaped_subreddit,
+    check_for_unescaped_username,
     clean_fenced_code_block,
 )
+from ocr.helpers import escape_reddit_links, replace_shortlinks
 from utils.mixins import CSRFExemptMixin
 from utils.requests import convert_to_drf_request
 from utils.workers import send_to_worker
@@ -54,7 +56,7 @@ EXCITEMENT = [
 ]
 
 TRANSCRIPTION_TEMPLATE = (
-    "Image Transcription: {0}\n\n---\n\n{1}\n\n---\n\n"
+    "Image Transcription: {content_type}\n\n---\n\n{transcription}\n\n---\n\n"
     "^^I'm&#32;a&#32;human&#32;volunteer&#32;content&#32;transcriber&#32;"
     "for&#32;Reddit&#32;and&#32;you&#32;could&#32;be&#32;too!&#32;"
     "[If&#32;you'd&#32;like&#32;more&#32;information&#32;on&#32;what&#32;"
@@ -85,15 +87,16 @@ def accept_coc(request: HttpRequest) -> HttpResponse:
 @require_reddit_auth
 def choose_transcription(request: HttpRequest) -> HttpResponse:
     """Provide a user with transcriptions to choose from."""
-    time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+    # time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
     # todo: remove this when finished testing raw functionality
-    # time_delay = timezone.now() - timedelta(hours=130)
+    time_delay = timezone.now() - timedelta(hours=330)
     options = Submission.objects.annotate(original_id_len=Length("original_id")).filter(
         original_id_len__lt=10,
         completed_by=None,
         claimed_by=None,
         create_time__gte=time_delay,
         removed_from_queue=False,
+        archived=False,
     )
 
     if options.count() > 3:
@@ -120,6 +123,19 @@ def choose_transcription(request: HttpRequest) -> HttpResponse:
 
     context = get_additional_context({"options": options, "fullwidth_view": True})
 
+    if len(options) == 0:
+        completed_post_count = (
+            Submission.objects.annotate(original_id_len=Length("original_id"))
+            .filter(
+                original_id_len__lt=10,
+                completed_by__isnull=False,
+                create_time__gte=time_delay,
+            )
+            .count()
+        )
+        if completed_post_count == 0:
+            # if it's not zero, then we cleared the queue and will show that page instead.
+            context.update({"show_error_page": True})
     claimed_submissions = Submission.objects.filter(
         claimed_by=request.user, archived=False, completed_by__isnull=True
     )
@@ -139,6 +155,13 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
         self, request: HttpRequest, submission_id: int
     ) -> HttpResponse:
         """Provide the transcription view."""
+
+        def remove_session_data(request: HttpRequest) -> None:
+            del request.session["transcription"]
+            del request.session["heading"]
+            del request.session["issues"]
+            del request.session["submission_id"]
+
         drf_request = convert_to_drf_request(
             request, data={"username": request.user.username}
         )
@@ -235,6 +258,8 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
         transcription: str = request.POST.get("transcription")
         transcription = transcription.replace("\r\n", "\n")
 
+        breakpoint()
+
         issues = check_for_formatting_issues(transcription)
         if len(issues) > 0:
             # stash the important stuff in the session so that we can
@@ -243,7 +268,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
             # escape the backticks so that they can be rendered properly by the JS
             # template literals in the html template
             request.session["transcription"] = transcription.replace(
-                "`", "\`"  # noqa: W605
+                "`", r"\`"  # noqa: W605
             )
             request.session["heading"] = request.POST.get("transcription_type")
             request.session["issues"] = list(issues)
@@ -255,8 +280,15 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
             if check_for_fenced_code_block(transcription):
                 transcription = clean_fenced_code_block(transcription)
 
+            if check_for_unescaped_subreddit(
+                transcription
+            ) or check_for_unescaped_username(transcription):
+                transcription = escape_reddit_links(transcription)
+            transcription = replace_shortlinks(transcription)
+
             text = TRANSCRIPTION_TEMPLATE.format(
-                request.POST.get("transcription_type"), transcription
+                content_type=request.POST.get("transcription_type"),
+                transcription=transcription,
             )
 
             submission_obj = Submission.objects.get(id=submission_id)
@@ -306,74 +338,6 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
             )
 
             return redirect("choose_transcription")
-
-
-class PracticeTranscription(CSRFExemptMixin, View):
-    """
-    A page to practice writing transcriptions.
-
-    This view consists of three pages:
-    * the welcome page where you can set how long of a transcription that
-        you want to attempt
-    * the writing page with the content to transcribe
-    * the original transcription so that folks can look at the differences
-
-    QSP:
-    &transcription_id -- the source transcription with practice page
-    &new -- get a new transcription and re-render page
-
-    Example urls:
-    * GET /practice/ -> welcome page
-    * GET /practice/?transcription_id=4 -> practice page
-    * POST /practice/?transcription_id=4 -> show attempt and original
-    """
-
-    # todo: add tumblr post
-    PREAPPROVED = [
-        15372,  # image description
-        15373,  # text messages
-        101816,  # youtube comment
-        21400,  # twitter
-        20085,  # image of text
-        102619,  # twitter
-        102773,  # code
-        15021,  # large sign
-    ]
-
-    def get_preapproved_transcription(self) -> Transcription:
-        """Return a specific transcription for use."""
-        return Transcription.objects.get(id=random.choice(self.PREAPPROVED))
-
-    def get(self, request: HttpRequest) -> HttpResponse:
-        """Choose appropriate practice page and render it."""
-        context = get_additional_context({"fullwidth_view": True})
-
-        if transcription_id := request.GET.get("transcription_id"):
-            transcription_id = int(transcription_id)
-            if transcription_id not in self.PREAPPROVED:
-                raise HttpResponseServerError
-
-            # convert the page to the version with the text fields
-            transcription = get_object_or_404(Transcription, id=transcription_id)
-            context.update(
-                {
-                    "transcription": transcription,
-                    "source_url": transcription.submission.content_url,
-                }
-            )
-
-        return render(request, "app/index.html", context)
-
-    def post(self, request: HttpRequest) -> None:
-        """Post things."""
-        # transcription = get_object_or_404(Transcription, id=transcription_id)
-        # context.update(
-        #     {
-        #         'transcription': transcription,
-        #         'source_url': transcription.submission.content_url
-        #     }
-        # )
-        ...
 
 
 @send_to_worker

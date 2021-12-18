@@ -54,6 +54,7 @@ pytest-mock = "^1.13"
 coveralls = "^1.11.1"
 mimesis = "^4.0.0"
 blossom-wrapper = { git = "https://github.com/GrafeasGroup/blossom-wrapper.git", branch = "master" }
+pytest-parallel = "^0.1.1"
 
 [tool.black]
 include = '\.pyi?$'

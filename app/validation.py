@@ -164,8 +164,6 @@ def check_for_formatting_issues(transcription: str) -> Set[str]:
         issue
         for issue in [
             check_for_heading_with_dashes(transcription),
-            check_for_unescaped_username(transcription),
-            check_for_unescaped_subreddit(transcription),
             check_for_unescaped_heading(transcription),
         ]
         if issue is not None

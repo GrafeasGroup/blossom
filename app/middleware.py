@@ -16,8 +16,10 @@ def refresh_token(request: HttpRequest) -> None:
     """Refresh the OAuth token so that we can use it."""
     strategy = load_strategy(request)
     social = request.user.social_auth.filter(provider="reddit")[0]
+
     social.refresh_token(
-        strategy=strategy, redirect_uri="http://localhost:8000/complete/reddit/"
+        strategy=strategy,
+        redirect_uri=f"{request.scheme}://{request.get_host()}/complete/reddit/",
     )
 
 
