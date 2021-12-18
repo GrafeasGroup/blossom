@@ -1,7 +1,0 @@
-<p>
-    <strong>Unescaped subreddit name</strong>: It looks like there are unescaped subreddit names,
-    i.e. `r/subreddit` or `/r/subreddit`. Unfortunately, this might give the sub's mod a notification and could annoy them.
-</p>
-<p>
-   Please escape the subreddit name with a backslash (`\\`), for example `r\\/subreddit` or `\\/r/subreddit`."
-</p>
