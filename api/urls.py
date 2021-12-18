@@ -75,7 +75,7 @@ router.register(r"source", source.SourceViewSet, basename="source")
 urlpatterns = [
     url(r"", include(router.urls)),
     url(r"^summary/", misc.SummaryView.as_view(), name="summary"),
-    url(r"^find/", find.FindView.as_view(), name="summary"),
+    url(r"^find/", find.FindView.as_view(), name="find"),
     url(
         r"^swagger(?P<format>\.json|\.yaml)$",
         schema_view.without_ui(cache_timeout=0),
