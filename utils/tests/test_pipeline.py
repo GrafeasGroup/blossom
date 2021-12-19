@@ -1,5 +1,5 @@
-from api.tests.helpers import create_user
 from utils.pipeline import load_user
+from utils.test_helpers import create_user
 
 
 class BaseAuth:

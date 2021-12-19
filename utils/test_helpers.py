@@ -1,4 +1,3 @@
-"""Helper functions for the API test methods to ease the setup of required instances."""
 from typing import Dict, Tuple
 
 from django.test import Client

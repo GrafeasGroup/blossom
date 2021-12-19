@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework import status
 
 from api.models import Source
-from api.tests.helpers import create_submission, setup_user_client
+from utils.test_helpers import create_submission, setup_user_client
 
 
 class TestSubmissionExpired:

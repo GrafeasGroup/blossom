@@ -5,8 +5,12 @@ from typing import Optional
 import pytest
 from django.test import Client
 
-from api.tests.helpers import create_submission, create_transcription, setup_user_client
 from api.views.find import find_by_submission_url, normalize_url
+from utils.test_helpers import (
+    create_submission,
+    create_transcription,
+    setup_user_client,
+)
 
 
 @pytest.mark.parametrize(

@@ -8,7 +8,7 @@ from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
 from api.models import Source, Submission, Transcription
-from api.tests.helpers import get_default_test_source, setup_user_client
+from utils.test_helpers import get_default_test_source, setup_user_client
 
 
 class TestSubmissionCreation:

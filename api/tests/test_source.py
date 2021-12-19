@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from api.models import Source
-from api.tests.helpers import get_default_test_source, setup_user_client
+from utils.test_helpers import get_default_test_source, setup_user_client
 
 
 class TestSourceViewset:

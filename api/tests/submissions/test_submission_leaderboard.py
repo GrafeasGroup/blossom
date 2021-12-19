@@ -8,8 +8,8 @@ from django.urls import reverse
 from django.utils.timezone import make_aware
 from rest_framework import status
 
-from api.tests.helpers import create_submission, create_user, setup_user_client
 from authentication.models import BlossomUser
+from utils.test_helpers import create_submission, create_user, setup_user_client
 
 
 def extract_ids(results: List[Dict[str, Any]]) -> List[int]:

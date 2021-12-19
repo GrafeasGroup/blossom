@@ -4,8 +4,12 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
-from api.tests.helpers import create_submission, create_transcription, setup_user_client
 from api.views.submission import SubmissionViewSet
+from utils.test_helpers import (
+    create_submission,
+    create_transcription,
+    setup_user_client,
+)
 
 
 class TestSubmissionTranscribotQueue:

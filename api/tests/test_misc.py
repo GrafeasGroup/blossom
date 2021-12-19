@@ -11,8 +11,8 @@ from rest_framework import status
 
 from api.helpers import get_time_since_open
 from api.models import Source, get_default_source
-from api.tests.helpers import create_submission, create_user, setup_user_client
 from api.views.plausible import plausible_event
+from utils.test_helpers import create_submission, create_user, setup_user_client
 
 
 def test_ping(client: Client) -> None:

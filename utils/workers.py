@@ -37,6 +37,14 @@ def send_to_worker(func: Callable) -> Callable:
     """
 
     def decorator(*args: Any, **kwargs: Any) -> None:
+        # Detect the `worker_test_mode` arg here. If it's present, pop it out
+        # and just return the function with all the other args instead of
+        # routing it through the queue. This functionality should still be
+        # tested separately.
+        if "worker_test_mode" in kwargs:
+            del kwargs["worker_test_mode"]
+            return func(*args, **kwargs)
+
         _queue.put((func, args, kwargs))
 
     return decorator

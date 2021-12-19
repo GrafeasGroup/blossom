@@ -6,13 +6,13 @@ from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
-from api.tests.helpers import (
+from api.views.slack_helpers import client as slack_client
+from utils.test_helpers import (
     create_submission,
     create_transcription,
     create_user,
     setup_user_client,
 )
-from api.views.slack_helpers import client as slack_client
 
 
 class TestSubmissionDone:

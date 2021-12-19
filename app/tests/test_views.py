@@ -1,3 +1,7 @@
+# flake8: noqa
+
+from django.test import Client
+
 from app.views import (
     TranscribeSubmission,
     accept_coc,
@@ -5,7 +9,6 @@ from app.views import (
     unclaim_submission,
 )
 
-asdf = TranscribeSubmission
-bsdf = accept_coc
-csdf = choose_transcription
-dsdf = unclaim_submission
+
+def test_accept_coc(client: Client) -> None:
+    ...

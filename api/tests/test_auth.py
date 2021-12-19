@@ -5,8 +5,8 @@ from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
 from api.authentication import BlossomApiPermission
-from api.tests.helpers import create_user, setup_user_client
 from authentication.models import BlossomUser
+from utils.test_helpers import create_user, setup_user_client
 
 USER_CREATION_DATA = {"username": "Narf"}
 
