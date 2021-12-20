@@ -85,10 +85,14 @@ class TestChooseSubmission:
         add_social_auth_to_user(user)
 
         submission_1 = create_submission(
-            original_id=int(random.random() * 1000), title="a"
+            original_id=int(random.random() * 1000),
+            title="a",
+            content_url="http://imgur.com",
         )
         submission_2 = create_submission(
-            original_id=int(random.random() * 1000), title="b"
+            original_id=int(random.random() * 1000),
+            title="b",
+            content_url="http://imgur.com",
         )
         response = client.get(reverse("choose_transcription"))
 
@@ -414,3 +418,23 @@ class TestTranscribeSubmission:
         assert response.wsgi_request.session["transcription"] == "#aaa"
         assert response.wsgi_request.session["submission_id"] == submission.id
         assert response.wsgi_request.session["heading"] is None
+
+    def test_post_no_transcription(self, client: Client) -> None:
+        """Verify that submitting without a transcription throws an error."""
+        client, _, user = setup_user_client(client)
+        add_social_auth_to_user(user)
+
+        submission = create_submission(
+            original_id=int(random.random() * 1000),
+            content_url="http://imgur.com",
+            title="a",
+            claimed_by=user,
+        )
+        response = client.post(
+            reverse("transcribe_submission", kwargs={"submission_id": submission.id}),
+            data={"transcription": ""},
+        )
+        assert (
+            reverse("transcribe_submission", kwargs={"submission_id": submission.id})
+            in response.url
+        )

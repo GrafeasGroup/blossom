@@ -89,9 +89,9 @@ def accept_coc(request: HttpRequest) -> HttpResponse:
 def choose_transcription(request: HttpRequest) -> HttpResponse:
     """Provide a user with transcriptions to choose from."""
     time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
-    # todo: remove this when finished testing raw functionality
-    # time_delay = timezone.now() - timedelta(hours=330)
-    options = Submission.objects.annotate(original_id_len=Length("original_id")).filter(
+    submissions = Submission.objects.annotate(
+        original_id_len=Length("original_id")
+    ).filter(
         original_id_len__lt=10,
         completed_by=None,
         claimed_by=None,
@@ -100,23 +100,17 @@ def choose_transcription(request: HttpRequest) -> HttpResponse:
         archived=False,
     )
 
-    if options.count() > 3:
+    options_list = [obj for obj in submissions if obj.is_image]
+
+    if len(options_list) > 3:
         # we have more to choose from, so let's grab 3
         temp = []
-        options_list = list(options)
-        for _ in range(options.count()):
-            if len(temp) >= 3:
-                break
-            # What if the only options we have here are video options? This will
-            # terminate when it runs out of options to try but we at least get
-            # to inject a little randomness into it.
+        for _ in range(3):
             submission = random.choice(options_list)
-            # todo: we want to eventually handle other types of content here, but
-            #  we simply aren't ready for it yet.
-            if submission.is_image:
-                temp.append(options_list.pop(options_list.index(submission)))
-
+            temp.append(options_list.pop(options_list.index(submission)))
         options = temp
+    else:
+        options = options_list
 
     for submission in options:
         # todo: add check for source. This will need to happen after we convert
