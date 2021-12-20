@@ -1,0 +1,77 @@
+<h2 class="fs-2">Templates</h2>
+
+<style>
+    pre {
+        white-space: pre-wrap;
+    }
+</style>
+
+<div class="accordion" id="transcriptionAccordion">
+    {% for name, template_data in transcription_templates.items %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                <button
+                        {% if forloop.counter == 1 %}
+                            class="accordion-button"
+                        {% else %}
+                            class="accordion-button collapsed"
+                        {% endif %}
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapse{{ forloop.counter }}"
+                            aria-expanded="true"
+                            aria-controls="collapse{{ forloop.counter }}"
+                >
+                    {{ name }}
+                </button>
+            </h2>
+            <div
+                    id="collapse{{ forloop.counter }}"
+                    {% if forloop.counter == 1 %}
+                    class="accordion-collapse collapse show"
+                    {% else %}
+                    class="accordion-collapse collapse"
+                    {% endif %}
+                    aria-labelledby="heading{{ forloop.counter }}"
+                    data-bs-parent="#transcriptionAccordion"
+            >
+                <div class="accordion-body">
+                <div class="row">
+                    <div class="col-12 col-lg-9">
+                        <pre class="fs-6">{{ template_data.template }}</pre>
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <div class="d-grid mt-2">
+                            <div class="btn btn-outline-success hi" onclick="loadTemplate(this)">Load Template</div>
+                        </div>
+                    </div>
+                </div>
+                    {% if template_data.notes %}
+                        <hr>
+                        <div><strong>Useful Notes:</strong></div>
+                        <ul>
+                            {% for note in template_data.notes %}
+                                <li>{{ note|safe }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    <script type="application/javascript">
+        // make any links in the documentation open in a new tab
+        const links = document.links;
+
+        for (let i = 0, linksLength = links.length; i < linksLength; i++) {
+            if (links[i].hostname !== window.location.hostname) {
+                links[i].target = '_blank';
+            }
+        }
+
+        function loadTemplate(el) {
+            simplemde.value(el.parentElement.parentElement.previousElementSibling.innerText);
+        }
+    </script>
+</div>

@@ -12,7 +12,6 @@ from django.test.client import RequestFactory
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 
-from api.tests.helpers import create_user
 from api.views.slack import github_sponsors_endpoint
 from api.views.slack_helpers import client as slack_client
 from api.views.slack_helpers import (
@@ -23,6 +22,7 @@ from api.views.slack_helpers import (
     process_coc_reset,
 )
 from blossom.strings import translation
+from utils.test_helpers import create_user
 
 i18n = translation()
 

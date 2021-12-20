@@ -1,0 +1,191 @@
+{
+  "Art and Images Without Text": {
+    "template": "[*Description of Image.*]"
+  },
+  "Blaseball": {
+    "template": "[*Description of any images.*]\n\nText.",
+    "notes": [
+      "This is such a wide and complex topic that's just better to take a look at the [Ultimate Guide to Transcribing Blaseball](https://docs.google.com/document/d/1fmNBfNaYYYjCvQTq3r9RV6Al74r1FY7jm-cwpLiG9Tk/edit)."
+    ]
+  },
+  "Code": {
+    "template": "[four spaces]code",
+    "notes": [
+      "To create the code formatting, use four (4) spaces at the beginning of every line. Fenced code blocks do not render properly on mobile or new Reddit.",
+      "If post indicates the source program for the code, please include this on the first line of the transcription."
+    ]
+  },
+  "Comics": {
+    "template": "[*Title of Comic, by Author*]  NOTE: This is for comics that are not made in Reddit, if known.\n\n---\n\n**Panel Number**:\n\n[*Description of the scene.*]\n\n**Character**: Text.\n\n---\n\nNext panel",
+    "notes": [
+      "Write the text and describe the scene in the rough order that it is intended to be seen. For example, if there is text at the top of the panel, then a scene in the center, then more text at the bottom of the panel, write it as such."
+    ]
+  },
+  "Discord": {
+    "template": "**\\/u/Username1**\n\ntext\n\n**\\/u/Username2**\n\n>**\\/u/Username3**: hi everyone\n\nhi username3\n\n**\\/u/Username1**\n\n>*Original message was deleted*\n\nplz stop\n\n**\\/u/Username3**\n\n[*Image of a cat's face in front of a glowing green light.*]\n\n**\\/u/Username1**\n\n>**\\/u/Username3**: *Click to see attachment*\n\nthis cat is SO green\n\nwow\n\n***\\/u/Username4*** *is typing...*"
+  },
+  "Facebook Comments": {
+    "template": "**Name**\n\n[*Description of images, if any.*]\n\nText of post.\n\nNOTE: if your post has text above an image, transcribe the text before describing the image. Templates show how to format things, not the order to follow (but \"Name of the Poster\" must always stay on top to avoid confusion if there are several posts).\n\n> **Name of Commenter**\n>\n> [*Description of images, if any.*]\n>\n> Text of comment.",
+    "notes": [
+      "Most posts have likes or shares in the form of thumbs ups, two arrows, emojis, etc. Feel free to leave those out **unless** it's important to the clarity of the post. For example, if the text says something like \"For every share I'll do [something]\", it would be relevant to show how many times the post has been shared.",
+      "Sometimes it's hard to figure out what social media platform an image is of because of the graphical differences between app/desktop versions. If you are unsure, feel free to declare it as Image Transcription: Social Media.",
+      "Names are usually censored for privacy reasons, so instead use the color the submitter used to censor the name. i.e. **Red**, **Blue**, **Pink**, etc. If there isn't a color use **1st Commenter** or similar.",
+      "Check the destination sub's rules on including personal information. Most do **not** allow it. Please check with the sub to be certain!",
+      "Do not include dates or times unless these are required for the context of the content.",
+      "Do not include Retweets, Shares, Likes, etc, unless it is truly relevant to the context and/or content of the Twitter post.",
+      "Make sure to tell the difference between standalone posts and replies to posts. If a post includes an original tweet and a reply, use block quote (`>`) for the reply.",
+      "If the text to be transcribed includes emojis, please copy and paste the emoji into your transcription; we suggest [emojipedia.org](https://emojipedia.org)."
+    ]
+  },
+  "Facebook Marketplace": {
+    "template": "**Title**\n\n[Price]\n\n[Item Description]\n\n[*Description of images, if any.*]",
+    "notes": [
+      "Most posts have likes or shares in the form of thumbs ups, two arrows, emojis, etc. Feel free to leave those out **unless** it's important to the clarity of the post. For example, if the text says something like \"For every share I'll do [something]\", it would be relevant to show how many times the post has been shared.",
+      "Sometimes it's hard to figure out what social media platform an image is of because of the graphical differences between app/desktop versions. If you are unsure, feel free to declare it as Image Transcription: Social Media.",
+      "Names are usually censored for privacy reasons, so instead use the color the submitter used to censor the name. i.e. **Red**, **Blue**, **Pink**, etc. If there isn't a color use **1st Commenter** or similar.",
+      "Check the destination sub's rules on including personal information. Most do **not** allow it. Please check with the sub to be certain!",
+      "Do not include dates or times unless these are required for the context of the content.",
+      "Do not include Retweets, Shares, Likes, etc, unless it is truly relevant to the context and/or content of the Twitter post.",
+      "Make sure to tell the difference between standalone posts and replies to posts. If a post includes an original tweet and a reply, use block quote (`>`) for the reply.",
+      "If the text to be transcribed includes emojis, please copy and paste the emoji into your transcription; we suggest [emojipedia.org](https://emojipedia.org)."
+    ]
+  },
+  "Facebook Posts": {
+    "template": "**Name of Poster**\n\n[*Description of images, if any.*]\n\nText of post.\n\nNOTE: if your post has text above an image, transcribe the text before describing the image. Transcribe the text and image in the order they appear. (but \"Name of the Poster\" must always stay on top to avoid confusion if there are several posts).",
+    "notes": [
+      "Most posts have likes or shares in the form of thumbs ups, two arrows, emojis, etc. Feel free to leave those out **unless** it's important to the clarity of the post. For example, if the text says something like \"For every share I'll do [something]\", it would be relevant to show how many times the post has been shared.",
+      "Sometimes it's hard to figure out what social media platform an image is of because of the graphical differences between app/desktop versions. If you are unsure, feel free to declare it as Image Transcription: Social Media.",
+      "Names are usually censored for privacy reasons, so instead use the color the submitter used to censor the name. i.e. **Red**, **Blue**, **Pink**, etc. If there isn't a color use **1st Commenter** or similar.",
+      "Check the destination sub's rules on including personal information. Most do **not** allow it. Please check with the sub to be certain!",
+      "Do not include dates or times unless these are required for the context of the content.",
+      "Do not include Retweets, Shares, Likes, etc, unless it is truly relevant to the context and/or content of the Twitter post.",
+      "Make sure to tell the difference between standalone posts and replies to posts. If a post includes an original tweet and a reply, use block quote (`>`) for the reply.",
+      "If the text to be transcribed includes emojis, please copy and paste the emoji into your transcription; we suggest [emojipedia.org](https://emojipedia.org)."
+    ]
+  },
+  "Gifs": {
+    "template": "[*Description of anything that you think may be worth describing about the image itself aside from what the text says. For example, an unusual text font, background images or color, etc*]\n\nText.\n\n---\n\nRepeat for each \"scene\" of the gif."
+  },
+  "Images with Text": {
+    "template": "\n[*Description of anything that you think may be worth describing about the image itself aside from what the text says. For example, an unusual text font, background images or color, etc.*]\n\nText.\n\nNOTE: if your post has text above an image, transcribe the text before describing the image. Transcribe the text and image in the order they appear."
+  },
+  "Instagram": {
+    "template": "\n**Account name**\n\nText of post.\n\n> **Commenter name**\n>\n> Text of comment\n\n> **Commenter name**\n>\n> Text of comment"
+  },
+  "Memes: Advice Animals": {
+    "template": "[*Description of Meme - assume someone has never seen this meme before and has no idea what it is.*]\n\n# Top Text\n\n# Bottom Text"
+  },
+  "Memes: Generic": {
+    "template": "[*Description of Meme - assume someone has never seen this meme before and has no idea what it is.*]\n\nText. (Please format the text as closely to the meme as possible. If it uses large fonts, you can enlarge the font using #. The more # you put in front of the text, the smaller the header becomes.) \n\nNOTE: if your post has text above an image, transcribe the text before describing the image. Templates show how to format things, not the order to follow.",
+    "notes": [
+      "If you are unsure of the name to use to use for a meme, you might be able to find a name on [KnowYourMeme](https://knowyourmeme.com/memes/popular).",
+      "**The template shows how to format the content, not which order you have to follow to transcribe a post!** If your post has text before an image, feel free to transcribe the text before describing the image.",
+      "An (unofficial) bank of templates for transcribing common posts/memes [can be found here](https://github.com/MurdoMaclachlan/ToR-Repost-Collection). As any Reddit user knows, we love to rehash old jokes, beat dead horses, and generally go around in circles - now we have a collection of templates for those reposts to make your lives even easier! Feel free to add new templates, but make sure they follow the right guidelines. Feel free to ask a mod or the Discord for help, and someone will be able to sort you out!"
+    ]
+  },
+  "Other": {
+    "template": "[*Description of images, if any.*]\n\n**Name of Poster**\n\nText of post.\n\n>**1st Commentor**\n>\n>Text\n\n>**2nd Commentor**\n>\n>Text",
+    "notes": [
+      "Images can come from anywhere, so if we don't have a specific format guide or if you're in doubt stick to a simple format.",
+      "Whether it's Snapchat, Twitch, Omegle, Tumblr, Instagram or the next social media website that hasn't been invented yet - add the title at the top and take it from there, as neatly as possible. If you're uncertain, feel free to message the mods for guidance or advice, we're here to help!"
+    ]
+  },
+  "Pictures of Greentext": {
+    "template": "**Title**, **Username**\n\n[*Description of image, if any.*]\n\n[*Description of any unusual text font, background images or color, etc.*]\n\nPlaintext.\n\n\\>Greentext.\n\n\\>Greentext.\n\n---\n\nNext Post",
+    "notes": [
+      "The chevrons (`>`) in greentext are actual chevrons, and not markdown versions to show a reply. They need to be escaped with a backslash: `\\>`",
+      "If a post or comment is talking about \"dubs\" or \"trips,\" this refers to the last few digits of the post number: two repeating numbers in a row are \"dubs,\" and three are \"trips.\"",
+      "Only include the timestamp if it is relevant to the post. ",
+      "When writing the username and timestamp headers in Greentext threads, only include the date if either changes.",
+      "Time is written in 24h style.",
+      "Please format the date in whatever style/order is provided in the source content.",
+      "Greentext timestamps are given in hh:mm:ss, but unless two posts are made in the same minute, **do not include the second**."
+    ]
+  },
+  "Polls: Multi Selection": {
+    "template": "**Poll Question**\n\n[Selected] Option 1\n\n[Selected] Option 2\n\n[Unselected] Option 3",
+    "notes": [
+      "There are many different formats and ways to show polls online. If the exact format is not shown here, use your best judgement - the main goal is to make the poll obvious to accessibility readers. If the percentage is at the beginning of each option, feel free to move the formatting around.",
+      "If it's obvious that the OP voted, try to indicate that as well."
+    ]
+  },
+  "Polls: Number of Votes": {
+    "template": "**Poll Question**\n\nOption 1 [X Votes, checkmark to indicate OP voted for this option]\n\nOption 2 [X Votes]\n\nOption 3 [X Votes]",
+    "notes": [
+      "There are many different formats and ways to show polls online. If the exact format is not shown here, use your best judgement - the main goal is to make the poll obvious to accessibility readers. If the percentage is at the beginning of each option, feel free to move the formatting around.",
+      "If it's obvious that the OP voted, try to indicate that as well."
+    ]
+  },
+  "Polls: Percentages": {
+    "template": "\n**Poll Question**\n\nOption 1 [**57%**]\n\nOption 2 [**43%**]",
+    "notes": [
+      "There are many different formats and ways to show polls online. If the exact format is not shown here, use your best judgement - the main goal is to make the poll obvious to accessibility readers. If the percentage is at the beginning of each option, feel free to move the formatting around.",
+      "If it's obvious that the OP voted, try to indicate that as well."
+    ]
+  },
+  "Polls: Single Selection": {
+    "template": "**Poll Question**\n\n[Selected] Option 1\n\n[Unselected] Option 2\n\n[Unselected] Option 3",
+    "notes": [
+      "There are many different formats and ways to show polls online. If the exact format is not shown here, use your best judgement - the main goal is to make the poll obvious to accessibility readers. If the percentage is at the beginning of each option, feel free to move the formatting around.",
+      "If it's obvious that the OP voted, try to indicate that as well."
+    ]
+  },
+  "Polls: Shaded Boxes": {
+    "template": "**Poll Question**\n\nOption 1 [Option box is shaded to indicate that this option is in the lead]\n\nOption 2 [Option box is shaded to indicate that this option is in second place]\n\nOption 3 [Option box is shaded to indicate that this option is in third place/tied with second]",
+    "notes": [
+      "There are many different formats and ways to show polls online. If the exact format is not shown here, use your best judgement - the main goal is to make the poll obvious to accessibility readers. If the percentage is at the beginning of each option, feel free to move the formatting around.",
+      "If it's obvious that the OP voted, try to indicate that as well."
+    ]
+  },
+  "Reddit Comments": {
+    "template": "> **\\/u/Commenting Redditor**\n>\n> Comment text.\n\n>> **\\/u/ReplyingRedditor**\n>>\n>> Comment text \n\n>>> **\\/u/ReplyingRedditor**\n>>>\n>>> Comment Text\n\n>> **\\/u/ReplyingRedditor to commenter above this one**\n>>\n>> Comment text\n\netc.",
+    "notes": [
+      "If any details are missing, just state that it is **Unknown Post/Redditor/Subreddit**. You can also use the color of the redaction as the name if they are unique colors for each user.",
+      "\"User Reports\" should go underneath whatever is being reported (directly under the post or directly under the comment if the comment was reported).",
+      "When you have to write subreddit or user names in the body of the post or comment, place a backslash before the first forward slash in order to avoid mentioning or linking to the user or subreddit. For example:\n\n    \\/r/TranscribersOfReddit\n\n    \\/u/username",
+      "Do not include horizontal rules between a post and its comments; however, if there are multiple posts in one image, you should include the horizontal rule to break them up."
+    ]
+  },
+  "Reddit Comments with Reports": {
+    "template": "> **\\/u/Commenting Redditor**\n>\n> Comment text.\n\n>> **User Reports:**\n>>\n>> Times reported: report reason A  \n>>\n>> Times reported: report reason B  \n>>\n>> etc."
+  },
+  "Reddit Posts": {
+    "template": "**Post title**, submitted by **\\/u/Redditor** to **\\/r/Subreddit**\n\n[*Description of any unusual text font, background images or color, etc.*]\n\nPost text/content, if any.  \n\n> **\\/u/Commenting Redditor**\n>\n> Comment text.",
+    "notes": [
+      "If any details are missing, just state that it is **Unknown Post/Redditor/Subreddit**. You can also use the color of the redaction as the name if they are unique colors for each user.",
+      "\"User Reports\" should go underneath whatever is being reported (directly under the post or directly under the comment if the comment was reported).",
+      "When you have to write subreddit or user names in the body of the post or comment, place a backslash before the first forward slash in order to avoid mentioning or linking to the user or subreddit. For example:\n\n    \\/r/TranscribersOfReddit\n\n    \\/u/username",
+      "Do not include horizontal rules between a post and its comments; however, if there are multiple posts in one image, you should include the horizontal rule to break them up."
+    ]
+  },
+  "Text Messages": {
+    "template": "**Name of Poster 1**: [*Description of images, if any.*]\n\n**Name of Poster 1**: Text of post.\n\n>**Name of Poster 2**: Text of post.",
+    "notes": [
+      "Often text messages and similar platforms show messages from different users on opposite sides of the screen, [for example](https://i.imgur.com/tO3qTaF.png). In these instances please use > to distinguish the user that is on the right to make transcriptions easier to read.",
+      "**If your messages have text above an image, transcribe the text before describing the image**. Transcribe the text and image in the order they appear.",
+      "If the same texter sends multiple messages in a row, identify them each time to show that they are separate messages instead of 1 long paragraph."
+    ]
+  },
+  "Tumblr": {
+    "template": "**Name**\n\nText\n\n---\n\n**Name**\n\nText\n\n---\n\n**Name**\n\nText"
+  },
+  "Tumblr Ask / Comment": {
+    "template": "\n>*Anonymous asked/said*\n>\n>Text\n\n**Name**\n\nText"
+  },
+  "Tumblr Reblog": {
+    "template": "\n**Name** reblogged from **Name**\n\n[Text]"
+  },
+  "Twitter": {
+    "template": "**Name of Poster**, @Twitter handle\n\n[*Description of images, if any.*]\n\nText of post."
+  },
+  "Twitter Replies": {
+    "template": "\n**Name of Poster**, @Twitter handle\n\n[*Description of images, if any.*]\n\nText of post.\n\n> **Name**, @Twitter handle\n>\n> Text.\n>\n>[*Description of images, if any.*]"
+  },
+  "Quora": {
+    "template": "**Post title**\n\n**Username**, Title/Location, *Status* (if there is one)\n\nPost text/content, if any.",
+    "notes": [
+      "Most Quora posts have a username, location, and a status. If they don't, leave them out. If they are blurred out, replace them with [Redacted] or [Unknown].",
+      "Dates can be left out unless they are relevant to the context of the post."
+    ]
+  }
+}

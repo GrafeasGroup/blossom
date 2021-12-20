@@ -5,7 +5,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import HttpResponseRedirect, redirect, render, reverse
 from django.views.generic import DetailView, TemplateView, UpdateView
 
-from authentication.mixins import GrafeasStaffRequired
+from utils.mixins import GrafeasStaffRequired
 from website.forms import AddUserForm, PostAddForm
 from website.helpers import get_additional_context
 from website.models import Post

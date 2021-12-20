@@ -196,6 +196,7 @@ class Submission(models.Model):
 
     def generate_ocr_transcription(self) -> None:
         """Create automatic OCR transcriptions of images."""
+        # TODO: add @send_to_worker decorator to queue this
         if not settings.ENABLE_OCR:
             logging.warning("OCR is disabled; this call has been ignored.")
             return

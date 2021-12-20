@@ -4,11 +4,15 @@
 {% load fun_footers %}
 
 {% block content %}
+    YOU ARE: {{ request.user }}
     {% if not posts %}
         <p>
-        <h1 class="text-center">There's nothing here! Why not <a href="{% url "post_create" %}"
-                                                                 style="text-decoration: underline">add
-            something?</a></h1>
+        <h1 class="text-center">
+            There's nothing here! Why not
+            <a href="{% url "post_create" %}" style="text-decoration: underline">
+                add something?
+            </a>
+        </h1>
         </p>
     {% endif %}
     {% for p in posts %}

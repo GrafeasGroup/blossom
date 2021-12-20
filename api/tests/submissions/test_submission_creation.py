@@ -1,5 +1,4 @@
 import json
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +8,7 @@ from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
 from api.models import Source, Submission, Transcription
-from api.tests.helpers import get_default_test_source, setup_user_client
+from utils.test_helpers import get_default_test_source, setup_user_client
 
 
 class TestSubmissionCreation:
@@ -122,12 +121,7 @@ class TestSubmissionCreation:
         ],
     )
     def test_ocr_on_create(
-        self,
-        client: Client,
-        settings: SettingsWrapper,
-        setup_site: Any,
-        test_input: str,
-        output: str,
+        self, client: Client, settings: SettingsWrapper, test_input: str, output: str,
     ) -> None:
         """Verify that a new submission completes the OCR process."""
         settings.ENABLE_OCR = True
@@ -160,7 +154,7 @@ class TestSubmissionCreation:
         assert transcription.source == Source.objects.get(name="blossom")
 
     def test_ocr_on_create_with_cannot_ocr_flag(
-        self, client: Client, settings: SettingsWrapper, setup_site: Any
+        self, client: Client, settings: SettingsWrapper
     ) -> None:
         """Verify the OCR process exits early if the cannot_ocr flag is already set."""
         settings.ENABLE_OCR = True
@@ -191,7 +185,7 @@ class TestSubmissionCreation:
         assert Transcription.objects.count() == 0
 
     def test_failed_ocr_on_create(
-        self, client: Client, settings: SettingsWrapper, setup_site: Any
+        self, client: Client, settings: SettingsWrapper
     ) -> None:
         """Verify that a new submission completes the OCR process."""
         settings.ENABLE_OCR = True

@@ -42,5 +42,4 @@ LOGGING = {
 
 ENABLE_SLACK = False
 ENABLE_OCR = False
-# remove bugsnag middleware so that if tests explode it doesn't notify
-MIDDLEWARE = [m for m in MIDDLEWARE if "bugsnag" not in m]  # noqa: F405
+ENABLE_REDDIT = False

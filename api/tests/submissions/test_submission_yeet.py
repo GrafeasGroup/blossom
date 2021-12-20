@@ -6,7 +6,11 @@ from django.urls import reverse
 from rest_framework import status
 
 from api.models import Submission, Transcription
-from api.tests.helpers import create_submission, create_transcription, setup_user_client
+from utils.test_helpers import (
+    create_submission,
+    create_transcription,
+    setup_user_client,
+)
 
 
 class TestSubmissionYeet:

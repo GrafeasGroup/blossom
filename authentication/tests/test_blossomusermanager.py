@@ -1,6 +1,6 @@
 """Set of tests which are used to validate the behavior of the authentication of users."""
-from api.tests.helpers import create_user
 from authentication.models import BlossomUser
+from utils.test_helpers import create_user
 
 USER_CREATION_DATA = {"username": "Narf"}
 

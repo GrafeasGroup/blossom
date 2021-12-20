@@ -8,7 +8,8 @@ from django.urls import reverse
 from django.utils.timezone import make_aware
 from rest_framework import status
 
-from api.tests.helpers import create_submission, create_user, setup_user_client
+from authentication.models import BlossomUser
+from utils.test_helpers import create_submission, create_user, setup_user_client
 
 
 def extract_ids(results: List[Dict[str, Any]]) -> List[int]:
@@ -38,6 +39,7 @@ class TestSubmissionLeaderboard:
         self, client: Client, data: List[UserData], expected: List[UserData],
     ) -> None:
         """Test if the top leaderboard is set up correctly."""
+        BlossomUser.objects.all().delete()
         client, headers, _ = setup_user_client(client, id=99999, is_volunteer=False)
 
         for obj in data:
@@ -91,6 +93,7 @@ class TestSubmissionLeaderboard:
         expected_below: List[int],
     ) -> None:
         """Test if the user related leaderboard is set up correctly."""
+        BlossomUser.objects.all().delete()
         client, headers, _ = setup_user_client(client, id=99999, is_volunteer=False)
 
         for obj in data:
@@ -119,6 +122,7 @@ class TestSubmissionLeaderboard:
 
     def test_filtered_leaderboard(self, client: Client,) -> None:
         """Test if the submissions for the rate is calculated on are filtered."""
+        BlossomUser.objects.all().delete()
         date_joined = datetime(2021, 11, 3, tzinfo=pytz.UTC)
         client, headers, user = setup_user_client(
             client, id=1, username="user-1", date_joined=date_joined, is_volunteer=True

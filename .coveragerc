@@ -7,7 +7,7 @@ omit =
   */static/*,
   */static_dev/*,
   */media/*,
-  blossom/local_settings.py,
+  local_settings.py,
   */urls.py,
   */wsgi.py,
   blossom/management/commands/*,

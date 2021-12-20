@@ -11,7 +11,7 @@ def enable_db_access_for_all_tests(db: Any) -> None:
     pass
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def setup_site() -> None:
     """Fixture that configures the site as if it were about to be deployed."""
     bootstrap_site.Command().handle()

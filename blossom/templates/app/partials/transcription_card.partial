@@ -1,0 +1,41 @@
+{% load humanize %}
+
+<div class="col-xl-4">
+    <div class="card mt-4 shadow" style="width: 100%">
+        <div class="card-body">
+            <h5 class="card-title">{{ item.title }}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+                {{ item.get_subreddit_name }}, posted {{ item.create_time|naturaltime }}
+            </h6>
+            <div class="card-text">
+                <div class="position-relative">
+                    <img
+                            src="{{ item.content_url }}"
+                            class="rounded"
+                            alt="The content image that should be transcribed."
+                            style="z-index: 0;width: 100%;"
+                    >
+                    {% if item.nsfw %}
+                        <div style="z-index: 1; width: 100%; height:100%;"
+                             class="position-absolute top-0 bg-danger rounded"></div>
+                        <button class="nsfwButton btn btn-danger position-absolute translate-middle top-50 start-50"
+                                style="z-index: 2; border-color: white"
+                                onclick="showNSFW(this)"
+                        >View
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-0 col-sm-3"></div>
+                <div class="col-12 col-sm-6">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'transcribe_submission' item.id %}" type="submit"
+                           class="btn btn-success">Transcribe!</a>
+                    </div>
+                </div>
+                <div class="col-0 col-sm-3"></div>
+            </div>
+        </div>
+    </div>
+</div>

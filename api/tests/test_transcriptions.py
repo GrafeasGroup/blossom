@@ -10,7 +10,7 @@ from django.utils.timezone import make_aware
 from rest_framework import status
 
 from api.models import Source, Transcription
-from api.tests.helpers import (
+from utils.test_helpers import (
     create_submission,
     create_transcription,
     get_default_test_source,

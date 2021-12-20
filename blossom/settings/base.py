@@ -13,11 +13,24 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import logging
 import os
 
-import bugsnag
 import dotenv
 from django.urls import reverse_lazy
 
 from blossom import __version__
+
+"""
+***************************************************************************
+
+                                HEY YOU!
+
+   Only modify this file if changes need to apply in EVERY ENVIRONMENT!
+
+***************************************************************************
+
+Otherwise, please change the required other environment files in
+blossom/settings/!
+"""
+
 
 dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
@@ -32,10 +45,18 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 default_secret_key = "v7-fg)i9rb+&kx#c-@m2=6qdw)o*2x787!fl8-xbv5h&%gr8xx"
 SECRET_KEY = os.environ.get("BLOSSOM_SECRET_KEY", default_secret_key)
 
+VERSION = __version__
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["staging.grafeas.org", ".grafeas.org", "grafeas.org"]
+ALLOWED_HOSTS = [
+    "staging.grafeas.org",
+    ".grafeas.org",
+    "grafeas.org",
+    "thetranscription.app",
+    ".thetranscription.app",
+]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
@@ -55,6 +76,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "django.contrib.humanize",
     "django.forms",
     "django.contrib.staticfiles",
     # additional functionality
@@ -62,6 +84,7 @@ INSTALLED_APPS = [
     "ipware",
     # blossom internal apps
     "blossom",
+    "app",
     "api",
     "authentication",
     "engineeringblog",
@@ -73,6 +96,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework_api_key",
     "drf_yasg",
+    "revproxy",
     # Social authentication
     "social_django",
 ]
@@ -80,13 +104,13 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "authentication.BlossomUser"
 
 MIDDLEWARE = [
-    "bugsnag.django.middleware.BugsnagMiddleware",
     "beeline.middleware.django.HoneyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "app.middleware.RedditMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -106,6 +130,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
             ],
         },
     },
@@ -132,18 +158,15 @@ DATABASES = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "bugsnag": {"level": "ERROR", "class": "bugsnag.handlers.BugsnagHandler"},
-        "console": {"class": "logging.StreamHandler"},
-    },  # noqa: E231
+    "handlers": {"console": {"class": "logging.StreamHandler",},},  # noqa: E231
     "loggers": {
         "django": {
-            "handlers": ["console", "bugsnag"],
+            "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
         "blossom": {
-            "handlers": ["console", "bugsnag"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "DEBUG"),
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
     },
 }
@@ -172,7 +195,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTHENTICATION_BACKENDS = [
     "authentication.backends.EmailBackend",
-    "blossom.social_auth.reddit.RedditOAuth2",
+    "social_core.backends.reddit.RedditOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
@@ -236,6 +259,21 @@ IMAGE_DOMAINS = [
     "puu.sh",
     "i.redditmedia.com",
 ]
+SOCIAL_AUTH_REDDIT_KEY = os.environ.get("SOCIAL_AUTH_REDDIT_KEY")
+SOCIAL_AUTH_REDDIT_SECRET = os.environ.get("SOCIAL_AUTH_REDDIT_SECRET")
+SOCIAL_AUTH_REDDIT_AUTH_EXTRA_ARGUMENTS = {"duration": "permanent"}
+SOCIAL_AUTH_REDDIT_SCOPE = ["submit", "read"]
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+SOCIAL_AUTH_PIPELINE = (
+    "social_core.pipeline.social_auth.social_details",
+    "social_core.pipeline.social_auth.social_uid",
+    "social_core.pipeline.social_auth.auth_allowed",
+    "utils.pipeline.load_user",
+    "social_core.pipeline.social_auth.social_user",
+    "social_core.pipeline.social_auth.associate_user",
+    "social_core.pipeline.social_auth.load_extra_data",
+    "social_core.pipeline.user.user_details",
+)
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -259,5 +297,3 @@ if DATABASES["default"].get("PASSWORD") == default_db_password:
 
 if OCR_API_KEY == "helloworld":
     settings_err("Using default OCR API key, not ours!")
-
-bugsnag.configure(app_version=__version__)

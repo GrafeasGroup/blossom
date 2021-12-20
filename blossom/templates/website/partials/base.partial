@@ -59,7 +59,9 @@
 </head>
 
 <body>
-{% include 'website/partials/navbar.partial' with n=navbar %}
+{% block navbar %}
+    {% include 'website/partials/navbar.partial' with n=navbar %}
+{% endblock %}
 <div class="content container">
     {% if not fullwidth_view %}
         <div class="row">
@@ -75,38 +77,7 @@
     {% endif %}
 </div>
 
-<div class="footer container">
-    <hr>
-    <div class="row">
-        <div class="col-xs-12 col-sm-4">
-            <span class="text-muted">
-                Sitemap
-            </span>
-            <ul class="text-muted">
-                <li>
-                    <a class="text-muted" href="/">News</a>
-                </li>
-                {% for item in navbar %}
-                    <li>
-                        <a class="text-muted" href="{{ item.get_absolute_url }}">{{ item.title }}</a>
-                    </li>
-                {% endfor %}
-                <li><a class="text-muted" target="_blank" rel="noreferrer" href="https://github.com/grafeasgroup/">Github</a>
-                </li>
-                <li><a class="text-muted" target="_blank" rel="noreferrer"
-                       href="https://www.etsy.com/shop/GrafeasGroup">Merch</a>
-                </li>
-            </ul>
-        </div>
-        <div class="col-xs-0 col-sm-4"></div>
-        <div class="col-xs-12 col-sm-4">
-            <span class="text-muted">Disclaimer:<br>Grafeas Group, Ltd. is a registered 501(c)(3) nonprofit in the state of Indiana, U.S.A. Continued use of content associated with Grafeas Group indicates acceptance of our <a
-                    href="{{ tos.get_absolute_url }}" class="real-link text-muted">terms of service.</a></span>
-        </div>
-    </div>
-    <p></p>
-</div>
-
+{% include 'website/partials/footer.partial' %}
 
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="{% static "js/prism_js/prism.js" %}" async defer></script>
@@ -114,4 +85,6 @@
         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
         crossorigin="anonymous"></script>
 <script src="{% static 'js/emailmagic.js' %}" async defer></script>
+{% block scripts %}
+{% endblock %}
 </body>

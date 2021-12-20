@@ -6,7 +6,7 @@ from blossom.tests.helpers import create_test_user, guy, jane
 from website.forms import AddUserForm, PostAddForm
 
 
-def test_post_form_load(client: Client, setup_site: object) -> None:
+def test_post_form_load(client: Client) -> None:
     """Verify that the correct form loads when creating a post."""
     user = create_test_user(is_grafeas_staff=True)
     client.force_login(user)
@@ -17,7 +17,7 @@ def test_post_form_load(client: Client, setup_site: object) -> None:
         assert field in PostAddForm.Meta.fields
 
 
-def test_adduser_form_load(client: Client, setup_site: object) -> None:
+def test_adduser_form_load(client: Client) -> None:
     """Verify that the correct form loads when adding a user."""
     superuser = create_test_user(superuser=True)
     client.force_login(superuser)
@@ -28,9 +28,7 @@ def test_adduser_form_load(client: Client, setup_site: object) -> None:
         assert field in AddUserForm.declared_fields
 
 
-def test_adduser_form_insufficient_privileges(
-    client: Client, setup_site: object
-) -> None:
+def test_adduser_form_insufficient_privileges(client: Client) -> None:
     """Verify that a normal user cannot access the adduser form."""
     user = create_test_user()
     client.force_login(user)
@@ -38,7 +36,7 @@ def test_adduser_form_insufficient_privileges(
     assert result.status_code == 302
 
 
-def test_adduser_form_add_user(client: Client, setup_site: object) -> None:
+def test_adduser_form_add_user(client: Client) -> None:
     """Verify that a superuser is able to add users."""
     superuser = create_test_user(superuser=True)
     client.force_login(superuser)
@@ -55,7 +53,7 @@ def test_adduser_form_add_user(client: Client, setup_site: object) -> None:
     assert BlossomUser.objects.filter(username=jane.username).count() == 1
 
 
-def test_adduser_form_duplicate_username(client: Client, setup_site: object) -> None:
+def test_adduser_form_duplicate_username(client: Client) -> None:
     """Verify that an error is returned when adding a user with a duplicate username."""
     superuser = create_test_user(superuser=True)
     client.force_login(superuser)
@@ -71,7 +69,7 @@ def test_adduser_form_duplicate_username(client: Client, setup_site: object) -> 
     assert result.context["form"].errors["username"][0] == "Username already exists"
 
 
-def test_adduser_form_duplicate_email(client: Client, setup_site: object) -> None:
+def test_adduser_form_duplicate_email(client: Client) -> None:
     """Verify that an error is returned when creating a user with a duplicate email."""
     superuser = create_test_user(superuser=True)
     client.force_login(superuser)

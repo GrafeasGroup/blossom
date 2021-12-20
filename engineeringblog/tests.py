@@ -6,16 +6,14 @@ from blossom.tests.helpers import create_test_user
 from website.models import Post
 
 
-def test_properly_empty_blog(client: Client, setup_site: object) -> None:
+def test_properly_empty_blog(client: Client) -> None:
     """Verify that the regular site renders the context appropriately."""
     result = client.get(reverse("blog_index"))
     assert result.status_code == 200
     assert len(result.context["posts"]) == 0
 
 
-def test_single_post(
-    client: Client, setup_site: object, django_user_model: BlossomUser
-) -> None:
+def test_single_post(client: Client, django_user_model: BlossomUser) -> None:
     """Verify that the regular site renders a single post correctly."""
     user = create_test_user(django_user_model)
     post_obj = Post.objects.create(

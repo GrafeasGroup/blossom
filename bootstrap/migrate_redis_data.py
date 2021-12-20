@@ -231,6 +231,8 @@ def process_done_batch(done_data: List[DoneData]):
     # Cache data
     cache_entries(data)
     save_incomplete_entries(data)
+    # make cloudflare happy and don't look like a DDOS attempt
+    time.sleep(1)
 
 
 def filter_cached_ids(done_data: List[DoneData]) -> List[DoneData]:

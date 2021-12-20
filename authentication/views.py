@@ -17,6 +17,8 @@ class LoginView(TemplateView):
         """Retrieve the rendered login form."""
         form = LoginForm()
         context = get_additional_context({"form": form, "slim_form": True})
+        if next_path := request.GET.get("next", None):
+            context.update({"next": next_path})
         return render(request, "website/generic_form.html", context)
 
     def post(

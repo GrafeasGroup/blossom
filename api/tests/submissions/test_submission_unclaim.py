@@ -4,7 +4,7 @@ from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
-from api.tests.helpers import create_submission, create_user, setup_user_client
+from utils.test_helpers import create_submission, create_user, setup_user_client
 
 
 class TestSubmissionUnclaim:

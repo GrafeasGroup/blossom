@@ -1,0 +1,18 @@
+<p><strong>Heading with dashes</strong>: It seems like you meant to make a horizontal separator (<code>---</code>), but
+    have created a heading (i.e. 'big text') instead.</p>
+<p>The separators require an empty line before and after it, like this:</p>
+<div class="mx-3 my-3">
+    (empty line)<br>
+    ---<br>
+    (empty line)
+</div>
+<p>If you put it directly after a line of text, it will display as a heading, for example:</p>
+<div class="mx-3 my-3">
+    Heading<br>
+    ---
+</div>
+<h2>Heading</h2>
+
+<p>If you actually intended to make a heading, please use the syntax with number signs (<code>#</code>), like this:</p>
+
+<code>## Heading</code>

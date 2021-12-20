@@ -1,0 +1,25 @@
+<div class="text-center">
+    <h1 class="mt-5">THE QUEUE HAS BEEN CLEARED!!</h1>
+    <p class="mt-3">Pat yourself on the back -- the impossible has been achieved! The queue is clear!</p>
+    <p>
+        Feel free to refresh this page in a few minutes to see if something comes in or just come
+        celebrate with us on Discord below!
+    </p>
+
+    <div class="row">
+        <div class="col-0 col-md-3 col-lg-4"></div>
+        <div class="col-0 col-md-6 col-lg-4">
+            <div class="d-grid mt-5">
+                <a
+                        href="https://discord.gg/ZDDE3Pj"
+                        target="_blank"
+                        class="btn btn-outline-secondary"
+                >Launch Discord</a>
+            </div>
+        </div>
+        <div class="col-0 col-md-3 col-lg-4"></div>
+    </div>
+    <div class="text-center my-5">
+        ᕕ(ᐛ)ᕗ
+    </div>
+</div>

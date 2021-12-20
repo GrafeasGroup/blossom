@@ -1,7 +1,7 @@
-"""Helper functions for the API test methods to ease the setup of required instances."""
 from typing import Dict, Tuple
 
 from django.test import Client
+from social_django.models import UserSocialAuth
 
 from api.models import Source, Submission, Transcription
 from authentication.models import APIKey, BlossomUser
@@ -26,6 +26,11 @@ BASE_USER_INFO = {
     "is_volunteer": True,
     "api_key": None,
     "accepted_coc": True,
+}
+BASE_SOCIAL_AUTH_INFO = {
+    "provider": "reddit",
+    "uid": "12345abc",
+    "extra_data": {"refresh_token": "aaa"},
 }
 
 
@@ -130,3 +135,9 @@ def setup_user_client(
     if login:
         client.force_login(user)
     return client, {"HTTP_AUTHORIZATION": f"Api-Key {key}"}, user
+
+
+def add_social_auth_to_user(user: BlossomUser) -> None:
+    """Add a social auth object to the attached user."""
+    social_info = {"user": user, **BASE_SOCIAL_AUTH_INFO}
+    return UserSocialAuth.objects.create(**social_info)

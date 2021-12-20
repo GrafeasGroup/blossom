@@ -1,0 +1,15 @@
+<p>
+    <strong>Unescaped heading syntax</strong>:
+    It looks like you intended to transcribe a hashtag, but made it a heading (big text) instead.
+    This is caused by not escaping the number sign (`#`) in front of the hashtag. For example:
+</p>
+<p><code>#Text</code></p>
+<p>
+    This will render as:
+</p>
+<h2>Text</h2>
+<p>
+    To fix this, add a backslash in front of the <code>#</code> like so: <code>\#Text</code>.
+    If you meant for it to render as a heading, please add a space after the <code>#</code> to avoid this warning.
+    i.e. <code># Text</code>.
+</p>

@@ -1,16 +1,19 @@
-from typing import Any
 from unittest.mock import MagicMock
 
 from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
-from api.tests.helpers import create_submission, create_transcription, setup_user_client
 from api.views.submission import SubmissionViewSet
+from utils.test_helpers import (
+    create_submission,
+    create_transcription,
+    setup_user_client,
+)
 
 
 class TestSubmissionTranscribotQueue:
-    def test_get_transcribot_queue(self, client: Client, setup_site: Any) -> None:
+    def test_get_transcribot_queue(self, client: Client) -> None:
         """Test that the OCR queue endpoint returns the correct data."""
         client, headers, _ = setup_user_client(client)
         user_model = get_user_model()
@@ -45,9 +48,7 @@ class TestSubmissionTranscribotQueue:
         # now the submission has a transcribot entry
         assert len(result["data"]) == 1
 
-    def test_completed_ocr_transcriptions(
-        self, client: Client, setup_site: Any
-    ) -> None:
+    def test_completed_ocr_transcriptions(self, client: Client) -> None:
         """Test that a completed transcription removes the submission from the queue."""
         client, headers, _ = setup_user_client(client)
         user_model = get_user_model()
@@ -86,9 +87,7 @@ class TestSubmissionTranscribotQueue:
         # Queue goes back to 0.
         assert len(result["data"]) == 0
 
-    def test_normal_transcriptions_dont_affect_ocr_queue(
-        self, client: Client, setup_site: Any
-    ) -> None:
+    def test_normal_transcriptions_dont_affect_ocr_queue(self, client: Client) -> None:
         """Verify that a human-completed transcription doesn't affect the OCR queue."""
         client, headers, user = setup_user_client(client)
         submission = create_submission(source="reddit")
@@ -112,7 +111,7 @@ class TestSubmissionTranscribotQueue:
         # there should be no change to the OCR queue
         assert len(result["data"]) == 0
 
-    def test_transcribot_limit_param(self, client: Client, setup_site: Any) -> None:
+    def test_transcribot_limit_param(self, client: Client) -> None:
         """Verify that adding the `limit` QSP modifies the results."""
         client, headers, _ = setup_user_client(client)
         user_model = get_user_model()
@@ -143,7 +142,7 @@ class TestSubmissionTranscribotQueue:
         assert len(result["data"]) == 1
         assert result["data"][0]["id"] == submission1.id
 
-    def test_verify_no_removed_posts(self, client: Client, setup_site: Any) -> None:
+    def test_verify_no_removed_posts(self, client: Client) -> None:
         """Verify that a post removed from the queue is not sent to transcribot."""
         client, headers, _ = setup_user_client(client)
         user_model = get_user_model()

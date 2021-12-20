@@ -12,6 +12,7 @@ from api.views import (
     find,
     misc,
     plausible,
+    proxy,
     slack,
     source,
     submission,
@@ -95,6 +96,19 @@ urlpatterns = [
         "slack/github/sponsors/",
         slack.github_sponsors_endpoint,
         name="github_sponsors",
+    ),
+    url(
+        r"^iredditproxy/(?P<path>.*)$",
+        proxy.iReddItProxyView.as_view(),
+        name="iredditproxy",
+    ),
+    url(
+        r"^imgurproxy/(?P<path>.*)$", proxy.ImgurProxyView.as_view(), name="imgurproxy"
+    ),
+    path(
+        "subredditjsonproxy/",
+        proxy.subreddit_json_proxy_view,
+        name="subredditjsonproxy",
     ),
     path("event", plausible.plausible_event),
 ]

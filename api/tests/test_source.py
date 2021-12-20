@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from api.models import Source
-from api.tests.helpers import get_default_test_source, setup_user_client
+from utils.test_helpers import get_default_test_source, setup_user_client
 
 
 class TestSourceViewset:
@@ -13,6 +13,7 @@ class TestSourceViewset:
 
     def test_list(self, client: Client) -> None:
         """Verify that listing all Source objects works correctly."""
+        Source.objects.all().delete()  # clear out system ones for test
         client, headers, _ = setup_user_client(client)
         result = client.get(
             reverse("source-list"), content_type="application/json", **headers
@@ -33,6 +34,7 @@ class TestSourceViewset:
 
     def test_list_with_filters(self, client: Client) -> None:
         """Verify that listing all submissions works correctly."""
+        Source.objects.all().delete()  # clear out system ones for test
         client, headers, _ = setup_user_client(client)
 
         Source.objects.get_or_create(name="AAA")
@@ -58,6 +60,7 @@ class TestSourceViewset:
 
     def test_source_create(self, client: Client) -> None:
         """Verify that creating a Source through the API works as expected."""
+        Source.objects.all().delete()  # clear out system ones for test
         client, headers, _ = setup_user_client(client)
 
         data = {"name": "AAA"}

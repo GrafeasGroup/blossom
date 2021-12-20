@@ -5,17 +5,18 @@ from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
 from api.authentication import BlossomApiPermission
-from api.tests.helpers import create_user, setup_user_client
 from authentication.models import BlossomUser
+from utils.test_helpers import create_user, setup_user_client
 
 USER_CREATION_DATA = {"username": "Narf"}
 
 
 def test_creation_without_authentication(client: Client) -> None:
     """Test whether creation without logging in nor providing an API key is forbidden."""
-    assert len(BlossomUser.objects.all()) == 0
+    assert len(BlossomUser.objects.all()) == 4
     result = client.post(reverse("volunteer-list"), USER_CREATION_DATA)
     assert result.status_code == status.HTTP_403_FORBIDDEN
+    assert len(BlossomUser.objects.all()) == 4
 
 
 def test_creation_without_api_key(client: Client) -> None:
@@ -63,10 +64,11 @@ def test_creation_allowed(client: Client) -> None:
     and the corresponding API Key is provided.
     """
     client, headers, _ = setup_user_client(client)
+    previous_user_count = BlossomUser.objects.count()
     result = client.post(reverse("volunteer-list"), USER_CREATION_DATA, **headers)
     assert result.json().get("username") == "Narf"
     assert result.status_code == status.HTTP_201_CREATED
-    assert len(BlossomUser.objects.all()) == 2
+    assert BlossomUser.objects.count() == previous_user_count + 1
 
 
 class TestPermissionsCheck:
@@ -99,7 +101,8 @@ class TestPermissionsCheck:
     ) -> None:
         """Test whether the API allows access to Grafeas staff members."""
         client, headers, _ = setup_user_client(client)
-        user = BlossomUser.objects.get(id=1)
+        # four system accounts first
+        user = BlossomUser.objects.get(id=5)
         request = rf.get("/")
         request.user = user
         request.META.update(headers)
