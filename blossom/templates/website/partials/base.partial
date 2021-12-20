@@ -27,7 +27,7 @@
           integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
     <link href="{% static "js/prism_js/prism-tomorrow-night.css" %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static "css/main.css" %}">
-    {% if not request.user.is_authenticated %}
+    {% if not request.user.is_grafeas_staff %}
         {# only get metrics on folks who aren't staff #}
         <script defer data-domain="grafeas.org" src="{% static "js/potentially.js" %}"></script>
     {% endif %}

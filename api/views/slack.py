@@ -48,7 +48,17 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
     """
     if not is_valid_slack_request(request):
         return HttpResponse(status=200)
-    json_data = json.loads(request.body)
+
+    # If it passes the above check, then it's a valid request... but we
+    # have no idea what _form_ the request is in. If it's an action that's
+    # as a response to a button press, then it will be a payload. If it's
+    # a standard message, then it will just be encoded as the body of the
+    # request. WTF, Slack?
+    try:
+        json_data = json.loads(request.body.decode())
+    except json.JSONDecodeError:
+        json_data = json.loads(request.POST.get("payload"))
+
     if json_data.get("challenge"):
         # looks like we got hit with the magic handshake packet. Send it
         # back to its maker.

@@ -394,7 +394,7 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
         submission.id
     )
 
-    client.chat_postMessage(channel="removed_posts", blocks=blocks)
+    client.chat_postMessage(channel="reported_posts", blocks=blocks)
 
 
 @login_required
