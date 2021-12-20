@@ -57,7 +57,7 @@ EXCITEMENT = [
 ]
 
 TRANSCRIPTION_TEMPLATE = (
-    "Image Transcription: {content_type}\n\n---\n\n{transcription}\n\n---\n\n"
+    "*Image Transcription: {content_type}*\n\n---\n\n{transcription}\n\n---\n\n"
     "^^I'm&#32;a&#32;human&#32;volunteer&#32;content&#32;transcriber&#32;and&#32;"
     "you&#32;could&#32;be&#32;too!&#32;[If&#32;you'd&#32;like&#32;more&#32;"
     "information&#32;on&#32;what&#32;we&#32;do&#32;and&#32;why&#32;we&#32;do&#32;"
@@ -429,7 +429,7 @@ def unclaim_submission(
             " one.",
         )
         return redirect("choose_transcription")
-
-    flair_post(Submission.objects.get(id=submission_id), Flair.unclaimed)
-    ask_about_removing_post(request, submission_id)
+    submission_obj = Submission.objects.get(id=submission_id)
+    flair_post(submission_obj, Flair.unclaimed)
+    ask_about_removing_post(request, submission_obj)
     return redirect("choose_transcription")
