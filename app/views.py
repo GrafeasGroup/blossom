@@ -352,7 +352,10 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": ("Submission: <{url}|{title}>\nReport reason: {reason}"),
+                "text": (
+                    "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\n"
+                    "Report reason: {reason}"
+                ),
             },
         },
         {"type": "divider"},
@@ -384,7 +387,10 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
     ]
 
     blocks[2]["text"]["text"] = blocks[2]["text"]["text"].format(
-        url=submission.url, title=submission.title, reason=request.GET.get("reason")
+        url=submission.url,
+        title=submission.title,
+        tor_url=submission.tor_url,
+        reason=request.GET.get("reason"),
     )
 
     blocks[-1]["elements"][0]["value"] = blocks[-1]["elements"][0]["value"].format(
