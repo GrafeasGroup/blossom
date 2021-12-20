@@ -37,13 +37,14 @@ def require_reddit_auth(func: Callable) -> Any:
 
     @wraps(func)
     def inner_func(request: HttpRequest, *args: list, **kwargs: dict) -> Any:
-        if not request.user.social_auth.first():
+        social_auth = request.user.social_auth.filter(provider="reddit").first()
+        if not social_auth:
             # Don't do anything if we don't have social auth hooked up
             return login_error(request)
-        if not hasattr(request.user.social_auth.first(), "extra_data"):
+        if not hasattr(social_auth, "extra_data"):
             # Safety check; make sure the extra data dict exists
             return login_error(request)
-        if not request.user.social_auth.first().extra_data.get("refresh_token"):
+        if not social_auth.extra_data.get("refresh_token"):
             # We won't have a refresh token if we just started the process
             refresh_token(request)
 

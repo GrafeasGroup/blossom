@@ -5,6 +5,7 @@ import uuid
 from datetime import timedelta
 
 import markdown
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -87,9 +88,9 @@ def accept_coc(request: HttpRequest) -> HttpResponse:
 @require_reddit_auth
 def choose_transcription(request: HttpRequest) -> HttpResponse:
     """Provide a user with transcriptions to choose from."""
-    # time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+    time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
     # todo: remove this when finished testing raw functionality
-    time_delay = timezone.now() - timedelta(hours=330)
+    # time_delay = timezone.now() - timedelta(hours=330)
     options = Submission.objects.annotate(original_id_len=Length("original_id")).filter(
         original_id_len__lt=10,
         completed_by=None,
@@ -102,12 +103,19 @@ def choose_transcription(request: HttpRequest) -> HttpResponse:
     if options.count() > 3:
         # we have more to choose from, so let's grab 3
         temp = []
-        while len(temp) < 3:
-            submission = random.choice(options)
+        options_list = list(options)
+        for _ in range(options.count()):
+            if len(temp) >= 3:
+                break
+            # What if the only options we have here are video options? This will
+            # terminate when it runs out of options to try but we at least get
+            # to inject a little randomness into it.
+            submission = random.choice(options_list)
             # todo: we want to eventually handle other types of content here, but
             #  we simply aren't ready for it yet.
-            if submission not in temp and submission.is_image:
-                temp.append(submission)
+            if submission.is_image:
+                temp.append(options_list.pop(options_list.index(submission)))
+
         options = temp
 
     for submission in options:
@@ -146,7 +154,7 @@ def choose_transcription(request: HttpRequest) -> HttpResponse:
         messages.success(request, f"You ranked up to {request.user.get_rank}! {ending}")
         context.update({"show_confetti": True})
 
-    return render(request, "app/choose_transcription.html", context,)
+    return render(request, "app/choose_transcription.html", context)
 
 
 @method_decorator(require_coc, name="dispatch")
@@ -252,8 +260,8 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
         transcription = transcription.replace("\r\n", "\n")
 
         issues = check_for_formatting_issues(transcription)
-        if len(issues) > 0:
-            # stash the important stuff in the session so that we can
+        if len(issues) > 0 or not transcription:
+            #            # stash the important stuff in the session so that we can
             # retrieve it on the other side
 
             # escape the backticks so that they can be rendered properly by the JS
@@ -262,7 +270,9 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
                 "`", r"\`"  # noqa: W605
             )
             request.session["heading"] = request.POST.get("transcription_type")
-            request.session["issues"] = list(issues)
+            request.session["issues"] = (
+                list(issues) if issues else ["no_transcription_found"]
+            )
             # store this one too so that we know which submission this information is for
             request.session["submission_id"] = submission_id
             return redirect("transcribe_submission", submission_id=submission_id)
@@ -427,6 +437,7 @@ def unclaim_submission(
             "That submission is already completed, so you'll want to choose a different"
             " one.",
         )
+        return redirect("choose_transcription")
 
     flair_post(Submission.objects.get(id=submission_id), Flair.unclaimed)
     ask_about_removing_post(request, submission_id)
