@@ -266,9 +266,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
 
             # escape the backticks so that they can be rendered properly by the JS
             # template literals in the html template
-            request.session["transcription"] = transcription.replace(
-                "`", r"\`"  # noqa: W605
-            )
+            request.session["transcription"] = transcription.replace("`", r"\`")
             request.session["heading"] = request.POST.get("transcription_type")
             request.session["issues"] = (
                 list(issues) if issues else ["no_transcription_found"]
