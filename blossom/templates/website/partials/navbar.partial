@@ -9,20 +9,32 @@
         {% endif %}
 >
     <div class="container-fluid">
-        {% if 'engineering' in request.path or post.engineeringblogpost %}
-            <a class="navbar-brand" href="{% url 'blog_index' %}">
-        {% else %}
-            <a class="navbar-brand" href="{% url 'homepage' %}">
-        {% endif %}
-        <img src="{% static 'images/logo.svg' %}" width="30px" id="navbar-logo" alt="Logo">
-        {% if 'engineering' in request.path or post.engineeringblogpost %}
-            <span class="d-sm-none">GG Engineering</span>
-            <span class="d-none d-sm-inline-block">Grafeas Group Engineering</span>
-        {% elif '/app/' in request.path %}
-            <span>TheTranscription.App</span>
-        {% else %}
-            Grafeas Group
-        {% endif %}
+        <a class="navbar-brand me-0"
+                {% if 'engineering' in request.path or post.engineeringblogpost %}
+           href="{% url 'blog_index' %}"
+                {% else %}
+           href="{% url 'homepage' %}"
+                {% endif %}
+        >
+            <img src="{% static 'images/logo.svg' %}" width="30px" id="navbar-logo" alt="Logo">
+        </a>
+        <a class="navbar-brand"
+                {% if 'engineering' in request.path or post.engineeringblogpost %}
+           href="{% url 'blog_index' %}"
+                {% elif '/app/' in request.path %}
+           href="{% url 'choose_transcription' %}"
+                {% else %}
+           href="{% url 'homepage' %}"
+                {% endif %}
+        >
+            {% if 'engineering' in request.path or post.engineeringblogpost %}
+                <span class="d-sm-none">GG Engineering</span>
+                <span class="d-none d-sm-inline-block">Grafeas Group Engineering</span>
+            {% elif '/app/' in request.path %}
+                <span>TheTranscription.App</span>
+            {% else %}
+                Grafeas Group
+            {% endif %}
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
                 aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,6 +46,10 @@
                     <li class="nav-item active">
                         <a class="nav-link" id="tutorialToggleButton" data-bs-toggle="modal" href="#tutorialModal"
                            role="button">Tutorial</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item active">
+                        <a class="nav-link" href="{% url 'choose_transcription' %}">App</a>
                     </li>
                 {% endif %}
                 <li class="nav-item active">
