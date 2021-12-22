@@ -44,7 +44,7 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 {% if '/app/' in request.path %}
                     <li class="nav-item active">
-                        <a class="nav-link" id="tutorialToggleButton" data-bs-toggle="modal" href="#tutorialModal"
+                        <a class="nav-link" id="tutorialToggleButton" data-bs-toggle="modal" href="#tutModalToggle1"
                            role="button">Tutorial</a>
                     </li>
                 {% else %}

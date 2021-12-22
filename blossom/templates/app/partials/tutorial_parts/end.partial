@@ -1,0 +1,21 @@
+{% load mathfilters %}
+
+            </div>
+            <div class="modal-footer">
+                {% if back %}
+                    <button class="btn btn-primary" data-bs-target="#tutModalToggle{{ slidenum|sub:1 }}" data-bs-toggle="modal"
+                            data-bs-dismiss="modal">Back
+                    </button>
+                {% endif %}
+                {% if next %}
+                    <button class="btn btn-primary" data-bs-target="#tutModalToggle{{ slidenum|add:1 }}" data-bs-toggle="modal"
+                            data-bs-dismiss="modal">Next
+                    </button>
+                {% endif %}
+                {% if close %}
+                    <button class="btn btn-success" type="button" data-bs-dismiss="modal">Close</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

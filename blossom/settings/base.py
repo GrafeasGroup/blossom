@@ -82,6 +82,7 @@ INSTALLED_APPS = [
     # additional functionality
     "widget_tweaks",
     "ipware",
+    "mathfilters",
     # blossom internal apps
     "blossom",
     "app",
