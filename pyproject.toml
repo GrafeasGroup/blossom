@@ -33,6 +33,7 @@ typed-ast = "^1.5.0"
 django-revproxy = {git = "https://github.com/hcpuk/django-revproxy.git"}
 Markdown = "^3.3.6"
 django-ipware = "^4.0.0"
+django-mathfilters = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"

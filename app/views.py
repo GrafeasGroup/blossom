@@ -336,6 +336,9 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
 def ask_about_removing_post(request: HttpRequest, submission: Submission) -> None:
     """Ask Slack if we want to remove a reported submission or not."""
     # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
+    if request.GET.get("reason") is None:
+        return
+
     blocks = [
         {
             "type": "section",

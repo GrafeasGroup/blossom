@@ -1,38 +1,246 @@
-<div class="modal fade" id="tutorialModal" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-     tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalToggleLabel">Modal 1</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Show a second modal and hide this one with the button below.
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" data-bs-target="#exampleModalToggle2" data-bs-toggle="modal"
-                        data-bs-dismiss="modal">Open second modal
-                </button>
+{% load static %}
+
+{# #################################################################### #}
+
+{% with 1 as slidenum %}
+    {% include 'app/partials/tutorial_parts/beginning.partial' with title="Introduction" %}
+    <p>
+        Welcome to TheTranscription.App! This isn't a big app, but we want
+        to take a moment and introduce you to all the important features so
+        that you have a good idea of what to expect.
+    </p>
+    <p>
+        Use the <strong>Next</strong> and <strong>Back</strong> buttons to
+        move through the pages, and just click or tap outside this window to
+        close it. You can always show it again by clicking
+        <strong>Tutorial</strong> in the navbar at the top of the screen!
+    </p>
+    {% include 'app/partials/tutorial_parts/end.partial' with next=True %}
+{% endwith %}
+
+{# #################################################################### #}
+
+{% with 2 as slidenum %}
+    {% include 'app/partials/tutorial_parts/beginning.partial' with title="Choosing" %}
+    <p>
+        The main page is where you choose a transcription! You'll see a group
+        of options presented to you; these are recent submissions that have
+        come in that need transcriptions. Each one looks like this:
+    </p>
+    <div class="row">
+        <div class="col-0 col-lg-2"></div>
+        <div class="col-12 col-lg-8">
+            <div class="text-center">
+                <img src="{% static 'images/tutorial_1.png' %}" style="width: 100%"
+                     alt="A screenshot showing an image from r/blursedimages of a T-Rex with Dwayne Johnson's head.">
             </div>
         </div>
+        <div class="col-0 col-lg-2"></div>
     </div>
-</div>
-<div class="modal fade" id="exampleModalToggle2" aria-hidden="true" aria-labelledby="exampleModalToggleLabel2"
-     tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalToggleLabel2">Modal 2</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                Hide this modal and show the first with the button below.
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-primary" data-bs-target="#tutorialModal" data-bs-toggle="modal"
-                        data-bs-dismiss="modal">Back to first
-                </button>
+
+    <p class="mt-3">
+        Each submission will have some important information on it and a green
+        <strong>Transcribe!</strong> button at the bottom. If you want to
+        work on this transcription, then that button is your ticket!
+    </p>
+    {% include 'app/partials/tutorial_parts/end.partial' with next=True back=True %}
+{% endwith %}
+
+{# #################################################################### #}
+
+{% with 3 as slidenum %}
+    {% include 'app/partials/tutorial_parts/beginning.partial' with title="Rerolling" %}
+    <p>
+        Sometimes the posts that are suggested aren't really your cup of tea,
+        and that's okay! We want you to be able to find and work on content
+        that you're interested in. At the bottom of the screen, there is a
+        blue button labelled <strong>Reroll!</strong>.
+    </p>
+    <div class="row">
+        <div class="col-0 col-lg-2"></div>
+        <div class="col-12 col-lg-8">
+            <div class="text-center">
+                <img src="{% static 'images/tutorial_2.png' %}" style="width: 100%"
+                     alt="A screenshot showing a blue button labelled 'Reroll!'">
             </div>
         </div>
+        <div class="col-0 col-lg-2"></div>
     </div>
-</div>
+
+    <p class="mt-3">
+        If you're not a fan of the submissions that get recommended to you,
+        don't worry! Just reroll and see what you get!
+    </p>
+    {% include 'app/partials/tutorial_parts/end.partial' with next=True back=True %}
+{% endwith %}
+
+{# #################################################################### #}
+
+{% with 4 as slidenum %}
+    {% include 'app/partials/tutorial_parts/beginning.partial' with title="Images and You" %}
+    <p>
+        Once you click or tap the <strong>Transcribe!</strong> button, you'll
+        be taken to the Transcription View. Here, you'll have access to the
+        same image that you saw before, but now there's a lot of things you
+        can do to it! Pan around, zoom in, zoom out, and make it full screen
+        if you want so that you can find all the tiniest details!
+    </p>
+    <div class="row">
+        <div class="col-0 col-lg-2"></div>
+        <div class="col-12 col-lg-8">
+            <div class="text-center">
+                <img src="{% static 'images/tutorial_3.png' %}" style="width: 100%"
+                     alt="A screenshot showing the original T-Rex image, but this time in a different frame with some buttons underneath."
+                >
+            </div>
+        </div>
+        <div class="col-0 col-lg-2"></div>
+    </div>
+
+    <p class="mt-3">
+        If you don't like where the image is (or you zoomed in too far and
+        lost it) then use the controls at the top of the image (not visible
+        here) to reset it.
+    </p>
+    <p>
+        You also have access to a new button here: the
+        <strong>View Rules</strong> button. This will show you all the rules
+        relating to the place where this image came from; it's on you to
+        identify whether this image breaks the rules or not! If it doesn't,
+        then it's good to go... but if it does, you'll want to report it so
+        that it can be removed. More on that shortly!
+    </p>
+    {% include 'app/partials/tutorial_parts/end.partial' with next=True back=True %}
+{% endwith %}
+
+{# #################################################################### #}
+
+{% with 5 as slidenum %}
+    {% include 'app/partials/tutorial_parts/beginning.partial' with title="Transcribing" %}
+    <p>
+        Here is where the magic happens. Just write down what you see in the
+        image! Remember that the goal here is that someone who cannot access
+        the image should be able to understand what is going on just by reading
+        what you've written.
+    </p>
+    <p>
+        We use <a href="https://www.markdownguide.org/" target="_blank">Markdown</a>
+        text formatting for our transcriptions. If you ever need help on how to
+        format something, just click the question mark button in the toolbar for
+        the transcription to see a helpful formatting guide!
+    </p>
+    <div class="row">
+        <div class="col-0 col-lg-2"></div>
+        <div class="col-12 col-lg-8">
+            <div class="text-center">
+                <img src="{% static 'images/tutorial_4.png' %}" style="width: 100%"
+                     alt="A screenshot showing a text box with a submit button and a red reroll button.">
+            </div>
+        </div>
+        <div class="col-0 col-lg-2"></div>
+    </div>
+
+    <p class="mt-3">
+        Clarity is always your goal here. Now... the question of the hour --
+        how do we know what formatting to use? Click <strong>Next</strong>
+        to find out!
+    </p>
+    {% include 'app/partials/tutorial_parts/end.partial' with next=True back=True %}
+{% endwith %}
+
+{# #################################################################### #}
+
+{% with 6 as slidenum %}
+    {% include 'app/partials/tutorial_parts/beginning.partial' with title="Templates" %}
+    <p>
+        We have templates for a ton of different types of image! Take a scroll
+        through the list and find one that's appropriate for the type of material
+        that you're transcribing. Just click on the name to open it, and click
+        the green <strong>Load Template</strong> button to automatically copy
+        it to the transcription window!<br>(Psst -- it will overwrite anything
+        you've already put there, so do watch out!)
+    </p>
+    <div class="row">
+        <div class="col-0 col-lg-2"></div>
+        <div class="col-12 col-lg-8">
+            <div class="text-center">
+                <img src="{% static 'images/tutorial_5.png' %}" style="width: 100%"
+                     alt="A screenshot showing a lot of different template options to choose from.">
+            </div>
+        </div>
+        <div class="col-0 col-lg-2"></div>
+    </div>
+
+    <p class="mt-3">
+        If you don't see a template for the kind of content that you're
+        working on, don't worry! Just grab the one that seems the closest
+        and modify it to fit or ask us on <code>#transcribing</code> on
+        our Discord!
+    </p>
+    {% include 'app/partials/tutorial_parts/end.partial' with next=True back=True %}
+{% endwith %}
+
+{# #################################################################### #}
+
+{% with 7 as slidenum %}
+    {% include 'app/partials/tutorial_parts/beginning.partial' with title="Returning a Post" %}
+    <p>
+        Sometimes you and a post simply won't get along, and the only option
+        is to <em>cast it into the fires of Mount Doom!</em>
+    </p>
+    <p>
+        Okay, that might be an overstatement, but when you click on the
+        <strong>Transcribe!</strong> button, that post is yours to work on.
+        That means that other people can't work on it, and if you don't want it
+        anymore, we need to release it back so that other folks can give it a
+        try. Clicking the red <strong>Reroll</strong> button will bring up the
+        below screen.
+    </p>
+    <div class="row">
+        <div class="col-0 col-lg-2"></div>
+        <div class="col-12 col-lg-8">
+            <div class="text-center">
+                <img src="{% static 'images/tutorial_6.png' %}" style="width: 100%"
+                     alt="A screenshot showing a series of choices in red for why a post is being returned.">
+            </div>
+        </div>
+        <div class="col-0 col-lg-2"></div>
+    </div>
+
+    <p class="mt-3">
+        Select the option that works best, but please be truthful! This helps
+        us keep the queue clean for other volunteers (and for you!), so accurate
+        reports as to why you're returning this one are super helpful.
+    </p>
+    {% include 'app/partials/tutorial_parts/end.partial' with next=True back=True %}
+{% endwith %}
+
+{# #################################################################### #}
+
+{% with 8 as slidenum %}
+    {% include 'app/partials/tutorial_parts/beginning.partial' with title="All Done!" %}
+    <p>
+        Thanks for reading through this and thanks for being a volunteer!
+        This work really truly does make someone's day better, and you just
+        being here is the first step to making that happen.
+    </p>
+    <p>
+        If you have any questions or issues, please reach out to us on Discord
+        at the button below -- we hope to see you there!
+    </p>
+    <div class="row">
+        <div class="col-0 col-md-3 col-lg-4"></div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="d-grid mt-3">
+                <a
+                        href="https://discord.gg/ZDDE3Pj"
+                        target="_blank"
+                        class="btn btn-outline-secondary"
+                >Launch Discord</a>
+            </div>
+        </div>
+        <div class="col-0 col-md-3 col-lg-4"></div>
+    </div>
+    <p class="my-3">Thanks for being here, and thanks for being you!</p>
+    {% include 'app/partials/tutorial_parts/end.partial' with back=True close=True %}
+{% endwith %}
