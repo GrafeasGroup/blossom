@@ -4,6 +4,8 @@ from typing import Optional
 
 import pytest
 from django.test import Client
+from django.urls import reverse
+from rest_framework import status
 
 from api.views.find import find_by_submission_url, normalize_url
 from utils.test_helpers import (
@@ -114,3 +116,59 @@ def test_find_by_submission_url(
         assert actual["author"] == user
     else:
         assert actual is None
+
+
+@pytest.mark.parametrize(
+    "url,expected",
+    [
+        # Submission URL
+        ("https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/", True,),
+        # ToR Submission URL
+        (
+            "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
+            True,
+        ),
+        # Other submission URL
+        (
+            "https://reddit.com/r/aaaaaaacccccccce/comments/q1t6kh/not_so_sure_about_the_demiboy_thing_anymore_im/",
+            False,
+        ),
+        # Other ToR URL
+        (
+            "https://reddit.com/r/TranscribersOfReddit/comments/q1ucl3/aaaaaaacccccccce_image_not_so_sure_about_the/",
+            False,
+        ),
+    ],
+)
+def test_find(client: Client, url: str, expected: bool) -> None:
+    """Verify that the posts can be found by their URL."""
+    client, headers, user = setup_user_client(client, id=123, username="test_user")
+
+    submission = create_submission(
+        claimed_by=user,
+        completed_by=user,
+        url="https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/",
+        tor_url="https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
+        content_url="https://i.redd.it/upwchc4bqhr71.jpg",
+        title="Work is work",
+    )
+
+    transcription = create_transcription(
+        submission=submission,
+        user=user,
+        url="https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/",
+    )
+
+    result = client.get(
+        reverse("find") + f"?url={url}", content_type="application/json", **headers,
+    )
+
+    if expected:
+        assert result.status_code == status.HTTP_200_OK
+        actual = result.json()
+
+        assert actual["submission"]["id"] == submission.id
+        assert actual["transcription"]["id"] == transcription.id
+        assert actual["author"]["id"] == user.id
+    else:
+        assert result.status_code == status.HTTP_404_NOT_FOUND
