@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.models import Submission, Transcription
+from api.serializers import FindResponseSerializer
 from authentication.models import BlossomUser
 
 
@@ -147,4 +148,9 @@ class FindView(APIView):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        return Response(data=data, status=status.HTTP_200_OK)
+        print(data)
+
+        return Response(
+            data=FindResponseSerializer(data, context={"request": request}).data,
+            status=status.HTTP_200_OK,
+        )
