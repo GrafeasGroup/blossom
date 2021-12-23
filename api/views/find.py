@@ -58,7 +58,12 @@ def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
 
 def find_by_transcription_url(url: str) -> Optional[FindResponse]:
     """Find the objects by a transcription URL."""
-    transcription = Transcription.objects.get(url=url)
+    transcriptions = Transcription.objects.filter(url=url)
+
+    if transcriptions.count() == 0:
+        return None
+
+    transcription = transcriptions[0]
     author = transcription.author
     submission = transcription.submission
 
