@@ -180,6 +180,14 @@ def test_find_by_transcription_url(client: Client, url: str, expected: bool) -> 
             "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
             True,
         ),
+        # Transcription URL
+        ("https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/", True),
+        # Shared transcription URL
+        (
+            "https://www.reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/"
+            "?utm_source=share&utm_medium=web2x&context=3",
+            True,
+        ),
         # Other submission URL
         (
             "https://reddit.com/r/aaaaaaacccccccce/comments/q1t6kh/not_so_sure_about_the_demiboy_thing_anymore_im/",
@@ -188,6 +196,11 @@ def test_find_by_transcription_url(client: Client, url: str, expected: bool) -> 
         # Other ToR URL
         (
             "https://reddit.com/r/TranscribersOfReddit/comments/q1ucl3/aaaaaaacccccccce_image_not_so_sure_about_the/",
+            False,
+        ),
+        # Other Transcription URL
+        (
+            "https://reddit.com/r/NonPoliticalTwitter/comments/rn02rf/subtitles/hppsgrs/",
             False,
         ),
     ],

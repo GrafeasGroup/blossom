@@ -83,7 +83,7 @@ def find_by_url(url: str) -> Optional[FindResponse]:
         # The fifth segment (index 4) of the link is the sub name
         url_type = "tor_url" if url_parts[4] == "TranscribersOfReddit" else "url"
         return find_by_submission_url(url, url_type)
-    elif len(url_parts) == 11:
+    elif len(url_parts) == 10:
         # It's a link to a comment
         if url_parts[4] == "TranscribersOfReddit":
             # It's a comment on ToR, e.g. a "claim" comment
