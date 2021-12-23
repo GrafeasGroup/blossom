@@ -12,7 +12,6 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from api.models import Source, Submission, Transcription
-from api.views.find import FindResponse
 from authentication.models import BlossomUser
 
 
@@ -114,7 +113,8 @@ class FindResponseSerializer(serializers.Serializer):
     transcription = TranscriptionSerializer(required=False)
     author = VolunteerSerializer(required=False)
 
-    def create(self, validated_data: Any) -> FindResponse:
+    # We cannot type this properly without circular imports
+    def create(self, validated_data: Any) -> Any:
         """Create an object based on the validated data."""
         submission = validated_data.get("submission")
         transcription = validated_data.get("transcription", None)
@@ -126,7 +126,8 @@ class FindResponseSerializer(serializers.Serializer):
             "author": BlossomUser(**author) if author else None,
         }
 
-    def update(self, instance: FindResponse, validated_data: Any) -> FindResponse:
+    # We cannot type this properly without circular imports
+    def update(self, instance: Any, validated_data: Any) -> Any:
         """Update the object based on the validated data."""
         instance.submission = validated_data.get("submission")
         instance.transcription = validated_data.get("transcription", None)
