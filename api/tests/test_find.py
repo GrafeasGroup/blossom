@@ -7,11 +7,7 @@ from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
-from api.views.find import (
-    find_by_submission_url,
-    find_by_transcription_url,
-    normalize_url,
-)
+from api.views.find import find_by_submission_url, normalize_url
 from utils.test_helpers import (
     create_submission,
     create_transcription,
@@ -113,54 +109,6 @@ def test_find_by_submission_url(
     )
 
     actual = find_by_submission_url(url, url_type)
-
-    if expected:
-        assert actual["submission"] == submission
-        assert actual["transcription"] == transcription
-        assert actual["author"] == user
-    else:
-        assert actual is None
-
-
-@pytest.mark.parametrize(
-    "url,expected",
-    [
-        # Transcription URL
-        ("https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/", True),
-        # Submission URL
-        ("https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/", False),
-        # ToR Submission URL
-        (
-            "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
-            False,
-        ),
-        # Other Transcription URL
-        (
-            "https://reddit.com/r/NonPoliticalTwitter/comments/rn02rf/subtitles/hppsgrs/",
-            False,
-        ),
-    ],
-)
-def test_find_by_transcription_url(client: Client, url: str, expected: bool) -> None:
-    """Verify that a transcription is found by its URL."""
-    client, headers, user = setup_user_client(client, id=123, username="test_user")
-
-    submission = create_submission(
-        claimed_by=user,
-        completed_by=user,
-        url="https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/",
-        tor_url="https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
-        content_url="https://i.redd.it/upwchc4bqhr71.jpg",
-        title="Work is work",
-    )
-
-    transcription = create_transcription(
-        submission=submission,
-        user=user,
-        url="https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/",
-    )
-
-    actual = find_by_transcription_url(url)
 
     if expected:
         assert actual["submission"] == submission
