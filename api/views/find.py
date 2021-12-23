@@ -112,6 +112,7 @@ class FindView(APIView):
                 type="string",
                 description="The URL to find the object of. "
                 "Can be a submission URL, a ToR submission URL or a transcription URL.",
+                required=True,
             ),
         ],
         required=["url"],
