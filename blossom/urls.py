@@ -1,8 +1,14 @@
+from functools import wraps
+from typing import Any, Callable
+
+from decorator_include import decorator_include
 from django.conf import settings
 from django.conf.urls import url
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.http import HttpRequest
+from django.shortcuts import redirect
+from django.urls import path
 
 from authentication.views import LoginView
 from website.views import user_create
@@ -13,15 +19,57 @@ admin.site.login = LoginView.as_view()
 handler404 = "website.views.handler404"
 handler500 = "website.views.handler500"
 
+
+def force_domain(domain: str) -> Any:
+    """Enforce the appropriate domain name for a given route."""
+
+    def decorator(func: Callable) -> Any:
+        """Enforce the appropriate domain name for a given route."""
+
+        @wraps(func)
+        def inner_func(request: HttpRequest, *args: list, **kwargs: dict) -> Any:
+            if settings.DEBUG or request.get_host() == "testserver":
+                # return either the configured hostname for testing or the host that's
+                # required for this route.
+                request.get_host = (
+                    lambda: settings.OVERRIDE_HOST if settings.OVERRIDE_HOST else domain
+                )
+            elif request.get_host() != domain:
+                # The request came in on the wrong domain, so issue a redirect for
+                # the same route so they come in from the right site.
+                return redirect(request.scheme + "://" + domain + request.path)
+            # everything's groovy -- let's roll
+            return func(request, *args, **kwargs)
+
+        return inner_func
+
+    return decorator
+
+
+# grafeas urls
 urlpatterns = [
     path("superadmin/newuser", user_create, name="user_create"),
     path("superadmin/", admin.site.urls),
-    path("api/", include("api.urls")),
-    path("app/", include("app.urls")),
-    path("payments/", include("payments.urls")),
-    path("engineering/", include("engineeringblog.urls")),
-    path("", include("website.urls")),
-    url("", include("social_django.urls", namespace="social")),
+    path("api/", decorator_include(force_domain("grafeas.org"), "api.urls")),
+    path("payments/", decorator_include(force_domain("grafeas.org"), "payments.urls")),
+    path(
+        "engineering/",
+        decorator_include(force_domain("grafeas.org"), "engineeringblog.urls"),
+    ),
+    path("", decorator_include(force_domain("grafeas.org"), "website.urls")),
+]
+
+# thetranscription.app urls
+urlpatterns += [
+    path("app/", decorator_include(force_domain("thetranscription.app"), "app.urls")),
+    url(
+        "",
+        decorator_include(
+            force_domain("thetranscription.app"),
+            "social_django.urls",
+            namespace="social",
+        ),
+    ),
 ]
 
 if settings.DEBUG:

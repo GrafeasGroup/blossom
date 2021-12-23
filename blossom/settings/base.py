@@ -215,6 +215,10 @@ USE_TZ = True
 
 SITE_ID = 1
 
+# Force the request to appear as coming from one site or another in debug mode.
+# Set to the hostname from allowed hosts; for example, "grafeas.org".
+OVERRIDE_HOST = None
+
 OVERRIDE_API_AUTH = False
 
 # number of hours to allow a post to stay up
