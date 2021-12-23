@@ -76,8 +76,12 @@ def test_extract_core_url() -> None:
 @pytest.mark.parametrize(
     "url,url_type,expected",
     [
+        # Submission Core URL
+        ("https://reddit.com/r/antiwork/comments/q1tlcf", "url", True),
         # Submission URL
-        ("https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/", "url", True,),
+        ("https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/", "url", True),
+        # ToR Submission Core URL
+        ("https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc", "tor_url", True,),
         # ToR Submission URL
         (
             "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
@@ -139,12 +143,24 @@ def test_find_by_submission_url(
             "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
             True,
         ),
+        # ToR comment URL
+        (
+            "https://www.reddit.com/r/TranscribersOfReddit/comments/q1tnhc/comment/hfgp1g7/"
+            + "?utm_source=share&utm_medium=web2x&context=3",
+            True,
+        ),
         # Transcription URL
         ("https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/", True),
         # Shared transcription URL
         (
             "https://www.reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/"
-            "?utm_source=share&utm_medium=web2x&context=3",
+            + "?utm_source=share&utm_medium=web2x&context=3",
+            True,
+        ),
+        # Submission comment URL
+        (
+            "https://www.reddit.com/r/antiwork/comments/q1tlcf/comment/hfgttrw/"
+            + "?utm_source=share&utm_medium=web2x&context=3",
             True,
         ),
         # Other submission URL
