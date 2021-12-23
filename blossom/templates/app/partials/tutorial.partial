@@ -194,7 +194,10 @@
         That means that other people can't work on it, and if you don't want it
         anymore, we need to release it back so that other folks can give it a
         try. Clicking the red <strong>Reroll</strong> button will bring up the
-        below screen.
+        below screen. Clicking "Just want something different" will return the
+        post back to the queue for someone else to grab, but choosing any of
+        the other options will report the post so mods can determine if it
+        should be removed.
     </p>
     <div class="row">
         <div class="col-0 col-lg-2"></div>
