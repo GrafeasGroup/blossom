@@ -8,7 +8,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import HttpRequest
 from django.shortcuts import redirect
-from django.urls import path
+from django.urls import include, path
 
 from authentication.views import LoginView
 from website.views import user_create
@@ -50,6 +50,7 @@ def force_domain(domain: str) -> Any:
 urlpatterns = [
     path("superadmin/newuser", user_create, name="user_create"),
     path("superadmin/", admin.site.urls),
+    path("", include("authentication.urls")),
     path("api/", decorator_include(force_domain("grafeas.org"), "api.urls")),
     path("payments/", decorator_include(force_domain("grafeas.org"), "payments.urls")),
     path(

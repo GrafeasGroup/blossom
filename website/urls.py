@@ -1,6 +1,5 @@
 from django.urls import path
 
-from authentication.urls import urlpatterns as auth_urls
 from website import views
 
 urlpatterns = [
@@ -17,5 +16,3 @@ urlpatterns = [
     path("posts/<str:slug>/edit/", views.PostUpdate.as_view(), name="post_update",),
     path("admin/", views.AdminView.as_view(), name="admin_view"),
 ]
-
-urlpatterns += auth_urls
