@@ -6,10 +6,13 @@ fields and model used per serializer are specified in the Meta class included
 within the serializer. This serialized object can in turn be used for serving
 objects through the API.
 """
+from typing import Any
+
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from api.models import Source, Submission, Transcription
+from api.views.find import FindResponse
 from authentication.models import BlossomUser
 
 
@@ -98,3 +101,34 @@ class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
             "text",
             "removed_from_reddit",
         )
+
+
+class FindResponseSerializer(serializers.Serializer):
+    """Serializer for the response of the /find/ endpoint.
+
+    See https://www.django-rest-framework.org/api-guide/serializers/
+    """
+
+    # We just delegate to the serializers of the models
+    submission = SubmissionSerializer()
+    transcription = TranscriptionSerializer(required=False)
+    author = VolunteerSerializer(required=False)
+
+    def create(self, validated_data: Any) -> FindResponse:
+        """Create an object based on the validated data."""
+        submission = validated_data.get("submission")
+        transcription = validated_data.get("transcription", None)
+        author = validated_data.get("author", None)
+
+        return {
+            "submission": Submission(**submission),
+            "transcription": Transcription(**transcription) if transcription else None,
+            "author": BlossomUser(**author) if author else None,
+        }
+
+    def update(self, instance: FindResponse, validated_data: Any) -> FindResponse:
+        """Update the object based on the validated data."""
+        instance.submission = validated_data.get("submission")
+        instance.transcription = validated_data.get("transcription", None)
+        instance.author = validated_data.get("author", None)
+        return instance
