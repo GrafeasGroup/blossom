@@ -57,6 +57,19 @@ def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     return {"submission": submission, "author": author, "transcription": transcription}
 
 
+def extract_core_url(url: str) -> str:
+    """Extract the minimal unique part of the URL.
+
+    https://reddit.com/r/TranscribersOfReddit/comments/plmx5n/curatedtumblr_image_im_an_atheist_but_yall_need/
+    will be converted to
+    https://reddit.com/r/TranscribersOfReddit/comments/plmx5n
+
+    This way we can handle submissions and comments uniformly.
+    """
+    url_parts = url.split("/")
+    return "/".join(url_parts[:7])
+
+
 def find_by_url(url: str) -> Optional[FindResponse]:
     """Find the objects by a normalized URL.
 
@@ -65,10 +78,7 @@ def find_by_url(url: str) -> Optional[FindResponse]:
     """
     url_parts = url.split("/")
     subreddit = url_parts[4]
-    # The unique part of the URL, which also contains the ID of the submission
-    # Comment URLs will be shortened to the submission URL part
-    # E.g.: https://reddit.com/r/TranscribersOfReddit/comments/q1ucl3
-    core_url = "/".join(url_parts[:7])
+    core_url = extract_core_url(url)
 
     if subreddit.casefold() == "transcribersofreddit":
         # Find the submission on ToR

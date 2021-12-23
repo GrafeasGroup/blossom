@@ -7,7 +7,7 @@ from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
-from api.views.find import find_by_submission_url, normalize_url
+from api.views.find import extract_core_url, find_by_submission_url, normalize_url
 from utils.test_helpers import (
     create_submission,
     create_transcription,
@@ -59,6 +59,17 @@ from utils.test_helpers import (
 def test_normalize_url(url: str, expected: Optional[str]) -> None:
     """Verify that the URL is normalized correctly."""
     actual = normalize_url(url)
+    assert actual == expected
+
+
+def test_extract_core_url() -> None:
+    """Verify that the core URL is extracted correctly."""
+    url = (
+        "https://reddit.com/r/TranscribersOfReddit/comments/plmx5n/"
+        + "curatedtumblr_image_im_an_atheist_but_yall_need/"
+    )
+    expected = "https://reddit.com/r/TranscribersOfReddit/comments/plmx5n"
+    actual = extract_core_url(url)
     assert actual == expected
 
 
