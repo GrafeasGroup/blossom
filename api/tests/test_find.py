@@ -89,12 +89,6 @@ def test_extract_core_url() -> None:
             "tor_url",
             True,
         ),
-        # OCR URL
-        (
-            "https://www.reddit.com/r/TranscribersOfReddit/comments/q1tnhc/comment/hfgp1gt/",
-            "tor_url",
-            True,
-        ),
         # Other submission URL
         (
             "https://reddit.com/r/aaaaaaacccccccce/comments/q1t6kh/not_so_sure_about_the_demiboy_thing_anymore_im/",
