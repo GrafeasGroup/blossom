@@ -42,10 +42,11 @@ def normalize_url(reddit_url_str: str) -> Optional[str]:
 
 def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     """Find the objects by a submission URL."""
-    try:
-        submission = Submission.objects.get(**{url_type: url})
-    except Submission.DoesNotExist:
+    submissions = Submission.objects.filter(**{f"{url_type}__startswith": url})
+    if submissions.count() == 0:
         return None
+
+    submission = submissions[0]
 
     author = submission.completed_by
     if author is not None:
@@ -56,13 +57,17 @@ def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     return {"submission": submission, "author": author, "transcription": transcription}
 
 
-def find_by_transcription_url(url: str) -> Optional[FindResponse]:
-    """Find the objects by a transcription URL."""
-    transcription = Transcription.objects.get(url=url)
-    author = transcription.author
-    submission = transcription.submission
+def extract_core_url(url: str) -> str:
+    """Extract the minimal unique part of the URL.
 
-    return {"submission": submission, "author": author, "transcription": transcription}
+    https://reddit.com/r/TranscribersOfReddit/comments/plmx5n/curatedtumblr_image_im_an_atheist_but_yall_need/
+    will be converted to
+    https://reddit.com/r/TranscribersOfReddit/comments/plmx5n
+
+    This way we can handle submissions and comments uniformly.
+    """
+    url_parts = url.split("/")
+    return "/".join(url_parts[:7])
 
 
 def find_by_url(url: str) -> Optional[FindResponse]:
@@ -72,33 +77,15 @@ def find_by_url(url: str) -> Optional[FindResponse]:
     https://reddit.com/r/TranscribersOfReddit/comments/plmx5n/curatedtumblr_image_im_an_atheist_but_yall_need/
     """
     url_parts = url.split("/")
-    if len(url_parts) == 9:
-        # It's a link to a submission
-        # Find out if it's a ToR or partner sub submission
-        # The fifth segment (index 4) of the link is the sub name
-        url_type = "tor_url" if url_parts[4] == "TranscribersOfReddit" else "url"
-        return find_by_submission_url(url, url_type)
-    elif len(url_parts) == 11:
-        # It's a link to a comment
-        if url_parts[4] == "TranscribersOfReddit":
-            # It's a comment on ToR, e.g. a "claim" comment
-            # Extract the ToR submission URL
-            submission_url = "/".join(url_parts[:9])
-            return find_by_submission_url(submission_url, "tor_url")
-        else:
-            # It's a comment on a partner sub
-            # Check if it's a transcription
-            transcription_data = find_by_transcription_url(url)
-            if transcription_data is not None:
-                return transcription_data
-            else:
-                # It's some other comment on the partner sub
-                # Extract the submission URL and search for that
-                submission_url = "/".join(url_parts[:9])
-                return find_by_submission_url(submission_url, "url")
+    subreddit = url_parts[4]
+    core_url = extract_core_url(url)
+
+    if subreddit.casefold() == "transcribersofreddit":
+        # Find the submission on ToR
+        return find_by_submission_url(core_url, "tor_url")
     else:
-        # Unknown link format
-        return None
+        # Find the submission on the partner sub
+        return find_by_submission_url(core_url, "url")
 
 
 class FindView(APIView):
@@ -147,8 +134,6 @@ class FindView(APIView):
                 data="No submission or transcription found for the given URL.",
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        print(data)
 
         return Response(
             data=FindResponseSerializer(data, context={"request": request}).data,
