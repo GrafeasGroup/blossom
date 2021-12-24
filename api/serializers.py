@@ -111,26 +111,30 @@ class FindResponseSerializer(serializers.Serializer):
 
     # We just delegate to the serializers of the models
     submission = SubmissionSerializer()
-    transcription = TranscriptionSerializer(required=False)
     author = VolunteerSerializer(required=False)
+    transcription = TranscriptionSerializer(required=False)
+    ocr = TranscriptionSerializer(required=False)
 
     # We cannot type this properly without circular imports
     def create(self, validated_data: Any) -> Any:
         """Create an object based on the validated data."""
         submission = validated_data.get("submission")
-        transcription = validated_data.get("transcription", None)
         author = validated_data.get("author", None)
+        transcription = validated_data.get("transcription", None)
+        ocr = validated_data.get("ocr", None)
 
         return {
             "submission": Submission(**submission),
-            "transcription": Transcription(**transcription) if transcription else None,
             "author": BlossomUser(**author) if author else None,
+            "transcription": Transcription(**transcription) if transcription else None,
+            "ocr": Transcription(**ocr) if ocr else None,
         }
 
     # We cannot type this properly without circular imports
     def update(self, instance: Any, validated_data: Any) -> Any:
         """Update the object based on the validated data."""
         instance.submission = validated_data.get("submission")
-        instance.transcription = validated_data.get("transcription", None)
         instance.author = validated_data.get("author", None)
+        instance.transcription = validated_data.get("transcription", None)
+        instance.ocr = validated_data.get("ocr", None)
         return instance
