@@ -51,7 +51,7 @@ urlpatterns = [
     path("superadmin/newuser", user_create, name="user_create"),
     path("superadmin/", admin.site.urls),
     path("", include("authentication.urls")),
-    path("api/", decorator_include(force_domain("grafeas.org"), "api.urls")),
+    path("api/", include("api.urls")),
     path("payments/", decorator_include(force_domain("grafeas.org"), "payments.urls")),
     path(
         "engineering/",
