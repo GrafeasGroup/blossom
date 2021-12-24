@@ -11,6 +11,7 @@ from api.views.find import extract_core_url, find_by_submission_url, normalize_u
 from utils.test_helpers import (
     create_submission,
     create_transcription,
+    create_user,
     setup_user_client,
 )
 
@@ -118,17 +119,29 @@ def test_find_by_submission_url(
     )
 
     transcription = create_transcription(
+        id=555,
         submission=submission,
         user=user,
         url="https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/",
     )
 
+    ocr_bot = create_user(id=333, username="ocr_bot", is_volunteer=False)
+
+    ocr = create_transcription(
+        id=666,
+        submission=submission,
+        user=ocr_bot,
+        url="https://www.reddit.com/r/TranscribersOfReddit/comments/q1tnhc/comment/hfgp1gt/",
+    )
+
     actual = find_by_submission_url(url, url_type)
 
     if expected:
+        assert actual is not None
         assert actual["submission"] == submission
-        assert actual["transcription"] == transcription
         assert actual["author"] == user
+        assert actual["transcription"] == transcription
+        assert actual["ocr"] == ocr
     else:
         assert actual is None
 
@@ -157,6 +170,11 @@ def test_find_by_submission_url(
             + "?utm_source=share&utm_medium=web2x&context=3",
             True,
         ),
+        # OCR URL
+        (
+            "https://www.reddit.com/r/TranscribersOfReddit/comments/q1tnhc/comment/hfgp1gt/",
+            True,
+        ),
         # Submission comment URL
         (
             "https://www.reddit.com/r/antiwork/comments/q1tlcf/comment/hfgttrw/"
@@ -182,7 +200,9 @@ def test_find_by_submission_url(
 )
 def test_find(client: Client, url: str, expected: bool) -> None:
     """Verify that the posts can be found by their URL."""
-    client, headers, user = setup_user_client(client, id=123, username="test_user")
+    client, headers, user = setup_user_client(
+        client, id=123, username="test_user", is_volunteer=True
+    )
 
     submission = create_submission(
         claimed_by=user,
@@ -194,9 +214,19 @@ def test_find(client: Client, url: str, expected: bool) -> None:
     )
 
     transcription = create_transcription(
+        id=555,
         submission=submission,
         user=user,
         url="https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/",
+    )
+
+    ocr_bot = create_user(id=333, username="ocr_bot", is_volunteer=False)
+
+    ocr = create_transcription(
+        id=666,
+        submission=submission,
+        user=ocr_bot,
+        url="https://www.reddit.com/r/TranscribersOfReddit/comments/q1tnhc/comment/hfgp1gt/",
     )
 
     result = client.get(
@@ -208,7 +238,8 @@ def test_find(client: Client, url: str, expected: bool) -> None:
         actual = result.json()
 
         assert actual["submission"]["id"] == submission.id
-        assert actual["transcription"]["id"] == transcription.id
         assert actual["author"]["id"] == user.id
+        assert actual["transcription"]["id"] == transcription.id
+        assert actual["ocr"]["id"] == ocr.id
     else:
         assert result.status_code == status.HTTP_404_NOT_FOUND
