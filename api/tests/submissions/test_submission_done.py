@@ -245,7 +245,7 @@ class TestSubmissionDone:
                 == slack_client.chat_postMessage.call_args_list[-1]
             )
 
-    def test_removed_transcription_not_sent(self, client: Client) -> None:
+    def test_removed_transcription_changes(self, client: Client) -> None:
         """Verify that a removed transcription is not sent to Slack."""
         # Mock both the gamma property and the random.random function.
         with patch(
@@ -258,6 +258,27 @@ class TestSubmissionDone:
             client, headers, user = setup_user_client(client)
             submission = create_submission(tor_url="asdf", claimed_by=user)
             create_transcription(submission, user, url=None, removed_from_reddit=True)
+
+            result = client.patch(
+                reverse("submission-done", args=[submission.id]),
+                json.dumps({"username": user.username}),
+                content_type="application/json",
+                **headers,
+            )
+
+            assert result.status_code == status.HTTP_201_CREATED
+            assert len(slack_client.chat_postMessage.call_args_list) == 1
+
+            # A new transcriber with a removed post should get sent. An existing one
+            # shouldn't get forwarded since they should hopefully already know what
+            # they're doing and we'll see one of their next (not removed) posts anyway.
+            mock.return_value = 10
+            # reset the slack_client mock
+            slack_client.chat_postMessage = MagicMock()
+            # reset the submission
+            submission.completed_by = None
+            submission.complete_time = None
+            submission.save()
 
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
