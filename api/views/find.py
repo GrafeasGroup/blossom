@@ -18,8 +18,9 @@ from authentication.models import BlossomUser
 
 class FindResponse(TypedDict):
     submission: Submission
-    transcription: Optional[Transcription]
     author: Optional[BlossomUser]
+    transcription: Optional[Transcription]
+    ocr: Optional[Transcription]
 
 
 def normalize_url(reddit_url_str: str) -> Optional[str]:
@@ -46,15 +47,26 @@ def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     if submissions.count() == 0:
         return None
 
+    # Get submission
     submission = submissions[0]
-
+    # Get author
     author = submission.completed_by
+    # Get transcription
     if author is not None:
-        transcription = submission.transcription_set.filter(author=author)[0]
+        transcriptions = submission.transcription_set.filter(author=author)
+        transcription = transcriptions[0] if transcriptions.count() > 0 else None
     else:
         transcription = None
+    # Get OCR
+    ocr_transcriptions = submission.transcription_set.filter(author__is_volunteer=False)
+    ocr = ocr_transcriptions[0] if ocr_transcriptions.count() > 0 else None
 
-    return {"submission": submission, "author": author, "transcription": transcription}
+    return {
+        "submission": submission,
+        "author": author,
+        "transcription": transcription,
+        "ocr": ocr,
+    }
 
 
 def extract_core_url(url: str) -> str:
@@ -112,8 +124,9 @@ class FindView(APIView):
                     # TODO: Use the schemas of the corresponding models
                     properties={
                         "submission": Schema(type="object"),
-                        "transcription": Schema(type="object"),
                         "author": Schema(type="object"),
+                        "transcription": Schema(type="object"),
+                        "ocr": Schema(type="object"),
                     },
                 ),
             ),
