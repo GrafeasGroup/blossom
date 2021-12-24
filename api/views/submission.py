@@ -583,9 +583,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
 
             if self._should_check_transcription(user):
-                self._send_transcription_to_slack(
-                    transcription, submission, user, slack
-                )
+                # Check to see if the transcription has been removed. If it has, only
+                # post the message to slack if the user has completed 5 or fewer posts.
+                if not transcription.removed_from_reddit or user.gamma <= 5:
+                    self._send_transcription_to_slack(
+                        transcription, submission, user, slack
+                    )
 
         submission.completed_by = user
         submission.complete_time = timezone.now()
