@@ -63,6 +63,7 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
             "complete_time",
             "source",
             "title",
+            "nsfw",
             "url",
             "tor_url",
             "content_url",
