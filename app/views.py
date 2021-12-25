@@ -19,7 +19,6 @@ from django.shortcuts import (
     reverse,
 )
 from django.utils import timezone
-from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 from rest_framework import status
@@ -27,8 +26,14 @@ from rest_framework import status
 from api.models import Source, Submission, Transcription
 from api.views.slack_helpers import client
 from api.views.submission import SubmissionViewSet
-from app.permissions import require_coc, require_reddit_auth
-from app.reddit_actions import Flair, advertise, flair_post, submit_transcription
+from app.permissions import RequireCoCMixin, require_coc, require_reddit_auth
+from app.reddit_actions import (
+    Flair,
+    advertise,
+    edit_transcription,
+    flair_post,
+    submit_transcription,
+)
 from app.validation import (
     check_for_fenced_code_block,
     check_for_formatting_issues,
@@ -85,9 +90,31 @@ def accept_coc(request: HttpRequest) -> HttpResponse:
 @login_required
 @require_coc
 @require_reddit_auth
+def view_previous_transcriptions(request: HttpRequest) -> HttpResponse:
+    """Show the user their latest transcriptions so that they can edit them if needed."""
+    transcriptions = (
+        Transcription.objects.annotate(original_id_len=Length("original_id"))
+        .filter(
+            author=request.user, original_id_len__lt=14, submission__title__isnull=False
+        )
+        .order_by("-create_time")[:25]
+    )
+    context = get_additional_context(
+        {"transcriptions": transcriptions, "fullwidth_view": True}
+    )
+    return render(request, "app/view_transcriptions.html", context)
+
+
+@login_required
+@require_coc
+@require_reddit_auth
 def choose_transcription(request: HttpRequest) -> HttpResponse:
     """Provide a user with transcriptions to choose from."""
-    time_delay = timezone.now() - timedelta(hours=settings.ARCHIVIST_DELAY_TIME)
+    time_delay = timezone.now() - timedelta(
+        hours=settings.OVERRIDE_ARCHIVIST_DELAY_TIME
+        if settings.OVERRIDE_ARCHIVIST_DELAY_TIME
+        else settings.ARCHIVIST_DELAY_TIME
+    )
     submissions = Submission.objects.annotate(
         original_id_len=Length("original_id")
     ).filter(
@@ -150,8 +177,151 @@ def choose_transcription(request: HttpRequest) -> HttpResponse:
     return render(request, "app/choose_transcription.html", context)
 
 
-@method_decorator(require_coc, name="dispatch")
-class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
+def get_and_format_templates() -> list:
+    """Load all templates and format them appropriately."""
+    md = markdown.Markdown(output_format="html5")
+    with open("app/transcription_templates.json", "r") as file:
+        data = json.load(file)
+        for template in data.keys():
+            if notes := data[template].get("notes"):
+                data[template]["notes"] = [md.convert(note) for note in notes]
+    return data
+
+
+def update_context_with_proxy_data(submission: Submission, context: dict) -> dict:
+    """Verify that if proxy data is needed, it is formatted and added to the context."""
+    if "i.redd.it" in submission.content_url:
+        # just grab the `abcde.jpg` bit out of the url so that we can route it
+        # through the proxy for OpenSeaDragon
+        context.update({"ireddit_content_url": submission.content_url.split("/")[-1]})
+    elif "imgur.com" in submission.content_url:
+        context.update({"imgur_content_url": submission.content_url.split("/")[-1]})
+    return context
+
+
+def update_context_with_session_data(request: HttpRequest, context: dict) -> dict:
+    """Pull data off the request session if present and add to context."""
+    if transcription := request.session.get("transcription"):
+        context.update({"transcription": transcription})
+
+    if heading := request.session.get("heading"):
+        context.update({"heading": heading})
+
+    if issues := request.session.get("issues"):
+        context.update(
+            {"issues": [f"app/partials/errors/{issue}.partial" for issue in issues]}
+        )
+    return context
+
+
+def remove_old_session_data(request: HttpRequest) -> None:
+    """Remove old session data from the request."""
+    del request.session["transcription"]
+    del request.session["heading"]
+    del request.session["issues"]
+    del request.session["submission_id"]
+
+
+def add_transcription_data_to_session_and_redirect(
+    request: HttpRequest, transcription: str, submission_id: str, issues: list
+) -> HttpResponse:
+    """Stash the important stuff in the session so that we can GET it back."""
+    # we need this information to be accessible on the GET call that comes after
+    # the failed POST, so we'll stuff everything necessary into the session.
+
+    # escape the backticks so that they can be rendered properly by the JS
+    # template literals in the html template
+    request.session["transcription"] = transcription.replace("`", r"\`")
+    request.session["heading"] = request.POST.get("transcription_type")
+    request.session["issues"] = list(issues) if issues else ["no_transcription_found"]
+    # store this one too so that we know which submission this information is for
+    request.session["submission_id"] = submission_id
+    return redirect("transcribe_submission", submission_id=submission_id)
+
+
+class EditSubmissionTranscription(
+    CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin, View
+):
+    def get(self, request: HttpRequest, submission_id: int) -> HttpResponse:
+        """Render the transcription view with data from an existing transcription."""
+        submission = get_object_or_404(Submission, id=submission_id)
+        transcription = submission.transcription_set.filter(author=request.user).first()
+
+        if not transcription:
+            messages.error(
+                request,
+                f"Cannot find transcription for submission {submission.id} by you!",
+            )
+            return redirect("choose_transcription")
+
+        context = get_additional_context({"fullwidth_view": True})
+        context.update({"submission": submission})
+        context.update({"transcription_templates": get_and_format_templates()})
+        context = update_context_with_proxy_data(submission, context)
+
+        if s_id := request.session.get("submission_id"):
+            if s_id == submission_id:
+                # it's for the submission we're currently working on.
+                context = update_context_with_session_data(request, context)
+            else:
+                # it's old data. Nuke it.
+                remove_old_session_data(request)
+
+        # if this is a submission we're revisiting because of an error, this value
+        # won't get nuked in the previous step. If this is something new, then it
+        # won't be here.
+        if not request.session.get("submission_id"):
+            text = transcription.text
+            context.update(
+                {
+                    "transcription": text[
+                        text.index("---") + 5 : text.rindex("---") - 2
+                    ].replace("`", r"\`")
+                }
+            )
+            context.update(
+                {"heading": text[text.index(":") + 1 : text.index("---") - 3].strip()}
+            )
+
+        return render(request, "app/transcribing.html", context)
+
+    def post(self, request: HttpRequest, submission_id: int) -> HttpResponse:
+        """Handle a resubmitted transcription."""
+        submission_obj: Submission = Submission.objects.get(id=submission_id)
+        transcription_obj: Transcription = submission_obj.transcription_set.filter(
+            author=request.user
+        ).first()
+
+        transcription: str = request.POST.get("transcription")
+        transcription = transcription.replace("\r\n", "\n")
+
+        issues = check_for_formatting_issues(transcription)
+        if len(issues) > 0 or not transcription:
+            return add_transcription_data_to_session_and_redirect(
+                request, transcription, submission_id, issues
+            )
+        else:
+            # we're good to go -- let's submit it!
+            if check_for_fenced_code_block(transcription):
+                transcription = clean_fenced_code_block(transcription)
+
+            if check_for_unescaped_subreddit(
+                transcription
+            ) or check_for_unescaped_username(transcription):
+                transcription = escape_reddit_links(transcription)
+            transcription = replace_shortlinks(transcription)
+
+            transcription_obj.text = TRANSCRIPTION_TEMPLATE.format(
+                content_type=request.POST.get("transcription_type"),
+                transcription=transcription,
+            )
+            transcription_obj.save()
+            edit_transcription(request, transcription_obj, submission_obj)
+            messages.success(request, "Looks good -- all edited!")
+            return redirect("choose_transcription")
+
+
+class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin, View):
     def get(  # noqa: C901
         self, request: HttpRequest, submission_id: int
     ) -> HttpResponse:
@@ -199,23 +369,9 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
         context = get_additional_context({"fullwidth_view": True})
         context.update({"submission": submission})
 
-        md = markdown.Markdown(output_format="html5")
-        with open("app/transcription_templates.json", "r") as file:
-            data = json.load(file)
-            for template in data.keys():
-                if notes := data[template].get("notes"):
-                    data[template]["notes"] = [md.convert(note) for note in notes]
+        context.update({"transcription_templates": get_and_format_templates()})
 
-            context.update({"transcription_templates": data})
-
-        if "i.redd.it" in submission.content_url:
-            # just grab the `abcde.jpg` bit out of the url so that we can route it
-            # through the proxy for OpenSeaDragon
-            context.update(
-                {"ireddit_content_url": submission.content_url.split("/")[-1]}
-            )
-        elif "imgur.com" in submission.content_url:
-            context.update({"imgur_content_url": submission.content_url.split("/")[-1]})
+        context = update_context_with_proxy_data(submission, context)
 
         # if they posted a bad transcription and we want them to fix it, grab
         # the stored values and add them to the current context, then delete them
@@ -223,27 +379,10 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
         if s_id := request.session.get("submission_id"):
             if s_id == submission_id:
                 # it's for the submission we're currently working on.
-                if transcription := request.session.get("transcription"):
-                    context.update({"transcription": transcription})
-
-                if heading := request.session.get("heading"):
-                    context.update({"heading": heading})
-
-                if issues := request.session.get("issues"):
-                    context.update(
-                        {
-                            "issues": [
-                                f"app/partials/errors/{issue}.partial"
-                                for issue in issues
-                            ]
-                        }
-                    )
+                context = update_context_with_session_data(request, context)
             else:
                 # it's old data. Nuke it.
-                del request.session["transcription"]
-                del request.session["heading"]
-                del request.session["issues"]
-                del request.session["submission_id"]
+                remove_old_session_data(request)
 
         return render(request, "app/transcribing.html", context)
 
@@ -254,19 +393,9 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, View):
 
         issues = check_for_formatting_issues(transcription)
         if len(issues) > 0 or not transcription:
-            #            # stash the important stuff in the session so that we can
-            # retrieve it on the other side
-
-            # escape the backticks so that they can be rendered properly by the JS
-            # template literals in the html template
-            request.session["transcription"] = transcription.replace("`", r"\`")
-            request.session["heading"] = request.POST.get("transcription_type")
-            request.session["issues"] = (
-                list(issues) if issues else ["no_transcription_found"]
+            return add_transcription_data_to_session_and_redirect(
+                request, transcription, submission_id, issues
             )
-            # store this one too so that we know which submission this information is for
-            request.session["submission_id"] = submission_id
-            return redirect("transcribe_submission", submission_id=submission_id)
         else:
             # we're good to go -- let's submit it!
             if check_for_fenced_code_block(transcription):
@@ -337,6 +466,7 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
     """Ask Slack if we want to remove a reported submission or not."""
     # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
     if request.GET.get("reason") is None:
+        # they just wanted to return the post. No reason to investigate.
         return
 
     blocks = [

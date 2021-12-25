@@ -8,7 +8,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import HttpRequest
 from django.shortcuts import redirect
-from django.urls import include, path
+from django.urls import path
 
 from authentication.views import LoginView
 from website.views import user_create
@@ -20,7 +20,7 @@ handler404 = "website.views.handler404"
 handler500 = "website.views.handler500"
 
 
-def force_domain(domain: str) -> Any:
+def force_domain(domain: [str, None]) -> Any:
     """Enforce the appropriate domain name for a given route."""
 
     def decorator(func: Callable) -> Any:
@@ -29,12 +29,18 @@ def force_domain(domain: str) -> Any:
         @wraps(func)
         def inner_func(request: HttpRequest, *args: list, **kwargs: dict) -> Any:
             if settings.DEBUG or request.get_host() == "testserver":
-                # return either the configured hostname for testing or the host that's
-                # required for this route.
+                # Patch the request with either the configured hostname for testing
+                # or the host that's required for this route.
                 request.get_host = (
                     lambda: settings.OVERRIDE_HOST if settings.OVERRIDE_HOST else domain
                 )
-            elif request.get_host() != domain:
+
+            if not domain:
+                # This is so that we can set the request manipulation when in debug mode
+                # on routes that otherwise don't get forced one way or another.
+                return func(request, *args, **kwargs)
+
+            if request.get_host() != domain:
                 # The request came in on the wrong domain, so issue a redirect for
                 # the same route so they come in from the right site.
                 return redirect(request.scheme + "://" + domain + request.path)
@@ -46,12 +52,16 @@ def force_domain(domain: str) -> Any:
     return decorator
 
 
-# grafeas urls
+# domainless urls
 urlpatterns = [
     path("superadmin/newuser", user_create, name="user_create"),
     path("superadmin/", admin.site.urls),
-    path("", include("authentication.urls")),
-    path("api/", include("api.urls")),
+    path("", decorator_include(force_domain(None), "authentication.urls")),
+    path("api/", decorator_include(force_domain(None), "api.urls")),
+]
+
+# grafeas urls
+urlpatterns += [
     path("payments/", decorator_include(force_domain("grafeas.org"), "payments.urls")),
     path(
         "engineering/",

@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.http import HttpRequest, HttpResponseRedirect
 from django.shortcuts import redirect, reverse
+from django.utils.decorators import method_decorator
 
 from app.middleware import refresh_token
 
@@ -19,6 +20,14 @@ def require_coc(func: Callable) -> Any:
         return func(request, *args, **kwargs)
 
     return inner_func
+
+
+class RequireCoCMixin:
+    # https://stackoverflow.com/a/53065028
+    @method_decorator(require_coc)
+    def dispatch(self, *args: object, **kwargs: object) -> object:
+        """Apply the decorator to the class."""
+        return super().dispatch(*args, **kwargs)
 
 
 def require_reddit_auth(func: Callable) -> Any:

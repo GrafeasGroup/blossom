@@ -1,0 +1,23 @@
+<div class="text-center">
+    <h1 class="mt-5">Oops!</h1>
+    <p class="mt-3">
+        It looks like either your transcriptions are so old that we don't have them on file
+        or you've not transcribed with us before! Why not go grab a post to transcribe?
+    </p>
+
+    <div class="row">
+        <div class="col-0 col-md-3 col-lg-4"></div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="d-grid mt-5">
+                <a
+                        href="{% url 'choose_transcription' %}"
+                        class="btn btn-primary"
+                >Let's go!</a>
+            </div>
+        </div>
+        <div class="col-0 col-md-3 col-lg-4"></div>
+    </div>
+    <div class="text-center my-5">
+        ᕕ(¬ ͜ ¬)ᕗ
+    </div>
+</div>
