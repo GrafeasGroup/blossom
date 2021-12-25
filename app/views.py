@@ -62,7 +62,7 @@ EXCITEMENT = [
 ]
 
 TRANSCRIPTION_TEMPLATE = (
-    "*Image Transcription: {content_type}*\n\n---\n\n{transcription}\n\n---\n\n"
+    "*Image Transcription:{content_type}*\n\n---\n\n{transcription}\n\n---\n\n"
     "^^I'm&#32;a&#32;human&#32;volunteer&#32;content&#32;transcriber&#32;and&#32;"
     "you&#32;could&#32;be&#32;too!&#32;[If&#32;you'd&#32;like&#32;more&#32;"
     "information&#32;on&#32;what&#32;we&#32;do&#32;and&#32;why&#32;we&#32;do&#32;"
@@ -311,9 +311,13 @@ class EditSubmissionTranscription(
                 transcription = escape_reddit_links(transcription)
             transcription = replace_shortlinks(transcription)
 
+            content_type = request.POST.get("transcription_type")
+            if content_type:
+                # add in the space before the type so that it renders correctly
+                content_type = " " + content_type
+
             transcription_obj.text = TRANSCRIPTION_TEMPLATE.format(
-                content_type=request.POST.get("transcription_type"),
-                transcription=transcription,
+                content_type=content_type, transcription=transcription,
             )
             transcription_obj.save()
             edit_transcription(request, transcription_obj, submission_obj)
