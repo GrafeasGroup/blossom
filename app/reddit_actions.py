@@ -45,6 +45,7 @@ def edit_transcription(
         # Something went wrong; it was never pushed in the first place.
         # Try it again.
         submit_transcription(request, transcription_obj, submission_obj)
+        return
 
     if BASE_URL not in url:
         url = BASE_URL + url
