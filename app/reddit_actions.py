@@ -1,5 +1,7 @@
 import logging
+from contextlib import suppress
 
+import praw.exceptions
 from django.http import HttpRequest
 
 from api.models import Submission, Transcription
@@ -7,6 +9,9 @@ from blossom.reddit import REDDIT
 from utils.workers import send_to_worker
 
 log = logging.getLogger(__name__)
+
+
+BASE_URL = "https://reddit.com"
 
 
 class Flair:
@@ -26,9 +31,27 @@ def submit_transcription(
     reddit_submission = request.user.reddit.submission(url=submission_obj.url)
     transcription = reddit_submission.reply(transcription_obj.text)
     transcription_obj.original_id = transcription.fullname
-    transcription_obj.url = transcription.permalink
+    transcription_obj.url = BASE_URL + transcription.permalink
     transcription_obj.removed_from_reddit = False
     transcription_obj.save()
+
+
+def edit_transcription(
+    request: HttpRequest, transcription_obj: Transcription, submission_obj: Submission
+) -> None:
+    """Post the updated transcription as an edit to the existing comment."""
+    url = transcription_obj.url
+    if not url:
+        # Something went wrong; it was never pushed in the first place.
+        # Try it again.
+        submit_transcription(request, transcription_obj, submission_obj)
+
+    if BASE_URL not in url:
+        url = BASE_URL + url
+
+    reddit_comment = request.user.reddit.comment(url=url)
+    with suppress(praw.exceptions.RedditAPIException):
+        reddit_comment.edit(transcription_obj.text)
 
 
 @send_to_worker

@@ -1,0 +1,36 @@
+{% extends "website/partials/base.partial" %}
+
+{% block content %}
+    {% if not transcriptions %}
+        {% include "app/partials/errors/no_transcriptions.partial" %}
+    {% else %}
+        <h1 class="mb-5">Your Transcriptions</h1>
+        {% for option in transcriptions %}
+            <div class="card mt-3 shadow-sm" style="width: 100%">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 col-lg-8">
+                            {{ option.submission.title }} from {{ option.submission.get_subreddit_name }}
+                        </div>
+                        <div class="col-12 col-lg-2">
+                            <div class="d-lg-none mt-3"></div>
+                            <div class="d-grid gap-2">
+                                <a href="{{ option.url }}" target="_blank" class="btn btn-outline-success">View Comment</a>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-2">
+                            <div class="d-lg-none mt-2"></div>
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'edit_transcription' submission_id=option.submission.id %}" class="btn btn-primary">Edit</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="text-muted my-5 text-center">
+            Not seeing all the entries you were expecting?<br>We limit this to your most recent 25,
+            and if you've been here for a while then some of your older work might not be here.
+        </div>
+    {% endif %}
+{% endblock %}

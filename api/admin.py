@@ -3,6 +3,11 @@ from django.contrib import admin
 
 from api.models import Submission, Transcription
 
+
+class SubmissionAdmin(admin.ModelAdmin):
+    search_fields = ("original_id", "title", "url", "tor_url")
+
+
 # Register your models here.
 admin.site.register(Transcription)
-admin.site.register(Submission)
+admin.site.register(Submission, SubmissionAdmin)

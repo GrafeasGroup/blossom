@@ -223,6 +223,7 @@ OVERRIDE_API_AUTH = False
 
 # number of hours to allow a post to stay up
 ARCHIVIST_DELAY_TIME = 18
+OVERRIDE_ARCHIVIST_DELAY_TIME = None  # for testing
 # number of hours to allow a completed post to stay up
 ARCHIVIST_COMPLETED_DELAY_TIME = 0.5
 
@@ -267,7 +268,7 @@ IMAGE_DOMAINS = [
 SOCIAL_AUTH_REDDIT_KEY = os.environ.get("SOCIAL_AUTH_REDDIT_KEY")
 SOCIAL_AUTH_REDDIT_SECRET = os.environ.get("SOCIAL_AUTH_REDDIT_SECRET")
 SOCIAL_AUTH_REDDIT_AUTH_EXTRA_ARGUMENTS = {"duration": "permanent"}
-SOCIAL_AUTH_REDDIT_SCOPE = ["submit", "read"]
+SOCIAL_AUTH_REDDIT_SCOPE = ["submit", "read", "edit"]
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
