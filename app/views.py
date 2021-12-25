@@ -411,9 +411,13 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
                 transcription = escape_reddit_links(transcription)
             transcription = replace_shortlinks(transcription)
 
+            content_type = request.POST.get("transcription_type")
+            if content_type:
+                # add in the space before the type so that it renders correctly
+                content_type = " " + content_type
+
             text = TRANSCRIPTION_TEMPLATE.format(
-                content_type=request.POST.get("transcription_type"),
-                transcription=transcription,
+                content_type=content_type, transcription=transcription,
             )
 
             submission_obj = Submission.objects.get(id=submission_id)
