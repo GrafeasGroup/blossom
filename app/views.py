@@ -583,3 +583,12 @@ def unclaim_submission(
     flair_post(submission_obj, Flair.unclaimed)
     ask_about_removing_post(request, submission_obj)
     return redirect("choose_transcription")
+
+
+@login_required
+@require_coc
+def report_submission(request: HttpRequest, submission_id: int) -> HttpResponseRedirect:
+    """Process reports without unclaiming that originate from the web app side."""
+    submission_obj = Submission.objects.get(id=submission_id)
+    ask_about_removing_post(request, submission_obj)
+    return redirect("choose_transcription")

@@ -35,11 +35,47 @@
                 </div>
                 <div class="col">
                     <div class="d-grid gap-2">
-                        <a href="#" type="submit"
-                           class="btn btn-outline-danger">Report</a>
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#reportOptionsModal"
+                        >
+                            Report
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="reportOptionsModal" tabindex="-1" aria-labelledby="optionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="optionsModalLabel">Report Options</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Please choose a reason for reporting this post:
+            </div>
+            <div class="d-grid gap-2 mx-2 mb-2">
+                <a href="{% url 'app_report' submission.id %}?reason=rules" class="btn btn-outline-danger">
+                    Post breaks rules
+                </a>
+                <a href="{% url 'app_report' submission.id %}?reason=removed" class="btn btn-outline-danger">
+                    Post was removed
+                </a>
+                <a href="{% url 'app_report' submission.id %}?reason=op_transcribed"
+                   class="btn btn-outline-danger">
+                    OP already transcribed it
+                </a>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
