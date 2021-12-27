@@ -50,7 +50,7 @@ def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     # Get submission
     submission = submissions[0]
     # Get author
-    author = submission.completed_by
+    author = submission.claimed_by
     # Get transcription
     if author is not None:
         transcriptions = submission.transcription_set.filter(author=author)
