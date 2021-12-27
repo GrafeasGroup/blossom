@@ -36,6 +36,7 @@ def submit_transcription(
     transcription_obj.save()
 
 
+@send_to_worker
 def edit_transcription(
     request: HttpRequest, transcription_obj: Transcription, submission_obj: Submission
 ) -> None:
