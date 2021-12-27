@@ -206,7 +206,7 @@
         );
 
         {% if transcription %}
-            simplemde.value(`{{ transcription }}`)
+            simplemde.value(`{{ transcription|safe }}`)
         {% endif %}
 
         fetch('{% url "subredditjsonproxy" %}?s={{ submission.get_subreddit_name }}')
