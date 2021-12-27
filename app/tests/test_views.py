@@ -258,9 +258,10 @@ class TestTranscribeSubmission:
         client, _, user = setup_user_client(client)
         add_social_auth_to_user(user)
 
+        # Imgur direct link
         submission = create_submission(
             original_id=int(random.random() * 1000),
-            content_url="http://imgur.com/aaa",
+            content_url="http://imgur.com/aaa.png",
             title="a",
         )
 
@@ -269,8 +270,20 @@ class TestTranscribeSubmission:
         )
 
         assert "imgur_content_url" in response.context
-        assert response.context["imgur_content_url"] == "aaa"
+        assert response.context["imgur_content_url"] == "aaa.png"
 
+        # Imgur post link
+        submission.claimed_by = None
+        submission.content_url = "http://imgur.com/aaa"
+        submission.save()
+
+        response = client.get(
+            reverse("transcribe_submission", kwargs={"submission_id": submission.id})
+        )
+        assert "imgur_content_url" in response.context
+        assert response.context["imgur_content_url"] == "aaa.jpg"
+
+        # Reddit link
         submission.claimed_by = None
         submission.content_url = "i.redd.it/bbb"
         submission.save()
