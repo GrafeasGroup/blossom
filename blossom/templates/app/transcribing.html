@@ -68,7 +68,9 @@
                     </label>
                     <textarea class="form-control" required name="transcription"
                               aria-describedby="transcriptionFieldHelp"
-                              id="transcriptionTextArea" rows="3"></textarea>
+                              id="transcriptionTextArea" rows="3"
+                              placeholder="Put your transcription here!"
+                    ></textarea>
                     <div class="d-none" id="transcriptionErrorMessage" style="color: red">
                         I don't see a transcription in here... put some text in and try again.
                     </div>
@@ -203,9 +205,7 @@
             }
         );
 
-        {% if not transcription %}
-            simplemde.value("Put your transcription here!");
-        {% else %}
+        {% if transcription %}
             simplemde.value(`{{ transcription|safe }}`)
         {% endif %}
 
