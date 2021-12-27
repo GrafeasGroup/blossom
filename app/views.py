@@ -222,6 +222,15 @@ def remove_old_session_data(request: HttpRequest) -> None:
     del request.session["submission_id"]
 
 
+def get_and_clean_content_type(request: HttpRequest) -> [str, None]:
+    """Retrieve and format the content type if present."""
+    content_type = request.POST.get("transcription_type")
+    if content_type:
+        # add in the space before the type so that it renders correctly
+        content_type = " " + content_type.strip()
+    return content_type
+
+
 def add_transcription_data_to_session_and_redirect(
     request: HttpRequest, transcription: str, submission_id: str, issues: list
 ) -> HttpResponse:
@@ -311,10 +320,7 @@ class EditSubmissionTranscription(
                 transcription = escape_reddit_links(transcription)
             transcription = replace_shortlinks(transcription)
 
-            content_type = request.POST.get("transcription_type")
-            if content_type:
-                # add in the space before the type so that it renders correctly
-                content_type = " " + content_type
+            content_type = get_and_clean_content_type(request)
 
             transcription_obj.text = TRANSCRIPTION_TEMPLATE.format(
                 content_type=content_type, transcription=transcription,
@@ -411,10 +417,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
                 transcription = escape_reddit_links(transcription)
             transcription = replace_shortlinks(transcription)
 
-            content_type = request.POST.get("transcription_type")
-            if content_type:
-                # add in the space before the type so that it renders correctly
-                content_type = " " + content_type
+            content_type = get_and_clean_content_type(request)
 
             text = TRANSCRIPTION_TEMPLATE.format(
                 content_type=content_type, transcription=transcription,
