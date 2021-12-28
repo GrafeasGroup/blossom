@@ -266,6 +266,7 @@ class EditSubmissionTranscription(
         context = get_additional_context({"fullwidth_view": True})
         context.update({"submission": submission})
         context.update({"transcription_templates": get_and_format_templates()})
+        context.update({"edit_mode": True})
         context = update_context_with_proxy_data(submission, context)
 
         if s_id := request.session.get("submission_id"):
@@ -378,6 +379,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
 
         context = get_additional_context({"fullwidth_view": True})
         context.update({"submission": submission})
+        context.update({"edit_mode": False})
 
         context.update({"transcription_templates": get_and_format_templates()})
 
