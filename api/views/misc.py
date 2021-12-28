@@ -38,8 +38,9 @@ class Summary(object):
             weeks=2
         )
         return {
-            "volunteer_count": BlossomUser.objects.filter(is_volunteer=True).count()
-            - 2,
+            "volunteer_count": BlossomUser.objects.filter(
+                is_volunteer=True, is_bot=False
+            ).count(),
             "active_volunteer_count": Submission.objects.filter(
                 completed_by__isnull=False, complete_time__gte=date_minus_two_weeks,
             )

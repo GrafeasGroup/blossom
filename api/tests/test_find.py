@@ -125,7 +125,7 @@ def test_find_by_submission_url(
         url="https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/",
     )
 
-    ocr_bot = create_user(id=333, username="ocr_bot", is_volunteer=False)
+    ocr_bot = create_user(id=333, username="ocr_bot", is_bot=True)
 
     ocr = create_transcription(
         id=666,
@@ -187,9 +187,7 @@ def test_find_by_submission_url(
 )
 def test_find_in_progress(client: Client, url: str, expected: bool) -> None:
     """Verify that an in-progress posts can be found by its URLs."""
-    client, headers, user = setup_user_client(
-        client, id=123, username="test_user", is_volunteer=True
-    )
+    client, headers, user = setup_user_client(client, id=123, username="test_user")
 
     submission = create_submission(
         claimed_by=user,
@@ -267,9 +265,7 @@ def test_find_in_progress(client: Client, url: str, expected: bool) -> None:
 )
 def test_find_completed(client: Client, url: str, expected: bool) -> None:
     """Verify that a completed posts can be found by its URLs."""
-    client, headers, user = setup_user_client(
-        client, id=123, username="test_user", is_volunteer=True
-    )
+    client, headers, user = setup_user_client(client, id=123, username="test_user")
 
     submission = create_submission(
         claimed_by=user,
@@ -287,7 +283,7 @@ def test_find_completed(client: Client, url: str, expected: bool) -> None:
         url="https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/",
     )
 
-    ocr_bot = create_user(id=333, username="ocr_bot", is_volunteer=False)
+    ocr_bot = create_user(id=333, username="ocr_bot", is_bot=True)
 
     ocr = create_transcription(
         id=666,
