@@ -18,10 +18,17 @@ from api.serializers import VolunteerSerializer
 from api.views.misc import Summary
 from app.reddit_actions import remove_post
 from authentication.models import BlossomUser
+from blossom.errors import ConfigurationError
 from blossom.strings import translation
 
 if settings.ENABLE_SLACK is True:
-    client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
+    try:
+        client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
+    except KeyError:
+        raise ConfigurationError(
+            "ENABLE_SLACK is set to True, but no API key was found. Set the"
+            " SLACK_API_KEY environment variable or change ENABLE_SLACK to False."
+        )
 else:
     # this is to explicitly disable posting to Slack when doing local dev
     client = mock.Mock()

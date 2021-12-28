@@ -1,4 +1,5 @@
 import logging
+from unittest.mock import MagicMock
 
 from django.conf import settings
 from django.http import HttpRequest
@@ -25,15 +26,19 @@ def refresh_token(request: HttpRequest) -> None:
 
 def configure_reddit(request: HttpRequest) -> Reddit:
     """Build the reddit instance that will be attached to the user."""
-    reddit = Reddit(
-        client_id=settings.SOCIAL_AUTH_REDDIT_KEY,
-        client_secret=settings.SOCIAL_AUTH_REDDIT_SECRET,
-        refresh_token=request.user.social_auth.first().extra_data["refresh_token"],
-        user_agent=(
-            f"Python:Blossom:{__version__} (by /u/itsthejoker),"
-            f" acting as {request.user.username}"
-        ),
-    )
+    if settings.ENABLE_REDDIT:
+        reddit = Reddit(
+            client_id=settings.SOCIAL_AUTH_REDDIT_KEY,
+            client_secret=settings.SOCIAL_AUTH_REDDIT_SECRET,
+            refresh_token=request.user.social_auth.first().extra_data["refresh_token"],
+            user_agent=(
+                f"Python:Blossom:{__version__} (by /u/itsthejoker),"
+                f" acting as {request.user.username}"
+            ),
+        )
+    else:
+        # so that everything doesn't explode during development.
+        reddit = MagicMock()
 
     return reddit
 
@@ -41,6 +46,10 @@ def configure_reddit(request: HttpRequest) -> Reddit:
 class RedditMiddleware(MiddlewareMixin):
     def process_request(self, request: HttpRequest) -> None:
         """Add the built Reddit object to the request if it's available."""
+        if not settings.ENABLE_REDDIT:
+            request.user.reddit = MagicMock()
+            return
+
         if not request.user.is_authenticated:
             # Don't trigger on anonymous users
             return
