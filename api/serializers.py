@@ -33,6 +33,7 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
             "last_update_time",
             "accepted_coc",
             "blacklisted",
+            "is_bot",
         )
 
 

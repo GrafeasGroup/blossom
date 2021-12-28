@@ -48,6 +48,9 @@ class BlossomUser(AbstractUser):
     # (not to be confused with the base Django staff account.)
     is_grafeas_staff = models.BooleanField(default=False)
 
+    # A boolean that denotes whether a user is a bot account.
+    is_bot = models.BooleanField(default=False)
+
     # Each person is allowed one API key, but advanced security around this
     # means that it is not fully implemented at this time. It is used by
     # u/transcribersofreddit and the other bots, though.
