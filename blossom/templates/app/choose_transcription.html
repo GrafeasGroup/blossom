@@ -42,7 +42,18 @@
     </style>
 
     {% if options %}
-        <h1>Choose Post to Transcribe</h1>
+        <div class="container">
+            <div class="row">
+                <h1 class="col-md">Choose Post to Transcribe</h1>
+                <div class="col">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'choose_transcription' %}"
+                           class="btn btn-outline-primary"
+                           title="Get a new set of posts to choose from">Reroll!</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% endif %}
     {% if messages %}
         {% for message in messages %}
@@ -72,33 +83,12 @@
                     {% endfor %}
                 </div>
             {% endif %}
-            Pick one of the {{ options|length|apnumber }} options below to get started!
-
-            <div class="row mt-3">
-                <div class="col-0 col-sm-3"></div>
-                <div class="col-12 col-sm-6">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'choose_transcription' %}" class="btn btn-outline-primary">Reroll!</a>
-                    </div>
-                </div>
-                <div class="col-0 col-sm-3"></div>
-            </div>
             <div class="container">
                 <div class="row">
                     {% for option in options %}
                         {% include 'app/partials/transcription_card.partial' with item=option %}
                     {% endfor %}
                 </div>
-            </div>
-            <div class="text-muted mt-4 text-center">Don't like these options? Just reroll!</div>
-            <div class="row mt-3 mb-5">
-                <div class="col-0 col-sm-3"></div>
-                <div class="col-12 col-sm-6">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'choose_transcription' %}" class="btn btn-outline-primary">Reroll!</a>
-                    </div>
-                </div>
-                <div class="col-0 col-sm-3"></div>
             </div>
         {% endif %}
     </div>
