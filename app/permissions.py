@@ -1,6 +1,7 @@
 from functools import wraps
 from typing import Any, Callable
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.http import HttpRequest, HttpResponseRedirect
@@ -46,6 +47,8 @@ def require_reddit_auth(func: Callable) -> Any:
 
     @wraps(func)
     def inner_func(request: HttpRequest, *args: list, **kwargs: dict) -> Any:
+        if not settings.ENABLE_REDDIT:
+            return func(request, *args, **kwargs)
         social_auth = request.user.social_auth.filter(provider="reddit").first()
         if not social_auth:
             # Don't do anything if we don't have social auth hooked up

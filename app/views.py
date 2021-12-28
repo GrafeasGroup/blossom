@@ -92,6 +92,7 @@ def accept_coc(request: HttpRequest) -> HttpResponse:
 @require_reddit_auth
 def view_previous_transcriptions(request: HttpRequest) -> HttpResponse:
     """Show the user their latest transcriptions so that they can edit them if needed."""
+    breakpoint()
     transcriptions = (
         Transcription.objects.annotate(original_id_len=Length("original_id"))
         .filter(

@@ -1,9 +1,14 @@
 # adapted from https://stackoverflow.com/a/6614844
 
 import atexit
+import logging
 import queue
 import threading
 from typing import Any, Callable
+
+from django.conf import settings
+
+log = logging.getLogger(__name__)
 
 
 def _worker() -> None:
@@ -19,10 +24,12 @@ def _worker() -> None:
             from api.views.slack_helpers import client
 
             details = traceback.format_exc()
-            client.chat_postMessage(
-                channel="botstuffs",
-                text=f"Background worker exception: ```{details}```",
-            )
+            message = f"Background worker exception: ```{details}```"
+            if settings.ENABLE_SLACK:
+                client.chat_postMessage(
+                    channel="botstuffs", text=message,
+                )
+            log.error(message)
         finally:
             _queue.task_done()  # so we can join at exit
 

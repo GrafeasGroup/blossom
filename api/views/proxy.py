@@ -48,6 +48,11 @@ class ImgurProxyView(ProxyView):
 def subreddit_json_proxy_view(request: HttpRequest) -> JsonResponse:
     """Proxy for retrieving information from Reddit about subreddits."""
     if sub_name := request.GET.get("s"):
+        if not sub_name.startswith("/r/"):
+            # it's a source, but it's not a source from Reddit. We'll handle these
+            # eventually, but for now just return an empty response.
+            return JsonResponse({})
+
         request_id = generate_request_id()
         headers = {
             "User-Agent": f"Python:Blossom:ID:{request_id} - contact u/itsthejoker"
