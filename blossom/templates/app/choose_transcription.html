@@ -42,7 +42,18 @@
     </style>
 
     {% if options %}
-        <h1>Choose Post to Transcribe</h1>
+        <div class="container">
+            <div class="row">
+                <h1 class="col-md">Choose Post to Transcribe</h1>
+                <div class="col">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'choose_transcription' %}"
+                           class="btn btn-outline-primary"
+                           title="Get a new set of posts to choose from">Reroll!</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     {% endif %}
     {% if messages %}
         {% for message in messages %}
@@ -64,8 +75,14 @@
         {% elif not options %}
             {% include 'app/partials/cleared_queue.partial' %}
         {% else %}
-            Pick one of the {{ options|length|apnumber }} options below to get started!
-            </div>
+            {% if claimed_submissions %}
+                <h2>Transcriptions You're Working On</h2>
+                <div class="row justify-content-center">
+                    {% for claimed in claimed_submissions %}
+                        {% include 'app/partials/claimed_transcription.partial' with item=claimed %}
+                    {% endfor %}
+                </div>
+            {% endif %}
             <div class="container">
                 <div class="row">
                     {% for option in options %}
@@ -73,25 +90,8 @@
                     {% endfor %}
                 </div>
             </div>
-            <div class="text-muted mt-4 text-center">Don't like these options? Just reroll!</div>
-            <div class="row mt-3 mb-5">
-                <div class="col-0 col-sm-3"></div>
-                <div class="col-12 col-sm-6">
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'choose_transcription' %}" class="btn btn-outline-primary">Reroll!</a>
-                    </div>
-                </div>
-                <div class="col-0 col-sm-3"></div>
-            </div>
-            {% if claimed_submissions %}
-                <h2>Transcriptions You're Working On</h2>
-                <div class="row">
-                    {% for claimed in claimed_submissions %}
-                        {% include 'app/partials/claimed_transcription.partial' with item=claimed %}
-                    {% endfor %}
-                </div>
-            {% endif %}
         {% endif %}
+    </div>
 {% endblock %}
 
 {% block scripts %}
