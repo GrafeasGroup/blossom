@@ -195,7 +195,13 @@ def update_context_with_proxy_data(submission: Submission, context: dict) -> dic
         # through the proxy for OpenSeaDragon
         context.update({"ireddit_content_url": submission.content_url.split("/")[-1]})
     elif "imgur.com" in submission.content_url:
-        context.update({"imgur_content_url": submission.content_url.split("/")[-1]})
+        imgur_content_url = submission.content_url.split("/")[-1]
+        # Check if the URL links to the imgur post instead of directly to the image
+        # Kinda dirty, but this way we can account for all image formats
+        if "." not in imgur_content_url:
+            imgur_content_url += ".jpg"
+
+        context.update({"imgur_content_url": imgur_content_url})
     return context
 
 
