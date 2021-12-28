@@ -66,13 +66,15 @@
         {% else %}
             {% if claimed_submissions %}
                 <h2>Transcriptions You're Working On</h2>
-                <div class="row">
+                <div class="row justify-content-center">
                     {% for claimed in claimed_submissions %}
                         {% include 'app/partials/claimed_transcription.partial' with item=claimed %}
                     {% endfor %}
                 </div>
             {% endif %}
-            <div class="row mt-3 mb-5">
+            Pick one of the {{ options|length|apnumber }} options below to get started!
+
+            <div class="row mt-3">
                 <div class="col-0 col-sm-3"></div>
                 <div class="col-12 col-sm-6">
                     <div class="d-grid gap-2">
@@ -80,8 +82,6 @@
                     </div>
                 </div>
                 <div class="col-0 col-sm-3"></div>
-            </div>
-            Pick one of the {{ options|length|apnumber }} options below to get started!
             </div>
             <div class="container">
                 <div class="row">
@@ -101,6 +101,7 @@
                 <div class="col-0 col-sm-3"></div>
             </div>
         {% endif %}
+    </div>
 {% endblock %}
 
 {% block scripts %}
