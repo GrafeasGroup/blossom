@@ -6,6 +6,7 @@ import pytest
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.shortcuts import reverse
 from django.test import Client, RequestFactory
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
 from api.models import Transcription
@@ -134,10 +135,13 @@ class TestChooseSubmission:
         assert len(response.context["options"]) == 0
         assert "show_error_page" in response.context
 
-    def test_check_reddit_for_missing_information(self, client: Client) -> None:
+    def test_check_reddit_for_missing_information(
+        self, client: Client, settings: SettingsWrapper
+    ) -> None:
         """Verify that if information is missing we will check Reddit for it."""
         client, _, user = setup_user_client(client)
         add_social_auth_to_user(user)
+        settings.ENABLE_REDDIT = True
 
         class RedditSubmission:
             class Response:
