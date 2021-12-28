@@ -26,16 +26,56 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="row mt-3">
-                <div class="col-0 col-sm-3"></div>
-                <div class="col-12 col-sm-6">
+            <div class="row mt-3 gx-3 gy-2 justify-content-center">
+                <div class="col-md-8">
                     <div class="d-grid gap-2">
                         <a href="{% url 'transcribe_submission' item.id %}" type="submit"
                            class="btn btn-success">Transcribe!</a>
                     </div>
                 </div>
-                <div class="col-0 col-sm-3"></div>
+                <div class="col-md-4">
+                    <div class="d-grid gap-2">
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                data-bs-toggle="modal"
+                                data-bs-target="#reportOptionsModal-{{ item.id }}"
+                        >
+                            Report
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="reportOptionsModal-{{ item.id }}" tabindex="-1" aria-labelledby="optionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="optionsModalLabel">Report Options</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Please choose a reason for reporting this post:
+            </div>
+            <div class="d-grid gap-2 mx-2 mb-2">
+                <a href="{% url 'app_report' item.id %}?reason=rules" class="btn btn-outline-danger">
+                    Post breaks rules
+                </a>
+                <a href="{% url 'app_report' item.id %}?reason=removed" class="btn btn-outline-danger">
+                    Post was removed
+                </a>
+                <a href="{% url 'app_report' item.id %}?reason=op_transcribed"
+                   class="btn btn-outline-danger">
+                    OP already transcribed it
+                </a>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
