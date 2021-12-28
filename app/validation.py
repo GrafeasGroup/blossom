@@ -126,38 +126,6 @@ def check_for_unescaped_heading(transcription: str) -> Optional[str]:
     )
 
 
-def clean_fenced_code_block(transcription: str) -> str:
-    """Convert a fenced code block to reddit's four space formatting."""
-
-    def cleanline(line: str) -> None:
-        if "```" in line and "".join(line.split("```")).strip() == "":
-            # take this line out
-            pass
-        else:
-            line = line.replace("```", "")
-            line = f"    {line}"
-            temp.append(line)
-
-    if not check_for_fenced_code_block(transcription):
-        return transcription
-
-    transcription = transcription.splitlines()
-    temp = []
-    codeblock: bool = False
-    for line in transcription:
-        if ("```" in line and not codeblock) or ("```" not in line and codeblock):
-            # check if it's just ``` on its own or if it's on its own line
-            cleanline(line)
-            codeblock = True
-        elif "```" in line and codeblock:
-            cleanline(line)
-            codeblock = False
-        else:
-            temp.append(line)
-
-    return "\n".join(temp)
-
-
 def check_for_formatting_issues(transcription: str) -> Set[str]:
     """Check the transcription for common formatting issues."""
     return set(

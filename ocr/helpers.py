@@ -153,20 +153,6 @@ def decode_image_from_url(
         }
 
 
-def escape_reddit_links(body: str) -> str:
-    r"""
-    Escape u/ and r/ links in a message.
-
-    There is no (known) way to escape u/ or r/ (without a preceding slash),
-    so those will also be changed to \/u/ and \/r/.  # noqa: W605
-    :param body: the text to escape
-    :return: the escaped text
-    """
-    body = body.replace("\r\n", "\n\n").replace(">>", r"\>\>")
-    magic = re.compile(r"(?<![a-zA-Z0-9])([ur])/|/([ur])/")
-    return magic.sub(r"\/\1\2/", body)
-
-
 def _is_shortlink(url: str) -> bool:
     """Rule-based checker to identify short links."""
     # Long URLs aren't short.

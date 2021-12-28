@@ -1,6 +1,6 @@
 import pytest
 
-from ocr.helpers import _is_shortlink, escape_reddit_links, replace_shortlinks
+from ocr.helpers import _is_shortlink, replace_shortlinks
 
 
 @pytest.mark.parametrize(
@@ -47,27 +47,3 @@ def test_is_shortlink(test_input: str, expected_result: bool) -> None:
 def test_replace_shortlinks(test_input: str, expected_result: str) -> None:
     """Verify that shortlinks are appropriately replaced."""
     assert replace_shortlinks(test_input) == expected_result
-
-
-@pytest.mark.parametrize(
-    "test_input,expected_result",
-    [
-        ("Hi, u/a!", "Hi, \/u/a!"),  # noqa: W605
-        ("Hi, /u/a!", "Hi, \/u/a!"),  # noqa: W605
-        ("Hi, /u/a", "Hi, \/u/a"),  # noqa: W605
-        ("Hi, u/a", "Hi, \/u/a"),  # noqa: W605
-        (
-            "something r/test_sub is cool",
-            "something \/r/test_sub is cool",  # noqa: W605
-        ),
-        (
-            "something /r/test_sub is cool",
-            "something \/r/test_sub is cool",  # noqa: W605
-        ),
-        ("r/test is the best", "\/r/test is the best"),  # noqa: W605
-        ("/r/test is the best", "\/r/test is the best"),  # noqa: W605
-    ],
-)
-def test_escape_reddit_links(test_input: str, expected_result: str) -> None:
-    """Verify that reddit pings are appropriately replaced."""
-    assert escape_reddit_links(test_input) == expected_result

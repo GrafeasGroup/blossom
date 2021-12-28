@@ -9,8 +9,9 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
+from app.formatting_fixes import escape_reddit_links
 from ocr.errors import OCRError
-from ocr.helpers import escape_reddit_links, process_image, replace_shortlinks
+from ocr.helpers import process_image, replace_shortlinks
 
 
 def create_id() -> uuid.UUID:  # pragma: no cover

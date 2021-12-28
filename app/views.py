@@ -26,6 +26,7 @@ from rest_framework import status
 from api.models import Source, Submission, Transcription
 from api.views.slack_helpers import client
 from api.views.submission import SubmissionViewSet
+from app.formatting_fixes import clean_fenced_code_block, escape_reddit_links
 from app.permissions import RequireCoCMixin, require_coc, require_reddit_auth
 from app.reddit_actions import (
     Flair,
@@ -39,9 +40,8 @@ from app.validation import (
     check_for_formatting_issues,
     check_for_unescaped_subreddit,
     check_for_unescaped_username,
-    clean_fenced_code_block,
 )
-from ocr.helpers import escape_reddit_links, replace_shortlinks
+from ocr.helpers import replace_shortlinks
 from utils.mixins import CSRFExemptMixin
 from utils.requests import convert_to_drf_request
 from utils.workers import send_to_worker
