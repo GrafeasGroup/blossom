@@ -198,6 +198,26 @@ class TestChooseSubmission:
         assert len(response.context["options"]) == 0
         assert "show_error_page" not in response.context
 
+    def test_reported_post_is_removed(self, client: Client) -> None:
+        """Verify that a reported post is not brought back to the page."""
+        client, _, user = setup_user_client(client)
+        add_social_auth_to_user(user)
+
+        submission = create_submission(
+            original_id=int(random.random() * 1000),
+            title="a",
+            content_url="http://imgur.com",
+        )
+
+        response = client.get(reverse("choose_transcription"))
+
+        assert submission in response.context["options"]
+
+        # Now we'll report it and verify that it's not rolled anymore
+        client.get(reverse("app_report", kwargs={"submission_id": submission.id}))
+        response = client.get(reverse("choose_transcription"))
+        assert submission not in response.context["options"]
+
 
 class TestTranscribeSubmission:
     def test_load_page(self, client: Client) -> None:
