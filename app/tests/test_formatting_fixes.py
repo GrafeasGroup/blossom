@@ -1,6 +1,10 @@
 import pytest
 
-from app.formatting_fixes import escape_reddit_links, redact_urls
+from app.formatting_fixes import (
+    escape_markdown_formatting,
+    escape_reddit_links,
+    redact_urls,
+)
 
 
 @pytest.mark.parametrize(
@@ -40,3 +44,21 @@ def test_escape_reddit_links(test_input: str, expected_result: str) -> None:
 def test_redact_urls(test_input: str, expected_result: str) -> None:
     """Verify that shortlinks are appropriately replaced."""
     assert redact_urls(test_input) == expected_result
+
+
+@pytest.mark.parametrize(
+    "test_input,expected_result",
+    [
+        ("# Heading", r"\# Heading"),
+        ("* List", r"\* List"),
+        ("- List", r"\- List"),
+        ("*Italics*", r"\*Italics\*"),
+        ("_Italics_", r"\_Italics\_"),
+        ("**Bold**", r"\*\*Bold\*\*"),
+        ("__Bold__", r"\_\_Bold\_\_"),
+        ("Normal text and 123 numbers", r"Normal text and 123 numbers"),
+    ],
+)
+def test_escape_markdown_formatting(test_input: str, expected_result: str) -> None:
+    """Verify that markdown formatting is escaped."""
+    assert escape_markdown_formatting(test_input) == expected_result

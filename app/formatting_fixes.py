@@ -81,7 +81,7 @@ def escape_markdown_formatting(transcription: str) -> str:
         # Lists/Horizontal separators
         .replace("-", r"\-")
         # Italics/Bold
-        .replace("*", r"*").replace("_", r"_")
+        .replace("*", r"\*").replace("_", r"\_")
     )
 
 
