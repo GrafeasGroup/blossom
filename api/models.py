@@ -9,9 +9,9 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
-from app.formatting_fixes import escape_reddit_links
+from app.formatting_fixes import auto_fix_ocr_formatting
 from ocr.errors import OCRError
-from ocr.helpers import process_image, replace_shortlinks
+from ocr.helpers import process_image
 
 
 def create_id() -> uuid.UUID:  # pragma: no cover
@@ -219,8 +219,7 @@ class Submission(models.Model):
             return
 
         if self.source.name == "reddit":
-            result["text"] = escape_reddit_links(result["text"])
-            result["text"] = replace_shortlinks(result["text"])
+            result["text"] = auto_fix_ocr_formatting(result["text"])
 
         self._create_ocr_transcription(text=result["text"])
 

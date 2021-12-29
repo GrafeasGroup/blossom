@@ -26,7 +26,7 @@ from rest_framework import status
 from api.models import Source, Submission, Transcription
 from api.views.slack_helpers import client
 from api.views.submission import SubmissionViewSet
-from app.formatting_fixes import auto_fix_formatting
+from app.formatting_fixes import auto_fix_user_formatting
 from app.permissions import RequireCoCMixin, require_coc, require_reddit_auth
 from app.reddit_actions import (
     Flair,
@@ -303,8 +303,7 @@ class EditSubmissionTranscription(
         ).first()
 
         transcription: str = request.POST.get("transcription")
-        transcription = transcription.replace("\r\n", "\n")
-        transcription = auto_fix_formatting(transcription)
+        transcription = auto_fix_user_formatting(transcription)
 
         issues = check_for_formatting_issues(transcription)
         if len(issues) > 0 or not transcription:
@@ -393,8 +392,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
     def post(self, request: HttpRequest, submission_id: int) -> HttpResponse:
         """Handle a submitted transcription."""
         transcription: str = request.POST.get("transcription")
-        transcription = transcription.replace("\r\n", "\n")
-        transcription = auto_fix_formatting(transcription)
+        transcription = auto_fix_user_formatting(transcription)
 
         issues = check_for_formatting_issues(transcription)
         if len(issues) > 0 or not transcription:
