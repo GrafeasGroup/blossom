@@ -3,6 +3,8 @@ import pytest
 from app.formatting_fixes import (
     escape_markdown_formatting,
     escape_reddit_links,
+    fix_line_endings,
+    line_breaks_to_paragraphs,
     redact_urls,
 )
 
@@ -62,3 +64,27 @@ def test_redact_urls(test_input: str, expected_result: str) -> None:
 def test_escape_markdown_formatting(test_input: str, expected_result: str) -> None:
     """Verify that markdown formatting is escaped."""
     assert escape_markdown_formatting(test_input) == expected_result
+
+
+@pytest.mark.parametrize(
+    "test_input,expected_result",
+    [
+        ("Line\r\nOther line", "Line\nOther line"),
+        ("Line\nOther line", "Line\nOther line"),
+    ],
+)
+def test_fix_line_endings(test_input: str, expected_result: str) -> None:
+    """Verify that markdown formatting is escaped."""
+    assert fix_line_endings(test_input) == expected_result
+
+
+@pytest.mark.parametrize(
+    "test_input,expected_result",
+    [
+        ("Line\nOther line", "Line\n\nOther line"),
+        ("Normal text and stuff", "Normal text and stuff"),
+    ],
+)
+def test_line_breaks_to_paragraphs(test_input: str, expected_result: str) -> None:
+    """Verify that line breaks are converted to paragraphs."""
+    assert line_breaks_to_paragraphs(test_input) == expected_result
