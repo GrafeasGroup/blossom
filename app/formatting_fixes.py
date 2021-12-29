@@ -47,3 +47,15 @@ def escape_reddit_links(body: str) -> str:
     body = body.replace("\r\n", "\n\n").replace(">>", r"\>\>")
     magic = re.compile(r"(?<![a-zA-Z0-9])([ur])/|/([ur])/")
     return magic.sub(r"\/\1\2/", body)
+
+
+def auto_fix_formatting(transcription: str) -> str:
+    """Apply automatic formatting fixes to the transcription.
+
+    - Escape username and subreddit links in messages.
+    - Convert fenced code blocks to 4 space notation.
+    """
+    transcription = clean_fenced_code_block(transcription)
+    transcription = escape_reddit_links(transcription)
+
+    return transcription

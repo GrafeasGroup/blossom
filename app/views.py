@@ -26,7 +26,7 @@ from rest_framework import status
 from api.models import Source, Submission, Transcription
 from api.views.slack_helpers import client
 from api.views.submission import SubmissionViewSet
-from app.formatting_fixes import clean_fenced_code_block, escape_reddit_links
+from app.formatting_fixes import auto_fix_formatting
 from app.permissions import RequireCoCMixin, require_coc, require_reddit_auth
 from app.reddit_actions import (
     Flair,
@@ -35,13 +35,7 @@ from app.reddit_actions import (
     flair_post,
     submit_transcription,
 )
-from app.validation import (
-    check_for_fenced_code_block,
-    check_for_formatting_issues,
-    check_for_unescaped_subreddit,
-    check_for_unescaped_username,
-)
-from ocr.helpers import replace_shortlinks
+from app.validation import check_for_formatting_issues
 from utils.mixins import CSRFExemptMixin
 from utils.requests import convert_to_drf_request
 from utils.workers import send_to_worker
@@ -310,6 +304,7 @@ class EditSubmissionTranscription(
 
         transcription: str = request.POST.get("transcription")
         transcription = transcription.replace("\r\n", "\n")
+        transcription = auto_fix_formatting(transcription)
 
         issues = check_for_formatting_issues(transcription)
         if len(issues) > 0 or not transcription:
@@ -318,15 +313,6 @@ class EditSubmissionTranscription(
             )
         else:
             # we're good to go -- let's submit it!
-            if check_for_fenced_code_block(transcription):
-                transcription = clean_fenced_code_block(transcription)
-
-            if check_for_unescaped_subreddit(
-                transcription
-            ) or check_for_unescaped_username(transcription):
-                transcription = escape_reddit_links(transcription)
-            transcription = replace_shortlinks(transcription)
-
             content_type = get_and_clean_content_type(request)
 
             transcription_obj.text = TRANSCRIPTION_TEMPLATE.format(
@@ -408,6 +394,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
         """Handle a submitted transcription."""
         transcription: str = request.POST.get("transcription")
         transcription = transcription.replace("\r\n", "\n")
+        transcription = auto_fix_formatting(transcription)
 
         issues = check_for_formatting_issues(transcription)
         if len(issues) > 0 or not transcription:
@@ -416,15 +403,6 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
             )
         else:
             # we're good to go -- let's submit it!
-            if check_for_fenced_code_block(transcription):
-                transcription = clean_fenced_code_block(transcription)
-
-            if check_for_unescaped_subreddit(
-                transcription
-            ) or check_for_unescaped_username(transcription):
-                transcription = escape_reddit_links(transcription)
-            transcription = replace_shortlinks(transcription)
-
             content_type = get_and_clean_content_type(request)
 
             text = TRANSCRIPTION_TEMPLATE.format(
