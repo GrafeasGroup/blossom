@@ -484,10 +484,6 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
 def ask_about_removing_post(request: HttpRequest, submission: Submission) -> None:
     """Ask Slack if we want to remove a reported submission or not."""
     # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
-    if request.GET.get("reason") is None:
-        # they just wanted to return the post. No reason to investigate.
-        return
-
     blocks = [
         {
             "type": "section",
@@ -551,7 +547,7 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
     blocks[-1]["elements"][1]["value"] = blocks[-1]["elements"][1]["value"].format(
         submission.id
     )
-
+    log.info(f"Sending message to Slack to ask about removing {submission.id}")
     client.chat_postMessage(channel="reported_posts", blocks=blocks)
 
 
@@ -588,8 +584,16 @@ def unclaim_submission(
         )
         return redirect("choose_transcription")
     submission_obj = Submission.objects.get(id=submission_id)
+
+    if request.GET.get("reason") is not None:
+        # There's a reason they're reporting this, so we should remove it from the queue
+        # until it can be reviewed. We guard here because an unclaim without a reason
+        # is just returning the post back to the queue to get something else.
+        submission_obj.removed_from_queue = True
+        submission_obj.save(skip_extras=True)
+        ask_about_removing_post(request, submission_obj)
+
     flair_post(submission_obj, Flair.unclaimed)
-    ask_about_removing_post(request, submission_obj)
     return redirect("choose_transcription")
 
 
@@ -598,5 +602,10 @@ def unclaim_submission(
 def report_submission(request: HttpRequest, submission_id: int) -> HttpResponseRedirect:
     """Process reports without unclaiming that originate from the web app side."""
     submission_obj = Submission.objects.get(id=submission_id)
+    # Reports that come in here are always for a specific reason, so remove the post
+    # from the queue until we can investigate.
+    submission_obj.removed_from_queue = True
+    submission_obj.save(skip_extras=True)
+
     ask_about_removing_post(request, submission_obj)
     return redirect("choose_transcription")
