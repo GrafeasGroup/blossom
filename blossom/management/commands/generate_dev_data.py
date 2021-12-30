@@ -10,6 +10,7 @@ Usage: python manage.py generate_dev_data
 
 import logging
 import random
+import string
 import sys
 import uuid
 from datetime import datetime, timedelta
@@ -38,12 +39,11 @@ if settings.DEBUG:
 
 logger = logging.getLogger("blossom.management.generate_dev_data")
 TRANSCRIPTION_TEMPLATE = (
-    "*Image Transcription:*\n\n---\n\n{0}\n\n---\n\n^^I'm&#32;a&#32;human&#32;"
-    "volunteer&#32;content&#32;transcriber&#32;for&#32;Reddit&#32;and&#32;you&"
-    "#32;could&#32;be&#32;too!&#32;[If&#32;you'd&#32;like&#32;more&#32;informa"
-    "tion&#32;on&#32;what&#32;we&#32;do&#32;and&#32;why&#32;we&#32;do&#32;it,&"
-    "#32;click&#32;here!](https://www.reddit.com/r/TranscribersOfReddit/wiki/i"
-    "ndex)"
+    "*Image Transcription:*\n\n---\n\n{0}\n\n---\n\n"
+    "^^I'm&#32;a&#32;human&#32;volunteer&#32;content&#32;transcriber&#32;and&#32;"
+    "you&#32;could&#32;be&#32;too!&#32;[If&#32;you'd&#32;like&#32;more&#32;"
+    "information&#32;on&#32;what&#32;we&#32;do&#32;and&#32;why&#32;we&#32;do&#32;"
+    "it,&#32;click&#32;here!](https://www.reddit.com/r/TranscribersOfReddit/wiki/index)"
 )
 TRANSCRIBOT_TEMPLATE = (
     "{0}\n\n---\n\nv0.6.0 | This message was posted by a bot. | [FAQ](https://"
@@ -128,6 +128,86 @@ def create_dummy_volunteers(num: int) -> None:
             volunteer.save()
 
 
+def gen_title() -> str:
+    """Create a beautiful title for a beautiful dog."""
+    zeroth = [
+        "This",
+        "The",
+        "Check out this",
+        "One",
+        "Check this",
+        "look at this",
+        "his",
+        "her",
+        "their",
+        "What about this",
+    ]
+    first = [
+        "fabulously",
+        "amazingly",
+        "fantastically",
+        "wonderfully",
+        "fantasmagorically",
+        "unbelievably",
+        "mind-blowingly",
+        "categorically",
+        "empirically",
+        "inarguably",
+        "one and only",
+        "completely unmatched",
+        "one of a kind",
+        "truly incomparable",
+    ]
+    second = [
+        "fabulous",
+        "amazing",
+        "fantastic",
+        "wonderful",
+        "fantasmagorical",
+        "unbelievable",
+        "mind-blowing",
+        "mind-boggling",
+        "adorable",
+        "beautiful",
+        "gorgeous",
+        "winning",
+    ]
+    third = [
+        "pooch",
+        "pupper",
+        "dog",
+        "doggo",
+        "canine",
+        "woofer",
+        "pup",
+        "puppy",
+        "pupperino",
+        "pupperchino",
+        "hound",
+        "doggy",
+        "mutt",
+    ]
+    fourth = [".", "!", "!!!", "!!!1!!!!!", "???", "‽", "?!!‽?!‽?!!?", "?"]
+    return (
+        f"{random.choice(zeroth)} {random.choice(first)}"
+        f" {random.choice(second)} {random.choice(third)}{random.choice(fourth)}"
+    ).title()
+
+
+def gen_id() -> str:
+    """
+    Create a random ID that is shorter than UUID4.
+
+    This allows us to mock real data that we get in while still allowing us to
+    filter out data created with UUID4, which is what we use for temporary unsubmitted
+    data and mock data to keep counts accurate.
+    """
+    id_str = ""
+    for _ in range(9):
+        id_str += random.choice(string.ascii_lowercase + string.digits)
+    return id_str
+
+
 def create_dummy_submissions(no_urls: bool) -> None:
     """Build a bunch of fake submissions."""
     users = get_user_model()
@@ -143,12 +223,14 @@ def create_dummy_submissions(no_urls: bool) -> None:
     for _ in range(users.objects.count() * 8):
         submission_date = gen_datetime()
         submission = Submission.objects.create(
-            original_id=uuid.uuid4(),
+            title=gen_title(),
+            original_id=gen_id(),
             create_time=submission_date,
             claimed_by=None,
             completed_by=None,
             source=dummy_source,
-            url=random.choice(urls),
+            content_url=random.choice(urls),
+            url=None,
             archived=random.choice([True, False]),
         )
         Transcription.objects.create(

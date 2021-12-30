@@ -19,7 +19,6 @@ A Django app that serves our website, payment portal for donations, engineering 
 Create a file at the top level called `local_settings.py`. Populate it with the following:
 
 ```python
-# noinspection PyUnresolvedReferences
 from blossom.settings.local import *
 import better_exceptions
 import os
@@ -29,7 +28,25 @@ better_exceptions.MAX_LENGTH = None
 # Use this file when developing locally -- it has some helpful additions which
 # change how the server runs.
 DEBUG = True
+
+# Turns on any behavior that interacts with Slack (modchat)
 ENABLE_SLACK = False
+# Enables reddit instances for Blossom and the logged-in user + social auth
+ENABLE_REDDIT = False
+# Ping ocr.space with content for OCR goodness?
+ENABLE_OCR = False
+
+# make it so that using the API does not require username / password / api key
+OVERRIDE_API_AUTH = True
+# By default, the app will only pull things from the latest 18 hours, but test
+# data doesn't always play along.
+OVERRIDE_ARCHIVIST_DELAY_TIME = 500  # hours
+
+# Flip between these depending on what you're working on -- if you don't need
+# domain-specific functionality, just leave them both commented out.
+# OVERRIDE_HOST = "thetranscription.app"
+# OVERRIDE_HOST = "grafeas.org"
+
 
 ALLOWED_HOSTS = ['*']
 CACHES = {
@@ -37,11 +54,11 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
     }
 }
-
-# ideally this should be postgres, but developing against sqlite3 will work.
-# Just be aware of potential issues where sqlite3 and postgres do not play well
-# together -- namely, django migrations for sqlite3 will allow a field creation
-# and field alter call in the same transaction. Postgres... will not.
+# We deploy to postgres, but developing against sqlite3 will work in almost all
+# cases. Just be aware of potential issues where sqlite3 and postgres do not
+# play well together -- namely, django migrations for sqlite3 will allow a
+# field creation and field alter call in the same transaction. Postgres... will
+# not.
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -50,7 +67,7 @@ DATABASES = {
 }
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
@@ -68,10 +85,8 @@ LOGGING = {
     },
 }
 
-OVERRIDE_API_AUTH = True
-ENABLE_OCR = False
-MIDDLEWARE = [i for i in MIDDLEWARE if "bugsnag" not in i]
 MIDDLEWARE = ["blossom.middleware.BetterExceptionsMiddleware"] + MIDDLEWARE
+IMAGE_DOMAINS += ['images.dog.ceo']  # the image API we use for dev data
 ```
 This file will be ignored by git, so make any changes you need to while developing.
 
@@ -91,19 +106,23 @@ Blossom uses `pre-commit` to help us keep everything clean. After you check out 
 If an issue is detected when you run `git commit`, the action will be aborted and you'll receive a message about what needs to be fixed before committing.
 
 
+## Getting Started
+
 * Minimum Python version: 3.8
 
-* Install dependencies with `poetry install`. Don't have Poetry? Info here: https://poetry.eustace.io/
+* Install dependencies with `poetry install`. Don't have Poetry? Info here: https://python-poetry.org/
 
-* Run `python manage.py makemigrations blossom` to build the migrations, then commit them to the database with `python manage.py migrate`.
+* Create your database with `python manage.py migrate`.
 
-* Run `python manage.py bootstrap` to prepopulate the site with the base posts. This will also create a base user account that you can use to make another user for yourself.
+* Run `python manage.py bootstrap_site` to prepopulate the site with the base posts. This will also create a base user account that you can use to make another user for yourself.
 
-  * username: `blossom@grafeas.org`
-  * password: `asdf`
+* Run `python manage.py generate_dev_data` if you're doing local development - this will create a bunch of dummy material for you to work with.
+
+Start the server with `python manage.py runserver`, navigate to http://localhost:8000/login/, and log in with 
+username: `blossom@grafeas.org` and password: `asdf`
 
 You can use the above credentials to create yourself a new account.
-* Navigate to `http://localhost:8000/superadmin/newuser` and log in with the above credentials.
+* Navigate to http://localhost:8000/superadmin/newuser and log in with the above credentials.
 * Create a personal user account with the requested fields. Make sure that you select "is superuser".
 
 Next, we'll disable the default admin account.

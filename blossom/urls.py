@@ -34,6 +34,7 @@ def force_domain(domain: [str, None]) -> Any:
                 request.get_host = (
                     lambda: settings.OVERRIDE_HOST if settings.OVERRIDE_HOST else domain
                 )
+                return func(request, *args, **kwargs)
 
             if not domain:
                 # This is so that we can set the request manipulation when in debug mode

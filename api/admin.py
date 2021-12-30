@@ -5,7 +5,7 @@ from api.models import Submission, Transcription
 
 
 class SubmissionAdmin(admin.ModelAdmin):
-    search_fields = ("original_id", "title", "url", "tor_url")
+    search_fields = ("id", "original_id", "title", "url", "tor_url")
 
 
 # Register your models here.

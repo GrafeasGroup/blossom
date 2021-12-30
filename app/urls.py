@@ -16,6 +16,7 @@ urlpatterns = [
     ),
     path("accept_coc/", views.accept_coc, name="accept_coc"),
     path("unclaim/<int:submission_id>/", views.unclaim_submission, name="app_unclaim"),
+    path("report/<int:submission_id>/", views.report_submission, name="app_report"),
     path(
         "previous_transcriptions/",
         views.view_previous_transcriptions,

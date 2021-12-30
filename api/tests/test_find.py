@@ -125,7 +125,7 @@ def test_find_by_submission_url(
         url="https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/",
     )
 
-    ocr_bot = create_user(id=333, username="ocr_bot", is_volunteer=False)
+    ocr_bot = create_user(id=333, username="ocr_bot", is_bot=True)
 
     ocr = create_transcription(
         id=666,
@@ -144,6 +144,71 @@ def test_find_by_submission_url(
         assert actual["ocr"] == ocr
     else:
         assert actual is None
+
+
+@pytest.mark.parametrize(
+    "url,expected",
+    [
+        # Submission URL
+        ("https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/", True),
+        # ToR Submission URL
+        (
+            "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
+            True,
+        ),
+        # ToR comment URL
+        (
+            "https://www.reddit.com/r/TranscribersOfReddit/comments/q1tnhc/comment/hfgp1g7/"
+            + "?utm_source=share&utm_medium=web2x&context=3",
+            True,
+        ),
+        # Submission comment URL
+        (
+            "https://www.reddit.com/r/antiwork/comments/q1tlcf/comment/hfgttrw/"
+            + "?utm_source=share&utm_medium=web2x&context=3",
+            True,
+        ),
+        # Other submission URL
+        (
+            "https://reddit.com/r/aaaaaaacccccccce/comments/q1t6kh/not_so_sure_about_the_demiboy_thing_anymore_im/",
+            False,
+        ),
+        # Other ToR URL
+        (
+            "https://reddit.com/r/TranscribersOfReddit/comments/q1ucl3/aaaaaaacccccccce_image_not_so_sure_about_the/",
+            False,
+        ),
+        # Other Transcription URL
+        (
+            "https://reddit.com/r/NonPoliticalTwitter/comments/rn02rf/subtitles/hppsgrs/",
+            False,
+        ),
+    ],
+)
+def test_find_in_progress(client: Client, url: str, expected: bool) -> None:
+    """Verify that an in-progress posts can be found by its URLs."""
+    client, headers, user = setup_user_client(client, id=123, username="test_user")
+
+    submission = create_submission(
+        claimed_by=user,
+        url="https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/",
+        tor_url="https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
+        content_url="https://i.redd.it/upwchc4bqhr71.jpg",
+        title="Work is work",
+    )
+
+    result = client.get(
+        reverse("find") + f"?url={url}", content_type="application/json", **headers,
+    )
+
+    if expected:
+        assert result.status_code == status.HTTP_200_OK
+        actual = result.json()
+
+        assert actual["submission"]["id"] == submission.id
+        assert actual["author"]["id"] == user.id
+    else:
+        assert result.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.parametrize(
@@ -198,11 +263,9 @@ def test_find_by_submission_url(
         ),
     ],
 )
-def test_find(client: Client, url: str, expected: bool) -> None:
-    """Verify that the posts can be found by their URL."""
-    client, headers, user = setup_user_client(
-        client, id=123, username="test_user", is_volunteer=True
-    )
+def test_find_completed(client: Client, url: str, expected: bool) -> None:
+    """Verify that a completed posts can be found by its URLs."""
+    client, headers, user = setup_user_client(client, id=123, username="test_user")
 
     submission = create_submission(
         claimed_by=user,
@@ -220,7 +283,7 @@ def test_find(client: Client, url: str, expected: bool) -> None:
         url="https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/",
     )
 
-    ocr_bot = create_user(id=333, username="ocr_bot", is_volunteer=False)
+    ocr_bot = create_user(id=333, username="ocr_bot", is_bot=True)
 
     ocr = create_transcription(
         id=666,

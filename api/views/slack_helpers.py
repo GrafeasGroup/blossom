@@ -18,10 +18,17 @@ from api.serializers import VolunteerSerializer
 from api.views.misc import Summary
 from app.reddit_actions import remove_post
 from authentication.models import BlossomUser
+from blossom.errors import ConfigurationError
 from blossom.strings import translation
 
 if settings.ENABLE_SLACK is True:
-    client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
+    try:
+        client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
+    except KeyError:
+        raise ConfigurationError(
+            "ENABLE_SLACK is set to True, but no API key was found. Set the"
+            " SLACK_API_KEY environment variable or change ENABLE_SLACK to False."
+        )
 else:
     # this is to explicitly disable posting to Slack when doing local dev
     client = mock.Mock()
@@ -119,7 +126,10 @@ def process_submission_update(data: dict) -> None:
     # https://app.slack.com/block-kit-builder/
     value = data["actions"][0].get("value").split("_")
     blocks = data["message"]["blocks"]
+    submission_obj = Submission.objects.get(id=int(value[2]))
     if value[0] == "keep":
+        submission_obj.removed_from_queue = False
+        submission_obj.save(skip_extras=True)
         blocks[-1] = {
             "type": "section",
             "text": {
@@ -128,10 +138,9 @@ def process_submission_update(data: dict) -> None:
             },
         }
     else:
-        submission_obj = Submission.objects.get(id=int(value[2]))
-        submission_obj.removed_from_queue = True
-        submission_obj.save(skip_extras=True)
-        # pull the post out of the reddit queue
+        # The submission was removed temporarily from the app queue when it was reported,
+        # so we don't have to do anything else on the app side. Now that it's been
+        # verified, go ahead and nuke it from Reddit's side as well.
         remove_post(submission_obj)
         blocks[-1] = {
             "type": "section",

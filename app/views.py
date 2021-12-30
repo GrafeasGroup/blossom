@@ -195,7 +195,13 @@ def update_context_with_proxy_data(submission: Submission, context: dict) -> dic
         # through the proxy for OpenSeaDragon
         context.update({"ireddit_content_url": submission.content_url.split("/")[-1]})
     elif "imgur.com" in submission.content_url:
-        context.update({"imgur_content_url": submission.content_url.split("/")[-1]})
+        imgur_content_url = submission.content_url.split("/")[-1]
+        # Check if the URL links to the imgur post instead of directly to the image
+        # Kinda dirty, but this way we can account for all image formats
+        if "." not in imgur_content_url:
+            imgur_content_url += ".jpg"
+
+        context.update({"imgur_content_url": imgur_content_url})
     return context
 
 
@@ -220,6 +226,15 @@ def remove_old_session_data(request: HttpRequest) -> None:
     del request.session["heading"]
     del request.session["issues"]
     del request.session["submission_id"]
+
+
+def get_and_clean_content_type(request: HttpRequest) -> [str, None]:
+    """Retrieve and format the content type if present."""
+    content_type = request.POST.get("transcription_type")
+    if content_type:
+        # add in the space before the type so that it renders correctly
+        content_type = " " + content_type.strip()
+    return content_type
 
 
 def add_transcription_data_to_session_and_redirect(
@@ -257,6 +272,7 @@ class EditSubmissionTranscription(
         context = get_additional_context({"fullwidth_view": True})
         context.update({"submission": submission})
         context.update({"transcription_templates": get_and_format_templates()})
+        context.update({"edit_mode": True})
         context = update_context_with_proxy_data(submission, context)
 
         if s_id := request.session.get("submission_id"):
@@ -311,10 +327,7 @@ class EditSubmissionTranscription(
                 transcription = escape_reddit_links(transcription)
             transcription = replace_shortlinks(transcription)
 
-            content_type = request.POST.get("transcription_type")
-            if content_type:
-                # add in the space before the type so that it renders correctly
-                content_type = " " + content_type
+            content_type = get_and_clean_content_type(request)
 
             transcription_obj.text = TRANSCRIPTION_TEMPLATE.format(
                 content_type=content_type, transcription=transcription,
@@ -372,6 +385,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
 
         context = get_additional_context({"fullwidth_view": True})
         context.update({"submission": submission})
+        context.update({"edit_mode": False})
 
         context.update({"transcription_templates": get_and_format_templates()})
 
@@ -411,10 +425,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
                 transcription = escape_reddit_links(transcription)
             transcription = replace_shortlinks(transcription)
 
-            content_type = request.POST.get("transcription_type")
-            if content_type:
-                # add in the space before the type so that it renders correctly
-                content_type = " " + content_type
+            content_type = get_and_clean_content_type(request)
 
             text = TRANSCRIPTION_TEMPLATE.format(
                 content_type=content_type, transcription=transcription,
@@ -473,10 +484,6 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
 def ask_about_removing_post(request: HttpRequest, submission: Submission) -> None:
     """Ask Slack if we want to remove a reported submission or not."""
     # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
-    if request.GET.get("reason") is None:
-        # they just wanted to return the post. No reason to investigate.
-        return
-
     blocks = [
         {
             "type": "section",
@@ -540,7 +547,7 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
     blocks[-1]["elements"][1]["value"] = blocks[-1]["elements"][1]["value"].format(
         submission.id
     )
-
+    log.info(f"Sending message to Slack to ask about removing {submission.id}")
     client.chat_postMessage(channel="reported_posts", blocks=blocks)
 
 
@@ -577,6 +584,28 @@ def unclaim_submission(
         )
         return redirect("choose_transcription")
     submission_obj = Submission.objects.get(id=submission_id)
+
+    if request.GET.get("reason") is not None:
+        # There's a reason they're reporting this, so we should remove it from the queue
+        # until it can be reviewed. We guard here because an unclaim without a reason
+        # is just returning the post back to the queue to get something else.
+        submission_obj.removed_from_queue = True
+        submission_obj.save(skip_extras=True)
+        ask_about_removing_post(request, submission_obj)
+
     flair_post(submission_obj, Flair.unclaimed)
+    return redirect("choose_transcription")
+
+
+@login_required
+@require_coc
+def report_submission(request: HttpRequest, submission_id: int) -> HttpResponseRedirect:
+    """Process reports without unclaiming that originate from the web app side."""
+    submission_obj = Submission.objects.get(id=submission_id)
+    # Reports that come in here are always for a specific reason, so remove the post
+    # from the queue until we can investigate.
+    submission_obj.removed_from_queue = True
+    submission_obj.save(skip_extras=True)
+
     ask_about_removing_post(request, submission_obj)
     return redirect("choose_transcription")

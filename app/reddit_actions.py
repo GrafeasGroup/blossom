@@ -1,7 +1,10 @@
 import logging
+import random
+import string
 from contextlib import suppress
 
 import praw.exceptions
+from django.conf import settings
 from django.http import HttpRequest
 
 from api.models import Submission, Transcription
@@ -28,14 +31,23 @@ def submit_transcription(
     request: HttpRequest, transcription_obj: Transcription, submission_obj: Submission
 ) -> None:
     """Post the transcription to Reddit as the user."""
-    reddit_submission = request.user.reddit.submission(url=submission_obj.url)
-    transcription = reddit_submission.reply(transcription_obj.text)
-    transcription_obj.original_id = transcription.fullname
-    transcription_obj.url = BASE_URL + transcription.permalink
+    if settings.ENABLE_REDDIT:
+        reddit_submission = request.user.reddit.submission(url=submission_obj.url)
+        transcription = reddit_submission.reply(transcription_obj.text)
+        transcription_obj.original_id = transcription.fullname
+        transcription_obj.url = BASE_URL + transcription.permalink
+    else:
+        # change the original_id so that it will show up on the previously done
+        # transcriptions page
+        transcription_obj.original_id = "".join(
+            [random.choice(string.ascii_lowercase + string.digits) for _ in range(9)]
+        )
+        transcription_obj.url = "http://example.com"
     transcription_obj.removed_from_reddit = False
     transcription_obj.save()
 
 
+@send_to_worker
 def edit_transcription(
     request: HttpRequest, transcription_obj: Transcription, submission_obj: Submission
 ) -> None:

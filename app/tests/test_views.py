@@ -6,6 +6,7 @@ import pytest
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.shortcuts import reverse
 from django.test import Client, RequestFactory
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
 from api.models import Transcription
@@ -134,10 +135,13 @@ class TestChooseSubmission:
         assert len(response.context["options"]) == 0
         assert "show_error_page" in response.context
 
-    def test_check_reddit_for_missing_information(self, client: Client) -> None:
+    def test_check_reddit_for_missing_information(
+        self, client: Client, settings: SettingsWrapper
+    ) -> None:
         """Verify that if information is missing we will check Reddit for it."""
         client, _, user = setup_user_client(client)
         add_social_auth_to_user(user)
+        settings.ENABLE_REDDIT = True
 
         class RedditSubmission:
             class Response:
@@ -193,6 +197,26 @@ class TestChooseSubmission:
         response = client.get(reverse("choose_transcription"))
         assert len(response.context["options"]) == 0
         assert "show_error_page" not in response.context
+
+    def test_reported_post_is_removed(self, client: Client) -> None:
+        """Verify that a reported post is not brought back to the page."""
+        client, _, user = setup_user_client(client)
+        add_social_auth_to_user(user)
+
+        submission = create_submission(
+            original_id=int(random.random() * 1000),
+            title="a",
+            content_url="http://imgur.com",
+        )
+
+        response = client.get(reverse("choose_transcription"))
+
+        assert submission in response.context["options"]
+
+        # Now we'll report it and verify that it's not rolled anymore
+        client.get(reverse("app_report", kwargs={"submission_id": submission.id}))
+        response = client.get(reverse("choose_transcription"))
+        assert submission not in response.context["options"]
 
 
 class TestTranscribeSubmission:
@@ -258,9 +282,10 @@ class TestTranscribeSubmission:
         client, _, user = setup_user_client(client)
         add_social_auth_to_user(user)
 
+        # Imgur direct link
         submission = create_submission(
             original_id=int(random.random() * 1000),
-            content_url="http://imgur.com/aaa",
+            content_url="http://imgur.com/aaa.png",
             title="a",
         )
 
@@ -269,8 +294,20 @@ class TestTranscribeSubmission:
         )
 
         assert "imgur_content_url" in response.context
-        assert response.context["imgur_content_url"] == "aaa"
+        assert response.context["imgur_content_url"] == "aaa.png"
 
+        # Imgur post link
+        submission.claimed_by = None
+        submission.content_url = "http://imgur.com/aaa"
+        submission.save()
+
+        response = client.get(
+            reverse("transcribe_submission", kwargs={"submission_id": submission.id})
+        )
+        assert "imgur_content_url" in response.context
+        assert response.context["imgur_content_url"] == "aaa.jpg"
+
+        # Reddit link
         submission.claimed_by = None
         submission.content_url = "i.redd.it/bbb"
         submission.save()

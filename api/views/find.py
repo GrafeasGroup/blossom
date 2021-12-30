@@ -50,7 +50,7 @@ def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     # Get submission
     submission = submissions[0]
     # Get author
-    author = submission.completed_by
+    author = submission.claimed_by
     # Get transcription
     if author is not None:
         transcriptions = submission.transcription_set.filter(author=author)
@@ -58,7 +58,7 @@ def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     else:
         transcription = None
     # Get OCR
-    ocr_transcriptions = submission.transcription_set.filter(author__is_volunteer=False)
+    ocr_transcriptions = submission.transcription_set.filter(author__is_bot=True)
     ocr = ocr_transcriptions[0] if ocr_transcriptions.count() > 0 else None
 
     return {
