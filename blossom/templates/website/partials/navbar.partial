@@ -48,9 +48,11 @@
                            role="button">Tutorial</a>
                     </li>
                 {% else %}
-                    <li class="nav-item active">
-                        <a class="nav-link" href="{% url 'choose_transcription' %}">App</a>
-                    </li>
+                    {% if ENABLE_APP %}
+                        <li class="nav-item active">
+                            <a class="nav-link" href="{% url 'choose_transcription' %}">App</a>
+                        </li>
+                    {% endif %}
                 {% endif %}
                 <li class="nav-item active">
                     <a class="nav-link" href="/">News</a>
@@ -72,14 +74,14 @@
             {% if request.user.is_authenticated %}
                 <div class="navbar-nav">
                     <ul class="navbar-nav my-2 my-lg-0">
-                    {% if '/app/' in request.path %}
-                        <li class="nav-item active">
-                            <a href="{% url 'previous_transcriptions' %}" class="nav-link pe-3">
-                                u/{{ request.user.username }}
-                                <span class="badge bg-secondary fs-6">{{ request.user.gamma }} Γ · {{ request.user.get_rank }}</span>
-                            </a>
-                        </li>
-                    {% endif %}
+                        {% if '/app/' in request.path %}
+                            <li class="nav-item active">
+                                <a href="{% url 'previous_transcriptions' %}" class="nav-link pe-3">
+                                    u/{{ request.user.username }}
+                                    <span class="badge bg-secondary fs-6">{{ request.user.gamma }} Γ · {{ request.user.get_rank }}</span>
+                                </a>
+                            </li>
+                        {% endif %}
                         {% if request.user.is_grafeas_staff %}
                             <li class="nav-item active">
                                 <a id="adminView" class="nav-link" href="{% url 'admin_view' %}">Admin Panel</a>

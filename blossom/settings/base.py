@@ -133,6 +133,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
+                "app.context_processors.app_enable_check",
             ],
         },
     },
@@ -254,7 +255,8 @@ if OCR_ENABLE_BACKUP_ENDPOINT:
 OCR_NOOP_MODE = bool(os.getenv("OCR_NOOP_MODE", ""))
 OCR_DEBUG_MODE = bool(os.getenv("OCR_DEBUG_MODE", ""))
 
-ENABLE_REDDIT = True
+ENABLE_REDDIT = True  # enable access to reddit at all
+ENABLE_APP = False  # enable the routes for thetranscription.app
 
 IMAGE_DOMAINS = [
     "imgur.com",

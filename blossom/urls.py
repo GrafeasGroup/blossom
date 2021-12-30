@@ -72,17 +72,20 @@ urlpatterns += [
 ]
 
 # thetranscription.app urls
-urlpatterns += [
-    path("app/", decorator_include(force_domain("thetranscription.app"), "app.urls")),
-    url(
-        "",
-        decorator_include(
-            force_domain("thetranscription.app"),
-            "social_django.urls",
-            namespace="social",
+if settings.ENABLE_APP:
+    urlpatterns += [
+        path(
+            "app/", decorator_include(force_domain("thetranscription.app"), "app.urls")
         ),
-    ),
-]
+        url(
+            "",
+            decorator_include(
+                force_domain("thetranscription.app"),
+                "social_django.urls",
+                namespace="social",
+            ),
+        ),
+    ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

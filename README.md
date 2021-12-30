@@ -35,6 +35,8 @@ ENABLE_SLACK = False
 ENABLE_REDDIT = False
 # Ping ocr.space with content for OCR goodness?
 ENABLE_OCR = False
+# Enable or disable access to the transcription app side entirely.
+ENABLE_APP = False
 
 # make it so that using the API does not require username / password / api key
 OVERRIDE_API_AUTH = True
