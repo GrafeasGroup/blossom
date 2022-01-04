@@ -318,7 +318,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         The week days are numbered Monday=1 through Sunday=7.
         """
-        utc_offset = request.GET.get("utc_offset", 0)
+        utc_offset = int(request.GET.get("utc_offset", "0"))
         # Construct a timezone from the offset
         tzinfo = datetime.timezone(datetime.timedelta(seconds=utc_offset))
 
