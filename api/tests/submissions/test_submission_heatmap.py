@@ -99,6 +99,57 @@ class TestHeatmap:
         heatmap = result.json()
         assert heatmap == expected_heatmap
 
+    def test_heatmap_timezones(self, client: Client) -> None:
+        """Test that the timezone is adjusted correctly, if specified."""
+        client, headers, user = setup_user_client(client, accepted_coc=True, id=123456)
+
+        dates = [
+            # Thursday 14:03 h
+            datetime(2020, 7, 16, 14, 3, 55),
+            # Thursday 14:59 h
+            datetime(2020, 7, 16, 14, 59, 55),
+            # Sunday 15:10 h
+            datetime(2021, 6, 20, 15, 10, 5),
+            # Sunday 15:42 h
+            datetime(2021, 6, 20, 15, 42, 10),
+            # Sunday 16:05 h
+            datetime(2021, 6, 20, 16, 5, 5),
+            # Thursday 14:30 h
+            datetime(2021, 6, 24, 14, 30, 30),
+        ]
+
+        for date in dates:
+            create_transcription(
+                create_submission(completed_by=user, complete_time=make_aware(date)),
+                user,
+                create_time=make_aware(date),
+            )
+
+        # +01:30 offset
+        utc_offset = 90 * 60
+
+        result = client.get(
+            reverse("submission-heatmap")
+            + f"?completed_by=123456&utc_offset={utc_offset}",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+
+        expected_heatmap = [
+            # Thursday 13:30 - 14:30 UTC
+            {"day": 4, "hour": 15, "count": 1},
+            # Thursday 14:30 - 15:30 UTC
+            {"day": 4, "hour": 16, "count": 2},
+            # Sunday 14:30 - 15:30 UTC
+            {"day": 7, "hour": 16, "count": 1},
+            # Sunday 15:30 - 16:30 UTC
+            {"day": 7, "hour": 17, "count": 2},
+        ]
+        heatmap = result.json()
+        assert heatmap == expected_heatmap
+
     def test_heatmap_filtering(self, client: Client) -> None:
         """Verify that filters can be applied to the submissions."""
         client, headers, user = setup_user_client(client, accepted_coc=True, id=123456)

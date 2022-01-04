@@ -1,4 +1,5 @@
 """Views that specifically relate to submissions."""
+import datetime
 import logging
 import random
 from datetime import timedelta
@@ -238,6 +239,14 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 'For example, "none" will return the date of every transcription '
                 'separately, while "day" will return the daily transcribing rate.',
             ),
+            Parameter(
+                "utc_offset",
+                "query",
+                type="number",
+                description="The timezone offset to calculate the rate on, in seconds.",
+                default=0,
+                required=False,
+            ),
             Parameter("page_size", "query", type="number"),
             Parameter("page", "query", type="number"),
         ],
@@ -250,6 +259,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         include days on which the user did not make any transcriptions!
         """
         time_frame = request.GET.get("time_frame", "day")
+        utc_offset = int(request.GET.get("utc_offset", "0"))
+        # Construct a timezone from the offset
+        tzinfo = datetime.timezone(datetime.timedelta(seconds=utc_offset))
 
         trunc_dict = {
             # Don't group the transcriptions at all
@@ -270,7 +282,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         rate = (
             self.filter_queryset(Submission.objects)
             .filter(complete_time__isnull=False)
-            .annotate(date=trunc_fn("complete_time"))
+            .annotate(date=trunc_fn("complete_time", tzinfo=tzinfo))
             .values("date")
             .annotate(count=Count("id"))
             .values("date", "count")
@@ -282,7 +294,19 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return pagination.get_paginated_response(page)
 
     @csrf_exempt
-    @swagger_auto_schema()
+    @swagger_auto_schema(
+        operation_summary=("Get the data to construct a heatmap of the submissions."),
+        manual_parameters=[
+            Parameter(
+                "utc_offset",
+                "query",
+                type="number",
+                description="The timezone offset to calculate the rate on, in seconds.",
+                default=0,
+                required=False,
+            ),
+        ],
+    )
     @action(detail=False, methods=["get"])
     def heatmap(self, request: Request) -> Response:
         """Get the data to generate a heatmap for the volunteer.
@@ -294,12 +318,16 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         The week days are numbered Monday=1 through Sunday=7.
         """
+        utc_offset = int(request.GET.get("utc_offset", "0"))
+        # Construct a timezone from the offset
+        tzinfo = datetime.timezone(datetime.timedelta(seconds=utc_offset))
+
         heatmap = (
             self.filter_queryset(Submission.objects).filter(complete_time__isnull=False)
             # Extract the day of the week and the hour the transcription was made in
             .annotate(
-                day=ExtractIsoWeekDay("complete_time"),
-                hour=ExtractHour("complete_time"),
+                day=ExtractIsoWeekDay("complete_time", tzinfo=tzinfo),
+                hour=ExtractHour("complete_time", tzinfo=tzinfo),
             )
             # Group by the day and hour
             .values("day", "hour")
