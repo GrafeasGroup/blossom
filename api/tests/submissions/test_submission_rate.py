@@ -298,3 +298,38 @@ class TestSubmissionRate:
         assert response["results"] == [
             {"count": 3, "date": "2021-06-20T00:00:00Z"},
         ]
+
+    def test_rate_timezones(self, client: Client,) -> None:
+        """Verify that the timezone is applied correctly, if specified."""
+        client, headers, user = setup_user_client(client, id=123456)
+
+        dates = [
+            # 2020-07-16 23:00 UTC
+            datetime(2020, 7, 16, 23),
+            # 2020-07-16 22:00 UTC
+            datetime(2020, 7, 16, 22),
+        ]
+
+        for date in dates:
+            create_transcription(
+                create_submission(completed_by=user, complete_time=date),
+                user,
+                create_time=make_aware(date),
+            )
+
+        # +01:30 offset
+        utc_offset = 90 * 60
+
+        result = client.get(
+            reverse("submission-rate")
+            + "?time_frame=day&completed_by=123456"
+            + f"&utc_offset={utc_offset}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        response = result.json()
+        assert response["results"] == [
+            {"count": 1, "date": "2020-07-16T00:00:00+01:30"},
+            {"count": 1, "date": "2020-07-17T00:00:00+01:30"},
+        ]

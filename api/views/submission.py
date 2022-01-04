@@ -259,7 +259,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         include days on which the user did not make any transcriptions!
         """
         time_frame = request.GET.get("time_frame", "day")
-        utc_offset = request.GET.get("utc_offset", 0)
+        utc_offset = int(request.GET.get("utc_offset", "0"))
         # Construct a timezone from the offset
         tzinfo = datetime.timezone(datetime.timedelta(seconds=utc_offset))
 
