@@ -58,6 +58,12 @@ class BlossomUser(AbstractUser):
         APIKey, on_delete=models.CASCADE, null=True, blank=True
     )
 
+    # The percentage used to determine if a transcription should be checked by the mods.
+    # If this is set, it will overwrite the automatically determined percentage
+    # based on the user's gamma.
+    # This must be a number between 0 and 1 (inclusive).
+    overwrite_check_percentage = models.FloatField(null=True, blank=True, default=None)
+
     # The time that this record was last updated.
     last_update_time = models.DateTimeField(default=timezone.now)
     # Whether this particular user has accepted our Code of Conduct.
