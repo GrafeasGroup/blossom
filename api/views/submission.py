@@ -838,6 +838,21 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return Response(data)
 
 
+def _is_returning_transcriber(volunteer: BlossomUser) -> bool:
+    """Determine if the transcriber is returning.
+
+    If the user has just gotten back into transcribing,
+    their transcriptions should be checked.
+    """
+    recent_date = datetime.datetime.now(tz=pytz.UTC) - datetime.timedelta(days=30)
+    recent_transcriptions = Submission.objects.filter(
+        completed_by=volunteer, complete_time__gte=recent_date,
+    ).count()
+
+    # If the volunteer just returned to transcribing, check them
+    return recent_transcriptions <= 5
+
+
 def _should_check_transcription(volunteer: BlossomUser) -> bool:
     """
     Return whether a transcription should be checked based on user gamma.
@@ -866,13 +881,7 @@ def _should_check_transcription(volunteer: BlossomUser) -> bool:
             return False
 
     # Count the transcriptions by the user in the past month
-    recent_date = datetime.datetime.now(tz=pytz.UTC) - datetime.timedelta(days=30)
-    recent_transcriptions = Submission.objects.filter(
-        completed_by=volunteer, complete_time__gte=recent_date,
-    ).count()
-
-    # If the volunteer just returned to transcribing, check them
-    if recent_transcriptions <= 5:
+    if _is_returning_transcriber(volunteer):
         return True
 
     # Otherwise, use their total gamma to determine the percentage

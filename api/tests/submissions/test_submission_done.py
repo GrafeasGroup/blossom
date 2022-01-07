@@ -163,7 +163,11 @@ class TestSubmissionDone:
         # Mock both the gamma property and the random.random function.
         with patch(
             "authentication.models.BlossomUser.gamma", new_callable=PropertyMock
-        ) as mock, patch("random.random", lambda: probability):
+        ) as mock, patch(
+            "api.views.submission._is_returning_transcriber", return_value=False
+        ), patch(
+            "random.random", lambda: probability
+        ):
             mock.return_value = gamma
             # Mock the Slack client to catch the sent messages by the function under test.
             slack_client.chat_postMessage = MagicMock()
