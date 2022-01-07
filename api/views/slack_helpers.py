@@ -289,6 +289,30 @@ def process_watch(channel: str, message: str) -> None:
     client.chat_postMessage(channel=channel, text=msg)
 
 
+def process_unwatch(channel: str, message: str) -> None:
+    """Set the transcription checks back to automatic."""
+    parsed_message = message.split()
+
+    if len(parsed_message) == 1:
+        # they didn't give a username
+        msg = i18n["slack"]["errors"]["missing_username"]
+    elif len(parsed_message) == 2:
+        username = clean_links(parsed_message[1])
+        if user := BlossomUser.objects.filter(username__iexact=username).first():
+            # Set the check percentage back to automatic
+            user.overwrite_check_percentage = None
+            user.save()
+
+            msg = i18n["slack"]["unwatch"]["success"].format(user=user.username)
+        else:
+            msg = i18n["slack"]["errors"]["unknown_username"]
+
+    else:
+        msg = i18n["slack"]["errors"]["too_many_params"]
+
+    client.chat_postMessage(channel=channel, text=msg)
+
+
 def dadjoke_target(channel: str, message: str, use_api: bool = True) -> None:
     """Send the pinged user a dad joke. Or just send everybody a joke."""
     parsed_message = message.split()
@@ -372,6 +396,7 @@ def process_message(data: Dict) -> None:
         "info": send_info,
         "blacklist": process_blacklist,
         "watch": process_watch,
+        "unwatch": process_unwatch,
         "dadjoke": dadjoke_target,
     }
 
