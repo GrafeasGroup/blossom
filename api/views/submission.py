@@ -35,13 +35,13 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.request import Request
 from rest_framework.response import Response
-from slack import WebClient
 
 from api.authentication import BlossomApiPermission
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.pagination import StandardResultsSetPagination
 from api.serializers import SubmissionSerializer
+from api.views.slack_helpers import _send_transcription_to_slack
 from api.views.slack_helpers import client as slack
 from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
@@ -50,48 +50,6 @@ from authentication.models import BlossomUser
 # depending on their current gamma score
 MAX_CLAIMS = [{"gamma": 0, "claims": 1}, {"gamma": 100, "claims": 2}]
 logger = logging.getLogger("api.views.submission")
-
-
-def _send_transcription_to_slack(
-    transcription: Transcription,
-    submission: Submission,
-    user: BlossomUser,
-    slack: WebClient,
-) -> None:
-    """Notify slack for the transcription check."""
-    url = None
-    # it's possible that we either won't pull a transcription object OR that
-    # a transcription object won't have a URL. If either fails, then we default
-    # to the submission's URL.
-    if transcription:
-        url = transcription.url
-    if not url:
-        url = submission.tor_url
-
-    url = "https://reddit.com" + url if submission.source == "reddit" else url
-
-    msg = f"Please check the following transcription of " f"u/{user.username}: {url}."
-
-    if user.overwrite_check_percentage is not None:
-        # Let the mods know that the user is being watched
-        percentage = user.overwrite_check_percentage
-        msg += (
-            f"\n\nThis user is being watched with a chance of {percentage:.0%}.\n"
-            + f"Undo this using the `unwatch {user.username}` command."
-        )
-
-    # the `done` process is still going here, so they technically don't have
-    # a transcription yet. It's about to get assigned, but for right now the
-    # value is still zero.
-    if user.gamma == 0:
-        msg = ":rotating_light: First transcription! :rotating_light: " + msg
-
-    try:
-        slack.chat_postMessage(
-            channel="#transcription_check", text=msg,
-        )
-    except:  # noqa
-        logger.warning(f"Cannot post message to slack. Msg: {msg}")
 
 
 def _check_for_rank_up(user: BlossomUser, submission: Submission = None) -> None:
