@@ -5,6 +5,7 @@ import random
 from datetime import timedelta
 from typing import Union
 
+import pytz
 from django.conf import settings
 from django.db.models import Count, F
 from django.db.models.functions import (
@@ -475,12 +476,24 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         :param volunteer:   the volunteer for which the post should be checked
         :return:            whether the post should be checked
         """
+        # Check if a mod has overwritten the percentage
         if percentage := volunteer.overwrite_check_percentage:
             if random.random() < percentage:
                 return True
             else:
                 return False
 
+        # Count the transcriptions by the user in the past month
+        recent_date = datetime.datetime.now(tz=pytz.UTC) - datetime.timedelta(days=30)
+        recent_transcriptions = Submission.objects.filter(
+            completed_by=volunteer, complete_time__gte=recent_date,
+        ).count()
+
+        # If the volunteer just returned to transcribing, check them
+        if recent_transcriptions <= 5:
+            return True
+
+        # Otherwise, use their total gamma to determine the percentage
         probabilities = [
             (5, 1),
             (50, 0.4),
