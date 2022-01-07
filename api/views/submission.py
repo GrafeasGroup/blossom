@@ -521,6 +521,14 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             f"Please check the following transcription of " f"u/{user.username}: {url}."
         )
 
+        if user.overwrite_check_percentage is not None:
+            # Let the mods know that the user is being watched
+            percentage = user.overwrite_check_percentage
+            msg += (
+                f"\n\nThis user is being watched with a chance of {percentage:.0%}.\n"
+                + f"Undo this using the `unwatch {user.username}` command."
+            )
+
         # the `done` process is still going here, so they technically don't have
         # a transcription yet. It's about to get assigned, but for right now the
         # value is still zero.

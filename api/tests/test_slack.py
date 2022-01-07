@@ -370,7 +370,7 @@ def test_process_watch(message: str, percentage: float) -> None:
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
     expected_message = i18n["slack"]["watch"]["success"].format(
-        user=test_user.username, percentage=percentage * 100
+        user=test_user.username, percentage=percentage
     )
 
     assert test_user.overwrite_check_percentage == percentage

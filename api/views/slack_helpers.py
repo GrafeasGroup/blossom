@@ -278,7 +278,7 @@ def process_watch(channel: str, message: str) -> None:
             user.save()
 
             msg = i18n["slack"]["watch"]["success"].format(
-                user=user.username, percentage=decimal_percentage * 100
+                user=user.username, percentage=decimal_percentage
             )
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
