@@ -301,8 +301,10 @@ class TestSubmissionDone:
 
         submission = create_submission(claimed_by=user, original_id=25)
 
-        # patch out random so that the "check transcription" doesn't fire
-        with patch("random.random", lambda: 1):
+        # patch out transcription check
+        with patch(
+            "api.views.submission._should_check_transcription", return_value=False,
+        ):
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
                 json.dumps({"username": user.username, "mod_override": "True"}),
@@ -324,10 +326,12 @@ class TestSubmissionDone:
         create_transcription(submission, user)
 
         # now it shouldn't trigger on the next transcription
-        # patch out random so that the "check transcription" doesn't fire
+        # patch out transcription check
         old_count_of_slack_calls = len(slack_client.chat_postMessage.call_args_list)
 
-        with patch("random.random", lambda: 1):
+        with patch(
+            "api.views.submission._should_check_transcription", return_value=False,
+        ):
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
                 json.dumps({"username": user.username}),
