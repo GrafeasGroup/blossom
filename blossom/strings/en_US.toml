@@ -39,6 +39,8 @@ Get information about a user: `@blossom info {username}`
 Get general server information: `@blossom info`
 Blacklist / unblacklist user: `@blossom blacklist {username}`
 Toggle CoC status of user: `@blossom reset {username}`
+Overwrite check percentage: `@blossom watch {username} {percentage}`, where {percentage} is a number between 0 and 100
+Reset check percentage: `@blossom unwatch {username}`
 Render this message: `@blossom help`
 """
 
@@ -77,6 +79,13 @@ github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
     [slack.reset_coc]
     success="Code of Conduct acceptance revoked for user '{0}'."
     success_undo="Code of Conduct acceptance approved for user '{0}'."
+
+    [slack.watch]
+    invalid_percentage="{percentage} is an invalid percentage. Please provide a number between 0 and 100, such as '50%' or '75'."
+    success="The transcriptions of {user} now have a {percentage:.0%} chance to be checked.\nUse `unwatch {user}` to undo this."
+
+    [slack.unwatch]
+    success="The chance to check transcriptions of {user} is now determined automatically."
 
     [slack.dadjoke]
     message = "Hey {0}! {1}"

@@ -469,9 +469,18 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         is to verify that they are continuing to do a good job, not to constantly
         be looking over their shoulder.
 
+        This can also be overwritten manually by a mod through the
+        overwrite_check_percentage field.
+
         :param volunteer:   the volunteer for which the post should be checked
         :return:            whether the post should be checked
         """
+        if percentage := volunteer.overwrite_check_percentage:
+            if random.random() < percentage:
+                return True
+            else:
+                return False
+
         probabilities = [
             (5, 1),
             (50, 0.4),
@@ -511,6 +520,14 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         msg = (
             f"Please check the following transcription of " f"u/{user.username}: {url}."
         )
+
+        if user.overwrite_check_percentage is not None:
+            # Let the mods know that the user is being watched
+            percentage = user.overwrite_check_percentage
+            msg += (
+                f"\n\nThis user is being watched with a chance of {percentage:.0%}.\n"
+                + f"Undo this using the `unwatch {user.username}` command."
+            )
 
         # the `done` process is still going here, so they technically don't have
         # a transcription yet. It's about to get assigned, but for right now the

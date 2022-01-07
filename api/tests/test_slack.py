@@ -20,6 +20,8 @@ from api.views.slack_helpers import (
     is_valid_github_request,
     process_blacklist,
     process_coc_reset,
+    process_unwatch,
+    process_watch,
 )
 from blossom.strings import translation
 from utils.test_helpers import create_user
@@ -293,7 +295,7 @@ def test_process_blacklist_errors(message: str, response: str) -> None:
 
 
 def test_process_coc_reset() -> None:
-    """Test blacklist functionality and ensure that it works in reverse."""
+    """Test reset functionality and ensure that it works in reverse."""
     slack_client.chat_postMessage = MagicMock()
 
     test_user = create_user()
@@ -345,6 +347,108 @@ def test_process_coc_reset_errors(message: str, response: str) -> None:
     slack_client.chat_postMessage = MagicMock()
     process_coc_reset("", message)
     slack_client.chat_postMessage.assert_called_once()
+    assert slack_client.chat_postMessage.call_args[1]["text"] == response
+
+
+@pytest.mark.parametrize(
+    "message,percentage",
+    [
+        ("watch u123", 1),
+        ("watch u123 50", 0.5),
+        ("watch u123 75%", 0.75),
+        ("watch <https://reddit.com/u/u123|u123> 10", 0.1),
+    ],
+)
+def test_process_watch(message: str, percentage: float) -> None:
+    """Test watch functionality."""
+    slack_client.chat_postMessage = MagicMock()
+
+    test_user = create_user(username="u123")
+    assert test_user.overwrite_check_percentage is None
+    # process the message
+    process_watch("", message)
+    slack_client.chat_postMessage.assert_called_once()
+    test_user.refresh_from_db()
+    expected_message = i18n["slack"]["watch"]["success"].format(
+        user=test_user.username, percentage=percentage
+    )
+
+    assert test_user.overwrite_check_percentage == percentage
+    assert slack_client.chat_postMessage.call_args[1]["text"] == expected_message
+
+
+@pytest.mark.parametrize(
+    "message,response",
+    [
+        ("watch", i18n["slack"]["errors"]["missing_username"]),
+        ("watch u123 50 13", i18n["slack"]["errors"]["too_many_params"]),
+        ("watch u456 50", i18n["slack"]["errors"]["unknown_username"]),
+        (
+            "watch u123 -1",
+            i18n["slack"]["watch"]["invalid_percentage"].format(percentage="-1"),
+        ),
+        (
+            "watch u123 101",
+            i18n["slack"]["watch"]["invalid_percentage"].format(percentage="101"),
+        ),
+        (
+            "watch u123 0.5",
+            i18n["slack"]["watch"]["invalid_percentage"].format(percentage="0.5"),
+        ),
+    ],
+)
+def test_process_watch_error(message: str, response: str) -> None:
+    """Test watch command for invalid messages."""
+    slack_client.chat_postMessage = MagicMock()
+
+    test_user = create_user(username="u123")
+    assert test_user.overwrite_check_percentage is None
+    # process the message
+    process_watch("", message)
+    slack_client.chat_postMessage.assert_called_once()
+    test_user.refresh_from_db()
+
+    assert test_user.overwrite_check_percentage is None
+    assert slack_client.chat_postMessage.call_args[1]["text"] == response
+
+
+def test_process_unwatch() -> None:
+    """Test unwatch functionality."""
+    slack_client.chat_postMessage = MagicMock()
+
+    test_user = create_user(username="u123", overwrite_check_percentage=0.5)
+    assert test_user.overwrite_check_percentage == 0.5
+    # process the message
+    process_unwatch("", "unwatch u123")
+    slack_client.chat_postMessage.assert_called_once()
+    test_user.refresh_from_db()
+    expected_message = i18n["slack"]["unwatch"]["success"].format(
+        user=test_user.username
+    )
+
+    assert test_user.overwrite_check_percentage is None
+    assert slack_client.chat_postMessage.call_args[1]["text"] == expected_message
+
+
+@pytest.mark.parametrize(
+    "message,response",
+    [
+        ("unwatch", i18n["slack"]["errors"]["missing_username"]),
+        ("unwatch u123 50", i18n["slack"]["errors"]["too_many_params"]),
+    ],
+)
+def test_process_unwatch_error(message: str, response: str) -> None:
+    """Test watch command for invalid messages."""
+    slack_client.chat_postMessage = MagicMock()
+
+    test_user = create_user(username="u123")
+    assert test_user.overwrite_check_percentage is None
+    # process the message
+    process_unwatch("", message)
+    slack_client.chat_postMessage.assert_called_once()
+    test_user.refresh_from_db()
+
+    assert test_user.overwrite_check_percentage is None
     assert slack_client.chat_postMessage.call_args[1]["text"] == response
 
 
