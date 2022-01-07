@@ -469,9 +469,18 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         is to verify that they are continuing to do a good job, not to constantly
         be looking over their shoulder.
 
+        This can also be overwritten manually by a mod through the
+        overwrite_check_percentage field.
+
         :param volunteer:   the volunteer for which the post should be checked
         :return:            whether the post should be checked
         """
+        if percentage := volunteer.overwrite_check_percentage:
+            if random.random() < percentage:
+                return True
+            else:
+                return False
+
         probabilities = [
             (5, 1),
             (50, 0.4),
