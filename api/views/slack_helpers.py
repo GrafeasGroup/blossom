@@ -241,6 +241,52 @@ def process_coc_reset(channel: str, message: str) -> None:
     client.chat_postMessage(channel=channel, text=msg)
 
 
+def process_watch(channel: str, message: str) -> None:
+    """Overwrite the transcription check percentage of a user."""
+    parsed_message = message.split()
+
+    if len(parsed_message) == 1:
+        # they didn't give a username
+        msg = i18n["slack"]["errors"]["missing_username"]
+    elif len(parsed_message) <= 3:
+        username = clean_links(parsed_message[1])
+        if user := BlossomUser.objects.filter(username__iexact=username).first():
+            if len(parsed_message) == 2:
+                # they didn't give a percentage, default to 100%
+                decimal_percentage = 1
+            else:
+                # parse the provided percentage
+                percentage = parsed_message[2]
+
+                try:
+                    # Try to parse the new check percentage
+                    percentage = int(percentage.rstrip(" %"))
+                    if percentage < 0 or percentage > 100:
+                        raise ValueError
+
+                    decimal_percentage = percentage / 100
+                except ValueError:
+                    # The percentage is invalid
+                    msg = i18n["slack"]["watch"]["invalid_percentage"].format(
+                        percentage=percentage
+                    )
+                    client.chat_postMessage(channel=channel, text=msg)
+                    return
+
+            # Overwrite the check percentage
+            user.overwrite_check_percentage = decimal_percentage
+            msg = i18n["slack"]["watch"]["success"].format(
+                user=user["username"], percentage=decimal_percentage * 100
+            )
+        else:
+            msg = i18n["slack"]["errors"]["unknown_username"]
+
+    else:
+        msg = i18n["slack"]["errors"]["too_many_params"]
+
+    client.chat_postMessage(channel=channel, text=msg)
+
+
 def dadjoke_target(channel: str, message: str, use_api: bool = True) -> None:
     """Send the pinged user a dad joke. Or just send everybody a joke."""
     parsed_message = message.split()
@@ -323,6 +369,7 @@ def process_message(data: Dict) -> None:
         "reset": process_coc_reset,
         "info": send_info,
         "blacklist": process_blacklist,
+        "watch": process_watch,
         "dadjoke": dadjoke_target,
     }
 
