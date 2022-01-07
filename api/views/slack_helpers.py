@@ -275,8 +275,10 @@ def process_watch(channel: str, message: str) -> None:
 
             # Overwrite the check percentage
             user.overwrite_check_percentage = decimal_percentage
+            user.save()
+
             msg = i18n["slack"]["watch"]["success"].format(
-                user=user["username"], percentage=decimal_percentage * 100
+                user=user.username, percentage=decimal_percentage * 100
             )
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]

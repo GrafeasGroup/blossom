@@ -20,6 +20,7 @@ from api.views.slack_helpers import (
     is_valid_github_request,
     process_blacklist,
     process_coc_reset,
+    process_watch,
 )
 from blossom.strings import translation
 from utils.test_helpers import create_user
@@ -293,7 +294,7 @@ def test_process_blacklist_errors(message: str, response: str) -> None:
 
 
 def test_process_coc_reset() -> None:
-    """Test blacklist functionality and ensure that it works in reverse."""
+    """Test reset functionality and ensure that it works in reverse."""
     slack_client.chat_postMessage = MagicMock()
 
     test_user = create_user()
@@ -346,6 +347,33 @@ def test_process_coc_reset_errors(message: str, response: str) -> None:
     process_coc_reset("", message)
     slack_client.chat_postMessage.assert_called_once()
     assert slack_client.chat_postMessage.call_args[1]["text"] == response
+
+
+@pytest.mark.parametrize(
+    "message,percentage",
+    [
+        ("watch u123", 1),
+        ("watch u123 50", 0.5),
+        ("watch u123 75%", 0.75),
+        ("watch <https://reddit.com/u/u123|u123> 10", 0.1),
+    ],
+)
+def test_process_watch(message: str, percentage: float) -> None:
+    """Test watch functionality."""
+    slack_client.chat_postMessage = MagicMock()
+
+    test_user = create_user(username="u123")
+    assert test_user.overwrite_check_percentage is None
+    # process the message
+    process_watch("", message)
+    slack_client.chat_postMessage.assert_called_once()
+    test_user.refresh_from_db()
+    expected_message = i18n["slack"]["watch"]["success"].format(
+        user=test_user.username, percentage=percentage * 100
+    )
+
+    assert test_user.overwrite_check_percentage == percentage
+    assert slack_client.chat_postMessage.call_args[1]["text"] == expected_message
 
 
 @pytest.mark.parametrize(
