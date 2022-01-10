@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blossom"
-version = "1.20.0"
+version = "1.21.0"
 description = "The site!"
 authors = ["Grafeas Group Ltd. <devs@grafeas.org>"]
 
