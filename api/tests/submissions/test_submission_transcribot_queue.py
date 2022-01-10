@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 
-from api.views.submission import SubmissionViewSet
+from api.views.submission import _get_limit_value
 from utils.test_helpers import (
     create_submission,
     create_transcription,
@@ -171,25 +171,25 @@ def test_get_limit() -> None:
     """Verify that get_limit_value returns the requested value or 10."""
     request = MagicMock()
     request.query_params.get.return_value = None
-    return_value = SubmissionViewSet()._get_limit_value(request)
+    return_value = _get_limit_value(request)
     assert return_value == 10
 
     request.query_params.get.return_value = None
-    return_value = SubmissionViewSet()._get_limit_value(request, default=200)
+    return_value = _get_limit_value(request, default=200)
     assert return_value == 200
 
     request.query_params.get.return_value = "999"
-    return_value = SubmissionViewSet()._get_limit_value(request)
+    return_value = _get_limit_value(request)
     assert return_value == 999
 
     request.query_params.get.return_value = "none"
-    return_value = SubmissionViewSet()._get_limit_value(request)
+    return_value = _get_limit_value(request)
     assert return_value is None
 
     request.query_params.get.return_value = "aaa"
-    return_value = SubmissionViewSet()._get_limit_value(request)
+    return_value = _get_limit_value(request)
     assert return_value == 10
 
     request.query_params.get.return_value = "!@#$%&%)%^&"
-    return_value = SubmissionViewSet()._get_limit_value(request)
+    return_value = _get_limit_value(request)
     assert return_value == 10

@@ -1,12 +1,15 @@
+import datetime
 import json
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
 import pytest
+import pytz
 from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
 from api.views.slack_helpers import client as slack_client
+from api.views.submission import _is_returning_transcriber
 from utils.test_helpers import (
     create_submission,
     create_transcription,
@@ -163,7 +166,11 @@ class TestSubmissionDone:
         # Mock both the gamma property and the random.random function.
         with patch(
             "authentication.models.BlossomUser.gamma", new_callable=PropertyMock
-        ) as mock, patch("random.random", lambda: probability):
+        ) as mock, patch(
+            "api.views.submission._is_returning_transcriber", return_value=False
+        ), patch(
+            "random.random", lambda: probability
+        ):
             mock.return_value = gamma
             # Mock the Slack client to catch the sent messages by the function under test.
             slack_client.chat_postMessage = MagicMock()
@@ -190,6 +197,33 @@ class TestSubmissionDone:
                 )
             else:
                 assert slack_client.chat_postMessage.call_count == 0
+
+    @pytest.mark.parametrize(
+        "recent_gamma, total_gamma, expected",
+        [(0, 10000, True), (5, 10000, True), (6, 6, False), (10, 10000, False)],
+    )
+    def test_is_returning_transcriber(
+        self, client: Client, recent_gamma: int, total_gamma: int, expected: bool,
+    ) -> None:
+        """Test whether returning transcribers are determined correctly."""
+        # Mock both the total gamma
+        with patch(
+            "authentication.models.BlossomUser.gamma",
+            new_callable=PropertyMock,
+            return_value=total_gamma,
+        ):
+            # Mock the Slack client to catch the sent messages by the function under test.
+            client, headers, user = setup_user_client(client)
+            now = datetime.datetime.now(tz=pytz.UTC)
+
+            # Create the recent transcriptions
+            for i in range(0, recent_gamma):
+                submission = create_submission(
+                    id=i + 100, claimed_by=user, completed_by=user, complete_time=now,
+                )
+                create_transcription(submission, user, id=i + 100, create_time=now)
+
+            assert _is_returning_transcriber(user) == expected
 
     def test_send_transcription_to_slack(self, client: Client) -> None:
         """Verify that a new user gets a different welcome message."""
@@ -301,8 +335,10 @@ class TestSubmissionDone:
 
         submission = create_submission(claimed_by=user, original_id=25)
 
-        # patch out random so that the "check transcription" doesn't fire
-        with patch("random.random", lambda: 1):
+        # patch out transcription check
+        with patch(
+            "api.views.submission._should_check_transcription", return_value=False,
+        ):
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
                 json.dumps({"username": user.username, "mod_override": "True"}),
@@ -324,10 +360,12 @@ class TestSubmissionDone:
         create_transcription(submission, user)
 
         # now it shouldn't trigger on the next transcription
-        # patch out random so that the "check transcription" doesn't fire
+        # patch out transcription check
         old_count_of_slack_calls = len(slack_client.chat_postMessage.call_args_list)
 
-        with patch("random.random", lambda: 1):
+        with patch(
+            "api.views.submission._should_check_transcription", return_value=False,
+        ):
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
                 json.dumps({"username": user.username}),

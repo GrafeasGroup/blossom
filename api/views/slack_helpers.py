@@ -1,6 +1,7 @@
 import binascii
 import hashlib
 import hmac
+import logging
 import os
 import re
 import time
@@ -11,15 +12,18 @@ import requests
 import slack
 from django.conf import settings
 from django.http import HttpRequest
+from slack import WebClient
 
 from api.helpers import fire_and_forget
-from api.models import Submission
+from api.models import Submission, Transcription
 from api.serializers import VolunteerSerializer
 from api.views.misc import Summary
 from app.reddit_actions import remove_post
 from authentication.models import BlossomUser
 from blossom.errors import ConfigurationError
 from blossom.strings import translation
+
+logger = logging.getLogger("api.views.slack_helpers")
 
 if settings.ENABLE_SLACK is True:
     try:
@@ -452,3 +456,45 @@ def is_valid_slack_request(request: HttpRequest) -> bool:
     )
 
     return hmac.compare_digest(signature, slack_signature)
+
+
+def _send_transcription_to_slack(
+    transcription: Transcription,
+    submission: Submission,
+    user: BlossomUser,
+    slack_client: WebClient,
+) -> None:
+    """Notify slack for the transcription check."""
+    url = None
+    # it's possible that we either won't pull a transcription object OR that
+    # a transcription object won't have a URL. If either fails, then we default
+    # to the submission's URL.
+    if transcription:
+        url = transcription.url
+    if not url:
+        url = submission.tor_url
+
+    url = "https://reddit.com" + url if submission.source == "reddit" else url
+
+    msg = f"Please check the following transcription of " f"u/{user.username}: {url}."
+
+    if user.overwrite_check_percentage is not None:
+        # Let the mods know that the user is being watched
+        percentage = user.overwrite_check_percentage
+        msg += (
+            f"\n\nThis user is being watched with a chance of {percentage:.0%}.\n"
+            + f"Undo this using the `unwatch {user.username}` command."
+        )
+
+    # the `done` process is still going here, so they technically don't have
+    # a transcription yet. It's about to get assigned, but for right now the
+    # value is still zero.
+    if user.gamma == 0:
+        msg = ":rotating_light: First transcription! :rotating_light: " + msg
+
+    try:
+        slack_client.chat_postMessage(
+            channel="#transcription_check", text=msg,
+        )
+    except:  # noqa
+        logger.warning(f"Cannot post message to slack. Msg: {msg}")

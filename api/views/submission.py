@@ -5,6 +5,7 @@ import random
 from datetime import timedelta
 from typing import Union
 
+import pytz
 from django.conf import settings
 from django.db.models import Count, F
 from django.db.models.functions import (
@@ -34,13 +35,13 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
 from rest_framework.request import Request
 from rest_framework.response import Response
-from slack import WebClient
 
 from api.authentication import BlossomApiPermission
 from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.pagination import StandardResultsSetPagination
 from api.serializers import SubmissionSerializer
+from api.views.slack_helpers import _send_transcription_to_slack
 from api.views.slack_helpers import client as slack
 from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
@@ -49,6 +50,48 @@ from authentication.models import BlossomUser
 # depending on their current gamma score
 MAX_CLAIMS = [{"gamma": 0, "claims": 1}, {"gamma": 100, "claims": 2}]
 logger = logging.getLogger("api.views.submission")
+
+
+def _check_for_rank_up(user: BlossomUser, submission: Submission = None) -> None:
+    """
+    Check if a volunteer has changed rank and, if so, notify Slack.
+
+    Because gamma is calculated off of transcriptions and the `done` endpoint
+    is called after the transcription is posted, by the time that we go to
+    calculate the gamma of the user, their gamma has already changed... so
+    we'll just subtract one from their current score and see if that changes
+    anything.
+    """
+    current_rank = user.get_rank()
+    if user.get_rank(override=user.gamma - 1) != current_rank:
+        msg = (
+            f"Congrats to {user.username} on achieving the rank of {current_rank}!!"
+            f" {submission.tor_url}"
+        )
+        try:
+            slack.chat_postMessage(channel="#new_volunteers_meta", text=msg)
+        except:  # noqa
+            logger.warning(f"Cannot post message to slack. Msg: {msg}")
+            pass
+
+
+def _get_limit_value(request: Request, default: int = 10) -> Union[int, None]:
+    """
+    Retrieve an optional limit parameter for get_transcribot_queue.
+
+    If no limit is passed in, a default of 10 is used. Passing in "none"
+    will return the entire queryset.
+    """
+    limit_value = request.query_params.get("limit")
+    if not limit_value:
+        return default
+    try:
+        return int(limit_value)
+    except (ValueError, TypeError):
+        if str(limit_value).lower() == "none":
+            return None
+        else:
+            return default
 
 
 @method_decorator(
@@ -454,118 +497,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 
-    @staticmethod
-    def _should_check_transcription(volunteer: BlossomUser) -> bool:
-        """
-        Return whether a transcription should be checked based on user gamma.
-
-        This is based on the gamma of the user. Given this gamma, a probability
-        for the check is provided. For example, if the probability listed is
-        (5, 1), then for the first five transcriptions there is a 100% probability
-        that their transcription will be posted to the channel. If the probability
-        listed reads something like (100, 0.2), then there is a 1 in 5 chance
-        (20%) of their transcription being posted. The chance will get lower as
-        the volunteer gains more experience, as the entire point of this system
-        is to verify that they are continuing to do a good job, not to constantly
-        be looking over their shoulder.
-
-        This can also be overwritten manually by a mod through the
-        overwrite_check_percentage field.
-
-        :param volunteer:   the volunteer for which the post should be checked
-        :return:            whether the post should be checked
-        """
-        if percentage := volunteer.overwrite_check_percentage:
-            if random.random() < percentage:
-                return True
-            else:
-                return False
-
-        probabilities = [
-            (5, 1),
-            (50, 0.4),
-            (100, 0.2),
-            (250, 0.1),
-            (500, 0.05),
-            (1000, 0.02),
-            (5000, 0.01),
-        ]
-        for (gamma, probability) in probabilities:
-            if volunteer.gamma <= gamma:
-                if random.random() < probability:
-                    return True
-                else:
-                    return False
-        return random.random() < 0.005
-
-    def _send_transcription_to_slack(
-        self,
-        transcription: Transcription,
-        submission: Submission,
-        user: BlossomUser,
-        slack: WebClient,
-    ) -> None:
-        """Notify slack for the transcription check."""
-        url = None
-        # it's possible that we either won't pull a transcription object OR that
-        # a transcription object won't have a URL. If either fails, then we default
-        # to the submission's URL.
-        if transcription:
-            url = transcription.url
-        if not url:
-            url = submission.tor_url
-
-        url = "https://reddit.com" + url if submission.source == "reddit" else url
-
-        msg = (
-            f"Please check the following transcription of " f"u/{user.username}: {url}."
-        )
-
-        if user.overwrite_check_percentage is not None:
-            # Let the mods know that the user is being watched
-            percentage = user.overwrite_check_percentage
-            msg += (
-                f"\n\nThis user is being watched with a chance of {percentage:.0%}.\n"
-                + f"Undo this using the `unwatch {user.username}` command."
-            )
-
-        # the `done` process is still going here, so they technically don't have
-        # a transcription yet. It's about to get assigned, but for right now the
-        # value is still zero.
-        if user.gamma == 0:
-            msg = ":rotating_light: First transcription! :rotating_light: " + msg
-
-        try:
-            slack.chat_postMessage(
-                channel="#transcription_check", text=msg,
-            )
-        except:  # noqa
-            logger.warning(f"Cannot post message to slack. Msg: {msg}")
-
-    def _check_for_rank_up(
-        self, user: BlossomUser, submission: Submission = None
-    ) -> None:
-        """
-        Check if a volunteer has changed rank and, if so, notify Slack.
-
-        Because gamma is calculated off of transcriptions and the `done` endpoint
-        is called after the transcription is posted, by the time that we go to
-        calculate the gamma of the user, their gamma has already changed... so
-        we'll just subtract one from their current score and see if that changes
-        anything.
-        """
-        current_rank = user.get_rank()
-        if user.get_rank(override=user.gamma - 1) != current_rank:
-            msg = (
-                f"Congrats to {user.username} on achieving the rank of {current_rank}!!"
-                f" {submission.tor_url}"
-            )
-            try:
-                slack.chat_postMessage(channel="#new_volunteers_meta", text=msg)
-            except:  # noqa
-                logger.warning(f"Cannot post message to slack. Msg: {msg}")
-                pass
-
     @csrf_exempt
     @swagger_auto_schema(
         request_body=Schema(
@@ -627,19 +558,17 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if not transcription:
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
 
-            if self._should_check_transcription(user):
+            if _should_check_transcription(user):
                 # Check to see if the transcription has been removed. If it has, only
                 # post the message to slack if the user has completed 5 or fewer posts.
                 if not transcription.removed_from_reddit or user.gamma <= 5:
-                    self._send_transcription_to_slack(
-                        transcription, submission, user, slack
-                    )
+                    _send_transcription_to_slack(transcription, submission, user, slack)
 
         submission.completed_by = user
         submission.complete_time = timezone.now()
         submission.save()
 
-        self._check_for_rank_up(user, submission)
+        _check_for_rank_up(user, submission)
 
         return Response(
             status=status.HTTP_201_CREATED,
@@ -707,24 +636,6 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 
-    def _get_limit_value(self, request: Request, default: int = 10) -> Union[int, None]:
-        """
-        Retrieve an optional limit parameter for get_transcribot_queue.
-
-        If no limit is passed in, a default of 10 is used. Passing in "none"
-        will return the entire queryset.
-        """
-        limit_value = request.query_params.get("limit")
-        if not limit_value:
-            return default
-        try:
-            return int(limit_value)
-        except (ValueError, TypeError):
-            if str(limit_value).lower() == "none":
-                return None
-            else:
-                return default
-
     @csrf_exempt
     @swagger_auto_schema(
         responses={
@@ -763,7 +674,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         source_obj = get_object_or_404(Source, pk=source)
         transcribot = BlossomUser.objects.get(username="transcribot")
-        return_limit = self._get_limit_value(request)
+        return_limit = _get_limit_value(request)
         queryset = Submission.objects.filter(
             source=source_obj,
             transcription__author=transcribot,
@@ -925,3 +836,68 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         }
 
         return Response(data)
+
+
+def _is_returning_transcriber(volunteer: BlossomUser) -> bool:
+    """Determine if the transcriber is returning.
+
+    If the user has just gotten back into transcribing,
+    their transcriptions should be checked.
+    """
+    recent_date = datetime.datetime.now(tz=pytz.UTC) - datetime.timedelta(days=30)
+    recent_transcriptions = Submission.objects.filter(
+        completed_by=volunteer, complete_time__gte=recent_date,
+    ).count()
+
+    # If the volunteer just returned to transcribing, check them
+    return recent_transcriptions <= 5
+
+
+def _should_check_transcription(volunteer: BlossomUser) -> bool:
+    """
+    Return whether a transcription should be checked based on user gamma.
+
+    This is based on the gamma of the user. Given this gamma, a probability
+    for the check is provided. For example, if the probability listed is
+    (5, 1), then for the first five transcriptions there is a 100% probability
+    that their transcription will be posted to the channel. If the probability
+    listed reads something like (100, 0.2), then there is a 1 in 5 chance
+    (20%) of their transcription being posted. The chance will get lower as
+    the volunteer gains more experience, as the entire point of this system
+    is to verify that they are continuing to do a good job, not to constantly
+    be looking over their shoulder.
+
+    This can also be overwritten manually by a mod through the
+    overwrite_check_percentage field.
+
+    :param volunteer:   the volunteer for which the post should be checked
+    :return:            whether the post should be checked
+    """
+    # Check if a mod has overwritten the percentage
+    if percentage := volunteer.overwrite_check_percentage:
+        if random.random() < percentage:
+            return True
+        else:
+            return False
+
+    # Count the transcriptions by the user in the past month
+    if _is_returning_transcriber(volunteer):
+        return True
+
+    # Otherwise, use their total gamma to determine the percentage
+    probabilities = [
+        (5, 1),
+        (50, 0.4),
+        (100, 0.2),
+        (250, 0.1),
+        (500, 0.05),
+        (1000, 0.02),
+        (5000, 0.01),
+    ]
+    for (gamma, probability) in probabilities:
+        if volunteer.gamma <= gamma:
+            if random.random() < probability:
+                return True
+            else:
+                return False
+    return random.random() < 0.005
