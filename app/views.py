@@ -24,7 +24,7 @@ from django.views.generic import View
 from rest_framework import status
 
 from api.models import Source, Submission, Transcription
-from api.views.slack_helpers import client
+from api.views.slack_helpers import send_slack_message
 from api.views.submission import SubmissionViewSet
 from app.permissions import RequireCoCMixin, require_coc, require_reddit_auth
 from app.reddit_actions import (
@@ -548,7 +548,7 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
         submission.id
     )
     log.info(f"Sending message to Slack to ask about removing {submission.id}")
-    client.chat_postMessage(channel="reported_posts", blocks=blocks)
+    send_slack_message(channel_key="REPORTED_POST", blocks=blocks)
 
 
 @login_required

@@ -43,6 +43,7 @@ from api.pagination import StandardResultsSetPagination
 from api.serializers import SubmissionSerializer
 from api.views.slack_helpers import _send_transcription_to_slack
 from api.views.slack_helpers import client as slack
+from api.views.slack_helpers import send_slack_message
 from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
 
@@ -69,7 +70,7 @@ def _check_for_rank_up(user: BlossomUser, submission: Submission = None) -> None
             f" {submission.tor_url}"
         )
         try:
-            slack.chat_postMessage(channel="#new_volunteers_meta", text=msg)
+            send_slack_message(channel="RANK_UP", text=msg)
         except:  # noqa
             logger.warning(f"Cannot post message to slack. Msg: {msg}")
             pass

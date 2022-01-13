@@ -46,6 +46,28 @@ SLACK_TEXT_EXTRACTOR = re.compile(
 )
 
 
+def send_slack_message(
+    channel: Optional[str] = None, channel_key: Optional[str] = None, **kwargs: Any
+) -> None:
+    """Send a message to the given channel.
+
+    Takes EITHER a concrete channel ID OR a channel key.
+
+    If a channel key is provided, the actual ID will be taken from
+    the SLACK_<key>_CHANNEL env variable.
+    """
+    if channel is None and channel_key is None:
+        RuntimeError("Either a channel or channel key must be provided!")
+
+    channel_id = channel or os.environ.get(f"SLACK_{channel_key}_CHANNEL")
+
+    if not channel_id:
+        logger.warning(f"Channel ID for SLACK_{channel_key}_CHANNEL is not defined!")
+        return
+
+    client.chat_postMessage(channel=channel_id, **kwargs)
+
+
 def clean_links(text: str) -> str:
     """Strip link out of auto-generated slack fancy URLS and return the text only."""
     results = [_ for _ in re.finditer(SLACK_TEXT_EXTRACTOR, text)]
@@ -92,9 +114,9 @@ def dict_to_table(dictionary: Dict, titles: List = None, width: int = None) -> L
     return return_list
 
 
-def send_help_message(channel: str, *args: Any) -> None:
+def send_help_message(channel: str) -> None:
     """Post a help message to slack."""
-    client.chat_postMessage(channel=channel, text=i18n["slack"]["help_message"])
+    send_slack_message(channel=channel, text=i18n["slack"]["help_message"])
 
 
 def send_github_sponsors_message(data: Dict, action: str) -> None:
@@ -121,7 +143,7 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
     msg = i18n["slack"]["github_sponsor_update"].format(
         emote, action, username, sponsorlevel
     )
-    client.chat_postMessage(channel="org_running", text=msg)
+    send_slack_message(channel_key="GITHUB_SPONSORS", text=msg)
 
 
 def process_submission_update(data: dict) -> None:
@@ -167,7 +189,7 @@ def send_info(channel: str, message: str) -> None:
     if len(parsed_message) == 1:
         # they just sent an empty info message, create a summary response
         data = Summary().generate_summary()
-        client.chat_postMessage(
+        send_slack_message(
             channel=channel,
             text=i18n["slack"]["server_summary"].format("\n".join(dict_to_table(data))),
         )
@@ -186,7 +208,7 @@ def send_info(channel: str, message: str) -> None:
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
-    client.chat_postMessage(channel=channel, text=msg)
+    send_slack_message(channel=channel, text=msg)
 
 
 def process_blacklist(channel: str, message: str) -> None:
@@ -211,12 +233,12 @@ def process_blacklist(channel: str, message: str) -> None:
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
-    client.chat_postMessage(channel=channel, text=msg)
+    send_slack_message(channel=channel, text=msg)
 
 
 def pong(channel: str, *args: Any) -> None:
     """Respond to pings."""
-    client.chat_postMessage(channel=channel, text="PONG")
+    send_slack_message(channel=channel, text="PONG")
 
 
 def process_coc_reset(channel: str, message: str) -> None:
@@ -242,7 +264,7 @@ def process_coc_reset(channel: str, message: str) -> None:
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
-    client.chat_postMessage(channel=channel, text=msg)
+    send_slack_message(channel=channel, text=msg)
 
 
 def process_watch(channel: str, message: str) -> None:
@@ -274,7 +296,7 @@ def process_watch(channel: str, message: str) -> None:
                     msg = i18n["slack"]["watch"]["invalid_percentage"].format(
                         percentage=percentage
                     )
-                    client.chat_postMessage(channel=channel, text=msg)
+                    send_slack_message(channel=channel, text=msg)
                     return
 
             # Overwrite the check percentage
@@ -290,7 +312,7 @@ def process_watch(channel: str, message: str) -> None:
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
-    client.chat_postMessage(channel=channel, text=msg)
+    send_slack_message(channel=channel, text=msg)
 
 
 def process_unwatch(channel: str, message: str) -> None:
@@ -314,7 +336,7 @@ def process_unwatch(channel: str, message: str) -> None:
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
-    client.chat_postMessage(channel=channel, text=msg)
+    send_slack_message(channel=channel, text=msg)
 
 
 def dadjoke_target(channel: str, message: str, use_api: bool = True) -> None:
@@ -341,7 +363,7 @@ def dadjoke_target(channel: str, message: str, use_api: bool = True) -> None:
     if not msg:
         msg = joke
 
-    client.chat_postMessage(channel=channel, text=msg, link_names=True)
+    send_slack_message(channel=channel, text=msg, link_names=True)
 
 
 def get_message(data: Dict) -> Optional[str]:
@@ -380,13 +402,13 @@ def process_message(data: Dict) -> None:
     actions = data.get("actions")
 
     if not message and not actions:
-        client.chat_postMessage(
+        send_slack_message(
             channel=channel, text=i18n["slack"]["errors"]["message_parse_error"],
         )
         return
 
     if not message:
-        client.chat_postMessage(
+        send_slack_message(
             channel=channel, text=i18n["slack"]["errors"]["empty_message_error"],
         )
         return
@@ -410,9 +432,7 @@ def process_message(data: Dict) -> None:
             return
 
     # if we fall through here, we got a message that we don't understand.
-    client.chat_postMessage(
-        channel=channel, text=i18n["slack"]["errors"]["unknown_request"]
-    )
+    send_slack_message(channel=channel, text=i18n["slack"]["errors"]["unknown_request"])
 
 
 def is_valid_github_request(request: HttpRequest) -> bool:
@@ -493,8 +513,8 @@ def _send_transcription_to_slack(
         msg = ":rotating_light: First transcription! :rotating_light: " + msg
 
     try:
-        slack_client.chat_postMessage(
-            channel="#transcription_check", text=msg,
+        send_slack_message(
+            channel_key="TRANSCRIPTION_CHECK", text=msg,
         )
     except:  # noqa
         logger.warning(f"Cannot post message to slack. Msg: {msg}")
