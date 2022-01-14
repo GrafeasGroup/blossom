@@ -25,9 +25,44 @@ from blossom.strings import translation
 
 logger = logging.getLogger("api.views.slack_helpers")
 
+
+class DictWithNoKeyError(dict):
+    def __getitem__(self, item: Any) -> Any:
+        # make it so that mydict['unknown_value'] returns None instead of KeyError.
+        result = self.get(item, None)
+        if not result:
+            logging.warning(f"Requested nonexistent key {item} - is Slack initialized?")
+        return result
+
+
+rooms_list = DictWithNoKeyError()
+
 if settings.ENABLE_SLACK is True:
     try:
         client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
+        # Define the list of rooms (useful to retrieve the ID of the rooms, knowing their
+        # name)
+        rooms = client.conversations_list()
+        for room in rooms["channels"]:
+            rooms_list[room["id"]] = room["name"]
+            rooms_list[room["name"]] = room["id"]
+
+        # Now that we have an understanding of what channels are available and what the
+        # actual IDs are, we can't send a message to a named channel anymore (e.g.
+        # "dev_test") -- it's gotta go to the internal Slack channel ID. So now we'll
+        # redefine DEFAULT_CHANNEL to be the internal slack ID version.
+        # Can't make this an easy loop because lazysettings doesn't want to play along.
+        settings.SLACK_GITHUB_SPONSORS_CHANNEL = rooms_list[
+            settings.SLACK_GITHUB_SPONSORS_CHANNEL
+        ]
+        settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL = rooms_list[
+            settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL
+        ]
+        settings.SLACK_REPORTED_POST_CHANNEL = rooms_list[
+            settings.SLACK_REPORTED_POST_CHANNEL
+        ]
+        settings.SLACK_RANK_UP_CHANNEL = rooms_list[settings.SLACK_RANK_UP_CHANNEL]
+
     except KeyError:
         raise ConfigurationError(
             "ENABLE_SLACK is set to True, but no API key was found. Set the"
@@ -121,7 +156,7 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
     msg = i18n["slack"]["github_sponsor_update"].format(
         emote, action, username, sponsorlevel
     )
-    client.chat_postMessage(channel="org_running", text=msg)
+    client.chat_postMessage(channel=settings.SLACK_GITHUB_SPONSORS_CHANNEL, text=msg)
 
 
 def process_submission_update(data: dict) -> None:
@@ -494,7 +529,7 @@ def _send_transcription_to_slack(
 
     try:
         slack_client.chat_postMessage(
-            channel="#transcription_check", text=msg,
+            channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL, text=msg,
         )
     except:  # noqa
         logger.warning(f"Cannot post message to slack. Msg: {msg}")

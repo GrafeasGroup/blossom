@@ -6,6 +6,7 @@ import pytest
 import pytz
 from django.test import Client
 from django.urls import reverse
+from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
 from api.views.slack_helpers import client as slack_client
@@ -156,6 +157,7 @@ class TestSubmissionDone:
     def test_done_random_checks(
         self,
         client: Client,
+        settings: SettingsWrapper,
         probability: float,
         gamma: int,
         message: bool,
@@ -192,7 +194,10 @@ class TestSubmissionDone:
             assert result.status_code == status.HTTP_201_CREATED
             if message:
                 assert (
-                    call(channel="#transcription_check", text=slack_message)
+                    call(
+                        channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL,
+                        text=slack_message,
+                    )
                     in slack_client.chat_postMessage.call_args_list
                 )
             else:
@@ -225,7 +230,9 @@ class TestSubmissionDone:
 
             assert _is_returning_transcriber(user) == expected
 
-    def test_send_transcription_to_slack(self, client: Client) -> None:
+    def test_send_transcription_to_slack(
+        self, client: Client, settings: SettingsWrapper
+    ) -> None:
         """Verify that a new user gets a different welcome message."""
         # Mock both the gamma property and the random.random function.
         with patch(
@@ -258,7 +265,10 @@ class TestSubmissionDone:
 
             assert result.status_code == status.HTTP_201_CREATED
             assert (
-                call(channel="#transcription_check", text=first_slack_message)
+                call(
+                    channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL,
+                    text=first_slack_message,
+                )
                 == slack_client.chat_postMessage.call_args_list[0]
             )
             submission.refresh_from_db()
@@ -275,7 +285,10 @@ class TestSubmissionDone:
             )
             assert result.status_code == status.HTTP_201_CREATED
             assert (
-                call(channel="#transcription_check", text=second_slack_message)
+                call(
+                    channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL,
+                    text=second_slack_message,
+                )
                 == slack_client.chat_postMessage.call_args_list[-1]
             )
 
@@ -324,7 +337,7 @@ class TestSubmissionDone:
             assert result.status_code == status.HTTP_201_CREATED
             assert len(slack_client.chat_postMessage.call_args_list) == 0
 
-    def test_check_for_rank_up(self, client: Client) -> None:
+    def test_check_for_rank_up(self, client: Client, settings: SettingsWrapper) -> None:
         """Verify that a slack message fires when a volunteer ranks up."""
         client, headers, user = setup_user_client(client)
         for iteration in range(24):
@@ -351,7 +364,7 @@ class TestSubmissionDone:
             f" {submission.tor_url}"
         )
         assert (
-            call(channel="#new_volunteers_meta", text=slack_message)
+            call(channel=settings.SLACK_RANK_UP_CHANNEL, text=slack_message)
             == slack_client.chat_postMessage.call_args_list[0]
         )
 

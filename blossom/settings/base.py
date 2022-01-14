@@ -282,6 +282,17 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "social_core.pipeline.user.user_details",
 )
+SLACK_DEFAULT_CHANNEL = os.environ.get("SLACK_DEFAULT_CHANNEL", "dev_alerts")
+SLACK_GITHUB_SPONSORS_CHANNEL = os.environ.get(
+    "SLACK_GITHUB_SPONSORS_CHANNEL", "admin_general"
+)
+SLACK_TRANSCRIPTION_CHECK_CHANNEL = os.environ.get(
+    "SLACK_TRANSCRIPTION_CHECK_CHANNEL", "qa_transcription_check_pings"
+)
+SLACK_REPORTED_POST_CHANNEL = os.environ.get(
+    "SLACK_REPORTED_POST_CHANNEL", "qa_reported_posts"
+)
+SLACK_RANK_UP_CHANNEL = os.environ.get("SLACK_RANK_UP_CHANNEL", "general")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

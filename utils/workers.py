@@ -27,7 +27,7 @@ def _worker() -> None:
             message = f"Background worker exception: ```{details}```"
             if settings.ENABLE_SLACK:
                 client.chat_postMessage(
-                    channel="botstuffs", text=message,
+                    channel=settings.SLACK_DEFAULT_CHANNEL, text=message,
                 )
             log.error(message)
         finally:
