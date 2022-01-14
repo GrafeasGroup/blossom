@@ -25,17 +25,7 @@ from blossom.strings import translation
 
 logger = logging.getLogger("api.views.slack_helpers")
 
-
-class DictWithNoKeyError(dict):
-    def __getitem__(self, item: Any) -> Any:
-        # make it so that mydict['unknown_value'] returns None instead of KeyError.
-        result = self.get(item, None)
-        if not result:
-            logging.warning(f"Requested nonexistent key {item} - is Slack initialized?")
-        return result
-
-
-rooms_list = DictWithNoKeyError()
+rooms_list = dict()
 
 if settings.ENABLE_SLACK is True:
     try:
