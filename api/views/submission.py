@@ -144,6 +144,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         "archived": ["exact"],
         "content_url": ["exact", "isnull"],
         "redis_id": ["exact", "isnull"],
+        "removed_from_queue": ["exact"],
     }
     ordering_fields = [
         "id",
