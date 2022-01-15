@@ -30,29 +30,6 @@ rooms_list = dict()
 if settings.ENABLE_SLACK is True:
     try:
         client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
-        # Define the list of rooms (useful to retrieve the ID of the rooms, knowing their
-        # name)
-        rooms = client.conversations_list()
-        for room in rooms["channels"]:
-            rooms_list[room["id"]] = room["name"]
-            rooms_list[room["name"]] = room["id"]
-
-        # Now that we have an understanding of what channels are available and what the
-        # actual IDs are, we can't send a message to a named channel anymore (e.g.
-        # "dev_test") -- it's gotta go to the internal Slack channel ID. So now we'll
-        # redefine DEFAULT_CHANNEL to be the internal slack ID version.
-        # Can't make this an easy loop because lazysettings doesn't want to play along.
-        settings.SLACK_GITHUB_SPONSORS_CHANNEL = rooms_list[
-            settings.SLACK_GITHUB_SPONSORS_CHANNEL
-        ]
-        settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL = rooms_list[
-            settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL
-        ]
-        settings.SLACK_REPORTED_POST_CHANNEL = rooms_list[
-            settings.SLACK_REPORTED_POST_CHANNEL
-        ]
-        settings.SLACK_RANK_UP_CHANNEL = rooms_list[settings.SLACK_RANK_UP_CHANNEL]
-
     except KeyError:
         raise ConfigurationError(
             "ENABLE_SLACK is set to True, but no API key was found. Set the"
