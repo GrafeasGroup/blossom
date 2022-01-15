@@ -304,3 +304,28 @@ class TestSubmissionGet:
         )
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == result_count
+
+    @pytest.mark.parametrize(
+        "filter_str,result_count",
+        [("removed_from_queue=true", 1), ("removed_from_queue=false", 1), ("", 2)],
+    )
+    def test_list_with_removed_filter(
+        self, client: Client, filter_str: str, result_count: int
+    ) -> None:
+        """Verify that submissions can be filtered by their removal status."""
+        client, headers, user = setup_user_client(client, id=123)
+
+        create_submission(
+            id=1, removed_from_queue=True,
+        )
+        create_submission(
+            id=2, removed_from_queue=False,
+        )
+
+        result = client.get(
+            reverse("submission-list") + f"?{filter_str}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == result_count
