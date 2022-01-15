@@ -848,11 +848,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             404: "Submission not found.",
         },
     )
-    @validate_request(data_params={"removed_from_queue"})
     @action(detail=True, methods=["patch"])
-    def remove(
-        self, request: Request, pk: int, removed_from_queue: bool = True
-    ) -> Response:
+    def remove(self, request: Request, pk: int) -> Response:
         """
         Remove the submission from the queue.
 
@@ -860,6 +857,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         in the body of the request.
         """
         submission = get_object_or_404(Submission, id=pk)
+
+        removed_from_queue = request.data.get("removed_from_queue", True)
 
         submission.removed_from_queue = removed_from_queue
         submission.save()
