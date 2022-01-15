@@ -548,7 +548,7 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
         submission.id
     )
     log.info(f"Sending message to Slack to ask about removing {submission.id}")
-    client.chat_postMessage(channel="reported_posts", blocks=blocks)
+    client.chat_postMessage(channel=settings.SLACK_REPORTED_POST_CHANNEL, blocks=blocks)
 
 
 @login_required

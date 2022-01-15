@@ -282,6 +282,22 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "social_core.pipeline.user.user_details",
 )
+# dev_alerts
+SLACK_DEFAULT_CHANNEL = os.environ.get("SLACK_DEFAULT_CHANNEL", "C5BSP8PV5")
+# admin_general
+SLACK_GITHUB_SPONSORS_CHANNEL = os.environ.get(
+    "SLACK_GITHUB_SPONSORS_CHANNEL", "C5WTEUWE5"
+)
+# qa_transcription_check
+SLACK_TRANSCRIPTION_CHECK_CHANNEL = os.environ.get(
+    "SLACK_TRANSCRIPTION_CHECK_CHANNEL", "CTE1SEPSP"
+)
+# qa_reported_posts
+SLACK_REPORTED_POST_CHANNEL = os.environ.get(
+    "SLACK_REPORTED_POST_CHANNEL", "C02RCEG0MEH"
+)
+# general
+SLACK_RANK_UP_CHANNEL = os.environ.get("SLACK_RANK_UP_CHANNEL", "C4R36V9V1")
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

@@ -25,6 +25,8 @@ from blossom.strings import translation
 
 logger = logging.getLogger("api.views.slack_helpers")
 
+rooms_list = dict()
+
 if settings.ENABLE_SLACK is True:
     try:
         client = slack.WebClient(token=os.environ["SLACK_API_KEY"])  # pragma: no cover
@@ -121,7 +123,7 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
     msg = i18n["slack"]["github_sponsor_update"].format(
         emote, action, username, sponsorlevel
     )
-    client.chat_postMessage(channel="org_running", text=msg)
+    client.chat_postMessage(channel=settings.SLACK_GITHUB_SPONSORS_CHANNEL, text=msg)
 
 
 def process_submission_update(data: dict) -> None:
@@ -494,7 +496,7 @@ def _send_transcription_to_slack(
 
     try:
         slack_client.chat_postMessage(
-            channel="#transcription_check", text=msg,
+            channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL, text=msg,
         )
     except:  # noqa
         logger.warning(f"Cannot post message to slack. Msg: {msg}")

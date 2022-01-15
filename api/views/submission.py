@@ -69,7 +69,7 @@ def _check_for_rank_up(user: BlossomUser, submission: Submission = None) -> None
             f" {submission.tor_url}"
         )
         try:
-            slack.chat_postMessage(channel="#new_volunteers_meta", text=msg)
+            slack.chat_postMessage(channel=settings.SLACK_RANK_UP_CHANNEL, text=msg)
         except:  # noqa
             logger.warning(f"Cannot post message to slack. Msg: {msg}")
             pass
