@@ -838,6 +838,35 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         return Response(data)
 
+    @csrf_exempt
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object", properties={"removed_from_queue": Schema(type="bool")}
+        ),
+        responses={
+            201: DocResponse("Successful removal", schema=serializer_class),
+            404: "Submission not found.",
+        },
+    )
+    @action(detail=True, methods=["patch"])
+    def remove(self, request: Request, pk: int) -> Response:
+        """
+        Remove the submission from the queue.
+
+        It is also possible to revert the removal by setting removed_from_queue to false
+        in the body of the request.
+        """
+        submission = get_object_or_404(Submission, id=pk)
+
+        removed_from_queue = request.data.get("removed_from_queue", True)
+
+        submission.removed_from_queue = removed_from_queue
+        submission.save()
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data=self.serializer_class(submission, context={"request": request}).data,
+        )
+
 
 def _is_returning_transcriber(volunteer: BlossomUser) -> bool:
     """Determine if the transcriber is returning.
