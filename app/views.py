@@ -483,6 +483,17 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
 @send_to_worker
 def ask_about_removing_post(request: HttpRequest, submission: Submission) -> None:
     """Ask Slack if we want to remove a reported submission or not."""
+    report_text = (
+        "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\nReport reason: {reason}"
+    ).format(
+        url=submission.url,
+        title=submission.title,
+        tor_url=submission.tor_url,
+        reason=request.GET.get("reason"),
+    )
+    keep_submission = f"keep_submission_{submission.id}"
+    remove_submission = f"remove_submission_{submission.id}"
+
     # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
     blocks = [
         {
@@ -496,16 +507,7 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
             },
         },
         {"type": "divider"},
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": (
-                    "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\n"
-                    "Report reason: {reason}"
-                ),
-            },
-        },
+        {"type": "section", "text": {"type": "mrkdwn", "text": report_text}},
         {"type": "divider"},
         {
             "type": "actions",
@@ -513,13 +515,13 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
                 {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Keep"},
-                    "value": "keep_submission_{}",
+                    "value": keep_submission,
                 },
                 {
                     "type": "button",
                     "style": "danger",
                     "text": {"type": "plain_text", "text": "Remove"},
-                    "value": "remove_submission_{}",
+                    "value": remove_submission,
                     "confirm": {
                         "title": {"type": "plain_text", "text": "Are you sure?"},
                         "text": {
@@ -534,19 +536,6 @@ def ask_about_removing_post(request: HttpRequest, submission: Submission) -> Non
         },
     ]
 
-    blocks[2]["text"]["text"] = blocks[2]["text"]["text"].format(
-        url=submission.url,
-        title=submission.title,
-        tor_url=submission.tor_url,
-        reason=request.GET.get("reason"),
-    )
-
-    blocks[-1]["elements"][0]["value"] = blocks[-1]["elements"][0]["value"].format(
-        submission.id
-    )
-    blocks[-1]["elements"][1]["value"] = blocks[-1]["elements"][1]["value"].format(
-        submission.id
-    )
     log.info(f"Sending message to Slack to ask about removing {submission.id}")
     client.chat_postMessage(channel=settings.SLACK_REPORTED_POST_CHANNEL, blocks=blocks)
 
