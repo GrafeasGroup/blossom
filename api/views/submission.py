@@ -41,7 +41,10 @@ from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.pagination import StandardResultsSetPagination
 from api.serializers import SubmissionSerializer
-from api.views.slack_helpers import _send_transcription_to_slack
+from api.views.slack_helpers import (
+    _send_transcription_to_slack,
+    ask_about_removing_post,
+)
 from api.views.slack_helpers import client as slack
 from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
@@ -862,6 +865,41 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         submission.removed_from_queue = removed_from_queue
         submission.save()
+        return Response(
+            status=status.HTTP_201_CREATED,
+            data=self.serializer_class(submission, context={"request": request}).data,
+        )
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        request_body=Schema(type="object", properties={"reason": Schema(type="str")}),
+        responses={
+            201: DocResponse("Successful report", schema=serializer_class),
+            404: "Submission not found.",
+        },
+    )
+    @validate_request(data_params={"reason"})
+    @action(detail=True, methods=["patch"])
+    def report(self, request: Request, pk: int) -> Response:
+        """Report the given submission.
+
+        This will send a message to the mods to review the submission.
+        """
+        submission = get_object_or_404(Submission, id=pk)
+        reason = request.data.get("reason")
+
+        if submission.removed_from_queue:
+            # The submission is already removed-- ignore the report
+            return Response(
+                status=status.HTTP_201_CREATED,
+                data=self.serializer_class(
+                    submission, context={"request": request}
+                ).data,
+            )
+
+        # Send the report to mod chat
+        ask_about_removing_post(submission, reason)
+
         return Response(
             status=status.HTTP_201_CREATED,
             data=self.serializer_class(submission, context={"request": request}).data,
