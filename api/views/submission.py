@@ -887,8 +887,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         submission = get_object_or_404(Submission, id=pk)
 
-        if submission.removed_from_queue or submission.report_reason:
+        if submission.removed_from_queue or submission.report_reason is not None:
             # The submission is already removed or reported-- ignore the report
+            print("Already reported!")
             return Response(
                 status=status.HTTP_201_CREATED,
                 data=self.serializer_class(
@@ -896,12 +897,14 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 ).data,
             )
 
+        print("Setting report reason")
         # Save the report reason
         submission.report_reason = reason
         submission.save(skip_extras=True)
 
         # Send the report to mod chat
         ask_about_removing_post(submission, reason)
+        print("Asked for post removal")
 
         return Response(
             status=status.HTTP_201_CREATED,

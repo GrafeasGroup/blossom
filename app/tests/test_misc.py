@@ -1,7 +1,5 @@
 from unittest.mock import MagicMock
 
-from django.test import RequestFactory
-
 from api.models import Source
 from api.views.slack_helpers import client as slack_client
 from app.views import ask_about_removing_post, get_blossom_app_source
@@ -18,15 +16,21 @@ def test_get_blossom_app_source() -> None:
     assert response.name == "TranscriptionApp"
 
 
-def test_ask_about_removing_post(rf: RequestFactory) -> None:
+def test_ask_about_removing_post() -> None:
     """Verify that block messages are handled appropriately."""
     # Mock the Slack client to catch the sent messages by the function under test.
-    slack_client.chat_postMessage = MagicMock()
-    request = rf.get("asdf?reason=asdf")
-    submission = create_submission()
-    ask_about_removing_post(request, submission, worker_test_mode=True)
+    mock = MagicMock()
+    mock.return_value = {"ok": True, "message": {"id": "12345"}}
+    slack_client.chat_postMessage = mock
 
-    blocks = slack_client.chat_postMessage.call_args[1]["blocks"]
+    submission = create_submission(id=3)
+    assert not submission.report_slack_id
+
+    ask_about_removing_post(submission, "asdf", worker_test_mode=True)
+    submission.refresh_from_db()
+
+    assert submission.report_slack_id == "12345"
+    blocks = mock.call_args[1]["blocks"]
     assert "asdf" in blocks[2]["text"]["text"]
-    assert "submission_1" in blocks[-1]["elements"][0]["value"]
-    assert "submission_1" in blocks[-1]["elements"][1]["value"]
+    assert "submission_3" in blocks[-1]["elements"][0]["value"]
+    assert "submission_3" in blocks[-1]["elements"][1]["value"]

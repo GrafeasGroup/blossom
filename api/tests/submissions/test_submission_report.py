@@ -37,11 +37,14 @@ class TestSubmissionReport:
 
     def test_report_not_removed(self, client: Client) -> None:
         """Verify that reporting sends a message to Slack."""
-        slack_client.chat_postMessage = MagicMock()
+        mock = MagicMock()
+        slack_client.chat_postMessage = mock
         client, headers, user = setup_user_client(client)
 
         submission = create_submission(id=3)
         assert not submission.removed_from_queue
+        assert not submission.report_reason
+        assert not submission.report_slack_id
 
         data = {"reason": "Violation of ALL the rules"}
 
@@ -56,4 +59,4 @@ class TestSubmissionReport:
 
         assert result.status_code == status.HTTP_201_CREATED
         assert not submission.removed_from_queue
-        assert slack_client.chat_postMessage.call_count == 1
+        assert submission.report_reason == "Violation of ALL the rules"
