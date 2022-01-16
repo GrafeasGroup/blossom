@@ -22,6 +22,7 @@ from app.reddit_actions import remove_post
 from authentication.models import BlossomUser
 from blossom.errors import ConfigurationError
 from blossom.strings import translation
+from utils.workers import send_to_worker
 
 logger = logging.getLogger("api.views.slack_helpers")
 
@@ -500,3 +501,61 @@ def _send_transcription_to_slack(
         )
     except:  # noqa
         logger.warning(f"Cannot post message to slack. Msg: {msg}")
+
+
+@send_to_worker
+def ask_about_removing_post(submission: Submission, reason: str) -> None:
+    """Ask Slack if we want to remove a reported submission or not."""
+    report_text = (
+        "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\nReport reason: {reason}"
+    ).format(
+        url=submission.url,
+        title=submission.title,
+        tor_url=submission.tor_url,
+        reason=reason,
+    )
+    keep_submission = f"keep_submission_{submission.id}"
+    remove_submission = f"remove_submission_{submission.id}"
+
+    # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    "This submission was reported -- please investigate and decide"
+                    " whether it should be removed."
+                ),
+            },
+        },
+        {"type": "divider"},
+        {"type": "section", "text": {"type": "mrkdwn", "text": report_text}},
+        {"type": "divider"},
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Keep"},
+                    "value": keep_submission,
+                },
+                {
+                    "type": "button",
+                    "style": "danger",
+                    "text": {"type": "plain_text", "text": "Remove"},
+                    "value": remove_submission,
+                    "confirm": {
+                        "title": {"type": "plain_text", "text": "Are you sure?"},
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "This will remove the submission from the queue.",
+                        },
+                        "confirm": {"type": "plain_text", "text": "Nuke it"},
+                        "deny": {"type": "plain_text", "text": "Back"},
+                    },
+                },
+            ],
+        },
+    ]
+    client.chat_postMessage(channel=settings.SLACK_REPORTED_POST_CHANNEL, blocks=blocks)
