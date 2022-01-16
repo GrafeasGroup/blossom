@@ -147,6 +147,11 @@ class Submission(models.Model):
     # specifically.
     removed_from_queue = models.BooleanField(default=False)
 
+    # If the submission has been reported, this contains the report reason
+    report_reason = models.CharField(max_length=300, null=True, blank=True)
+    # If the submission has been reported, this contains the ID to the Slack message
+    report_slack_id = models.CharField(max_length=50, null=True, blank=True)
+
     # If we get errors back from our OCR solution or if a given submission cannot
     # be run through OCR, this flag should be set.
     cannot_ocr = models.BooleanField(default=False)
