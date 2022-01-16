@@ -880,13 +880,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     )
     @validate_request(data_params={"reason"})
     @action(detail=True, methods=["patch"])
-    def report(self, request: Request, pk: int) -> Response:
+    def report(self, request: Request, pk: int, reason: str) -> Response:
         """Report the given submission.
 
         This will send a message to the mods to review the submission.
         """
         submission = get_object_or_404(Submission, id=pk)
-        reason = request.data.get("reason")
 
         if submission.removed_from_queue:
             # The submission is already removed-- ignore the report
