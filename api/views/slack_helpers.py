@@ -575,7 +575,7 @@ def ask_about_removing_post(submission: Submission, reason: str) -> None:
         )
         return
 
-    # TODO: Does this actually work?
-    submission.report_slack_channel_id = response["channel"]["id"]
+    # See https://api.slack.com/methods/chat.postMessage
+    submission.report_slack_channel_id = response["channel"]
     submission.report_slack_message_ts = response["message"]["ts"]
     submission.save()
