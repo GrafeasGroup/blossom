@@ -24,7 +24,7 @@ from django.views.generic import View
 from rest_framework import status
 
 from api.models import Source, Submission, Transcription
-from api.views.slack_helpers import client
+from api.views.slack_helpers import ask_about_removing_post
 from api.views.submission import SubmissionViewSet
 from app.permissions import RequireCoCMixin, require_coc, require_reddit_auth
 from app.reddit_actions import (
@@ -44,7 +44,6 @@ from app.validation import (
 from ocr.helpers import escape_reddit_links, replace_shortlinks
 from utils.mixins import CSRFExemptMixin
 from utils.requests import convert_to_drf_request
-from utils.workers import send_to_worker
 from website.helpers import get_additional_context
 
 log = logging.getLogger(__name__)
@@ -480,77 +479,6 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
             return redirect("choose_transcription")
 
 
-@send_to_worker
-def ask_about_removing_post(request: HttpRequest, submission: Submission) -> None:
-    """Ask Slack if we want to remove a reported submission or not."""
-    # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
-    blocks = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": (
-                    "This submission was reported -- please investigate and decide"
-                    " whether it should be removed."
-                ),
-            },
-        },
-        {"type": "divider"},
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": (
-                    "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\n"
-                    "Report reason: {reason}"
-                ),
-            },
-        },
-        {"type": "divider"},
-        {
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Keep"},
-                    "value": "keep_submission_{}",
-                },
-                {
-                    "type": "button",
-                    "style": "danger",
-                    "text": {"type": "plain_text", "text": "Remove"},
-                    "value": "remove_submission_{}",
-                    "confirm": {
-                        "title": {"type": "plain_text", "text": "Are you sure?"},
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "This will remove the submission from the queue.",
-                        },
-                        "confirm": {"type": "plain_text", "text": "Nuke it"},
-                        "deny": {"type": "plain_text", "text": "Back"},
-                    },
-                },
-            ],
-        },
-    ]
-
-    blocks[2]["text"]["text"] = blocks[2]["text"]["text"].format(
-        url=submission.url,
-        title=submission.title,
-        tor_url=submission.tor_url,
-        reason=request.GET.get("reason"),
-    )
-
-    blocks[-1]["elements"][0]["value"] = blocks[-1]["elements"][0]["value"].format(
-        submission.id
-    )
-    blocks[-1]["elements"][1]["value"] = blocks[-1]["elements"][1]["value"].format(
-        submission.id
-    )
-    log.info(f"Sending message to Slack to ask about removing {submission.id}")
-    client.chat_postMessage(channel=settings.SLACK_REPORTED_POST_CHANNEL, blocks=blocks)
-
-
 @login_required
 @require_coc
 def unclaim_submission(
@@ -601,11 +529,16 @@ def unclaim_submission(
 @require_coc
 def report_submission(request: HttpRequest, submission_id: int) -> HttpResponseRedirect:
     """Process reports without unclaiming that originate from the web app side."""
+    reason = request.GET.get("reason")
     submission_obj = Submission.objects.get(id=submission_id)
+
     # Reports that come in here are always for a specific reason, so remove the post
     # from the queue until we can investigate.
     submission_obj.removed_from_queue = True
+    submission_obj.report_reason = reason
     submission_obj.save(skip_extras=True)
 
-    ask_about_removing_post(request, submission_obj)
+    ask_about_removing_post(submission_obj, reason)
+
+    log.info(f"Sending message to Slack to ask about removing {submission_id}")
     return redirect("choose_transcription")

@@ -22,6 +22,7 @@ from app.reddit_actions import remove_post
 from authentication.models import BlossomUser
 from blossom.errors import ConfigurationError
 from blossom.strings import translation
+from utils.workers import send_to_worker
 
 logger = logging.getLogger("api.views.slack_helpers")
 
@@ -500,3 +501,81 @@ def _send_transcription_to_slack(
         )
     except:  # noqa
         logger.warning(f"Cannot post message to slack. Msg: {msg}")
+
+
+@send_to_worker
+def ask_about_removing_post(submission: Submission, reason: str) -> None:
+    """Ask Slack if we want to remove a reported submission or not."""
+    # Check if this got already sent to mod chat, we don't want duplicates
+    if (
+        submission.report_slack_channel_id is not None
+        or submission.report_slack_message_ts is not None
+    ):
+        return
+
+    report_text = (
+        "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\nReport reason: {reason}"
+    ).format(
+        url=submission.url,
+        title=submission.title,
+        tor_url=submission.tor_url,
+        reason=reason,
+    )
+    keep_submission = f"keep_submission_{submission.id}"
+    remove_submission = f"remove_submission_{submission.id}"
+
+    # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": (
+                    "This submission was reported -- please investigate and decide"
+                    " whether it should be removed."
+                ),
+            },
+        },
+        {"type": "divider"},
+        {"type": "section", "text": {"type": "mrkdwn", "text": report_text}},
+        {"type": "divider"},
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Keep"},
+                    "value": keep_submission,
+                },
+                {
+                    "type": "button",
+                    "style": "danger",
+                    "text": {"type": "plain_text", "text": "Remove"},
+                    "value": remove_submission,
+                    "confirm": {
+                        "title": {"type": "plain_text", "text": "Are you sure?"},
+                        "text": {
+                            "type": "mrkdwn",
+                            "text": "This will remove the submission from the queue.",
+                        },
+                        "confirm": {"type": "plain_text", "text": "Nuke it"},
+                        "deny": {"type": "plain_text", "text": "Back"},
+                    },
+                },
+            ],
+        },
+    ]
+
+    response = client.chat_postMessage(
+        channel=settings.SLACK_REPORTED_POST_CHANNEL, blocks=blocks
+    )
+    if not response["ok"]:
+        logger.warning(
+            f"Could not send report for submission {submission.id} to Slack!"
+        )
+        return
+
+    # TODO: Does this actually work?
+    submission.report_slack_channel_id = response["channel"]["id"]
+    submission.report_slack_message_ts = response["message"]["ts"]
+    submission.save()
