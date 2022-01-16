@@ -29,5 +29,5 @@ jobs:
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_SECRET }}
       run: |
-        poetry run pytest
+        poetry run pytest --workers=auto
         poetry run coveralls
