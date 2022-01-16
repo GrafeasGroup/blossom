@@ -506,6 +506,10 @@ def _send_transcription_to_slack(
 @send_to_worker
 def ask_about_removing_post(submission: Submission, reason: str) -> None:
     """Ask Slack if we want to remove a reported submission or not."""
+    # Check if this got already sent to mod chat, we don't want duplicates
+    if submission.report_slack_id is not None:
+        return
+
     report_text = (
         "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\nReport reason: {reason}"
     ).format(

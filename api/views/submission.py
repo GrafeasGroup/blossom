@@ -887,8 +887,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         submission = get_object_or_404(Submission, id=pk)
 
-        if submission.removed_from_queue:
-            # The submission is already removed-- ignore the report
+        if submission.removed_from_queue or submission.report_reason:
+            # The submission is already removed or reported-- ignore the report
             return Response(
                 status=status.HTTP_201_CREATED,
                 data=self.serializer_class(
