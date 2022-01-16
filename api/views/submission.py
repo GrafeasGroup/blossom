@@ -896,6 +896,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 ).data,
             )
 
+        # Save the report reason
+        submission.report_reason = reason
+        submission.save(skip_extras=True)
+
         # Send the report to mod chat
         ask_about_removing_post(submission, reason)
 

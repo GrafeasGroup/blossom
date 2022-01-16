@@ -529,14 +529,16 @@ def unclaim_submission(
 @require_coc
 def report_submission(request: HttpRequest, submission_id: int) -> HttpResponseRedirect:
     """Process reports without unclaiming that originate from the web app side."""
+    reason = request.GET.get("reason")
     submission_obj = Submission.objects.get(id=submission_id)
+
     # Reports that come in here are always for a specific reason, so remove the post
     # from the queue until we can investigate.
     submission_obj.removed_from_queue = True
+    submission_obj.report_reason = reason
     submission_obj.save(skip_extras=True)
 
-    reason = request.GET.get("reason")
     ask_about_removing_post(submission_obj, reason)
-    log.info(f"Sending message to Slack to ask about removing {submission_id}")
 
+    log.info(f"Sending message to Slack to ask about removing {submission_id}")
     return redirect("choose_transcription")

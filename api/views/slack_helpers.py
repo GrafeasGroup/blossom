@@ -558,4 +558,17 @@ def ask_about_removing_post(submission: Submission, reason: str) -> None:
             ],
         },
     ]
-    client.chat_postMessage(channel=settings.SLACK_REPORTED_POST_CHANNEL, blocks=blocks)
+
+    response = client.chat_postMessage(
+        channel=settings.SLACK_REPORTED_POST_CHANNEL, blocks=blocks
+    )
+    if not response["ok"]:
+        logger.warning(
+            f"Could not send report for submission {submission.id} to Slack!"
+        )
+        return
+
+    # TODO: Does this actually work?
+    message_id = response["message"]["id"]
+    submission.report_slack_id = message_id
+    submission.save()
