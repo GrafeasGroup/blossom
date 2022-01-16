@@ -44,7 +44,8 @@ class TestSubmissionReport:
         submission = create_submission(id=3)
         assert not submission.removed_from_queue
         assert not submission.report_reason
-        assert not submission.report_slack_id
+        assert not submission.report_slack_channel_id
+        assert not submission.report_slack_message_ts
 
         data = {"reason": "Violation of ALL the rules"}
 
