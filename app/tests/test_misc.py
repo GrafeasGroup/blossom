@@ -20,10 +20,26 @@ def test_ask_about_removing_post() -> None:
     """Verify that block messages are handled appropriately."""
     # Mock the Slack client to catch the sent messages by the function under test.
     mock = MagicMock()
+    # From https://api.slack.com/methods/chat.postMessage
     mock.return_value = {
         "ok": True,
-        "message": {"ts": "12345"},
-        "channel": {"id": "6789"},
+        "channel": "C1H9RESGL",
+        "ts": "1503435956.000247",
+        "message": {
+            "text": "Here's a message for you",
+            "username": "ecto1",
+            "bot_id": "B19LU7CSY",
+            "attachments": [
+                {
+                    "text": "This is an attachment",
+                    "id": 1,
+                    "fallback": "This is an attachment's fallback",
+                }
+            ],
+            "type": "message",
+            "subtype": "bot_message",
+            "ts": "1503435956.000247",
+        },
     }
     slack_client.chat_postMessage = mock
 
@@ -34,8 +50,8 @@ def test_ask_about_removing_post() -> None:
     ask_about_removing_post(submission, "asdf", worker_test_mode=True)
     submission.refresh_from_db()
 
-    assert submission.report_slack_channel_id == "6789"
-    assert submission.report_slack_message_ts == "12345"
+    assert submission.report_slack_channel_id == "C1H9RESGL"
+    assert submission.report_slack_message_ts == "1503435956.000247"
     blocks = mock.call_args[1]["blocks"]
     assert "asdf" in blocks[2]["text"]["text"]
     assert "submission_3" in blocks[-1]["elements"][0]["value"]

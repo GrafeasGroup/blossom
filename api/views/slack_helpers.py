@@ -145,10 +145,14 @@ def process_submission_update(data: dict) -> None:
             },
         }
     else:
-        # The submission was removed temporarily from the app queue when it was reported,
-        # so we don't have to do anything else on the app side. Now that it's been
-        # verified, go ahead and nuke it from Reddit's side as well.
+        # Remove the post from Reddit
         remove_post(submission_obj)
+        # Make sure the submission is marked as removed
+        # If reported on the app side this already happened, but not for
+        # reports from Reddit
+        submission_obj.removed_from_queue = True
+        submission_obj.save(skip_extras=True)
+
         blocks[-1] = {
             "type": "section",
             "text": {
@@ -575,7 +579,7 @@ def ask_about_removing_post(submission: Submission, reason: str) -> None:
         )
         return
 
-    # TODO: Does this actually work?
-    submission.report_slack_channel_id = response["channel"]["id"]
+    # See https://api.slack.com/methods/chat.postMessage
+    submission.report_slack_channel_id = response["channel"]
     submission.report_slack_message_ts = response["message"]["ts"]
     submission.save()
