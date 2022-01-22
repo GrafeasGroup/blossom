@@ -9,7 +9,7 @@ from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
-from api.views.slack_helpers import client as slack_client
+from api.slack import client as slack_client
 from api.views.submission import _is_returning_transcriber
 from utils.test_helpers import (
     create_submission,

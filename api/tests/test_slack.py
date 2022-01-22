@@ -12,17 +12,17 @@ from django.test.client import RequestFactory
 from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 
-from api.views.slack import github_sponsors_endpoint
-from api.views.slack_helpers import client as slack_client
-from api.views.slack_helpers import (
+from api.slack import client as slack_client
+from api.slack.commands import (
     dadjoke_target,
-    dict_to_table,
-    is_valid_github_request,
     process_blacklist,
     process_coc_reset,
     process_unwatch,
     process_watch,
 )
+from api.slack.events import is_valid_github_request
+from api.slack.utils import dict_to_table
+from api.views.slack import github_sponsors_endpoint
 from blossom.strings import translation
 from utils.test_helpers import create_user
 
