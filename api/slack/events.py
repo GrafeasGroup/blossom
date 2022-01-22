@@ -3,7 +3,8 @@ import hashlib
 import hmac
 import logging
 import time
-from typing import Dict
+from enum import Enum
+from typing import Dict, List
 
 from django.conf import settings
 from django.http import HttpRequest
@@ -140,61 +141,11 @@ def ask_about_removing_post(submission: Submission, reason: str) -> None:
     ):
         return
 
-    report_text = (
-        "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\nReport reason: {reason}"
-    ).format(
-        url=submission.url,
-        title=submission.title,
-        tor_url=submission.tor_url,
-        reason=reason,
-    )
-    keep_submission = f"keep_submission_{submission.id}"
-    remove_submission = f"remove_submission_{submission.id}"
-
-    # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
-    blocks = [
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": (
-                    "This submission was reported -- please investigate and decide"
-                    " whether it should be removed."
-                ),
-            },
-        },
-        {"type": "divider"},
-        {"type": "section", "text": {"type": "mrkdwn", "text": report_text}},
-        {"type": "divider"},
-        {
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "Keep"},
-                    "value": keep_submission,
-                },
-                {
-                    "type": "button",
-                    "style": "danger",
-                    "text": {"type": "plain_text", "text": "Remove"},
-                    "value": remove_submission,
-                    "confirm": {
-                        "title": {"type": "plain_text", "text": "Are you sure?"},
-                        "text": {
-                            "type": "mrkdwn",
-                            "text": "This will remove the submission from the queue.",
-                        },
-                        "confirm": {"type": "plain_text", "text": "Nuke it"},
-                        "deny": {"type": "plain_text", "text": "Back"},
-                    },
-                },
-            ],
-        },
-    ]
-
     response = client.chat_postMessage(
-        channel=settings.SLACK_REPORTED_POST_CHANNEL, blocks=blocks
+        channel=settings.SLACK_REPORTED_POST_CHANNEL,
+        blocks=_construct_report_message_blocks(
+            submission, ReportMessageStatus.REPORTED, reason
+        ),
     )
     if not response["ok"]:
         logger.warning(
@@ -206,3 +157,92 @@ def ask_about_removing_post(submission: Submission, reason: str) -> None:
     submission.report_slack_channel_id = response["channel"]
     submission.report_slack_message_ts = response["message"]["ts"]
     submission.save()
+
+
+class ReportMessageStatus(Enum):
+    """The current status of the report."""
+
+    REPORTED = "reported"
+    REMOVED = "removed"
+    APPROVED = "approved"
+
+
+def _construct_report_message_blocks(
+    submission: Submission, status: ReportMessageStatus, reason: str,
+) -> List[Dict]:
+    """Construct the report message for the given submission."""
+    report_title = f"*Reported submission {submission.id}"
+    report_text = (
+        "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\nReport reason: {reason}"
+    ).format(
+        url=submission.url,
+        title=submission.title,
+        tor_url=submission.tor_url,
+        reason=reason,
+    )
+
+    status_text = _construct_report_message_status_text(status)
+    actions = _construct_report_message_actions(submission, status)
+
+    # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
+    return [
+        {"type": "section", "text": {"type": "mrkdwn", "text": report_title}},
+        {"type": "section", "text": {"type": "mrkdwn", "text": report_text}},
+        {"type": "divider"},
+        {"type": "section", "text": {"type": "mrkdwn", "text": status_text}},
+        {"type": "actions", "elements": actions},
+    ]
+
+
+def _construct_report_message_status_text(status: ReportMessageStatus,) -> str:
+    """Get the status text for the report message."""
+    if status == ReportMessageStatus.REPORTED:
+        return "What should we do with this submission?"
+    elif status == ReportMessageStatus.REMOVED:
+        return "The submission has been *removed*."
+    elif status == ReportMessageStatus.APPROVED:
+        return "The submission has been *approved*."
+    else:
+        raise RuntimeError(f"Unexpected report status {status}!")
+
+
+def _construct_report_message_actions(
+    submission: Submission, status: ReportMessageStatus
+) -> List[Dict]:
+    """Construct the actions (buttons) for a report message."""
+    if status == ReportMessageStatus.REPORTED:
+        approve_submission = f"approve_submission_{submission.id}"
+        remove_submission = f"remove_submission_{submission.id}"
+
+        return [
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Approve"},
+                "value": approve_submission,
+            },
+            {
+                "type": "button",
+                "style": "danger",
+                "text": {"type": "plain_text", "text": "Remove"},
+                "value": remove_submission,
+                "confirm": {
+                    "title": {"type": "plain_text", "text": "Are you sure?"},
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "This will remove the submission from the queue.",
+                    },
+                    "confirm": {"type": "plain_text", "text": "Nuke it"},
+                    "deny": {"type": "plain_text", "text": "Back"},
+                },
+            },
+        ]
+    else:
+        report_submission = f"report_submission_{submission.id}"
+
+        return [
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Revert"},
+                "value": report_submission,
+            },
+        ]
