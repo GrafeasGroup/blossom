@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Dict
 
 import requests
 
@@ -52,14 +52,14 @@ def process_message(data: Dict) -> None:
     # format: first word command -> function to call
     # Reformatted this way because E228 hates the if / elif routing tree.
     options = {
-        "ping": pong,
-        "help": send_help_message,
-        "reset": process_coc_reset,
-        "info": send_info,
-        "blacklist": process_blacklist,
-        "watch": process_watch,
-        "unwatch": process_unwatch,
-        "dadjoke": dadjoke_target,
+        "ping": pong_cmd,
+        "help": help_cmd,
+        "reset": reset_cmd,
+        "info": info_cmd,
+        "blacklist": blacklist_cmd,
+        "watch": watch_cmd,
+        "unwatch": unwatch_cmd,
+        "dadjoke": dadjoke_cmd,
     }
 
     for key in options.keys():
@@ -73,12 +73,12 @@ def process_message(data: Dict) -> None:
     )
 
 
-def send_help_message(channel: str, *args: Any) -> None:
+def help_cmd(channel: str) -> None:
     """Post a help message to slack."""
     client.chat_postMessage(channel=channel, text=i18n["slack"]["help_message"])
 
 
-def send_info(channel: str, message: str) -> None:
+def info_cmd(channel: str, message: str) -> None:
     """Send info about a user to slack."""
     parsed_message = message.split()
     if len(parsed_message) == 1:
@@ -106,12 +106,12 @@ def send_info(channel: str, message: str) -> None:
     client.chat_postMessage(channel=channel, text=msg)
 
 
-def pong(channel: str, *args: Any) -> None:
+def pong_cmd(channel: str) -> None:
     """Respond to pings."""
     client.chat_postMessage(channel=channel, text="PONG")
 
 
-def process_coc_reset(channel: str, message: str) -> None:
+def reset_cmd(channel: str, message: str) -> None:
     """Reset the CoC status for a given volunteer."""
     parsed_message = message.split()
     if len(parsed_message) == 1:
@@ -137,7 +137,7 @@ def process_coc_reset(channel: str, message: str) -> None:
     client.chat_postMessage(channel=channel, text=msg)
 
 
-def process_watch(channel: str, message: str) -> None:
+def watch_cmd(channel: str, message: str) -> None:
     """Overwrite the transcription check percentage of a user."""
     parsed_message = message.split()
 
@@ -185,7 +185,7 @@ def process_watch(channel: str, message: str) -> None:
     client.chat_postMessage(channel=channel, text=msg)
 
 
-def process_unwatch(channel: str, message: str) -> None:
+def unwatch_cmd(channel: str, message: str) -> None:
     """Set the transcription checks back to automatic."""
     parsed_message = message.split()
 
@@ -209,7 +209,7 @@ def process_unwatch(channel: str, message: str) -> None:
     client.chat_postMessage(channel=channel, text=msg)
 
 
-def dadjoke_target(channel: str, message: str, use_api: bool = True) -> None:
+def dadjoke_cmd(channel: str, message: str, use_api: bool = True) -> None:
     """Send the pinged user a dad joke. Or just send everybody a joke."""
     parsed_message = message.split()
     ping_username, msg = None, None
@@ -236,7 +236,7 @@ def dadjoke_target(channel: str, message: str, use_api: bool = True) -> None:
     client.chat_postMessage(channel=channel, text=msg, link_names=True)
 
 
-def process_blacklist(channel: str, message: str) -> None:
+def blacklist_cmd(channel: str, message: str) -> None:
     """Blacklist a user based on a message from slack."""
     parsed_message = message.split()
     if len(parsed_message) == 1:

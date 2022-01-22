@@ -14,11 +14,11 @@ from pytest_django.fixtures import SettingsWrapper
 
 from api.slack import client as slack_client
 from api.slack.commands import (
-    dadjoke_target,
-    process_blacklist,
-    process_coc_reset,
-    process_unwatch,
-    process_watch,
+    blacklist_cmd,
+    dadjoke_cmd,
+    reset_cmd,
+    unwatch_cmd,
+    watch_cmd,
 )
 from api.slack.events import is_valid_github_request
 from api.slack.utils import dict_to_table
@@ -248,7 +248,7 @@ def test_process_blacklist() -> None:
     assert test_user.blacklisted is False
     message = f"blacklist {test_user.username}"
 
-    process_blacklist("", message)
+    blacklist_cmd("", message)
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
     assert test_user.blacklisted is True
@@ -257,7 +257,7 @@ def test_process_blacklist() -> None:
     ]["success"].format(test_user.username)
 
     # Now we unblacklist them
-    process_blacklist("", message)
+    blacklist_cmd("", message)
     assert slack_client.chat_postMessage.call_count == 2
     test_user.refresh_from_db()
     assert test_user.blacklisted is False
@@ -273,7 +273,7 @@ def test_process_blacklist_with_slack_link() -> None:
     test_user = create_user()
     assert test_user.blacklisted is False
     message = f"blacklist <https://reddit.com/example|{test_user.username}>"
-    process_blacklist("", message)
+    blacklist_cmd("", message)
     test_user.refresh_from_db()
     assert test_user.blacklisted is True
 
@@ -289,7 +289,7 @@ def test_process_blacklist_with_slack_link() -> None:
 def test_process_blacklist_errors(message: str, response: str) -> None:
     """Ensure that process_blacklist errors when passed the wrong username."""
     slack_client.chat_postMessage = MagicMock()
-    process_blacklist({}, message)
+    blacklist_cmd({}, message)
     slack_client.chat_postMessage.assert_called_once()
     assert slack_client.chat_postMessage.call_args[1]["text"] == response
 
@@ -303,7 +303,7 @@ def test_process_coc_reset() -> None:
     message = f"reset {test_user.username}"
 
     # revoke their code of conduct acceptance
-    process_coc_reset("", message)
+    reset_cmd("", message)
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
     assert test_user.accepted_coc is False
@@ -312,7 +312,7 @@ def test_process_coc_reset() -> None:
     ]["success"].format(test_user.username)
 
     # Now we approve them
-    process_coc_reset("", message)
+    reset_cmd("", message)
     assert slack_client.chat_postMessage.call_count == 2
     test_user.refresh_from_db()
     assert test_user.accepted_coc is True
@@ -328,7 +328,7 @@ def test_process_coc_reset_with_slack_link() -> None:
     test_user = create_user()
     assert test_user.accepted_coc is True
     message = f"reset <https://reddit.com/example|{test_user.username}>"
-    process_coc_reset("", message)
+    reset_cmd("", message)
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
     assert test_user.accepted_coc is False
@@ -345,7 +345,7 @@ def test_process_coc_reset_with_slack_link() -> None:
 def test_process_coc_reset_errors(message: str, response: str) -> None:
     """Ensure that process_coc_reset errors when passed the wrong username."""
     slack_client.chat_postMessage = MagicMock()
-    process_coc_reset("", message)
+    reset_cmd("", message)
     slack_client.chat_postMessage.assert_called_once()
     assert slack_client.chat_postMessage.call_args[1]["text"] == response
 
@@ -366,7 +366,7 @@ def test_process_watch(message: str, percentage: float) -> None:
     test_user = create_user(username="u123")
     assert test_user.overwrite_check_percentage is None
     # process the message
-    process_watch("", message)
+    watch_cmd("", message)
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
     expected_message = i18n["slack"]["watch"]["success"].format(
@@ -404,7 +404,7 @@ def test_process_watch_error(message: str, response: str) -> None:
     test_user = create_user(username="u123")
     assert test_user.overwrite_check_percentage is None
     # process the message
-    process_watch("", message)
+    watch_cmd("", message)
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
 
@@ -419,7 +419,7 @@ def test_process_unwatch() -> None:
     test_user = create_user(username="u123", overwrite_check_percentage=0.5)
     assert test_user.overwrite_check_percentage == 0.5
     # process the message
-    process_unwatch("", "unwatch u123")
+    unwatch_cmd("", "unwatch u123")
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
     expected_message = i18n["slack"]["unwatch"]["success"].format(
@@ -444,7 +444,7 @@ def test_process_unwatch_error(message: str, response: str) -> None:
     test_user = create_user(username="u123")
     assert test_user.overwrite_check_percentage is None
     # process the message
-    process_unwatch("", message)
+    unwatch_cmd("", message)
     slack_client.chat_postMessage.assert_called_once()
     test_user.refresh_from_db()
 
@@ -459,7 +459,7 @@ def test_dadjoke_target(message: str) -> None:
     """Verify that dadjokes are delivered appropriately."""
     slack_client.chat_postMessage = MagicMock()
 
-    dadjoke_target("", message, use_api=False)
+    dadjoke_cmd("", message, use_api=False)
     slack_client.chat_postMessage.assert_called_once()
     assert (
         i18n["slack"]["dadjoke"]["fallback_joke"]
