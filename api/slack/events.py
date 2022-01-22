@@ -20,6 +20,14 @@ logger = logging.getLogger("api.slack.events")
 i18n = translation()
 
 
+class ReportMessageStatus(Enum):
+    """The current status of the report."""
+
+    REPORTED = "reported"
+    REMOVED = "removed"
+    APPROVED = "approved"
+
+
 def send_github_sponsors_message(data: Dict, action: str) -> None:
     """
     Process the POST request from GitHub Sponsors.
@@ -45,47 +53,6 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
         emote, action, username, sponsorlevel
     )
     client.chat_postMessage(channel=settings.SLACK_GITHUB_SPONSORS_CHANNEL, text=msg)
-
-
-def process_submission_update(data: dict) -> None:
-    """Remove the submission from both reddit and app if it needs to be removed."""
-    # Blocks are created using the Slack Block Kit Builder
-    # https://app.slack.com/block-kit-builder/
-    value = data["actions"][0].get("value").split("_")
-    blocks = data["message"]["blocks"]
-    submission_obj = Submission.objects.get(id=int(value[2]))
-    if value[0] == "keep":
-        submission_obj.removed_from_queue = False
-        submission_obj.save(skip_extras=True)
-        blocks[-1] = {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "Thank you! This submission has been kept.",
-            },
-        }
-    else:
-        # Remove the post from Reddit
-        remove_post(submission_obj)
-        # Make sure the submission is marked as removed
-        # If reported on the app side this already happened, but not for
-        # reports from Reddit
-        submission_obj.removed_from_queue = True
-        submission_obj.save(skip_extras=True)
-
-        blocks[-1] = {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": (
-                    f"Submission ID {submission_obj.id} has been removed from the queue."
-                ),
-            },
-        }
-
-    client.chat_update(
-        channel=data["channel"]["id"], ts=data["message"]["ts"], blocks=blocks
-    )
 
 
 def is_valid_github_request(request: HttpRequest) -> bool:
@@ -141,10 +108,13 @@ def ask_about_removing_post(submission: Submission, reason: str) -> None:
     ):
         return
 
+    submission.report_reason = reason
+    submission.save(skip_extras=True)
+
     response = client.chat_postMessage(
         channel=settings.SLACK_REPORTED_POST_CHANNEL,
         blocks=_construct_report_message_blocks(
-            submission, ReportMessageStatus.REPORTED, reason
+            submission, ReportMessageStatus.REPORTED
         ),
     )
     if not response["ok"]:
@@ -159,16 +129,90 @@ def ask_about_removing_post(submission: Submission, reason: str) -> None:
     submission.save()
 
 
-class ReportMessageStatus(Enum):
-    """The current status of the report."""
+def process_submission_report_update(data: dict) -> None:
+    """Remove the submission from both reddit and app if it needs to be removed."""
+    # Blocks are created using the Slack Block Kit Builder
+    # https://app.slack.com/block-kit-builder/
+    value = data["actions"][0].get("value")
+    channel_id = data["channel"]["id"]
+    message_ts = data["message"]["ts"]
 
-    REPORTED = "reported"
-    REMOVED = "removed"
-    APPROVED = "approved"
+    # Find the submission corresponding to the message
+    submissions = Submission.objects.filter(
+        report_slack_channel_id=channel_id, report_slack_message_ts=message_ts,
+    )
+
+    if len(submissions) == 0:
+        logger.warning(
+            f"No submission found for value {value}, channel ID {channel_id} "
+            f"and message TS {message_ts}."
+        )
+        return
+
+    submission = submissions[0]
+    action = value.split("_")[0]
+
+    # Determine the new report status
+    if action == "approve":
+        status = ReportMessageStatus.APPROVED
+    elif action == "remove":
+        status = ReportMessageStatus.REMOVED
+    elif action == "report":
+        status = ReportMessageStatus.REPORTED
+    else:
+        logger.warning(f"Invalid report action {action}.")
+        return
+
+    update_submission_report(submission, status)
+
+
+def update_submission_report(
+    submission: Submission, status: ReportMessageStatus
+) -> None:
+    """Update the report of the given submission to the new status."""
+    if status == ReportMessageStatus.APPROVED:
+        # The submission has been approved
+
+        # TODO: Approve on Reddit
+        submission.removed_from_queue = False
+        submission.save(skip_extras=True)
+
+        blocks = _construct_report_message_blocks(
+            submission, ReportMessageStatus.APPROVED
+        )
+    elif status == ReportMessageStatus.REMOVED:
+        # Remove the post from Reddit
+        remove_post(submission)
+        # Make sure the submission is marked as removed
+        # If reported on the app side this already happened, but not for
+        # reports from Reddit
+        submission.removed_from_queue = True
+        submission.save(skip_extras=True)
+
+        blocks = _construct_report_message_blocks(
+            submission, ReportMessageStatus.REMOVED
+        )
+    elif status == ReportMessageStatus.REPORTED:
+        # The report has been reset
+        submission.removed_from_queue = False
+        submission.save(skip_extras=True)
+
+        blocks = _construct_report_message_blocks(
+            submission, ReportMessageStatus.REPORTED
+        )
+    else:
+        logger.warning(f"Unknown submission update {status}!")
+        return
+
+    client.chat_update(
+        channel=submission.report_slack_channel_id,
+        ts=submission.report_slack_message_ts,
+        blocks=blocks,
+    )
 
 
 def _construct_report_message_blocks(
-    submission: Submission, status: ReportMessageStatus, reason: str,
+    submission: Submission, status: ReportMessageStatus
 ) -> List[Dict]:
     """Construct the report message for the given submission."""
     report_title = f"*Reported submission {submission.id}"
@@ -178,7 +222,7 @@ def _construct_report_message_blocks(
         url=submission.url,
         title=submission.title,
         tor_url=submission.tor_url,
-        reason=reason,
+        reason=submission.report_reason,
     )
 
     status_text = _construct_report_message_status_text(status)
@@ -194,7 +238,7 @@ def _construct_report_message_blocks(
     ]
 
 
-def _construct_report_message_status_text(status: ReportMessageStatus,) -> str:
+def _construct_report_message_status_text(status: ReportMessageStatus) -> str:
     """Get the status text for the report message."""
     if status == ReportMessageStatus.REPORTED:
         return "What should we do with this submission?"

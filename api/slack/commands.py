@@ -6,7 +6,7 @@ import requests
 from api.helpers import fire_and_forget
 from api.serializers import VolunteerSerializer
 from api.slack import client
-from api.slack.events import process_submission_update
+from api.slack.events import process_submission_report_update
 from api.slack.utils import clean_links, dict_to_table, get_message
 from api.views.misc import Summary
 from authentication.models import BlossomUser
@@ -23,7 +23,7 @@ def process_message(data: Dict) -> None:
     if data.get("type") == "block_actions":
         value = data["actions"][0].get("value")
         if "keep" in value or "remove" in value:
-            process_submission_update(data)
+            process_submission_report_update(data)
         else:
             client.chat_postMessage(
                 channel=data["channel"]["id"],
