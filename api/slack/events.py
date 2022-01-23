@@ -210,23 +210,31 @@ def _construct_report_message_blocks(
     submission: Submission, status: ReportMessageStatus
 ) -> List[Dict]:
     """Construct the report message for the given submission."""
-    report_title = f"*Reported submission {submission.id}"
-    report_text = (
-        "Submission: <{url}|{title}> | <{tor_url}|ToR Post>\nReport reason: {reason}"
-    ).format(
-        url=submission.url,
-        title=submission.title,
-        tor_url=submission.tor_url,
-        reason=submission.report_reason,
+    post_status = (
+        f"Completed by u/{submission.completed_by.username}"
+        if submission.completed_by
+        else f"Claimed by u/{submission.claimed_by.username}"
+        if submission.claimed_by
+        else "Unclaimed"
     )
+    report_text = f"*<{submission.url}|{submission.title}>* (`#{submission.id}`)\n"
+    report_text += f"<{submission.tor_url}|ToR Post> | {post_status}\n\n"
+    report_text += f"*Report reason*: {submission.report_reason}"
 
     status_text = _construct_report_message_status_text(status)
     actions = _construct_report_message_actions(submission, status)
 
     # created using the Slack Block Kit Builder https://app.slack.com/block-kit-builder/
     return [
-        {"type": "section", "text": {"type": "mrkdwn", "text": report_title}},
-        {"type": "section", "text": {"type": "mrkdwn", "text": report_text}},
+        {
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": report_text},
+            "accessory": {
+                "type": "image",
+                "image_url": submission.content_url,
+                "alt_text": f"Image of submission {submission.id}",
+            },
+        },
         {"type": "divider"},
         {"type": "section", "text": {"type": "mrkdwn", "text": status_text}},
         {"type": "actions", "elements": actions},
