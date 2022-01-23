@@ -71,7 +71,18 @@ def edit_transcription(
 def remove_post(submission_obj: Submission) -> None:
     """Remove the requested post from the r/ToR queue."""
     log.info(f"Removing {submission_obj.original_id} from r/ToR.")
-    REDDIT.submission(url=submission_obj.tor_url).mod.remove()
+    REDDIT.submission(url=submission_obj.tor_url).mod.unignore_reports()
+    REDDIT.submission(url=submission_obj.tor_url).mod.remove(
+        mod_note=submission_obj.report_reason
+    )
+
+
+@send_to_worker
+def approve_post(submission_obj: Submission) -> None:
+    """Approve the post on the r/ToR queue."""
+    log.info(f"Approving {submission_obj.original_id} on r/ToR.")
+    REDDIT.submission(url=submission_obj.tor_url).mod.ignore_reports()
+    REDDIT.submission(url=submission_obj.tor_url).mod.approve()
 
 
 @send_to_worker

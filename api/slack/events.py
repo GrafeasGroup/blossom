@@ -11,7 +11,7 @@ from django.http import HttpRequest
 
 from api.models import Submission
 from api.slack import client
-from app.reddit_actions import remove_post
+from app.reddit_actions import approve_post, remove_post
 from blossom.strings import translation
 from utils.workers import send_to_worker
 
@@ -157,8 +157,6 @@ def process_submission_report_update(data: dict) -> None:
         status = ReportMessageStatus.APPROVED
     elif action == "remove":
         status = ReportMessageStatus.REMOVED
-    elif action == "report":
-        status = ReportMessageStatus.REPORTED
     else:
         logger.warning(f"Invalid report action {action}.")
         return
@@ -171,9 +169,9 @@ def update_submission_report(
 ) -> None:
     """Update the report of the given submission to the new status."""
     if status == ReportMessageStatus.APPROVED:
-        # The submission has been approved
-
-        # TODO: Approve on Reddit
+        # Approve the post on Reddit
+        approve_post(submission)
+        # Make sure the submission isn't marked as removed
         submission.removed_from_queue = False
         submission.save(skip_extras=True)
 
@@ -193,10 +191,7 @@ def update_submission_report(
             submission, ReportMessageStatus.REMOVED
         )
     elif status == ReportMessageStatus.REPORTED:
-        # The report has been reset
-        submission.removed_from_queue = False
-        submission.save(skip_extras=True)
-
+        # A fresh report
         blocks = _construct_report_message_blocks(
             submission, ReportMessageStatus.REPORTED
         )
@@ -255,20 +250,17 @@ def _construct_report_message_actions(
 ) -> List[Dict]:
     """Construct the actions (buttons) for a report message."""
     if status == ReportMessageStatus.REPORTED:
-        approve_submission = f"approve_submission_{submission.id}"
-        remove_submission = f"remove_submission_{submission.id}"
-
         return [
             {
                 "type": "button",
                 "text": {"type": "plain_text", "text": "Approve"},
-                "value": approve_submission,
+                "value": f"approve_submission_{submission.id}",
             },
             {
                 "type": "button",
                 "style": "danger",
                 "text": {"type": "plain_text", "text": "Remove"},
-                "value": remove_submission,
+                "value": f"remove_submission_{submission.id}",
                 "confirm": {
                     "title": {"type": "plain_text", "text": "Are you sure?"},
                     "text": {
@@ -280,13 +272,39 @@ def _construct_report_message_actions(
                 },
             },
         ]
-    else:
-        report_submission = f"report_submission_{submission.id}"
-
+    elif status == ReportMessageStatus.REMOVED:
         return [
             {
                 "type": "button",
                 "text": {"type": "plain_text", "text": "Revert"},
-                "value": report_submission,
+                "value": f"approve_submission_{submission.id}",
+                "confirm": {
+                    "title": {"type": "plain_text", "text": "Are you sure?"},
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "This will revert the removal by *approving* the post.",
+                    },
+                    "confirm": {"type": "plain_text", "text": "Approve"},
+                    "deny": {"type": "plain_text", "text": "Back"},
+                },
             },
         ]
+    elif status == ReportMessageStatus.APPROVED:
+        return [
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Revert"},
+                "value": f"remove_submission_{submission.id}",
+                "confirm": {
+                    "title": {"type": "plain_text", "text": "Are you sure?"},
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "This will revert the approval by *removing* the post.",
+                    },
+                    "confirm": {"type": "plain_text", "text": "Remove"},
+                    "deny": {"type": "plain_text", "text": "Back"},
+                },
+            },
+        ]
+    else:
+        raise RuntimeError(f"Unexpected report status {status}!")
