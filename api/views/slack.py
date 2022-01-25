@@ -4,10 +4,10 @@ import json
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from api.views.slack_helpers import (
+from api.slack.commands import process_message
+from api.slack.events import (
     is_valid_github_request,
     is_valid_slack_request,
-    process_message,
     send_github_sponsors_message,
 )
 

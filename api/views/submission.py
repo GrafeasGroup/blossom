@@ -41,11 +41,9 @@ from api.helpers import validate_request
 from api.models import Source, Submission, Transcription
 from api.pagination import StandardResultsSetPagination
 from api.serializers import SubmissionSerializer
-from api.views.slack_helpers import (
-    _send_transcription_to_slack,
-    ask_about_removing_post,
-)
-from api.views.slack_helpers import client as slack
+from api.slack import client as slack
+from api.slack.events import ask_about_removing_post
+from api.slack.utils import _send_transcription_to_slack
 from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
 

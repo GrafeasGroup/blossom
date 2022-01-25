@@ -1,8 +1,9 @@
 from unittest.mock import MagicMock
 
 from api.models import Source
-from api.views.slack_helpers import client as slack_client
-from app.views import ask_about_removing_post, get_blossom_app_source
+from api.slack import client as slack_client
+from api.slack.events import ask_about_removing_post
+from app.views import get_blossom_app_source
 from utils.test_helpers import create_submission
 
 
@@ -53,6 +54,6 @@ def test_ask_about_removing_post() -> None:
     assert submission.report_slack_channel_id == "C1H9RESGL"
     assert submission.report_slack_message_ts == "1503435956.000247"
     blocks = mock.call_args[1]["blocks"]
-    assert "asdf" in blocks[2]["text"]["text"]
+    assert "asdf" in blocks[0]["text"]["text"]
     assert "submission_3" in blocks[-1]["elements"][0]["value"]
     assert "submission_3" in blocks[-1]["elements"][1]["value"]

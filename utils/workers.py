@@ -21,7 +21,7 @@ def _worker() -> None:
             import traceback
 
             # prevent circular dependency
-            from api.views.slack_helpers import client
+            from api.slack import client
 
             details = traceback.format_exc()
             message = f"Background worker exception: ```{details}```"
