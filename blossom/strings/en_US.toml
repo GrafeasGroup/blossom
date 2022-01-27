@@ -41,6 +41,7 @@ Blacklist / unblacklist user: `@blossom blacklist {username}`
 Toggle CoC status of user: `@blossom reset {username}`
 Overwrite check percentage: `@blossom watch {username} {percentage}`, where {percentage} is a number between 0 and 100
 Reset check percentage: `@blossom unwatch {username}`
+List all overwritten check percentages: `@blossom watchlist {sorting}`, where {sorting} is either "percentage" (default) or "alphabetical".
 Render this message: `@blossom help`
 """
 
