@@ -262,6 +262,11 @@ class TestSubmissionDone:
                 f"Please check the following transcription of u/{user.username}:"
                 f" asdf."
             )
+            check_slack_message = (
+                f"Please check the following transcription of u/{user.username}:"
+                f" asdf.\n\nThis user is being watched with a chance of 100%.\n"
+                f"Undo this using the `unwatch {user.username}` command."
+            )
 
             assert result.status_code == status.HTTP_201_CREATED
             assert (
@@ -288,6 +293,26 @@ class TestSubmissionDone:
                 call(
                     channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL,
                     text=second_slack_message,
+                )
+                == slack_client.chat_postMessage.call_args_list[-1]
+            )
+            submission.refresh_from_db()
+            submission.completed_by = None
+            submission.save()
+
+            user.overwrite_check_percentage = 1
+            user.save()
+            result = client.patch(
+                reverse("submission-done", args=[submission.id]),
+                json.dumps({"username": user.username}),
+                content_type="application/json",
+                **headers,
+            )
+            assert result.status_code == status.HTTP_201_CREATED
+            assert (
+                call(
+                    channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL,
+                    text=check_slack_message,
                 )
                 == slack_client.chat_postMessage.call_args_list[-1]
             )

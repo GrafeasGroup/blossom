@@ -76,3 +76,7 @@ exclude = '''
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "blossom.settings.testing"
+python_files = "tests.py test_*.py *_tests.py"
+addopts = "--nomigrations --cov=. --cov-report=html --cov-report=term:skip-covered -p no:warnings"
