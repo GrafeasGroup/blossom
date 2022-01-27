@@ -241,26 +241,29 @@ def watchlist_cmd(channel: str, message: str) -> None:
             if usr.overwrite_check_percentage == last_percentage:
                 response_msg += " " * 6 + f"u/{usr.username}\n"
             else:
-                response_msg += "*{}*: u/{}".format(
-                    f"{usr.overwrite_check_percentage:.0%}".rjust(4, ""), usr.username
+                response_msg += "{}: u/{}\n".format(
+                    f"{usr.overwrite_check_percentage:.0%}".rjust(4, " "), usr.username
                 )
                 last_percentage = usr.overwrite_check_percentage
     elif sorting == "alphabetical":
         # Sort the users alphabetically
-        watched_users.sort(key=lambda u: u.username.casefold(), reverse=True)
+        watched_users.sort(key=lambda u: u.username.casefold())
 
         for usr in watched_users:
-            response_msg += "u/{} ({:.0%})".format(
+            response_msg += "u/{} ({:.0%})\n".format(
                 usr.username, usr.overwrite_check_percentage
             )
     else:
+        # Invalid sorting
         response_msg = (
             f"Invalid sorting '{sorting}'. "
             "Use either 'percentage' or 'alphabetical'."
         )
+        client.chat_postMessage(channel=channel, text=response_msg)
+        return
 
     response_msg += "```"
-    client.chat_postMessage(channel=channel, text=response_msg)
+    client.chat_postMessage(channel=channel, text=response_msg.strip())
 
 
 def dadjoke_cmd(channel: str, message: str, use_api: bool = True) -> None:
