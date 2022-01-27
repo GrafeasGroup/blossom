@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, List
 
 import requests
 
@@ -59,6 +59,7 @@ def process_message(data: Dict) -> None:
         "blacklist": blacklist_cmd,
         "watch": watch_cmd,
         "unwatch": unwatch_cmd,
+        "watchlist": watchlist_cmd,
         "dadjoke": dadjoke_cmd,
     }
 
@@ -207,6 +208,59 @@ def unwatch_cmd(channel: str, message: str) -> None:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
     client.chat_postMessage(channel=channel, text=msg)
+
+
+def watchlist_cmd(channel: str, message: str) -> None:
+    """Send a list of users who are currently being watched."""
+    parsed_message = message.split()
+    sorting = parsed_message[1] if len(parsed_message) > 1 else "percentage"
+
+    response_msg = "**List of all watched users:**\n\n"
+
+    watched_users: List[BlossomUser] = list(
+        BlossomUser.objects.filter(overwrite_check_percentage__isnull=False)
+    )
+
+    if len(watched_users) == 0:
+        # No users are watched yet
+        response_msg += (
+            "None yet. Use `@Blossom watch <username> <percentage>` to watch a user."
+        )
+
+        client.chat_postMessage(channel=channel, text=response_msg)
+        return
+    else:
+        response_msg += "```\n"
+
+    if sorting == "percentage":
+        # Group the users by percentages
+        watched_users.sort(key=lambda u: u.overwrite_check_percentage, reverse=True)
+        last_percentage = None
+
+        for usr in watched_users:
+            if usr.overwrite_check_percentage == last_percentage:
+                response_msg += " " * 6 + f"u/{usr.username}\n"
+            else:
+                response_msg += "*{}*: u/{}".format(
+                    f"{usr.overwrite_check_percentage:.0%}".rjust(4, ""), usr.username
+                )
+                last_percentage = usr.overwrite_check_percentage
+    elif sorting == "alphabetical":
+        # Sort the users alphabetically
+        watched_users.sort(key=lambda u: u.username.casefold(), reverse=True)
+
+        for usr in watched_users:
+            response_msg += "u/{} ({:.0%})".format(
+                usr.username, usr.overwrite_check_percentage
+            )
+    else:
+        response_msg = (
+            f"Invalid sorting '{sorting}'. "
+            "Use either 'percentage' or 'alphabetical'."
+        )
+
+    response_msg += "```"
+    client.chat_postMessage(channel=channel, text=response_msg)
 
 
 def dadjoke_cmd(channel: str, message: str, use_api: bool = True) -> None:
