@@ -63,10 +63,15 @@ def process_message(data: Dict) -> None:
         "dadjoke": dadjoke_cmd,
     }
 
-    for key in options.keys():
-        if message.startswith(key):
-            options[key](channel, message)
-            return
+    tokens = message.split()
+
+    if len(tokens) > 0:
+        # Find the command corresponding to the message
+        cmd_name = tokens[0].casefold()
+        for key in options.keys():
+            if cmd_name == key:
+                options[key](channel, message)
+                return
 
     # if we fall through here, we got a message that we don't understand.
     client.chat_postMessage(
