@@ -79,7 +79,7 @@ def process_message(data: Dict) -> None:
     )
 
 
-def help_cmd(channel: str) -> None:
+def help_cmd(channel: str, _message: str) -> None:
     """Post a help message to slack."""
     client.chat_postMessage(channel=channel, text=i18n["slack"]["help_message"])
 
@@ -112,7 +112,7 @@ def info_cmd(channel: str, message: str) -> None:
     client.chat_postMessage(channel=channel, text=msg)
 
 
-def pong_cmd(channel: str) -> None:
+def pong_cmd(channel: str, _message: str) -> None:
     """Respond to pings."""
     client.chat_postMessage(channel=channel, text="PONG")
 
