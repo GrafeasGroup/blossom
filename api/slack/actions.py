@@ -28,6 +28,18 @@ class ReportMessageStatus(Enum):
     APPROVED = "approved"
 
 
+def process_action(data: Dict) -> None:
+    """Process a Slack action, e.g. a button press."""
+    value = data["actions"][0].get("value")
+    if "approve" in value or "remove" in value:
+        process_submission_report_update(data)
+    else:
+        client.chat_postMessage(
+            channel=data["channel"]["id"],
+            text=i18n["slack"]["errors"]["unknown_payload"].format(value),
+        )
+
+
 def send_github_sponsors_message(data: Dict, action: str) -> None:
     """
     Process the POST request from GitHub Sponsors.

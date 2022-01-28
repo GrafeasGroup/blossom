@@ -24,7 +24,7 @@ from django.views.generic import View
 from rest_framework import status
 
 from api.models import Source, Submission, Transcription
-from api.slack.events import ask_about_removing_post
+from api.slack.actions import ask_about_removing_post
 from api.views.submission import SubmissionViewSet
 from app.permissions import RequireCoCMixin, require_coc, require_reddit_auth
 from app.reddit_actions import (

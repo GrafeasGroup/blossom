@@ -13,6 +13,7 @@ from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 
 from api.slack import client as slack_client
+from api.slack.actions import is_valid_github_request
 from api.slack.commands import (
     blacklist_cmd,
     dadjoke_cmd,
@@ -21,7 +22,6 @@ from api.slack.commands import (
     watch_cmd,
     watchlist_cmd,
 )
-from api.slack.events import is_valid_github_request
 from api.slack.utils import dict_to_table
 from api.views.slack import github_sponsors_endpoint
 from blossom.strings import translation

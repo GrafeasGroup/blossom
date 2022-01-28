@@ -3,10 +3,8 @@ from typing import Dict, List
 
 import requests
 
-from api.helpers import fire_and_forget
 from api.serializers import VolunteerSerializer
 from api.slack import client
-from api.slack.events import process_submission_report_update
 from api.slack.utils import clean_links, dict_to_table, get_message
 from api.views.misc import Summary
 from authentication.models import BlossomUser
@@ -17,20 +15,8 @@ logger = logging.getLogger("api.slack.commands")
 i18n = translation()
 
 
-@fire_and_forget
-def process_message(data: Dict) -> None:
-    """Identify the purpose of a slack message and route accordingly."""
-    if data.get("type") == "block_actions":
-        value = data["actions"][0].get("value")
-        if "keep" in value or "remove" in value:
-            process_submission_report_update(data)
-        else:
-            client.chat_postMessage(
-                channel=data["channel"]["id"],
-                text=i18n["slack"]["errors"]["unknown_payload"].format(value),
-            )
-        return
-
+def process_command(data: Dict) -> None:
+    """Process a Slack command."""
     e = data.get("event")  # noqa: VNE001
     channel = e.get("channel")
 
