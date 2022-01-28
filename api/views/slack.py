@@ -1,15 +1,29 @@
 """Views that specifically relate to communication with Slack."""
 import json
+from typing import Dict
 
 from django.http import HttpRequest, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
+from api.helpers import fire_and_forget
 from api.slack.actions import (
     is_valid_github_request,
     is_valid_slack_request,
+    process_action,
     send_github_sponsors_message,
 )
-from api.slack.commands import process_message
+from api.slack.commands import process_command
+
+
+@fire_and_forget
+def _process_slack_message(data: Dict) -> None:
+    """Process a Slack message and route it accordingly."""
+    if data.get("type") == "block_actions":
+        # It's an action, e.g. a button press
+        process_action(data)
+    else:
+        # It's a normal command
+        process_command(data)
 
 
 @csrf_exempt
@@ -65,7 +79,8 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
         return HttpResponse(json_data["challenge"])
     # It's not a challenge, so just hand off data processing to the
     # thread and give Slack the result it craves.
-    process_message(json_data)
+    _process_slack_message(json_data)
+
     return HttpResponse(status=200)
 
 
