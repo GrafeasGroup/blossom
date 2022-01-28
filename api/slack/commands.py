@@ -6,7 +6,7 @@ import requests
 from api.helpers import fire_and_forget
 from api.serializers import VolunteerSerializer
 from api.slack import client
-from api.slack.events import process_submission_report_update
+from api.slack.actions import process_submission_report_update
 from api.slack.utils import clean_links, dict_to_table, get_message
 from api.views.misc import Summary
 from authentication.models import BlossomUser
