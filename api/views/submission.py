@@ -909,6 +909,35 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 
+    @csrf_exempt
+    @swagger_auto_schema(
+        request_body=Schema(type="object", properties={"nsfw": Schema(type="bool")}),
+        responses={
+            200: DocResponse(
+                "Successfully marked as NSFW (or SWF)", schema=serializer_class
+            ),
+            404: "Submission not found.",
+        },
+    )
+    @action(detail=True, methods=["patch"])
+    def nsfw(self, request: Request, pk: int) -> Response:
+        """
+        Mark a submission as NSFW.
+
+        It is also possible to set it back to SFW by setting nsfw to false
+        in the body of the request.
+        """
+        submission = get_object_or_404(Submission, id=pk)
+
+        nsfw = request.data.get("nsfw", True)
+
+        submission.nsfw = nsfw
+        submission.save()
+        return Response(
+            status=status.HTTP_200_OK,
+            data=self.serializer_class(submission, context={"request": request}).data,
+        )
+
 
 def _is_returning_transcriber(volunteer: BlossomUser) -> bool:
     """Determine if the transcriber is returning.
