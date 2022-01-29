@@ -28,7 +28,7 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert submission.removed_from_queue
 
     def test_remove_no_change(self, client: Client) -> None:
@@ -49,7 +49,7 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert submission.removed_from_queue
 
     def test_remove_param_false(self, client: Client) -> None:
@@ -70,7 +70,7 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert not submission.removed_from_queue
 
     def test_remove_param_true(self, client: Client) -> None:
@@ -91,7 +91,7 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert submission.removed_from_queue
 
     def test_remove_reverting_approval(self, client: Client) -> None:
@@ -113,6 +113,6 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert submission.removed_from_queue
         assert not submission.approved

@@ -845,7 +845,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             type="object", properties={"removed_from_queue": Schema(type="bool")}
         ),
         responses={
-            201: DocResponse("Successful removal", schema=serializer_class),
+            200: DocResponse("Successful removal", schema=serializer_class),
             404: "Submission not found.",
         },
     )
@@ -867,7 +867,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             submission.approved = False
         submission.save()
         return Response(
-            status=status.HTTP_201_CREATED,
+            status=status.HTTP_200_OK,
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 
