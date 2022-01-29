@@ -911,6 +911,34 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     @csrf_exempt
     @swagger_auto_schema(
+        request_body=Schema(
+            type="object", properties={"apporved": Schema(type="bool")}
+        ),
+        responses={
+            200: DocResponse("Successful approval", schema=serializer_class),
+            404: "Submission not found.",
+        },
+    )
+    @action(detail=True, methods=["patch"])
+    def approve(self, request: Request, pk: int) -> Response:
+        """
+        Approve the submission.
+
+        This will prevent future reports from being generated for this submission.
+        """
+        submission = get_object_or_404(Submission, id=pk)
+
+        approved = request.data.get("approved", True)
+
+        submission.approved = approved
+        submission.save()
+        return Response(
+            status=status.HTTP_200_OK,
+            data=self.serializer_class(submission, context={"request": request}).data,
+        )
+
+    @csrf_exempt
+    @swagger_auto_schema(
         request_body=Schema(type="object", properties={"nsfw": Schema(type="bool")}),
         responses={
             200: DocResponse(
