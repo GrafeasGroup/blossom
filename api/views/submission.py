@@ -845,7 +845,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             type="object", properties={"removed_from_queue": Schema(type="bool")}
         ),
         responses={
-            201: DocResponse("Successful removal", schema=serializer_class),
+            200: DocResponse("Successful removal", schema=serializer_class),
             404: "Submission not found.",
         },
     )
@@ -862,9 +862,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         removed_from_queue = request.data.get("removed_from_queue", True)
 
         submission.removed_from_queue = removed_from_queue
+        if removed_from_queue:
+            # Revert the approval
+            submission.approved = False
         submission.save()
         return Response(
-            status=status.HTTP_201_CREATED,
+            status=status.HTTP_200_OK,
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 
@@ -885,9 +888,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         """
         submission = get_object_or_404(Submission, id=pk)
 
-        if submission.removed_from_queue or submission.report_reason is not None:
-            # The submission is already removed or reported-- ignore the report
-            print("Already reported!")
+        if (
+            submission.removed_from_queue
+            or submission.report_reason is not None
+            or submission.approved
+        ):
+            # The submission is already removed, reported or approved-- ignore the report
             return Response(
                 status=status.HTTP_201_CREATED,
                 data=self.serializer_class(
@@ -895,17 +901,46 @@ class SubmissionViewSet(viewsets.ModelViewSet):
                 ).data,
             )
 
-        print("Setting report reason")
         # Save the report reason
         submission.report_reason = reason
         submission.save(skip_extras=True)
 
         # Send the report to mod chat
         ask_about_removing_post(submission, reason)
-        print("Asked for post removal")
 
         return Response(
             status=status.HTTP_201_CREATED,
+            data=self.serializer_class(submission, context={"request": request}).data,
+        )
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        request_body=Schema(
+            type="object", properties={"approved": Schema(type="bool")}
+        ),
+        responses={
+            200: DocResponse("Successful approval", schema=serializer_class),
+            404: "Submission not found.",
+        },
+    )
+    @action(detail=True, methods=["patch"])
+    def approve(self, request: Request, pk: int) -> Response:
+        """
+        Approve the submission.
+
+        This will prevent future reports from being generated for this submission.
+        """
+        submission = get_object_or_404(Submission, id=pk)
+
+        approved = request.data.get("approved", True)
+
+        submission.approved = approved
+        if approved:
+            # Revert the removal
+            submission.removed_from_queue = False
+        submission.save()
+        return Response(
+            status=status.HTTP_200_OK,
             data=self.serializer_class(submission, context={"request": request}).data,
         )
 

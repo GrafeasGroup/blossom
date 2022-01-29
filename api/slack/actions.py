@@ -185,6 +185,7 @@ def update_submission_report(
         approve_post(submission)
         # Make sure the submission isn't marked as removed
         submission.removed_from_queue = False
+        submission.approved = True
         submission.save(skip_extras=True)
 
         blocks = _construct_report_message_blocks(
@@ -197,6 +198,7 @@ def update_submission_report(
         # If reported on the app side this already happened, but not for
         # reports from Reddit
         submission.removed_from_queue = True
+        submission.approved = False
         submission.save(skip_extras=True)
 
         blocks = _construct_report_message_blocks(

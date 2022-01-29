@@ -147,6 +147,10 @@ class Submission(models.Model):
     # specifically.
     removed_from_queue = models.BooleanField(default=False)
 
+    # Whether the submission has been approved by the moderators.
+    # If this is set to True, no new reports should be generated for this submission.
+    approved = models.BooleanField(default=False)
+
     # If the submission has been reported, this contains the report reason
     report_reason = models.CharField(max_length=300, null=True, blank=True)
     # If the submission has been reported, this contains the info to get

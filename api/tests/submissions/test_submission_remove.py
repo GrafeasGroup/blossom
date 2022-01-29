@@ -28,7 +28,7 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert submission.removed_from_queue
 
     def test_remove_no_change(self, client: Client) -> None:
@@ -49,7 +49,7 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert submission.removed_from_queue
 
     def test_remove_param_false(self, client: Client) -> None:
@@ -70,7 +70,7 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert not submission.removed_from_queue
 
     def test_remove_param_true(self, client: Client) -> None:
@@ -91,5 +91,28 @@ class TestSubmissionRemove:
 
         submission.refresh_from_db()
 
-        assert result.status_code == status.HTTP_201_CREATED
+        assert result.status_code == status.HTTP_200_OK
         assert submission.removed_from_queue
+
+    def test_remove_reverting_approval(self, client: Client) -> None:
+        """Verify that removing the submission reverts an approval."""
+        client, headers, user = setup_user_client(client)
+
+        submission = create_submission(id=3, approved=True)
+        assert not submission.removed_from_queue
+        assert submission.approved
+
+        data = {}
+
+        result = client.patch(
+            reverse("submission-remove", args=[submission.id]),
+            json.dumps(data),
+            content_type="application/json",
+            **headers
+        )
+
+        submission.refresh_from_db()
+
+        assert result.status_code == status.HTTP_200_OK
+        assert submission.removed_from_queue
+        assert not submission.approved
