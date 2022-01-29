@@ -93,3 +93,26 @@ class TestSubmissionApprove:
 
         assert result.status_code == status.HTTP_200_OK
         assert submission.approved
+
+    def test_approve_reverting_removal(self, client: Client) -> None:
+        """Verify that approving a submission reverts its removal."""
+        client, headers, user = setup_user_client(client)
+
+        submission = create_submission(id=3, removed_from_queue=True)
+        assert not submission.approved
+        assert submission.removed_from_queue
+
+        data = {}
+
+        result = client.patch(
+            reverse("submission-approve", args=[submission.id]),
+            json.dumps(data),
+            content_type="application/json",
+            **headers
+        )
+
+        submission.refresh_from_db()
+
+        assert result.status_code == status.HTTP_200_OK
+        assert submission.approved
+        assert not submission.removed_from_queue
