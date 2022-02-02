@@ -908,4 +908,5 @@ def extract_id_from_reddit_url(url: str) -> str:
     return url.split("/")[6]
 
 
-main()
+if __name__ == "__main__":
+    main()
