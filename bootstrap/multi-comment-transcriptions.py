@@ -29,28 +29,55 @@ def _get_link_id(tr: Dict) -> str:
     return tr["url"].split("/")[6]
 
 
-def fix_multi_comment_transcription(tr: Dict):
+def _remove_footer(transcription: str) -> str:
+    """Remove the footer of the transcription."""
+    parts = transcription.split("---")
+    if len(parts) < 3:
+        logging.warning(f"Weird transcription format:\n{transcription}")
+        return transcription
+
+    return "---".join(parts[:-1]).strip()
+
+
+def _join_transcriptions(transcriptions: List[CommentData]) -> str:
+    """Join a multi-comment transcription into a single text."""
+    texts = [tr["body"] for tr in transcriptions]
+    first_texts = texts[:-1]
+    # Remove the footers in the middle
+    combined_texts = [_remove_footer(txt) for txt in first_texts] + [texts[-1].strip()]
+    return "\n\n---\n\n".join(combined_texts)
+
+
+def fix_multi_comment_transcription(transcription: Dict):
     """Fix a multi comment transcription in Blossom."""
-    if not (7000 < len(tr["text"]) < 10050):
+    if not (7000 < len(transcription["text"]) < 10050):
         # If we have an unprocessed first comment of a multi-comment transcription,
         # it will be rather long, but shorter than ~10000 characters (with a small buffer)
         return
 
-    author_id = extract_id_from_grafeas_url(tr["author"])
+    # Get the transcription author
+    tr_id = transcription["id"]
+    tr_url = transcription["url"]
+    author_id = extract_id_from_grafeas_url(transcription["author"])
     author_response = blossom.get(f"volunteer/{author_id}")
     if not author_response.ok:
         logging.error(
-            f"Failed to fetch author {author_id} for transcription {tr['id']}! ({author_response.status_code})"
+            f"Failed to fetch author {author_id} for transcription {tr_id} {tr_url}!"
+            f"({author_response.status_code})"
         )
         return
     author = author_response.json()
 
+    # Get the transcription comments from Pushshift
     transcriptions = list(
         push.search_comments(
-            link_id=_get_link_id(tr), author=author["username"], filter=comment_filter,
+            link_id=_get_link_id(transcription),
+            author=author["username"],
+            filter=comment_filter,
         )
     )
     transcriptions: List[CommentData] = [dict_from_comment(x) for x in transcriptions]
+    # Make sure the comments are actually transcriptions
     transcriptions = [
         x
         for x in transcriptions
@@ -59,23 +86,39 @@ def fix_multi_comment_transcription(tr: Dict):
     ]
 
     if len(transcriptions) == 0:
-        logging.error(f"No transcription found for ID {tr['id']}!")
+        logging.error(f"No comments found for transcription {tr_id} {tr_url}!")
         return
 
     if len(transcriptions) < 2:
-        logging.info(f"Transcription {tr['id']} does not have multiple comments.")
+        logging.info(f"Transcription {tr_id} does not have multiple comments. {tr_url}")
         return
 
     transcriptions.sort(key=lambda x: x["created_utc"])
 
-    text = "\n\n".join([x["body"] for x in transcriptions])
-    logging.info(f"Transcription {tr['id']}:\n{text}")
+    # Assemble the transcription text
+    text = _join_transcriptions(transcriptions)
+    if (len(text) - 10) < len(transcription["text"]):
+        logging.warning(
+            f"New transcription is shorter than old transcription {tr_id} {tr_url}, skipping."
+        )
+        return
+
+    # Update the transcription in Blossom
+    update_response = blossom.patch(f"transcription/{tr_id}", data={"text": text})
+    if not update_response.ok:
+        logging.error(
+            f"Failed to update transcription {tr_id} {tr_url} "
+            f"({update_response.status_code}\n{update_response.content}"
+        )
+        return
+
+    logging.info(f"Updated transcription {tr_id} with multiple comments {tr_url}")
 
 
 def fix_multi_comment_transcriptions() -> int:
     """Fix multi comment transcriptions in Blossom."""
     page = 1
-    page_size = 50
+    page_size = 100
     tr_count = 0
 
     logging.info(f"Processing transcriptions (0%)")
