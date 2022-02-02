@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 import dotenv
@@ -34,7 +35,7 @@ REDDIT = (
 
 # The path to the log file
 LOG_FILE_PATH: str = os.environ.get("LOG_FILE_PATH") or os.path.join(
-    os.path.dirname(__file__), "migrate_redis_data.log"
+    os.path.dirname(__file__), "bootstrap.log"
 )
 
 # The path to the JSON file containing the Redis data
@@ -76,3 +77,27 @@ ID_BLACKLIST: List[str] = os.environ.get("ID_BLACKLIST").split(",") if os.enviro
 BATCH_SIZE: int = int(os.environ.get("BATCH_SIZE")) if os.environ.get(
     "BATCH_SIZE"
 ) else 20
+
+# Start date of data processing
+START_DATE: Optional[datetime] = datetime.fromisoformat(
+    os.getenv("START_DATE")
+) if os.getenv("START_DATE") else None
+
+# End date of data processing
+END_DATE: Optional[datetime] = datetime.fromisoformat(
+    os.getenv("END_DATE")
+) if os.getenv("END_DATE") else START_DATE + timedelta(hours=12) if START_DATE else None
+
+
+def _is_env_true(var_name: str) -> bool:
+    """Check if the env variable is set to true."""
+    value = os.getenv(var_name)
+    return value is not None and value.casefold() in [
+        "true",
+        "yes",
+        "1",
+    ]
+
+
+REMOVE_ALL: bool = _is_env_true("REMOVE_ALL")
+REPORT_NOT_REMOVED: bool = _is_env_true("REPORT_NOT_REMOVED")
