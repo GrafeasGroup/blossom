@@ -1022,10 +1022,10 @@ def _should_check_transcription(volunteer: BlossomUser) -> bool:
 
     # Otherwise, use their total gamma to determine the percentage
     probabilities = [
-        (5, 1),
-        (50, 0.4),
-        (100, 0.2),
-        (250, 0.1),
+        (10, 1),
+        (50, 0.5),
+        (100, 0.3),
+        (250, 0.15),
         (500, 0.05),
         (1000, 0.02),
         (5000, 0.01),
