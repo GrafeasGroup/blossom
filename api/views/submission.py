@@ -1032,7 +1032,7 @@ def _should_check_transcription(volunteer: BlossomUser) -> bool:
     ]
     for (gamma, probability) in probabilities:
         if volunteer.gamma <= gamma:
-            if random.random() < probability:
+            if random.random() <= probability:
                 return True
             else:
                 return False
