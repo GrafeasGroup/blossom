@@ -114,10 +114,7 @@ def is_valid_slack_request(request: HttpRequest) -> bool:
 def ask_about_removing_post(submission: Submission, reason: str) -> None:
     """Ask Slack if we want to remove a reported submission or not."""
     # Check if this got already sent to mod chat, we don't want duplicates
-    if (
-        submission.report_slack_channel_id is not None
-        or submission.report_slack_message_ts is not None
-    ):
+    if submission.has_slack_report_message:
         return
 
     submission.report_reason = reason

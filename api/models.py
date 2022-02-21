@@ -190,6 +190,14 @@ class Submission(models.Model):
         """Check whether the content url is from an image host we recognize."""
         return urlparse(self.content_url).netloc in settings.IMAGE_DOMAINS
 
+    @property
+    def has_slack_report_message(self) -> bool:
+        """Determine whether a Slack report message exists for this submission."""
+        return (
+            self.report_slack_channel_id is not None
+            and self.report_slack_message_ts is not None
+        )
+
     def _create_ocr_transcription(self, text: str) -> None:
         """
         Handle creation of an OCR transcription in a testable way.

@@ -1,9 +1,11 @@
 import json
+from unittest.mock import MagicMock
 
 from django.test import Client
 from django.urls import reverse
 from rest_framework import status
 
+from api.slack import client as slack_client
 from utils.test_helpers import create_submission, setup_user_client
 
 
@@ -116,3 +118,33 @@ class TestSubmissionRemove:
         assert result.status_code == status.HTTP_200_OK
         assert submission.removed_from_queue
         assert not submission.approved
+
+    def test_remove_update_report_message(self, client: Client) -> None:
+        """Verify that removing updates the report message, if available."""
+        mock = MagicMock()
+        slack_client.chat_update = mock
+        client, headers, user = setup_user_client(client)
+
+        submission = create_submission(
+            id=3,
+            report_reason="report",
+            report_slack_channel_id="abc",
+            report_slack_message_ts="def",
+        )
+        assert not submission.removed_from_queue
+        assert submission.has_slack_report_message
+
+        data = {}
+
+        result = client.patch(
+            reverse("submission-remove", args=[submission.id]),
+            json.dumps(data),
+            content_type="application/json",
+            **headers
+        )
+
+        submission.refresh_from_db()
+
+        assert result.status_code == status.HTTP_200_OK
+        assert submission.removed_from_queue
+        assert mock.call_count == 1

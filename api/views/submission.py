@@ -42,7 +42,11 @@ from api.models import Source, Submission, Transcription
 from api.pagination import StandardResultsSetPagination
 from api.serializers import SubmissionSerializer
 from api.slack import client as slack
-from api.slack.actions import ask_about_removing_post
+from api.slack.actions import (
+    ReportMessageStatus,
+    ask_about_removing_post,
+    update_submission_report,
+)
 from api.slack.utils import _send_transcription_to_slack
 from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
@@ -866,6 +870,11 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             # Revert the approval
             submission.approved = False
         submission.save()
+
+        # Update report message if needed
+        if submission.has_slack_report_message:
+            update_submission_report(submission, ReportMessageStatus.REMOVED)
+
         return Response(
             status=status.HTTP_200_OK,
             data=self.serializer_class(submission, context={"request": request}).data,
@@ -939,6 +948,11 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             # Revert the removal
             submission.removed_from_queue = False
         submission.save()
+
+        # Update report message if needed
+        if submission.has_slack_report_message:
+            update_submission_report(submission, ReportMessageStatus.APPROVED)
+
         return Response(
             status=status.HTTP_200_OK,
             data=self.serializer_class(submission, context={"request": request}).data,
