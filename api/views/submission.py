@@ -873,7 +873,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         # Update report message if needed
         if submission.has_slack_report_message:
-            update_submission_report(submission, ReportMessageStatus.APPROVED)
+            update_submission_report(submission, ReportMessageStatus.REMOVED)
 
         return Response(
             status=status.HTTP_200_OK,
