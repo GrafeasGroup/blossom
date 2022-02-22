@@ -1,5 +1,5 @@
 import json
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 from django.test import Client
@@ -137,9 +137,7 @@ class TestSubmissionDone:
         with patch(
             "authentication.models.BlossomUser.should_check_transcription",
             return_value=should_check_transcription,
-        ), patch(
-            "api.slack.utils._send_transcription_to_slack", new_callable=MagicMock
-        ) as mock:
+        ), patch("api.slack.utils._send_transcription_to_slack") as mock:
             client, headers, user = setup_user_client(client)
             submission = create_submission(url="abc", tor_url="def", claimed_by=user)
             create_transcription(submission, user, url="ghi")
