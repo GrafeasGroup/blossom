@@ -29,10 +29,10 @@ AUTO_CHECK_PERCENTAGES = [
 # Used as a fallback if the list above does not contain an entry.
 HIGH_GAMMA_CHECK_PERCENTAGE = 0.005
 
-# Time period of inactivity until the transcriber is marked as returning
-INACTIVITY_TIMEDELTA = timedelta(days=30)
-# Transcription count where a volunteer is marked as inactive
-INACTIVITY_THRESHOLD = 5
+# Time period to check low activity
+LOW_ACTIVITY_TIMEDELTA = timedelta(days=30)
+# Transcription count where a volunteer activity is marked as low
+LOW_ACTIVITY_THRESHOLD = 5
 
 
 class BlossomUserManager(UserManager):
@@ -155,18 +155,17 @@ class BlossomUser(AbstractUser):
         return self.get_rank() != self.get_rank(override=self.gamma - 1)
 
     @property
-    def is_inactive(self) -> bool:
-        """Determine if the volunteer is inactive.
+    def has_low_activity(self) -> bool:
+        """Determine if the volunteer currently has a low activity.
 
-        Inactive means that the transcriber only completed a very low
-        amount of transcriptions in a given timeframe.
+        This will be true if the volunteer has only done very few transcriptions recently.
         """
-        recent_date = datetime.now(tz=pytz.UTC) - INACTIVITY_TIMEDELTA
+        recent_date = datetime.now(tz=pytz.UTC) - LOW_ACTIVITY_TIMEDELTA
         recent_transcriptions = Submission.objects.filter(
             completed_by=self, complete_time__gte=recent_date,
         ).count()
 
-        return recent_transcriptions < INACTIVITY_THRESHOLD
+        return recent_transcriptions < LOW_ACTIVITY_THRESHOLD
 
     @property
     def auto_check_percentage(self) -> float:
@@ -188,7 +187,7 @@ class BlossomUser(AbstractUser):
 
     def should_check_transcription(self) -> bool:
         """Determine if a transcription should be checked for this user."""
-        return self.is_inactive or random() <= self.check_percentage
+        return self.has_low_activity or random() <= self.check_percentage
 
     def transcription_check_reason(self, ignore_low_activity: bool = False) -> str:
         """Determine the current reason for checking transcriptions.
@@ -198,7 +197,7 @@ class BlossomUser(AbstractUser):
         - The user is being watched by the mods.
         - Automatic checks.
         """
-        if self.is_inactive and not ignore_low_activity:
+        if self.has_low_activity and not ignore_low_activity:
             return "Low activity"
 
         return "{reason} {percentage:.1%}".format(
