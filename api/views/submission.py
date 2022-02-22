@@ -555,26 +555,33 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             and request.user.is_grafeas_staff
         )
 
+        transcription = None
+
         if not mod_override:
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
+
             transcription = Transcription.objects.filter(submission=submission).first()
-            if not transcription:
+
+            if transcription is None:
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
 
-            if user.should_check_transcription():
-                # Check to see if the transcription has been removed. If it has, only
-                # post the message to slack if the user has completed 5 or fewer posts.
-                if not transcription.removed_from_reddit or user.has_low_activity:
-                    reason = user.transcription_check_reason()
-                    _send_transcription_to_slack(
-                        transcription, submission, user, slack, reason
-                    )
-
+        # At this point everything looks good, award the user their gamma
         submission.completed_by = user
         submission.complete_time = timezone.now()
         submission.save()
 
+        # Send the transcription to Slack if necessary
+        if transcription is not None and user.should_check_transcription():
+            # Check to see if the transcription has been removed. If it has, only
+            # post the message to slack if they are new or inactive
+            if not transcription.removed_from_reddit or user.has_low_activity:
+                reason = user.transcription_check_reason()
+                _send_transcription_to_slack(
+                    transcription, submission, user, slack, reason
+                )
+
+        # Send rank up message to Slack if necessary
         _check_for_rank_up(user, submission)
 
         return Response(

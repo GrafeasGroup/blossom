@@ -31,9 +31,7 @@ def test_has_low_activity(
         now = datetime.now(tz=pytz.UTC)
 
         # Create the recent transcriptions
-        # We create one LESS, because the latest one wouldn't have been created yet
-        # when this property is checked.
-        for i in range(0, recent_gamma - 1):
+        for i in range(0, recent_gamma):
             submission = create_submission(
                 id=i + 100, claimed_by=user, completed_by=user, complete_time=now,
             )
