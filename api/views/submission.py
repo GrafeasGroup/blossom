@@ -565,7 +565,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if user.should_check_transcription():
                 # Check to see if the transcription has been removed. If it has, only
                 # post the message to slack if the user has completed 5 or fewer posts.
-                if not transcription.removed_from_reddit or user.is_inactive:
+                if not transcription.removed_from_reddit or user.has_low_activity:
                     reason = user.transcription_check_reason()
                     _send_transcription_to_slack(
                         transcription, submission, user, slack, reason

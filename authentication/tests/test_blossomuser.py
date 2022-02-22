@@ -17,10 +17,10 @@ from utils.test_helpers import (
     "recent_gamma, total_gamma, expected",
     [(0, 10000, True), (5, 10000, True), (6, 6, False), (10, 10000, False)],
 )
-def test_is_inactive(
+def test_has_low_activity(
     client: Client, recent_gamma: int, total_gamma: int, expected: bool,
 ) -> None:
-    """Test whether returning transcribers are determined correctly."""
+    """Test whether low transcribing activity is determined correctly."""
     # Mock the total gamma
     with patch(
         "authentication.models.BlossomUser.gamma",
@@ -39,7 +39,7 @@ def test_is_inactive(
             )
             create_transcription(submission, user, id=i + 100, create_time=now)
 
-        assert user.is_inactive == expected
+        assert user.has_low_activity == expected
 
 
 @pytest.mark.parametrize(
