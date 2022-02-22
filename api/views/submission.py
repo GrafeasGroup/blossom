@@ -45,7 +45,7 @@ from api.slack.actions import (
     ask_about_removing_post,
     update_submission_report,
 )
-from api.slack.utils import _send_transcription_to_slack
+from api.slack.utils import send_transcription_check
 from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
 
@@ -577,9 +577,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             # post the message to slack if they are new or inactive
             if not transcription.removed_from_reddit or user.has_low_activity:
                 reason = user.transcription_check_reason()
-                _send_transcription_to_slack(
-                    transcription, submission, user, slack, reason
-                )
+                send_transcription_check(transcription, submission, user, slack, reason)
 
         # Send rank up message to Slack if necessary
         _check_for_rank_up(user, submission)

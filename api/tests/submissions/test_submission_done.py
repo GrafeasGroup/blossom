@@ -137,7 +137,7 @@ class TestSubmissionDone:
         with patch(
             "authentication.models.BlossomUser.should_check_transcription",
             return_value=should_check_transcription,
-        ), patch("api.views.submission._send_transcription_to_slack") as mock:
+        ), patch("api.views.submission.send_transcription_check") as mock:
             client, headers, user = setup_user_client(client)
             submission = create_submission(url="abc", tor_url="def", claimed_by=user)
             create_transcription(submission, user, url="ghi")
@@ -172,7 +172,7 @@ class TestSubmissionDone:
             "authentication.models.BlossomUser.should_check_transcription",
             return_value=True,
         ), patch(
-            "api.views.submission._send_transcription_to_slack"
+            "api.views.submission.send_transcription_check"
         ) as mock:
             client, headers, user = setup_user_client(client)
             submission = create_submission(tor_url="asdf", claimed_by=user)
