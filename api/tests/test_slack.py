@@ -376,14 +376,14 @@ def test_process_watch(message: str, percentage: float) -> None:
     with patch(
         "authentication.models.BlossomUser.auto_check_percentage",
         new_callable=PropertyMock,
-        return_value=0.0,
+        return_value=0.05,
     ):
         # process the message
         watch_cmd("", message)
         slack_client.chat_postMessage.assert_called_once()
         test_user.refresh_from_db()
         expected_message = i18n["slack"]["watch"]["success"].format(
-            user=test_user.username, percentage=percentage
+            user=test_user.username, percentage=percentage, previous="Automatic (5.0%)"
         )
 
         assert test_user.overwrite_check_percentage == percentage
