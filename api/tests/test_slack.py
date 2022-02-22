@@ -22,7 +22,7 @@ from api.slack.commands import (
     watch_cmd,
     watchlist_cmd,
 )
-from api.slack.utils import _send_transcription_to_slack, dict_to_table
+from api.slack.utils import dict_to_table, send_transcription_check
 from api.views.slack import github_sponsors_endpoint
 from blossom.strings import translation
 from utils.test_helpers import (
@@ -595,9 +595,7 @@ def test_send_transcription_to_slack(
         submission = create_submission(tor_url="foo", url="bar", claimed_by=user)
         transcription = create_transcription(submission, user, url=tr_url)
 
-        _send_transcription_to_slack(
-            transcription, submission, user, slack_client, reason
-        )
+        send_transcription_check(transcription, submission, user, slack_client, reason)
 
         actual_message = mock.call_args[1]["text"]
         assert actual_message == message

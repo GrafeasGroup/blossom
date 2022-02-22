@@ -82,7 +82,7 @@ def get_message(data: Dict) -> Optional[str]:
         return None
 
 
-def _send_transcription_to_slack(
+def send_transcription_check(
     transcription: Transcription,
     submission: Submission,
     user: BlossomUser,
