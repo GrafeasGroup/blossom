@@ -166,7 +166,7 @@ class BlossomUser(AbstractUser):
             completed_by=self, complete_time__gte=recent_date,
         ).count()
 
-        return recent_transcriptions <= INACTIVITY_THRESHOLD
+        return recent_transcriptions < INACTIVITY_THRESHOLD
 
     @property
     def auto_check_percentage(self) -> float:
@@ -194,17 +194,18 @@ class BlossomUser(AbstractUser):
         Hence, it can also be used to determine IF a transcription should be checked.
 
         Possible reasons:
-        - "inactive": The volunteer is marked as inactive and needs to be checked.
-        - "watched (X%)": The volunteer is being watched.
-        - "automatic (X%)": Automatic checks.
+        - "Low activity": The volunteer is marked as inactive and needs to be checked.
+        - "Watched (X%)": The volunteer is being watched.
+        - "Automatic (X%)": Automatic checks.
         """
         if self.is_inactive:
-            return "inactive"
+            return "Low activity"
 
-        if random() <= self.check_percentage:
+        percentage = self.check_percentage
+        if random() <= percentage:
             return "{reason} {percentage:.1%}".format(
-                reason="watched" if self.overwrite_check_percentage else "automatic",
-                percentage=self.check_percentage,
+                reason="Watched" if self.overwrite_check_percentage else "Automatic",
+                percentage=percentage,
             )
 
         return None
