@@ -175,8 +175,13 @@ class TestSubmissionDone:
             "api.views.submission.send_transcription_check"
         ) as mock:
             client, headers, user = setup_user_client(client)
+            ocr_bot = create_user(id=123123, username="ocr_bot", is_bot=True)
+
             submission = create_submission(tor_url="asdf", claimed_by=user)
-            create_transcription(submission, user, url=None, removed_from_reddit=True)
+            create_transcription(submission, ocr_bot, id=30, url=None)
+            transcription = create_transcription(
+                submission, user, id=40, url=None, removed_from_reddit=True
+            )
 
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
@@ -186,8 +191,11 @@ class TestSubmissionDone:
             )
 
             assert result.status_code == status.HTTP_201_CREATED
+
             if has_low_activity:
                 assert mock.call_count == 1
+                # Make sure that the OCR transcription doesn't get picked up
+                assert mock.call_args[0][0].id == transcription.id
             else:
                 assert mock.call_count == 0
 
