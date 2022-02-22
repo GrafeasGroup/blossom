@@ -130,54 +130,21 @@ class TestSubmissionDone:
         assert result.status_code == status.HTTP_409_CONFLICT
 
     @pytest.mark.parametrize(
-        "probability,gamma,message,tor_url,trans_url",
-        [
-            (1, 3, True, None, None),
-            (0.8, 10, True, None, None),
-            (0.3999, 50, True, None, None),
-            (0.6, 49, False, None, None),
-            (0.7, 51, False, None, None),
-            (0.1999, 100, True, None, None),
-            (0.6, 101, False, None, None),
-            (0.0999, 250, True, None, None),
-            (0.5, 251, False, None, None),
-            (0.0499, 500, True, None, None),
-            (0.3, 501, False, None, None),
-            (0.0199, 1000, True, None, None),
-            (0.1, 1001, False, None, None),
-            (0.0099, 5000, True, None, None),
-            (0.05, 5001, False, None, None),
-            (0.00499, 10000, True, None, None),
-            (0, 1, True, "url", None),
-            (0, 1, True, "tor_url", "trans_url"),
-        ],
+        "should_check_transcription", [True, False],
     )
     def test_done_random_checks(
-        self,
-        client: Client,
-        settings: SettingsWrapper,
-        probability: float,
-        gamma: int,
-        message: bool,
-        tor_url: [str, None],
-        trans_url: [str, None],
+        self, client: Client, should_check_transcription: bool,
     ) -> None:
         """Test whether the random checks for the done process are invoked correctly."""
-        # Mock both the gamma property and the random.random function.
         with patch(
-            "authentication.models.BlossomUser.gamma", new_callable=PropertyMock
-        ) as mock, patch(
-            "api.views.submission._is_returning_transcriber", return_value=False
+            "authentication.models.BlossomUser.should_check_transcription",
+            return_value=should_check_transcription,
         ), patch(
-            "random.random", lambda: probability
-        ):
-            mock.return_value = gamma
-            # Mock the Slack client to catch the sent messages by the function under test.
-            slack_client.chat_postMessage = MagicMock()
-
+            "api.slack.utils._send_transcription_to_slack", new_callable=MagicMock
+        ) as mock:
             client, headers, user = setup_user_client(client)
-            submission = create_submission(tor_url=tor_url, claimed_by=user)
-            create_transcription(submission, user, url=trans_url)
+            submission = create_submission(url="abc", tor_url="def", claimed_by=user)
+            create_transcription(submission, user, url="ghi")
 
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
@@ -185,21 +152,11 @@ class TestSubmissionDone:
                 content_type="application/json",
                 **headers,
             )
-            slack_message = (
-                f"Please check the following transcription of u/{user.username}: "
-                f"{trans_url if trans_url else tor_url}."
-            )
             assert result.status_code == status.HTTP_201_CREATED
-            if message:
-                assert (
-                    call(
-                        channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL,
-                        text=slack_message,
-                    )
-                    in slack_client.chat_postMessage.call_args_list
-                )
+            if should_check_transcription:
+                assert mock.call_count == 1
             else:
-                assert slack_client.chat_postMessage.call_count == 0
+                assert mock.call_count == 0
 
     def test_send_transcription_to_slack(
         self, client: Client, settings: SettingsWrapper
