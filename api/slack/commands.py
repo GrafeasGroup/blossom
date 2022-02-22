@@ -214,7 +214,7 @@ def watchlist_cmd(channel: str, message: str) -> None:
     parsed_message = message.split()
     sorting = parsed_message[1] if len(parsed_message) > 1 else "percentage"
 
-    response_msg = "**List of all watched users:**\n\n"
+    response_msg = "*List of all watched users:*\n\n"
 
     watched_users: List[BlossomUser] = list(
         BlossomUser.objects.filter(overwrite_check_percentage__isnull=False)
