@@ -245,16 +245,26 @@ class TestSubmissionDone:
                 == slack_client.chat_postMessage.call_args_list[-1]
             )
 
-    def test_removed_transcription_changes(self, client: Client) -> None:
-        """Verify that a removed transcription is not sent to Slack."""
-        # Mock both the gamma property and the random.random function.
-        with patch(
-            "authentication.models.BlossomUser.gamma", new_callable=PropertyMock
-        ) as mock:
-            mock.return_value = 0
-            # Mock the Slack client to catch the sent messages by the function under test.
-            slack_client.chat_postMessage = MagicMock()
+    @pytest.mark.parametrize(
+        "has_low_activity", [True, False],
+    )
+    def test_removed_transcription_check(
+        self, client: Client, has_low_activity: bool
+    ) -> None:
+        """Verify that a removed transcription is not sent to Slack.
 
+        This should only be done if the user activity has been low recently.
+        """
+        with patch(
+            "authentication.models.BlossomUser.has_low_activity",
+            new_callable=PropertyMock,
+            return_value=has_low_activity,
+        ), patch(
+            "authentication.models.BlossomUser.should_check_transcription",
+            return_value=True,
+        ), patch(
+            "api.slack.utils._send_transcription_to_slack"
+        ) as mock:
             client, headers, user = setup_user_client(client)
             submission = create_submission(tor_url="asdf", claimed_by=user)
             create_transcription(submission, user, url=None, removed_from_reddit=True)
@@ -267,28 +277,10 @@ class TestSubmissionDone:
             )
 
             assert result.status_code == status.HTTP_201_CREATED
-            assert len(slack_client.chat_postMessage.call_args_list) == 1
-
-            # A new transcriber with a removed post should get sent. An existing one
-            # shouldn't get forwarded since they should hopefully already know what
-            # they're doing and we'll see one of their next (not removed) posts anyway.
-            mock.return_value = 10
-            # reset the slack_client mock
-            slack_client.chat_postMessage = MagicMock()
-            # reset the submission
-            submission.completed_by = None
-            submission.complete_time = None
-            submission.save()
-
-            result = client.patch(
-                reverse("submission-done", args=[submission.id]),
-                json.dumps({"username": user.username}),
-                content_type="application/json",
-                **headers,
-            )
-
-            assert result.status_code == status.HTTP_201_CREATED
-            assert len(slack_client.chat_postMessage.call_args_list) == 0
+            if has_low_activity:
+                assert mock.call_count == 1
+            else:
+                assert mock.call_count == 0
 
     def test_check_for_rank_up(self, client: Client, settings: SettingsWrapper) -> None:
         """Verify that a slack message fires when a volunteer ranks up."""
@@ -303,7 +295,8 @@ class TestSubmissionDone:
 
         # patch out transcription check
         with patch(
-            "api.views.submission._should_check_transcription", return_value=False,
+            "authentication.models.BlossomUser.should_check_transcription",
+            return_value=False,
         ):
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
@@ -330,7 +323,8 @@ class TestSubmissionDone:
         old_count_of_slack_calls = len(slack_client.chat_postMessage.call_args_list)
 
         with patch(
-            "api.views.submission._should_check_transcription", return_value=False,
+            "authentication.models.BlossomUser.should_check_transcription",
+            return_value=False,
         ):
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
