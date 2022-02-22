@@ -1,13 +1,11 @@
 import json
-from unittest.mock import MagicMock, PropertyMock, call, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from django.test import Client
 from django.urls import reverse
-from pytest_django.fixtures import SettingsWrapper
 from rest_framework import status
 
-from api.slack import client as slack_client
 from utils.test_helpers import (
     create_submission,
     create_transcription,
@@ -195,14 +193,16 @@ class TestSubmissionDone:
             else:
                 assert mock.call_count == 0
 
-    def test_check_for_rank_up(self, client: Client, settings: SettingsWrapper) -> None:
+    @pytest.mark.parametrize(
+        "gamma, expected", [(24, False), (25, True), (26, False)],
+    )
+    def test_check_for_rank_up(
+        self, client: Client, gamma: int, expected: bool
+    ) -> None:
         """Verify that a slack message fires when a volunteer ranks up."""
         client, headers, user = setup_user_client(client)
         for iteration in range(24):
             create_submission(claimed_by=user, completed_by=user)
-
-        # Mock the Slack client to catch the sent messages by the function under test.
-        slack_client.chat_postMessage = MagicMock()
 
         submission = create_submission(claimed_by=user, original_id=25)
 
@@ -210,48 +210,31 @@ class TestSubmissionDone:
         with patch(
             "authentication.models.BlossomUser.should_check_transcription",
             return_value=False,
-        ):
+        ), patch(
+            "authentication.models.BlossomUser.gamma",
+            new_callable=PropertyMock,
+            return_value=gamma,
+        ), patch(
+            "api.slack.client.chat_postMessage"
+        ) as mock:
             result = client.patch(
                 reverse("submission-done", args=[submission.id]),
                 json.dumps({"username": user.username, "mod_override": "True"}),
                 content_type="application/json",
                 **headers,
             )
-        assert result.status_code == status.HTTP_201_CREATED
-        slack_message = (
-            f"Congrats to {user.username} on achieving the rank of {user.get_rank()}!!"
-            f" {submission.tor_url}"
-        )
-        assert (
-            call(channel=settings.SLACK_RANK_UP_CHANNEL, text=slack_message)
-            == slack_client.chat_postMessage.call_args_list[0]
-        )
-
-        # now they do another transcription!
-        submission = create_submission(claimed_by=user, original_id=26)
-        create_transcription(submission, user)
-
-        # now it shouldn't trigger on the next transcription
-        # patch out transcription check
-        old_count_of_slack_calls = len(slack_client.chat_postMessage.call_args_list)
-
-        with patch(
-            "authentication.models.BlossomUser.should_check_transcription",
-            return_value=False,
-        ):
-            result = client.patch(
-                reverse("submission-done", args=[submission.id]),
-                json.dumps({"username": user.username}),
-                content_type="application/json",
-                **headers,
-            )
             assert result.status_code == status.HTTP_201_CREATED
 
-        # nothing fired, right?
-        assert (
-            len(slack_client.chat_postMessage.call_args_list)
-            == old_count_of_slack_calls
-        )
+            if expected:
+                assert mock.call_count == 1
+                slack_message = (
+                    f"Congrats to {user.username} on "
+                    f"achieving the rank of {user.get_rank()}!!"
+                    f" {submission.tor_url}"
+                )
+                assert mock.call_args[1]["text"] == slack_message
+            else:
+                assert mock.call_count == 0
 
     def test_done_no_coc(self, client: Client) -> None:
         """# noqa
