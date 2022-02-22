@@ -195,8 +195,8 @@ class BlossomUser(AbstractUser):
 
         Possible reasons:
         - "inactive": The volunteer is marked as inactive and needs to be checked.
-        - "watched (X %)": The volunteer is being watched.
-        - "automatic (X %)": Automatic checks.
+        - "watched (X%)": The volunteer is being watched.
+        - "automatic (X%)": Automatic checks.
         """
         if self.is_inactive:
             return "inactive"

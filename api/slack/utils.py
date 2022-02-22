@@ -87,38 +87,35 @@ def _send_transcription_to_slack(
     submission: Submission,
     user: BlossomUser,
     slack_client: WebClient,
+    reason: str,
 ) -> None:
     """Notify slack for the transcription check."""
-    url = None
-    # it's possible that we either won't pull a transcription object OR that
-    # a transcription object won't have a URL. If either fails, then we default
-    # to the submission's URL.
-    if transcription:
-        url = transcription.url
-    if not url:
-        url = submission.tor_url
+    # We add 1 to the gamma because the current transcription is not included yet
+    gamma = user.gamma + 1
+    msg = f"*Transcription check* for u/{user.username} ({gamma:,d}:)\n"
 
-    url = "https://reddit.com" + url if submission.source == "reddit" else url
+    # Add relevant links
+    tor_url = (
+        "<{}|ToR Post>".format(submission.tor_url) if submission.tor_url else "[N/A]"
+    )
+    post_url = "<{}|Partner Post>".format(submission.url) if submission.url else "[N/A]"
+    transcription_url = (
+        "<{}|Transcription>".format(transcription.url)
+        if transcription.url and not transcription.removed_from_reddit
+        else "[Removed]"
+    )
+    msg += " | ".join([tor_url, post_url, transcription_url]) + "\n"
 
-    msg = f"Please check the following transcription of " f"u/{user.username}: {url}."
+    # Add check reason
+    msg += f"Reason: {reason}\n"
 
-    if user.overwrite_check_percentage is not None:
-        # Let the mods know that the user is being watched
-        percentage = user.overwrite_check_percentage
-        msg += (
-            f"\n\nThis user is being watched with a chance of {percentage:.0%}.\n"
-            + f"Undo this using the `unwatch {user.username}` command."
-        )
-
-    # the `done` process is still going here, so they technically don't have
-    # a transcription yet. It's about to get assigned, but for right now the
-    # value is still zero.
-    if user.gamma == 0:
-        msg = ":rotating_light: First transcription! :rotating_light: " + msg
+    # Is it the first transcription? Extra care has to be taken
+    if gamma == 1:
+        msg += ":rotating_light: First transcription! :rotating_light:"
 
     try:
         slack_client.chat_postMessage(
-            channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL, text=msg,
+            channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL, text=msg.strip(),
         )
     except:  # noqa
         logger.warning(f"Cannot post message to slack. Msg: {msg}")
