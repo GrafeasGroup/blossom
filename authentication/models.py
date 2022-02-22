@@ -1,6 +1,8 @@
 """Models used within the Authentication application."""
+from datetime import datetime, timedelta
 from typing import Any
 
+import pytz
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.db.models import QuerySet
@@ -8,6 +10,28 @@ from django.utils import timezone
 from rest_framework_api_key.models import APIKey
 
 from api.models import Submission
+
+# A list of gamma values and corresponding check percentages.
+# An entry (x, y) means that if the user has <= x gamma,
+# they should be checked with a probability of y.
+AUTO_CHECK_PERCENTAGES = [
+    (10, 1),
+    (50, 0.5),
+    (100, 0.3),
+    (250, 0.15),
+    (500, 0.05),
+    (1000, 0.02),
+    (5000, 0.01),
+]
+
+# The check percentage for very high gamma users.
+# Used as a fallback if the list above does not contain an entry.
+HIGH_GAMMA_CHECK_PERCENTAGE = 0.005
+
+# Time period of inactivity until the transcriber is marked as returning
+INACTIVITY_TIMEDELTA = timedelta(days=30)
+# Transcription count where a volunteer is marked as inactive
+INACTIVITY_THRESHOLD = 5
 
 
 class BlossomUserManager(UserManager):
@@ -128,3 +152,35 @@ class BlossomUser(AbstractUser):
     def ranked_up(self) -> bool:
         """Determine whether the user has just ranked up."""
         return self.get_rank() != self.get_rank(override=self.gamma - 1)
+
+    @property
+    def is_inactive(self) -> bool:
+        """Determine if the volunteer is inactive.
+
+        Inactive means that the transcriber only completed a very low
+        amount of transcriptions in a given timeframe.
+        """
+        recent_date = datetime.now(tz=pytz.UTC) - INACTIVITY_TIMEDELTA
+        recent_transcriptions = Submission.objects.filter(
+            completed_by=self, complete_time__gte=recent_date,
+        ).count()
+
+        return recent_transcriptions <= INACTIVITY_THRESHOLD
+
+    @property
+    def auto_check_percentage(self) -> float:
+        """Determine the probability for automatic transcription checks."""
+        for (gamma, percentage) in AUTO_CHECK_PERCENTAGES:
+            if self.gamma <= gamma:
+                return percentage
+
+        return HIGH_GAMMA_CHECK_PERCENTAGE
+
+    @property
+    def check_percentage(self) -> float:
+        """Determine the current probability for transcription checks.
+
+        This is either the watch percentage if the user is being watched
+        or the percentage for automatic checks.
+        """
+        return self.overwrite_check_percentage or self.auto_check_percentage
