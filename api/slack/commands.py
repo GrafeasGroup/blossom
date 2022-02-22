@@ -167,12 +167,14 @@ def watch_cmd(channel: str, message: str) -> None:
                     auto_percentage=user.auto_check_percentage
                 )
             else:
+                # Remember the percentage before the overwrite
+                previous = user.transcription_check_reason(ignore_low_activity=True)
                 # Overwrite the check percentage
                 user.overwrite_check_percentage = decimal_percentage
                 user.save()
 
                 msg = i18n["slack"]["watch"]["success"].format(
-                    user=user.username, percentage=decimal_percentage
+                    user=user.username, percentage=decimal_percentage, previous=previous
                 )
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
