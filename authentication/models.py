@@ -165,7 +165,7 @@ class BlossomUser(AbstractUser):
             completed_by=self, complete_time__gte=recent_date,
         ).count()
 
-        return recent_transcriptions < LOW_ACTIVITY_THRESHOLD
+        return recent_transcriptions <= LOW_ACTIVITY_THRESHOLD
 
     @property
     def auto_check_percentage(self) -> float:
