@@ -458,7 +458,7 @@ def test_process_unwatch() -> None:
     [
         (
             "watchlist",
-            """**List of all watched users:**
+            """*List of all watched users:*
 
 ```
 100%: u/aaa
@@ -471,7 +471,7 @@ def test_process_unwatch() -> None:
         ),
         (
             "watchlist percentage",
-            """**List of all watched users:**
+            """*List of all watched users:*
 
 ```
 100%: u/aaa
@@ -484,7 +484,7 @@ def test_process_unwatch() -> None:
         ),
         (
             "watchlist alphabetical",
-            """**List of all watched users:**
+            """*List of all watched users:*
 
 ```
 u/aaa (100%)
