@@ -70,18 +70,18 @@ def test_auto_check_percentage(
 
 
 @pytest.mark.parametrize(
-    "total_gamma, override_percentage, expected",
+    "total_gamma, overwrite_percentage, expected",
     [(100, None, 0.3), (100, 0.8, 0.8), (300, None, 0.05), (300, 0.7, 0.7)],
 )
 def test_check_percentage(
     client: Client,
     total_gamma: int,
-    override_percentage: Optional[float],
+    overwrite_percentage: Optional[float],
     expected: float,
 ) -> None:
     """Test whether the automatic check percentage is calculated correctly."""
     client, headers, user = setup_user_client(
-        client, overwrite_check_percentage=override_percentage
+        client, overwrite_check_percentage=overwrite_percentage
     )
 
     # Mock the total gamma
@@ -125,3 +125,37 @@ def test_should_check_transcription(
         "random.random", lambda: random_value
     ):
         assert user.should_check_transcription() == expected
+
+
+@pytest.mark.parametrize(
+    "has_low_activity, overwrite, check_percentage, expected",
+    [
+        (True, True, 1.0, "Low activity"),
+        (False, True, 0.7, "Watched (70.0%)"),
+        (False, False, 0.3, "Automatic (30.0%)"),
+    ],
+)
+def test_transcription_check_reason(
+    client: Client,
+    has_low_activity: bool,
+    overwrite: bool,
+    check_percentage: float,
+    expected: str,
+) -> None:
+    """Test whether the check reason is determined correctly."""
+    overwrite_check_percentage = check_percentage if overwrite else None
+    client, headers, user = setup_user_client(
+        client, overwrite_check_percentage=overwrite_check_percentage
+    )
+
+    # Patch all relevant properties
+    with patch(
+        "authentication.models.BlossomUser.has_low_activity",
+        new_callable=PropertyMock,
+        return_value=has_low_activity,
+    ), patch(
+        "authentication.models.BlossomUser.check_percentage",
+        new_callable=PropertyMock,
+        return_value=check_percentage,
+    ):
+        assert user.transcription_check_reason() == expected

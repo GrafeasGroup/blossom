@@ -200,7 +200,7 @@ class BlossomUser(AbstractUser):
         if self.has_low_activity and not ignore_low_activity:
             return "Low activity"
 
-        return "{reason} {percentage:.1%}".format(
+        return "{reason} ({percentage:.1%})".format(
             reason="Watched" if self.overwrite_check_percentage else "Automatic",
             percentage=self.check_percentage,
         )
