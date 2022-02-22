@@ -1,7 +1,7 @@
 """Models used within the Authentication application."""
 from datetime import datetime, timedelta
 from random import random
-from typing import Any, Optional
+from typing import Any
 
 import pytz
 from django.contrib.auth.models import AbstractUser, UserManager
@@ -186,26 +186,22 @@ class BlossomUser(AbstractUser):
         """
         return self.overwrite_check_percentage or self.auto_check_percentage
 
-    def transcription_check_reason(self) -> Optional[str]:
-        """Determine the reason for a transcription check.
+    def should_check_transcription(self) -> bool:
+        """Determine if a transcription should be checked for this user."""
+        return self.is_inactive or random() <= self.check_percentage
 
-        This will return the reason as string if a transcription check should
-        be performed or None otherwise.
-        Hence, it can also be used to determine IF a transcription should be checked.
+    def transcription_check_reason(self, ignore_low_activity: bool = False) -> str:
+        """Determine the current reason for checking transcriptions.
 
-        Possible reasons:
-        - "Low activity": The volunteer is marked as inactive and needs to be checked.
-        - "Watched (X%)": The volunteer is being watched.
-        - "Automatic (X%)": Automatic checks.
+        - Low transcribing activity by the volunteer (can be disabled by setting
+          ignore_low_activity to True).
+        - The user is being watched by the mods.
+        - Automatic checks.
         """
-        if self.is_inactive:
+        if self.is_inactive and not ignore_low_activity:
             return "Low activity"
 
-        percentage = self.check_percentage
-        if random() <= percentage:
-            return "{reason} {percentage:.1%}".format(
-                reason="Watched" if self.overwrite_check_percentage else "Automatic",
-                percentage=percentage,
-            )
-
-        return None
+        return "{reason} {percentage:.1%}".format(
+            reason="Watched" if self.overwrite_check_percentage else "Automatic",
+            percentage=self.check_percentage,
+        )

@@ -562,10 +562,11 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if not transcription:
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
 
-            if reason := user.transcription_check_reason():
+            if user.should_check_transcription():
                 # Check to see if the transcription has been removed. If it has, only
                 # post the message to slack if the user has completed 5 or fewer posts.
                 if not transcription.removed_from_reddit or user.is_inactive:
+                    reason = user.transcription_check_reason()
                     _send_transcription_to_slack(
                         transcription, submission, user, slack, reason
                     )
