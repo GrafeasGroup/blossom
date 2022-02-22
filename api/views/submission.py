@@ -1,11 +1,9 @@
 """Views that specifically relate to submissions."""
 import datetime
 import logging
-import random
 from datetime import timedelta
 from typing import Union
 
-import pytz
 from django.conf import settings
 from django.db.models import Count, F
 from django.db.models.functions import (
@@ -538,7 +536,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         Slack for the random check of this transcription.
         """
         submission = get_object_or_404(Submission, id=pk)
-        user = get_object_or_404(BlossomUser, username=username)
+        user: BlossomUser = get_object_or_404(BlossomUser, username=username)
 
         if user.blacklisted:
             return Response(status=status.HTTP_423_LOCKED)
@@ -564,10 +562,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if not transcription:
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
 
-            if _should_check_transcription(user):
+            if user.transcription_check_reason():
                 # Check to see if the transcription has been removed. If it has, only
                 # post the message to slack if the user has completed 5 or fewer posts.
-                if not transcription.removed_from_reddit or user.gamma <= 5:
+                if not transcription.removed_from_reddit or user.is_inactive:
                     _send_transcription_to_slack(transcription, submission, user, slack)
 
         submission.completed_by = user
@@ -986,68 +984,3 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
             data=self.serializer_class(submission, context={"request": request}).data,
         )
-
-
-def _is_returning_transcriber(volunteer: BlossomUser) -> bool:
-    """Determine if the transcriber is returning.
-
-    If the user has just gotten back into transcribing,
-    their transcriptions should be checked.
-    """
-    recent_date = datetime.datetime.now(tz=pytz.UTC) - datetime.timedelta(days=30)
-    recent_transcriptions = Submission.objects.filter(
-        completed_by=volunteer, complete_time__gte=recent_date,
-    ).count()
-
-    # If the volunteer just returned to transcribing, check them
-    return recent_transcriptions <= 5
-
-
-def _should_check_transcription(volunteer: BlossomUser) -> bool:
-    """
-    Return whether a transcription should be checked based on user gamma.
-
-    This is based on the gamma of the user. Given this gamma, a probability
-    for the check is provided. For example, if the probability listed is
-    (5, 1), then for the first five transcriptions there is a 100% probability
-    that their transcription will be posted to the channel. If the probability
-    listed reads something like (100, 0.2), then there is a 1 in 5 chance
-    (20%) of their transcription being posted. The chance will get lower as
-    the volunteer gains more experience, as the entire point of this system
-    is to verify that they are continuing to do a good job, not to constantly
-    be looking over their shoulder.
-
-    This can also be overwritten manually by a mod through the
-    overwrite_check_percentage field.
-
-    :param volunteer:   the volunteer for which the post should be checked
-    :return:            whether the post should be checked
-    """
-    # Check if a mod has overwritten the percentage
-    if percentage := volunteer.overwrite_check_percentage:
-        if random.random() < percentage:
-            return True
-        else:
-            return False
-
-    # Count the transcriptions by the user in the past month
-    if _is_returning_transcriber(volunteer):
-        return True
-
-    # Otherwise, use their total gamma to determine the percentage
-    probabilities = [
-        (10, 1),
-        (50, 0.5),
-        (100, 0.3),
-        (250, 0.15),
-        (500, 0.05),
-        (1000, 0.02),
-        (5000, 0.01),
-    ]
-    for (gamma, probability) in probabilities:
-        if volunteer.gamma <= gamma:
-            if random.random() <= probability:
-                return True
-            else:
-                return False
-    return random.random() < 0.005

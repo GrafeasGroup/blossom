@@ -1,6 +1,7 @@
 """Models used within the Authentication application."""
 from datetime import datetime, timedelta
-from typing import Any
+from random import random
+from typing import Any, Optional
 
 import pytz
 from django.contrib.auth.models import AbstractUser, UserManager
@@ -184,3 +185,26 @@ class BlossomUser(AbstractUser):
         or the percentage for automatic checks.
         """
         return self.overwrite_check_percentage or self.auto_check_percentage
+
+    def transcription_check_reason(self) -> Optional[str]:
+        """Determine the reason for a transcription check.
+
+        This will return the reason as string if a transcription check should
+        be performed or None otherwise.
+        Hence, it can also be used to determine IF a transcription should be checked.
+
+        Possible reasons:
+        - "inactive": The volunteer is marked as inactive and needs to be checked.
+        - "watched (X %)": The volunteer is being watched.
+        - "automatic (X %)": Automatic checks.
+        """
+        if self.is_inactive:
+            return "inactive"
+
+        if random() <= self.check_percentage:
+            return "{reason} {percentage:.1%}".format(
+                reason="watched" if self.overwrite_check_percentage else "automatic",
+                percentage=self.check_percentage,
+            )
+
+        return None
