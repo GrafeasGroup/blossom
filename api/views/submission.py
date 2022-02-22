@@ -561,7 +561,9 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-            transcription = Transcription.objects.filter(submission=submission).first()
+            transcription = Transcription.objects.filter(
+                submission=submission, author=user
+            ).first()
 
             if transcription is None:
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)

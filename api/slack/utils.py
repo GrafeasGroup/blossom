@@ -91,7 +91,7 @@ def send_transcription_check(
 ) -> None:
     """Notify slack for the transcription check."""
     gamma = user.gamma
-    msg = f"*Transcription check* for u/{user.username} ({user.gamma:,d}):\n"
+    msg = f"*Transcription check* for u/{user.username} ({user.gamma:,d} Γ):\n"
 
     # Add relevant links
     tor_url = (

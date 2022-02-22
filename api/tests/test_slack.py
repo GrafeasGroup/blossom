@@ -575,7 +575,7 @@ def test_dadjoke_target(message: str) -> None:
             1,
             "url_stuff",
             "Low Activity",
-            "*Transcription check* for u/TESTosterone (1):\n"
+            "*Transcription check* for u/TESTosterone (1 Γ):\n"
             "<foo|ToR Post> | <bar|Partner Post> | <url_stuff|Transcription>\n"
             "Reason: Low Activity\n"
             ":rotating_light: First transcription! :rotating_light:",
@@ -584,7 +584,7 @@ def test_dadjoke_target(message: str) -> None:
             10,
             "url_stuff",
             "Watched (70.0%)",
-            "*Transcription check* for u/TESTosterone (10):\n"
+            "*Transcription check* for u/TESTosterone (10 Γ):\n"
             "<foo|ToR Post> | <bar|Partner Post> | <url_stuff|Transcription>\n"
             "Reason: Watched (70.0%)",
         ),
@@ -592,7 +592,7 @@ def test_dadjoke_target(message: str) -> None:
             20300,
             None,
             "Automatic (0.5%)",
-            "*Transcription check* for u/TESTosterone (20,300):\n"
+            "*Transcription check* for u/TESTosterone (20,300 Γ):\n"
             "<foo|ToR Post> | <bar|Partner Post> | [Removed]\n"
             "Reason: Automatic (0.5%)",
         ),
