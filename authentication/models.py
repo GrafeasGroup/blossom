@@ -1,6 +1,6 @@
 """Models used within the Authentication application."""
+import random
 from datetime import datetime, timedelta
-from random import random
 from typing import Any
 
 import pytz
@@ -187,7 +187,7 @@ class BlossomUser(AbstractUser):
 
     def should_check_transcription(self) -> bool:
         """Determine if a transcription should be checked for this user."""
-        return self.has_low_activity or random() <= self.check_percentage
+        return self.has_low_activity or random.random() <= self.check_percentage
 
     def transcription_check_reason(self, ignore_low_activity: bool = False) -> str:
         """Determine the current reason for checking transcriptions.

@@ -91,3 +91,37 @@ def test_check_percentage(
         return_value=total_gamma,
     ):
         assert user.check_percentage == expected
+
+
+@pytest.mark.parametrize(
+    "has_low_activity, check_percentage, random_value, expected",
+    [
+        (True, 0, 1, True),
+        (False, 0.8, 0.8, True),
+        (False, 0.8, 0.5, True),
+        (False, 0.8, 0.81, False),
+    ],
+)
+def test_should_check_transcription(
+    client: Client,
+    has_low_activity: bool,
+    check_percentage: float,
+    random_value: float,
+    expected: bool,
+) -> None:
+    """Test whether the checks are determined correctly."""
+    client, headers, user = setup_user_client(client)
+
+    # Patch all relevant properties
+    with patch(
+        "authentication.models.BlossomUser.has_low_activity",
+        new_callable=PropertyMock,
+        return_value=has_low_activity,
+    ), patch(
+        "authentication.models.BlossomUser.check_percentage",
+        new_callable=PropertyMock,
+        return_value=check_percentage,
+    ), patch(
+        "random.random", lambda: random_value
+    ):
+        assert user.should_check_transcription() == expected
