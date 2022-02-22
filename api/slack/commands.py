@@ -161,13 +161,19 @@ def watch_cmd(channel: str, message: str) -> None:
                     client.chat_postMessage(channel=channel, text=msg)
                     return
 
-            # Overwrite the check percentage
-            user.overwrite_check_percentage = decimal_percentage
-            user.save()
+            # Only allow to set the percentage if it's higher than the default
+            if decimal_percentage < user.auto_check_percentage:
+                msg = i18n["slack"]["watch"]["percentage_too_low"].format(
+                    auto_percentage=user.auto_check_percentage
+                )
+            else:
+                # Overwrite the check percentage
+                user.overwrite_check_percentage = decimal_percentage
+                user.save()
 
-            msg = i18n["slack"]["watch"]["success"].format(
-                user=user.username, percentage=decimal_percentage
-            )
+                msg = i18n["slack"]["watch"]["success"].format(
+                    user=user.username, percentage=decimal_percentage
+                )
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
 
