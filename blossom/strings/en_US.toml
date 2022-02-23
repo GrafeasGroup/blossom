@@ -35,14 +35,15 @@ messages = [
 help_message="""
 Help is on the way!
 
-Get information about a user: `@blossom info {username}`
-Get general server information: `@blossom info`
-Blacklist / unblacklist user: `@blossom blacklist {username}`
-Toggle CoC status of user: `@blossom reset {username}`
-Overwrite check percentage: `@blossom watch {username} {percentage}`, where {percentage} is a number between 0 and 100
-Reset check percentage: `@blossom unwatch {username}`
-List all overwritten check percentages: `@blossom watchlist {sorting}`, where {sorting} is either "percentage" (default) or "alphabetical".
-Render this message: `@blossom help`
+Get information about a user: `@Blossom info <username>`
+Get general server information: `@Blossom info`
+Blacklist / unblacklist user: `@Blossom blacklist <username>`
+Toggle CoC status of user: `@Blossom reset <username>`
+Overwrite check percentage: `@Blossom watch <username> <percentage>`, where `<percentage>` is a number between 0 and 100
+Reset check percentage: `@Blossom unwatch <username>`
+Get the check percentage for a user: `@Blossom watchlist <username>`
+List all overwritten check percentages: `@Blossom watchlist <sorting>`, where `<sorting>` is either "percentage" (default) or "alphabetical".
+Render this message: `@Blossom help`
 """
 
 server_summary="""
@@ -69,7 +70,7 @@ github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
     empty_message_error="Sorry, I wasn't able to get text out of that. Try again."
     too_many_params="Too many parameters; please try again."
     no_user_by_that_name="Sorry, I wasn't able to find a user with that name."
-    missing_username="I don't see a username in your request -- make sure you're formatting your request as \"@blossom {action} {argument}\". Example: \"@blossom dadjoke @itsthejoker\""
+    missing_username="I don't see a username in your request -- make sure you're formatting your request as \"@Blossom {action} {argument}\". Example: \"@Blossom dadjoke @itsthejoker\""
     unknown_username="No username like that on file; please check your spelling."
     unknown_payload="Received unknown payload from Slack with key I don't recognize. Unknown key: {}"
 
