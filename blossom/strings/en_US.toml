@@ -89,6 +89,9 @@ github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
     [slack.unwatch]
     success="The chance to check transcriptions of {user} is now determined automatically."
 
+    [slack.watchstatus]
+    success="Watch status for {user}: {status}"
+
     [slack.dadjoke]
     message = "Hey {0}! {1}"
     fallback_joke = "Did you know that fortune tellers make their tents purple? They believe the color has mythical properties. It allows them to tell the fuschia."
