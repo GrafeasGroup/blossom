@@ -327,3 +327,49 @@ class Transcription(models.Model):
 
     def __str__(self) -> str:  # pragma: no cover
         return f"{self.submission} by {self.author.username}"
+
+
+class TranscriptionCheck(models.Model):
+    class TranscriptionCheckStatus(models.TextChoices):
+        # The default. The check needs to be claimed by a moderator.
+        PENDING = "pending"
+        # The transcription has been approved by the moderator.
+        APPROVED = "approved"
+        # The moderator left a comment for the user to fix minor errors (e.g. formatting)
+        # and is waiting for them to fix them.
+        COMMENT_PENDING = "comment_pending"
+        # The moderator left a comment and the user has fixed the errors.
+        COMMENT_RESOLVED = "comment_resolved"
+        # The moderator discovered major errors (e.g. a PI violation) and  is waiting
+        # for the user to fix them (e.g. delete the transcription).
+        WARNING_PENDING = "warning_pending"
+        # The moderator warned the user and they responded and resolved any issues,
+        # if applicable.
+        WARNING_RESOLVED = "warning_resolved"
+
+    # The Transcription for which the check is made.
+    transcription = models.ForeignKey(Submission, on_delete=models.CASCADE)
+
+    # The moderator assigned to this check
+    moderator = models.ForeignKey(
+        "authentication.BlossomUser", default=None, on_delete=models.SET_DEFAULT
+    )
+
+    # The current status of the check
+    status = models.CharField(
+        max_length=20,
+        choices=TranscriptionCheckStatus.choices,
+        default=TranscriptionCheckStatus.PENDING,
+    )
+
+    # An internal note for the moderators
+    internal_note = models.CharField(
+        max_length=1000, null=True, blank=True, default=None,
+    )
+
+    # The time the check has been created.
+    create_time = models.DateTimeField(default=timezone.now)
+    # The time that the check has been claimed by a moderator
+    claim_time = models.DateTimeField(default=None, null=True, blank=True)
+    # The time that the check has been completed by the moderator
+    complete_time = models.DateTimeField(default=None, null=True, blank=True)
