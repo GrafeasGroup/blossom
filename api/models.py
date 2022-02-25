@@ -362,6 +362,10 @@ class TranscriptionCheck(models.Model):
         default=TranscriptionCheckStatus.PENDING,
     )
 
+    # The trigger for the check.
+    # Can be something like "Low activity", "Watched (70.0%)", etc.
+    trigger = models.CharField(max_length=200, null=True)
+
     # An internal note for the moderators
     internal_note = models.CharField(
         max_length=1000, null=True, blank=True, default=None,
@@ -373,3 +377,11 @@ class TranscriptionCheck(models.Model):
     claim_time = models.DateTimeField(default=None, null=True, blank=True)
     # The time that the check has been completed by the moderator
     complete_time = models.DateTimeField(default=None, null=True, blank=True)
+
+    # The info needed to update the Slack message of the check
+    slack_channel_id = models.CharField(
+        max_length=50, default=None, null=True, blank=True
+    )
+    slack_message_ts = models.CharField(
+        max_length=50, default=None, null=True, blank=True
+    )
