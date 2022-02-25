@@ -53,19 +53,19 @@ def _get_check_pending_actions(check: TranscriptionCheck) -> List[Dict]:
             "type": "button",
             "style": "primary",
             "text": {"type": "plain_text", "text": "Approve"},
-            "value": f"check_approve_{check.id}",
+            "value": f"check_approved_{check.id}",
         },
         {
             "type": "button",
             "style": "default",
             "text": {"type": "plain_text", "text": "Comment"},
-            "value": f"check_comment-create_{check.id}",
+            "value": f"check_comment-pending_{check.id}",
         },
         {
             "type": "button",
             "style": "danger",
             "text": {"type": "plain_text", "text": "Warn"},
-            "value": f"check_warn-create_{check.id}",
+            "value": f"check_warning-pending_{check.id}",
         },
         {
             "type": "button",
@@ -82,7 +82,7 @@ def _get_check_approved_actions(check: TranscriptionCheck) -> List[Dict]:
         {
             "type": "button",
             "text": {"type": "plain_text", "text": "Revert"},
-            "value": f"check_approve-revert_{check.id}",
+            "value": f"check_pending_{check.id}",
         },
     ]
 
@@ -94,19 +94,19 @@ def _get_check_comment_pending_actions(check: TranscriptionCheck) -> List[Dict]:
             "type": "button",
             "style": "primary",
             "text": {"type": "plain_text", "text": "Resolve"},
-            "value": f"check_comment-resolve_{check.id}",
+            "value": f"check_comment-resolved_{check.id}",
         },
         {
             "type": "button",
             "style": "default",
             "text": {"type": "plain_text", "text": "Revert"},
-            "value": f"check_comment-revert_{check.id}",
+            "value": f"check_pending_{check.id}",
         },
         {
             "type": "button",
             "style": "danger",
             "text": {"type": "plain_text", "text": "Warn"},
-            "value": f"check_warn-create_{check.id}",
+            "value": f"check_warning-pending_{check.id}",
         },
         {
             "type": "button",
@@ -123,7 +123,7 @@ def _get_check_comment_resolved_actions(check: TranscriptionCheck) -> List[Dict]
         {
             "type": "button",
             "text": {"type": "plain_text", "text": "Revert"},
-            "value": f"check_comment-revert_{check.id}",
+            "value": f"check_comment-pending_{check.id}",
         },
     ]
 
@@ -135,13 +135,13 @@ def _get_check_warning_pending_actions(check: TranscriptionCheck) -> List[Dict]:
             "type": "button",
             "style": "primary",
             "text": {"type": "plain_text", "text": "Resolve"},
-            "value": f"check_warn-resolve_{check.id}",
+            "value": f"check_warning-resolved_{check.id}",
         },
         {
             "type": "button",
             "style": "default",
             "text": {"type": "plain_text", "text": "Revert"},
-            "value": f"check_warn-revert_{check.id}",
+            "value": f"check_pending_{check.id}",
         },
         {
             "type": "button",
@@ -158,7 +158,7 @@ def _get_check_warning_resolved_actions(check: TranscriptionCheck) -> List[Dict]
         {
             "type": "button",
             "text": {"type": "plain_text", "text": "Revert"},
-            "value": f"check_warn-revert_{check.id}",
+            "value": f"check_warning-pending_{check.id}",
         },
     ]
 
