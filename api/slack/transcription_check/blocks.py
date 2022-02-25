@@ -185,7 +185,7 @@ def _get_check_actions(check: TranscriptionCheck) -> List[Dict]:
     raise RuntimeError(f"Unexpected transcription check status: {check.status}")
 
 
-def _construct_transcription_check_blocks(check: TranscriptionCheck) -> List[Dict]:
+def construct_transcription_check_blocks(check: TranscriptionCheck) -> List[Dict]:
     """Construct the Slack blocks for the transcription check message."""
     submission = check.transcription.submission
 
