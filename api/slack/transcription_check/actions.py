@@ -4,10 +4,13 @@ from api.models import TranscriptionCheck
 from authentication.models import BlossomUser
 
 
-def _update_db_model(check: TranscriptionCheck, action: str) -> None:
+def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -> None:
     """Update the DB model according to the action taken."""
     check_status = TranscriptionCheck.TranscriptionCheckStatus
 
+    if action == "claim":
+        check.moderator = mod
+        check.save()
     if action == "unclaim":
         check.moderator = None
     elif action == "pending":
@@ -47,19 +50,15 @@ def process_check_action(data: Dict) -> None:
     if mod is None:
         return
 
-    if action == "claim":
-        if check.moderator is not None:
-            # TODO: Send an error message in this case
-            return
+    # Only unclaimed checks can be claimed
+    if action == "claim" and check.moderator is not None:
+        # TODO: Send an error message
+        return
+    # A claimed check can only be worked on by the mod who claimed it
+    if action != "claim" and check.moderator != mod:
+        # TODO: Send an error message in this case
+        return
 
-        check.moderator = mod
-        check.save()
-    else:
-        # The mod pressing the button must be the same who claimed the check
-        if check.moderator != mod:
-            # TODO: Send an error message in this case
-            return
-
-        _update_db_model(check, action)
+    _update_db_model(check, mod, action)
 
     # TODO: Update Slack message
