@@ -375,7 +375,7 @@ class TranscriptionCheck(models.Model):
     create_time = models.DateTimeField(default=timezone.now)
     # The time that the check has been claimed by a moderator
     claim_time = models.DateTimeField(default=None, null=True, blank=True)
-    # The time that the check has been completed by the moderator
+    # The time that the check has been fully resolved
     complete_time = models.DateTimeField(default=None, null=True, blank=True)
 
     # The info needed to update the Slack message of the check
