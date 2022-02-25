@@ -1,5 +1,7 @@
 from typing import Dict
 
+from django.utils import timezone
+
 from api.models import TranscriptionCheck
 from authentication.models import BlossomUser
 
@@ -10,21 +12,28 @@ def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -
 
     if action == "claim":
         check.moderator = mod
-        check.save()
+        check.claim_time = timezone.now
     if action == "unclaim":
         check.moderator = None
+        check.claim_time = None
     elif action == "pending":
         check.status = check_status.PENDING
+        check.complete_time = None
     if action == "approved":
         check.status = check_status.APPROVED
+        check.complete_time = timezone.now
     elif action == "comment-pending":
         check.status = check_status.COMMENT_PENDING
+        check.complete_time = None
     elif action == "comment-resolved":
         check.status = check_status.COMMENT_RESOLVED
+        check.complete_time = timezone.now
     elif action == "warning-pending":
         check.status = check_status.WARNING_PENDING
+        check.complete_time = None
     elif action == "warning-resolved":
         check.status = check_status.WARNING_RESOLVED
+        check.complete_time = timezone.now
     else:
         # TODO: Send error message
         return
