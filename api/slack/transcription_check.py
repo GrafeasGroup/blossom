@@ -24,8 +24,9 @@ def _get_check_base_text(check: TranscriptionCheck) -> str:
     )
     base_text += " | ".join([tor_url, post_url, transcription_url]) + "\n"
 
-    # Add check reason
-    # base_text += f"Reason: {reason}\n"
+    # Add check trigger
+    trigger = check.trigger or "_Not specified_"
+    base_text += f"Trigger: {trigger}\n"
 
     # Is it the first transcription? Extra care has to be taken
     if gamma == 1:
