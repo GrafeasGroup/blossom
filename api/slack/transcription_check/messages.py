@@ -17,7 +17,7 @@ def send_check_message(
     blocks = construct_transcription_check_blocks(check)
     response = client.chat_postMessage(channel=channel, blocks=blocks)
     if not response["ok"]:
-        logger.warning(f"Could not send check {check.id} to Slack!")
+        logger.error(f"Could not send check {check.id} to Slack!")
         return
 
     # See https://api.slack.com/methods/chat.postMessage
@@ -37,9 +37,11 @@ def update_check_message(check: TranscriptionCheck) -> None:
         return
 
     blocks = construct_transcription_check_blocks(check)
-    client.chat_update(
+    response = client.chat_update(
         channel=check.slack_channel_id, ts=check.slack_message_ts, blocks=blocks,
     )
+    if not response["ok"]:
+        logger.error(f"Could not update check {check.id} on Slack!")
 
 
 def reply_to_action(data: Dict, text: str) -> Dict:
