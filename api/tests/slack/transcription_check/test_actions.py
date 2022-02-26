@@ -101,3 +101,51 @@ def test_update_db_model_unclaim(client: Client) -> None:
 
     assert check.moderator is None
     assert check.claim_time is None
+
+
+@pytest.mark.parametrize(
+    "action", ["approved", "comment-resolved", "warning-resolved"],
+)
+def test_update_db_model_set_complete_time(client: Client, action: str) -> None:
+    """Test that the complete time is updated after completing a check."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    mod = create_user(id=200, username="Moddington")
+    submission = create_submission(claimed_by=user, completed_by=user)
+    transcription = create_transcription(submission=submission, user=user)
+    check = create_check(transcription, moderator=mod)
+    assert check.complete_time is None
+
+    start = timezone.now()
+    assert _update_db_model(check, mod, action)
+    check.refresh_from_db()
+
+    assert _is_time_recent(start, check.complete_time)
+
+
+@pytest.mark.parametrize(
+    "action", ["pending", "comment-pending", "warning-pending"],
+)
+def test_update_db_model_unset_complete_time(client: Client, action: str) -> None:
+    """Test that the complete time is updated after reverting completion."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    mod = create_user(id=200, username="Moddington")
+    submission = create_submission(claimed_by=user, completed_by=user)
+    transcription = create_transcription(submission=submission, user=user)
+    check = create_check(transcription, moderator=mod, complete_time=timezone.now(),)
+    assert check.complete_time is not None
+
+    assert _update_db_model(check, mod, action)
+    check.refresh_from_db()
+
+    assert check.complete_time is None
+
+
+def test_update_db_model_unknown_action(client: Client) -> None:
+    """Test that the update returns False if the action is unknown."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    mod = create_user(id=200, username="Moddington")
+    submission = create_submission(claimed_by=user, completed_by=user)
+    transcription = create_transcription(submission=submission, user=user)
+    check = create_check(transcription, moderator=mod)
+
+    assert not _update_db_model(check, mod, "pasdpajsdp")
