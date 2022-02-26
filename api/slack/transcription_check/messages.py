@@ -1,4 +1,5 @@
 import logging
+from typing import Dict
 
 from django.conf import settings
 
@@ -39,3 +40,18 @@ def update_check_message(check: TranscriptionCheck) -> None:
     client.chat_update(
         channel=check.slack_channel_id, ts=check.slack_message_ts, blocks=blocks,
     )
+
+
+def reply_to_action(data: Dict, text: str) -> Dict:
+    """Reply to the given action with the given text."""
+    channel_id = data["channel"]["id"]
+    message_ts = data["message_ts"]
+
+    return client.chat_postMessage(channel=channel_id, thread_ts=message_ts, text=text)
+
+
+def reply_to_action_with_ping(data: Dict, text: str) -> Dict:
+    """Reply to the given action with the given text and ping the user."""
+    user_id = data["user"]["id"]
+
+    return reply_to_action(data, f"<@{user_id}>, {text}")
