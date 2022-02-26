@@ -348,11 +348,14 @@ class TranscriptionCheck(models.Model):
         WARNING_RESOLVED = "warning_resolved"
 
     # The Transcription for which the check is made.
-    transcription = models.ForeignKey(Submission, on_delete=models.CASCADE)
+    transcription = models.ForeignKey(Transcription, on_delete=models.CASCADE)
 
     # The moderator assigned to this check
     moderator = models.ForeignKey(
-        "authentication.BlossomUser", default=None, on_delete=models.SET_DEFAULT
+        "authentication.BlossomUser",
+        default=None,
+        null=True,
+        on_delete=models.SET_DEFAULT,
     )
 
     # The current status of the check

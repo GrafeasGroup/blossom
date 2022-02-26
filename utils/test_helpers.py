@@ -3,7 +3,7 @@ from typing import Dict, Tuple
 from django.test import Client
 from social_django.models import UserSocialAuth
 
-from api.models import Source, Submission, Transcription
+from api.models import Source, Submission, Transcription, TranscriptionCheck
 from authentication.models import APIKey, BlossomUser
 
 BASE_SUBMISSION_INFO = {
@@ -113,6 +113,21 @@ def create_transcription(
     if transcription_info["source"] is None:
         transcription_info["source"] = get_default_test_source()
     return Transcription.objects.create(**transcription_info)
+
+
+def create_check(transcription: Transcription, **kwargs: object) -> TranscriptionCheck:
+    """Create a new check for the given transcription.
+
+    :param transcription: The transcription to create the check for.
+    :param kwargs: The desired change of fields of the check compared to the default.
+    :returns: The created transcription check
+    """
+    check_info = {
+        "trigger": "Test",
+        "transcription": transcription,
+        **kwargs,
+    }
+    return TranscriptionCheck.objects.create(**check_info)
 
 
 def setup_user_client(

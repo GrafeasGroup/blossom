@@ -20,30 +20,32 @@ def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -
     """
     check_status = TranscriptionCheck.TranscriptionCheckStatus
 
+    print(action)
+
     if action == "claim":
         check.moderator = mod
-        check.claim_time = timezone.now
-    if action == "unclaim":
+        check.claim_time = timezone.now()
+    elif action == "unclaim":
         check.moderator = None
         check.claim_time = None
     elif action == "pending":
         check.status = check_status.PENDING
         check.complete_time = None
-    if action == "approved":
+    elif action == "approved":
         check.status = check_status.APPROVED
-        check.complete_time = timezone.now
+        check.complete_time = timezone.now()
     elif action == "comment-pending":
         check.status = check_status.COMMENT_PENDING
         check.complete_time = None
     elif action == "comment-resolved":
         check.status = check_status.COMMENT_RESOLVED
-        check.complete_time = timezone.now
+        check.complete_time = timezone.now()
     elif action == "warning-pending":
         check.status = check_status.WARNING_PENDING
         check.complete_time = None
     elif action == "warning-resolved":
         check.status = check_status.WARNING_RESOLVED
-        check.complete_time = timezone.now
+        check.complete_time = timezone.now()
     else:
         # Unknown action
         return False
