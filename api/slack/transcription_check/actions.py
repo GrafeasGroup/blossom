@@ -20,8 +20,6 @@ def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -
     """
     check_status = TranscriptionCheck.TranscriptionCheckStatus
 
-    print(action)
-
     if action == "claim":
         check.moderator = mod
         check.claim_time = timezone.now()
