@@ -3,11 +3,18 @@ from typing import Dict
 from django.utils import timezone
 
 from api.models import TranscriptionCheck
+from api.slack.transcription_check.messages import (
+    reply_to_action_with_ping,
+    update_check_message,
+)
 from authentication.models import BlossomUser
 
 
-def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -> None:
-    """Update the DB model according to the action taken."""
+def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -> bool:
+    """Update the DB model according to the action taken.
+
+    :returns: False, if the action is unknown, else True
+    """
     check_status = TranscriptionCheck.TranscriptionCheckStatus
 
     if action == "claim":
@@ -35,11 +42,12 @@ def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -
         check.status = check_status.WARNING_RESOLVED
         check.complete_time = timezone.now
     else:
-        # TODO: Send error message
-        return
+        # Unknown action
+        return False
 
     # Save the changes to the DB
     check.save()
+    return True
 
 
 def process_check_action(data: Dict) -> None:
@@ -48,26 +56,47 @@ def process_check_action(data: Dict) -> None:
     parts = value.split("_")
     action = parts[1]
     check_id = parts[2]
+    mod_username = data["user"]["username"]
 
     # Retrieve the corresponding objects form the DB
     check = TranscriptionCheck.objects.filter(id=check_id).first()
-    mod = BlossomUser.objects.filter(username=data["user"]["username"]).first()
+    mod = BlossomUser.objects.filter(username=mod_username).first()
 
-    # TODO: Send an error message in these cases
     if check is None:
+        reply_to_action_with_ping(data, f"I couldn't find a check with ID {check_id}!")
         return
     if mod is None:
+        reply_to_action_with_ping(
+            data,
+            f"I couldn't find a mod with username u/{mod_username}.\n"
+            "Did you set your username on Slack?",
+        )
         return
 
     # Only unclaimed checks can be claimed
     if action == "claim" and check.moderator is not None:
-        # TODO: Send an error message
+        reply_to_action_with_ping(
+            data, f"Check {check_id} is already claimed by someone!"
+        )
         return
+    # If it's not a claim it must already be claimed by someone
+    if action != "claim" and check.moderator is None:
+        reply_to_action_with_ping(
+            data, f"Check {check_id} is not claimed by anyone yet!"
+        )
     # A claimed check can only be worked on by the mod who claimed it
     if action != "claim" and check.moderator != mod:
-        # TODO: Send an error message in this case
+        reply_to_action_with_ping(
+            data,
+            f"Check {check_id} is claimed by u/{check.moderator.username}, not by you!",
+        )
         return
 
-    _update_db_model(check, mod, action)
+    # Try to update the DB model based on the action
+    if not _update_db_model(check, mod, action):
+        # Unknown action type
+        reply_to_action_with_ping(
+            data, f"Action '{action}' is invalid for check {check_id}!",
+        )
 
-    # TODO: Update Slack message
+    update_check_message(check)
