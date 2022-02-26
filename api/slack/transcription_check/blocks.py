@@ -185,12 +185,39 @@ def _get_check_actions(check: TranscriptionCheck) -> List[Dict]:
     raise RuntimeError(f"Unexpected transcription check status: {check.status}")
 
 
+def _get_check_status_text(check: TranscriptionCheck) -> str:
+    """Get a text indicating the status of the transcription check."""
+    check_status = TranscriptionCheck.TranscriptionCheckStatus
+    mod_username = "u/" + check.moderator.username if check.moderator else None
+
+    status = (
+        "*Unclaimed*"
+        if check.moderator is None
+        else f"*Claimed* by {mod_username}"
+        if check.status == check_status.PENDING
+        else f"*Approved* by {mod_username}"
+        if check.status == check_status.APPROVED
+        else f"*Comment pending* by {mod_username}"
+        if check.status == check_status.COMMENT_PENDING
+        else f"*Comment resolved* by {mod_username}"
+        if check.status == check_status.COMMENT_RESOLVED
+        else f"*Warning pending* by {mod_username}"
+        if check.status == check_status.WARNING_PENDING
+        else f"*Warning resolved* by {mod_username}"
+        if check.status == check_status.WARNING_RESOLVED
+        else f"_INVALID:_ {check.status}"
+    )
+
+    return f"Status: {status}"
+
+
 def construct_transcription_check_blocks(check: TranscriptionCheck) -> List[Dict]:
     """Construct the Slack blocks for the transcription check message."""
     submission = check.transcription.submission
 
     base_text = _get_check_base_text(check)
     actions = _get_check_actions(check)
+    status_text = _get_check_status_text(check)
 
     return [
         {
@@ -202,5 +229,7 @@ def construct_transcription_check_blocks(check: TranscriptionCheck) -> List[Dict
                 "alt_text": f"Image of submission {submission.id}",
             },
         },
+        {"type": "divider"},
+        {"type": "section", "text": {"type": "mrkdwn", "text": status_text}},
         {"type": "actions", "elements": actions},
     ]
