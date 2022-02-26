@@ -10,7 +10,7 @@ def _get_check_base_text(check: TranscriptionCheck) -> str:
     user = transcription.author
     gamma = user.gamma
 
-    base_text = f"*Transcription check* for u/{user.username} ({user.gamma:,d} Γ):\n"
+    base_text = f"Transcription check for *u/{user.username}* ({gamma:,d} Γ):\n"
 
     # Add relevant links
     tor_url = (
