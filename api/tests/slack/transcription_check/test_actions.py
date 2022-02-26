@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import Optional
+from unittest.mock import patch
 
 import pytest
 from django.test import Client
 from django.utils import timezone
 
 from api.models import TranscriptionCheck
-from api.slack.transcription_check.actions import _update_db_model
+from api.slack.transcription_check.actions import _update_db_model, process_check_action
 from utils.test_helpers import (
     create_check,
     create_submission,
@@ -149,3 +150,45 @@ def test_update_db_model_unknown_action(client: Client) -> None:
     check = create_check(transcription, moderator=mod)
 
     assert not _update_db_model(check, mod, "pasdpajsdp")
+
+
+def test_process_check_action(client: Client) -> None:
+    """Test that an expected check action runs correctly."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    mod = create_user(id=200, username="Moddington")
+    submission = create_submission(claimed_by=user, completed_by=user)
+    transcription = create_transcription(submission=submission, user=user)
+    check = create_check(
+        transcription,
+        moderator=mod,
+        slack_channel_id="C065W1189",
+        slack_message_ts="1458170866.000004",
+    )
+    assert check.status == CheckStatus.PENDING
+
+    # See https://api.slack.com/legacy/message-buttons
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [
+            {
+                "name": "Approve",
+                "value": f"check_approved_{check.id}",
+                "type": "button",
+            }
+        ],
+        "user": {"id": "U045VRZFT", "name": "Moddington"},
+        "message_ts": "1458170866.000004",
+    }
+
+    start = timezone.now()
+
+    with patch(
+        "api.slack.transcription_check.actions.update_check_message", return_value=None
+    ) as mock:
+        process_check_action(data)
+
+        check.refresh_from_db()
+
+        assert check.status == CheckStatus.APPROVED
+        assert _is_time_recent(start, check.complete_time)
+        assert mock.call_count == 1

@@ -59,7 +59,7 @@ def process_check_action(data: Dict) -> None:
     parts = value.split("_")
     action = parts[1]
     check_id = parts[2]
-    mod_username = data["user"]["username"]
+    mod_username = data["user"]["name"]
 
     # Retrieve the corresponding objects form the DB
     check = TranscriptionCheck.objects.filter(id=check_id).first()
