@@ -94,6 +94,14 @@ def process_check_action(data: Dict) -> None:
         reply_to_action_with_ping(
             data, f"Check {check_id} is not claimed by anyone yet!"
         )
+        return
+    # If the action isn't a claim, the check must already be claimed
+    if action != "claim" and check.moderator is None:
+        logger.warning(f"Check {check_id} has not been claimed yet!",)
+        reply_to_action_with_ping(
+            data, f"Check {check_id} has not been claimed yet!",
+        )
+        return
     # A claimed check can only be worked on by the mod who claimed it
     if action != "claim" and check.moderator != mod:
         logger.warning(
@@ -112,5 +120,6 @@ def process_check_action(data: Dict) -> None:
         reply_to_action_with_ping(
             data, f"Action '{action}' is invalid for check {check_id}!",
         )
+        return
 
     update_check_message(check)

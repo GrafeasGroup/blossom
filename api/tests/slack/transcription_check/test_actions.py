@@ -192,3 +192,173 @@ def test_process_check_action(client: Client) -> None:
         assert check.status == CheckStatus.APPROVED
         assert _is_time_recent(start, check.complete_time)
         assert mock.call_count == 1
+
+
+def test_process_check_action_unknown_check(client: Client) -> None:
+    """Test that an action with invalid check ID sends an error message."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    mod = create_user(id=200, username="Moddington")
+    submission = create_submission(claimed_by=user, completed_by=user)
+    transcription = create_transcription(submission=submission, user=user)
+    check = create_check(
+        transcription,
+        id=123,
+        moderator=mod,
+        slack_channel_id="C065W1189",
+        slack_message_ts="1458170866.000004",
+    )
+    assert check.status == CheckStatus.PENDING
+
+    # See https://api.slack.com/legacy/message-buttons
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [
+            {"name": "Approve", "value": "check_approved_777", "type": "button"}
+        ],
+        "user": {"id": "U045VRZFT", "name": "Moddington"},
+        "message_ts": "1458170866.000004",
+    }
+
+    with patch(
+        "api.slack.transcription_check.actions.update_check_message", return_value=None
+    ) as update_mock, patch(
+        "api.slack.transcription_check.actions.reply_to_action_with_ping",
+        return_value={},
+    ) as reply_mock:
+        process_check_action(data)
+
+        check.refresh_from_db()
+
+        assert check.status == CheckStatus.PENDING
+        assert check.complete_time is None
+        assert update_mock.call_count == 0
+        assert reply_mock.call_count == 1
+
+
+def test_process_check_action_unknown_mod(client: Client) -> None:
+    """Test that an action with an unknown Slack mod."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    submission = create_submission(claimed_by=user, completed_by=user)
+    transcription = create_transcription(submission=submission, user=user)
+    check = create_check(
+        transcription,
+        id=123,
+        slack_channel_id="C065W1189",
+        slack_message_ts="1458170866.000004",
+    )
+    assert check.status == CheckStatus.PENDING
+
+    # See https://api.slack.com/legacy/message-buttons
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [
+            {"name": "Approve", "value": f"check_claim_{check.id}", "type": "button"}
+        ],
+        "user": {"id": "U045VRZFT", "name": "Impostor"},
+        "message_ts": "1458170866.000004",
+    }
+
+    with patch(
+        "api.slack.transcription_check.actions.update_check_message", return_value=None
+    ) as update_mock, patch(
+        "api.slack.transcription_check.actions.reply_to_action_with_ping",
+        return_value={},
+    ) as reply_mock:
+        process_check_action(data)
+
+        check.refresh_from_db()
+
+        assert check.status == CheckStatus.PENDING
+        assert check.moderator is None
+        assert update_mock.call_count == 0
+        assert reply_mock.call_count == 1
+
+
+def test_process_check_action_no_mod(client: Client) -> None:
+    """Test that an action for an unclaimed check fails."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    create_user(id=200, username="Moddington")
+    submission = create_submission(claimed_by=user, completed_by=user)
+    transcription = create_transcription(submission=submission, user=user)
+    check = create_check(
+        transcription,
+        id=123,
+        moderator=None,
+        slack_channel_id="C065W1189",
+        slack_message_ts="1458170866.000004",
+    )
+    assert check.moderator is None
+
+    # See https://api.slack.com/legacy/message-buttons
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [
+            {
+                "name": "Approve",
+                "value": f"check_approved_{check.id}",
+                "type": "button",
+            }
+        ],
+        "user": {"id": "U045VRZFT", "name": "Moddington"},
+        "message_ts": "1458170866.000004",
+    }
+
+    with patch(
+        "api.slack.transcription_check.actions.update_check_message", return_value=None
+    ) as update_mock, patch(
+        "api.slack.transcription_check.actions.reply_to_action_with_ping",
+        return_value={},
+    ) as reply_mock:
+        process_check_action(data)
+
+        check.refresh_from_db()
+
+        assert check.status == CheckStatus.PENDING
+        assert check.moderator is None
+        assert update_mock.call_count == 0
+        assert reply_mock.call_count == 1
+
+
+def test_process_check_action_wrong_mod(client: Client) -> None:
+    """Test that an action fails if the mod is not the one who claimed the check."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    mod = create_user(id=200, username="Moddington")
+    create_user(id=300, username="Impostor")
+    submission = create_submission(claimed_by=user, completed_by=user)
+    transcription = create_transcription(submission=submission, user=user)
+    check = create_check(
+        transcription,
+        id=123,
+        moderator=mod,
+        slack_channel_id="C065W1189",
+        slack_message_ts="1458170866.000004",
+    )
+
+    # See https://api.slack.com/legacy/message-buttons
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [
+            {
+                "name": "Approve",
+                "value": f"check_approved_{check.id}",
+                "type": "button",
+            }
+        ],
+        "user": {"id": "U045VRZFT", "name": "Impostor"},
+        "message_ts": "1458170866.000004",
+    }
+
+    with patch(
+        "api.slack.transcription_check.actions.update_check_message", return_value=None
+    ) as update_mock, patch(
+        "api.slack.transcription_check.actions.reply_to_action_with_ping",
+        return_value={},
+    ) as reply_mock:
+        process_check_action(data)
+
+        check.refresh_from_db()
+
+        assert check.status == CheckStatus.PENDING
+        assert check.moderator == mod
+        assert update_mock.call_count == 0
+        assert reply_mock.call_count == 1
