@@ -96,3 +96,10 @@ github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
     [slack.dadjoke]
     message = "Hey {0}! {1}"
     fallback_joke = "Did you know that fortune tellers make their tents purple? They believe the color has mythical properties. It allows them to tell the fuschia."
+
+    [slack.check]
+    success="Generated <{check_url}|a check> for <{tr_url}|this transcription> by u/{username}!"
+    already_checked="There's already <{check_url}|a check> for <{tr_url}|this transcription> by u/{username}!"
+    failed_to_send="Sorry, there was a problem sending the check to Slack!"
+    no_transcription="<{tor_url}|The post> does not have a transcription yet!"
+    not_found="Sorry, I couldn't find a post for the URL '{url}'. Please provide a Reddit link to a ToR post, partner post or transcription."
