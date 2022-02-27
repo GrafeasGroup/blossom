@@ -43,6 +43,7 @@ Overwrite check percentage: `@Blossom watch <username> <percentage>`, where `<pe
 Reset check percentage: `@Blossom unwatch <username>`
 Get the check percentage for a user: `@Blossom watchlist <username>`
 List all overwritten check percentages: `@Blossom watchlist <sorting>`, where `<sorting>` is either "percentage" (default) or "alphabetical".
+Create a new transcription check for a given Reddit URL: `@Blossom check <url>`
 Render this message: `@Blossom help`
 """
 
