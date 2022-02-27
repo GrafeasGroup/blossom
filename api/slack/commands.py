@@ -3,9 +3,12 @@ from typing import Dict, List
 
 import requests
 
+from api.models import TranscriptionCheck
 from api.serializers import VolunteerSerializer
 from api.slack import client
+from api.slack.transcription_check.messages import send_check_message
 from api.slack.utils import clean_links, dict_to_table, get_message
+from api.views.find import find_by_url
 from api.views.misc import Summary
 from authentication.models import BlossomUser
 from blossom.strings import translation
@@ -47,6 +50,7 @@ def process_command(data: Dict) -> None:
         "unwatch": unwatch_cmd,
         "watchstatus": watchstatus_cmd,
         "watchlist": watchlist_cmd,
+        "check": check_cmd,
         "dadjoke": dadjoke_cmd,
     }
 
@@ -339,3 +343,84 @@ def blacklist_cmd(channel: str, message: str) -> None:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
     client.chat_postMessage(channel=channel, text=msg)
+
+
+def check_cmd(channel: str, message: str) -> None:
+    """Generate a transcription check for a link."""
+    parsed_message = message.split()
+    if len(parsed_message) == 1:
+        # they didn't give a username
+        msg = i18n["slack"]["errors"]["missing_username"]
+        client.chat_postMessage(channel=channel, text=msg)
+        return
+    if len(parsed_message) > 2:
+        # Too many parameters
+        msg = i18n["slack"]["errors"]["too_many_params"]
+        client.chat_postMessage(channel=channel, text=msg)
+        return
+
+    url = parsed_message[1]
+    if find_response := find_by_url(url):
+        if transcription := find_response.get("transcription"):
+            # Does a check already exist for this transcription?
+            if prev_check := TranscriptionCheck.objects.filter(
+                transcription=transcription
+            ).first():
+                # Make sure that the check actually got sent to Slack
+                if prev_check.slack_channel_id and prev_check.slack_message_ts:
+                    response = client.chat_getPermalink(
+                        channel=prev_check.slack_channel_id,
+                        message_ts=prev_check.slack_message_ts,
+                    )
+                    permalink = response.data.get("permalink")
+
+                    # Notify the user with a link to the existing check
+                    client.chat_postMessage(
+                        channel=channel,
+                        text=i18n["slack"]["check"]["already_checked"].format(
+                            check_url=permalink,
+                            tr_url=transcription.url,
+                            username=transcription.author.username,
+                        ),
+                    )
+                    return
+
+            # Create a new check object
+            check = prev_check or TranscriptionCheck.objects.create(
+                transcription=transcription, trigger="Manual check"
+            )
+
+            # Send the check to the check channel
+            send_check_message(check)
+            check.refresh_from_db()
+
+            # Get the link for the check
+            response = client.chat_getPermalink(
+                channel=check.slack_channel_id, message_ts=check.slack_message_ts,
+            )
+            permalink = response.data.get("permalink")
+
+            # Notify the user
+            client.chat_postMessage(
+                channel=channel,
+                text=i18n["slack"]["check"]["success"].format(
+                    check_url=permalink,
+                    tr_url=transcription.url,
+                    username=transcription.author.username,
+                ),
+            )
+        else:
+            # No transcription for post
+            client.chat_postMessage(
+                channel=channel,
+                text=i18n["slack"]["check"]["no_transcription"].format(
+                    tor_url=find_response["submission"].tor_url,
+                ),
+            )
+            pass
+    else:
+        # URL not found
+        client.chat_postMessage(
+            channel=channel, text=i18n["slack"]["check"]["not_found"].format(url=url,),
+        )
+        pass

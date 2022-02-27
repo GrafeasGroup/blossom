@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 from django.conf import settings
 
@@ -12,18 +12,20 @@ logger = logging.getLogger("api.slack.transcription_check.messages")
 
 def send_check_message(
     check: TranscriptionCheck, channel: str = settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL
-) -> None:
+) -> Optional[Dict]:
     """Send a transcription check message to the given channel."""
     blocks = construct_transcription_check_blocks(check)
     response = client.chat_postMessage(channel=channel, blocks=blocks)
     if not response["ok"]:
         logger.error(f"Could not send check {check.id} to Slack!")
-        return
+        return None
 
     # See https://api.slack.com/methods/chat.postMessage
     check.slack_channel_id = response["channel"]
     check.slack_message_ts = response["message"]["ts"]
     check.save()
+
+    return response
 
 
 def update_check_message(check: TranscriptionCheck) -> None:
