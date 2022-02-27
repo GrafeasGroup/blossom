@@ -11,6 +11,7 @@ from django.http import HttpRequest
 
 from api.models import Submission
 from api.slack import client
+from api.slack.transcription_check.actions import process_check_action
 from app.reddit_actions import approve_post, remove_post
 from blossom.strings import translation
 from utils.workers import send_to_worker
@@ -30,8 +31,10 @@ class ReportMessageStatus(Enum):
 
 def process_action(data: Dict) -> None:
     """Process a Slack action, e.g. a button press."""
-    value = data["actions"][0].get("value")
-    if "approve" in value or "remove" in value:
+    value: str = data["actions"][0].get("value")
+    if value.startswith("check"):
+        process_check_action(data)
+    elif "approve" in value or "remove" in value:
         process_submission_report_update(data)
     else:
         client.chat_postMessage(
