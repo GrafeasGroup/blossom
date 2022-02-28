@@ -57,7 +57,6 @@ def _get_check_pending_actions(check: TranscriptionCheck) -> List[Dict]:
         },
         {
             "type": "button",
-            "style": "default",
             "text": {"type": "plain_text", "text": "Comment"},
             "value": f"check_comment-pending_{check.id}",
         },
@@ -69,7 +68,6 @@ def _get_check_pending_actions(check: TranscriptionCheck) -> List[Dict]:
         },
         {
             "type": "button",
-            "style": "default",
             "text": {"type": "plain_text", "text": "Unclaim"},
             "value": f"check_unclaim_{check.id}",
         },
@@ -98,7 +96,6 @@ def _get_check_comment_pending_actions(check: TranscriptionCheck) -> List[Dict]:
         },
         {
             "type": "button",
-            "style": "default",
             "text": {"type": "plain_text", "text": "Revert"},
             "value": f"check_pending_{check.id}",
         },
@@ -110,7 +107,6 @@ def _get_check_comment_pending_actions(check: TranscriptionCheck) -> List[Dict]:
         },
         {
             "type": "button",
-            "style": "default",
             "text": {"type": "plain_text", "text": "Unclaim"},
             "value": f"check_unclaim_{check.id}",
         },
@@ -139,13 +135,11 @@ def _get_check_warning_pending_actions(check: TranscriptionCheck) -> List[Dict]:
         },
         {
             "type": "button",
-            "style": "default",
             "text": {"type": "plain_text", "text": "Revert"},
             "value": f"check_pending_{check.id}",
         },
         {
             "type": "button",
-            "style": "default",
             "text": {"type": "plain_text", "text": "Unclaim"},
             "value": f"check_unclaim_{check.id}",
         },
