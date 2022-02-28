@@ -184,7 +184,10 @@ def test_process_check_action(client: Client) -> None:
 
     with patch(
         "api.slack.transcription_check.actions.update_check_message", return_value=None
-    ) as mock:
+    ) as mock, patch(
+        "api.slack.transcription_check.actions.get_display_name",
+        lambda _, us: us["name"],
+    ):
         process_check_action(data)
 
         check.refresh_from_db()
@@ -224,7 +227,10 @@ def test_process_check_action_unknown_check(client: Client) -> None:
     ) as update_mock, patch(
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
-    ) as reply_mock:
+    ) as reply_mock, patch(
+        "api.slack.transcription_check.actions.get_display_name",
+        lambda _, us: us["name"],
+    ):
         process_check_action(data)
 
         check.refresh_from_db()
@@ -263,7 +269,10 @@ def test_process_check_action_unknown_mod(client: Client) -> None:
     ) as update_mock, patch(
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
-    ) as reply_mock:
+    ) as reply_mock, patch(
+        "api.slack.transcription_check.actions.get_display_name",
+        lambda _, us: us["name"],
+    ):
         process_check_action(data)
 
         check.refresh_from_db()
@@ -308,7 +317,10 @@ def test_process_check_action_no_mod(client: Client) -> None:
     ) as update_mock, patch(
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
-    ) as reply_mock:
+    ) as reply_mock, patch(
+        "api.slack.transcription_check.actions.get_display_name",
+        lambda _, us: us["name"],
+    ):
         process_check_action(data)
 
         check.refresh_from_db()
@@ -353,7 +365,10 @@ def test_process_check_action_wrong_mod(client: Client) -> None:
     ) as update_mock, patch(
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
-    ) as reply_mock:
+    ) as reply_mock, patch(
+        "api.slack.transcription_check.actions.get_display_name",
+        lambda _, us: us["name"],
+    ):
         process_check_action(data)
 
         check.refresh_from_db()
