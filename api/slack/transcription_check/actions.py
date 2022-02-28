@@ -89,6 +89,8 @@ def process_check_action(data: Dict) -> None:
         reply_to_action_with_ping(
             data, f"Check {check_id} is already claimed by someone!"
         )
+        # Update to make sure the proper controls are shown
+        update_check_message(check)
         return
     # If it's not a claim it must already be claimed by someone
     if action != "claim" and check.moderator is None:
@@ -96,6 +98,8 @@ def process_check_action(data: Dict) -> None:
         reply_to_action_with_ping(
             data, f"Check {check_id} is not claimed by anyone yet!"
         )
+        # Update to make sure the proper controls are shown
+        update_check_message(check)
         return
     # If the action isn't a claim, the check must already be claimed
     if action != "claim" and check.moderator is None:
@@ -103,6 +107,8 @@ def process_check_action(data: Dict) -> None:
         reply_to_action_with_ping(
             data, f"Check {check_id} has not been claimed yet!",
         )
+        # Update to make sure the proper controls are shown
+        update_check_message(check)
         return
     # A claimed check can only be worked on by the mod who claimed it
     if action != "claim" and check.moderator != mod:
@@ -113,6 +119,8 @@ def process_check_action(data: Dict) -> None:
             data,
             f"Check {check_id} is claimed by u/{check.moderator.username}, not by you!",
         )
+        # Update to make sure the proper controls are shown
+        update_check_message(check)
         return
 
     # Try to update the DB model based on the action

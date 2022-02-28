@@ -327,7 +327,7 @@ def test_process_check_action_no_mod(client: Client) -> None:
 
         assert check.status == CheckStatus.PENDING
         assert check.moderator is None
-        assert update_mock.call_count == 0
+        assert update_mock.call_count == 1
         assert reply_mock.call_count == 1
 
 
@@ -375,5 +375,5 @@ def test_process_check_action_wrong_mod(client: Client) -> None:
 
         assert check.status == CheckStatus.PENDING
         assert check.moderator == mod
-        assert update_mock.call_count == 0
+        assert update_mock.call_count == 1
         assert reply_mock.call_count == 1
