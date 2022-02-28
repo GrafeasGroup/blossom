@@ -8,7 +8,7 @@ from api.serializers import VolunteerSerializer
 from api.slack import client
 from api.slack.transcription_check.messages import send_check_message
 from api.slack.utils import clean_links, dict_to_table, get_message
-from api.views.find import find_by_url
+from api.views.find import find_by_url, normalize_url
 from api.views.misc import Summary
 from authentication.models import BlossomUser
 from blossom.strings import translation
@@ -360,7 +360,16 @@ def check_cmd(channel: str, message: str) -> None:
         return
 
     url = parsed_message[1]
-    if find_response := find_by_url(url):
+    normalized_url = normalize_url(url)
+
+    # Check if the URL is valid
+    if normalized_url is None:
+        client.chat_postMessage(
+            channel=channel, text=i18n["slack"]["check"]["not_found"].format(url=url),
+        )
+        return
+
+    if find_response := find_by_url(normalized_url):
         if transcription := find_response.get("transcription"):
             # Does a check already exist for this transcription?
             if prev_check := TranscriptionCheck.objects.filter(
