@@ -1,10 +1,15 @@
+# Disable line length restrictions to allow long URLs
+# flake8: noqa: E501
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+from django.test import Client
 
+from api.models import TranscriptionCheck
 from api.slack import client as slack_client
 from api.slack.commands import (
     blacklist_cmd,
+    check_cmd,
     dadjoke_cmd,
     reset_cmd,
     unwatch_cmd,
@@ -13,7 +18,13 @@ from api.slack.commands import (
     watchstatus_cmd,
 )
 from blossom.strings import translation
-from utils.test_helpers import create_user
+from utils.test_helpers import (
+    create_check,
+    create_submission,
+    create_transcription,
+    create_user,
+    setup_user_client,
+)
 
 i18n = translation()
 
@@ -377,3 +388,146 @@ def test_dadjoke_target(message: str) -> None:
     else:
         # no included username means don't use the ping formatting
         assert not slack_client.chat_postMessage.call_args[1]["text"].startswith("Hey")
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        "https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/"
+        "https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
+    ],
+)
+def test_check_cmd(client: Client, url: str) -> None:
+    """Test that the check command generates a new check."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    submission = create_submission(
+        claimed_by=user,
+        completed_by=user,
+        tor_url="https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
+    )
+    transcription = create_transcription(
+        submission=submission,
+        user=user,
+        url="https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
+    )
+
+    with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
+        "api.slack.commands.send_check_message"
+    ) as check_mock, patch("api.slack.commands.client.chat_getPermalink") as link_mock:
+        check_cmd("", f"check {url}")
+
+        assert message_mock.call_count == 1
+        assert check_mock.call_count == 1
+        assert link_mock.call_count == 1
+
+        checks = TranscriptionCheck.objects.filter(transcription=transcription)
+
+        assert len(checks) == 1
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        "https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/"
+        "https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
+    ],
+)
+def test_check_cmd_existing_check(client: Client, url: str) -> None:
+    """Test check command if a check already exists for the transcription."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    submission = create_submission(
+        claimed_by=user,
+        completed_by=user,
+        tor_url="https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
+    )
+    transcription = create_transcription(
+        submission=submission,
+        user=user,
+        url="https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
+    )
+    create_check(
+        transcription=transcription, slack_channel_id="asd", slack_message_ts="1234"
+    )
+
+    checks = TranscriptionCheck.objects.filter(transcription=transcription)
+    assert len(checks) == 1
+
+    with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
+        "api.slack.commands.send_check_message"
+    ) as check_mock, patch("api.slack.commands.client.chat_getPermalink") as link_mock:
+        check_cmd("", f"check {url}")
+
+        assert message_mock.call_count == 1
+        assert check_mock.call_count == 0
+        assert link_mock.call_count == 1
+
+        checks = TranscriptionCheck.objects.filter(transcription=transcription)
+        assert len(checks) == 1
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        "https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
+    ],
+)
+def test_check_cmd_no_transcription(client: Client, url: str) -> None:
+    """Test check command if the submission does not have a transcription."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    create_submission(
+        claimed_by=user,
+        completed_by=user,
+        tor_url="https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
+    )
+
+    with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
+        "api.slack.commands.send_check_message"
+    ) as check_mock, patch("api.slack.commands.client.chat_getPermalink") as link_mock:
+        check_cmd("", f"check {url}")
+
+        assert message_mock.call_count == 1
+        assert check_mock.call_count == 0
+        assert link_mock.call_count == 0
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "asdf",
+        "https://reddit.com/r/TranscribersOfReddit/comments/t31zvj/curatedtumblr_image_love_and_languages/",
+        "https://reddit.com/r/CuratedTumblr/comments/t31xsx/love_and_languages/",
+        "https://reddit.com/r/CuratedTumblr/comments/t31xsx/love_and_languages/hypsf0v/",
+    ],
+)
+def test_check_cmd_unknown_url(client: Client, url: str) -> None:
+    """Test check command if a check already exists for the transcription."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+    submission = create_submission(
+        claimed_by=user,
+        completed_by=user,
+        tor_url="https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
+    )
+    transcription = create_transcription(
+        submission=submission,
+        user=user,
+        url="https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
+    )
+    create_check(
+        transcription=transcription, slack_channel_id="asd", slack_message_ts="1234"
+    )
+
+    with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
+        "api.slack.commands.send_check_message"
+    ) as check_mock, patch("api.slack.commands.client.chat_getPermalink") as link_mock:
+        check_cmd("", f"check {url}")
+
+        assert message_mock.call_count == 1
+        assert check_mock.call_count == 0
+        assert link_mock.call_count == 0

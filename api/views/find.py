@@ -89,6 +89,10 @@ def find_by_url(url: str) -> Optional[FindResponse]:
     https://reddit.com/r/TranscribersOfReddit/comments/plmx5n/curatedtumblr_image_im_an_atheist_but_yall_need/
     """
     url_parts = url.split("/")
+
+    if "reddit" not in url or len(url_parts) < 5:
+        return None
+
     subreddit = url_parts[4]
     core_url = extract_core_url(url)
 
