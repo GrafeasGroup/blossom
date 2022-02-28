@@ -365,14 +365,12 @@ def check_cmd(channel: str, message: str) -> None:
         return
 
     url = parsed_message[1]
-    logger.info(f"URL: {url}")
     normalized_url = normalize_url(extract_url_from_link(url))
-    logger.info(f"Normalized: {normalized_url}")
 
     # Check if the URL is valid
     if normalized_url is None:
         client.chat_postMessage(
-            channel=channel, text=i18n["slack"]["check"]["not_found"].format(url=url),
+            channel=channel, text=i18n["slack"]["check"]["invalid_url"].format(url=url),
         )
         return
 
@@ -437,6 +435,7 @@ def check_cmd(channel: str, message: str) -> None:
     else:
         # URL not found
         client.chat_postMessage(
-            channel=channel, text=i18n["slack"]["check"]["not_found"].format(url=url),
+            channel=channel,
+            text=i18n["slack"]["check"]["no_submission"].format(url=normalized_url),
         )
         return
