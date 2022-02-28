@@ -4,7 +4,7 @@ import hmac
 import json
 import time
 from typing import Dict
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from django.test import Client, RequestFactory
@@ -12,7 +12,7 @@ from django.urls import reverse
 from pytest_django.fixtures import SettingsWrapper
 
 from api.slack import client as slack_client
-from api.slack.actions import is_valid_github_request
+from api.slack.actions import is_valid_github_request, process_action
 from api.views.slack import github_sponsors_endpoint
 
 # TODO: There is a way to mock decorators, but I can't figure it out.
@@ -172,3 +172,74 @@ def test_github_sponsor_slack_message(
 
     assert slack_client.chat_postMessage.call_args[1]["text"] == test_data["result"]
     assert response.status_code == test_data["status_code"]
+
+
+def test_process_action_check() -> None:
+    """Test that a check action is routed correctly."""
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [{"name": "Approve", "value": "check_approved_1", "type": "button"}],
+        "user": {"id": "U045VRZFT", "name": "Modulo"},
+        "message_ts": "1458170866.000004",
+    }
+
+    with patch(
+        "api.slack.actions.process_check_action", return_value=None
+    ) as check_mock, patch(
+        "api.slack.actions.process_submission_report_update"
+    ) as report_mock, patch(
+        "api.slack.actions.client.chat_postMessage"
+    ) as message_mock:
+        process_action(data)
+
+        assert check_mock.call_count == 1
+        assert report_mock.call_count == 0
+        assert message_mock.call_count == 0
+
+
+def test_process_action_report() -> None:
+    """Test that a report action is routed correctly."""
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [
+            {"name": "Approve", "value": "approve_submission_3", "type": "button"}
+        ],
+        "user": {"id": "U045VRZFT", "name": "Modulo"},
+        "message_ts": "1458170866.000004",
+    }
+
+    with patch(
+        "api.slack.actions.process_check_action", return_value=None
+    ) as check_mock, patch(
+        "api.slack.actions.process_submission_report_update"
+    ) as report_mock, patch(
+        "api.slack.actions.client.chat_postMessage"
+    ) as message_mock:
+        process_action(data)
+
+        assert check_mock.call_count == 0
+        assert report_mock.call_count == 1
+        assert message_mock.call_count == 0
+
+
+def test_process_action_unknown() -> None:
+    """Test that an error message is sent for an unknown action."""
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [{"name": "Approve", "value": "asdas", "type": "button"}],
+        "user": {"id": "U045VRZFT", "name": "Modulo"},
+        "message_ts": "1458170866.000004",
+    }
+
+    with patch(
+        "api.slack.actions.process_check_action", return_value=None
+    ) as check_mock, patch(
+        "api.slack.actions.process_submission_report_update"
+    ) as report_mock, patch(
+        "api.slack.actions.client.chat_postMessage"
+    ) as message_mock:
+        process_action(data)
+
+        assert check_mock.call_count == 0
+        assert report_mock.call_count == 0
+        assert message_mock.call_count == 1
