@@ -43,7 +43,7 @@ def normalize_url(reddit_url_str: str) -> Optional[str]:
 
 def find_by_submission_url(url: str, url_type: str) -> Optional[FindResponse]:
     """Find the objects by a submission URL."""
-    submissions = Submission.objects.filter(**{f"{url_type}__startswith": url})
+    submissions = Submission.objects.filter(**{f"{url_type}__istartswith": url})
     if submissions.count() == 0:
         return None
 

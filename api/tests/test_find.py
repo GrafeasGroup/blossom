@@ -227,6 +227,12 @@ def test_find_in_progress(client: Client, url: str, expected: bool) -> None:
             + "?utm_source=share&utm_medium=web2x&context=3",
             True,
         ),
+        # ToR comment URL lowercase
+        (
+            "https://www.reddit.com/r/transcribersofreddit/comments/q1tnhc/comment/hfgp1g7/"
+            + "?utm_source=share&utm_medium=web2x&context=3",
+            True,
+        ),
         # Transcription URL
         ("https://reddit.com/r/antiwork/comments/q1tlcf/comment/hfgp814/", True),
         # Shared transcription URL
