@@ -212,11 +212,12 @@ def construct_transcription_check_blocks(check: TranscriptionCheck) -> List[Dict
     base_text = _get_check_base_text(check)
     actions = _get_check_actions(check)
     status_text = _get_check_status_text(check)
+    text = f"{base_text}\n{status_text}"
 
     return [
         {
             "type": "section",
-            "text": {"type": "mrkdwn", "text": base_text},
+            "text": {"type": "mrkdwn", "text": text},
             "accessory": {
                 "type": "image",
                 "image_url": submission.content_url,
@@ -224,6 +225,5 @@ def construct_transcription_check_blocks(check: TranscriptionCheck) -> List[Dict
             },
         },
         {"type": "divider"},
-        {"type": "section", "text": {"type": "mrkdwn", "text": status_text}},
         {"type": "actions", "elements": actions},
     ]
