@@ -92,6 +92,18 @@ def process_check_action(data: Dict) -> None:
         # Update to make sure the proper controls are shown
         update_check_message(check)
         return
+    # A mod cannot claim their own transcription
+    if action == "claim" and mod == check.transcription.author:
+        logger.warning(
+            f"Check {check_id} cannot be claimed by the transcription's author!"
+        )
+        reply_to_action_with_ping(
+            data,
+            f"Check {check_id} is for your own transcription, you cannot claim it!",
+        )
+        # Update to make sure the proper controls are shown
+        update_check_message(check)
+        return
     # If it's not a claim it must already be claimed by someone
     if action != "claim" and check.moderator is None:
         logger.warning(f"Check {check_id} is not claimed by anyone yet!")
