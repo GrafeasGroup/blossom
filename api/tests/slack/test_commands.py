@@ -393,15 +393,22 @@ def test_dadjoke_target(message: str) -> None:
 @pytest.mark.parametrize(
     "url",
     [
+        # Normal URLs
         "https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
         "https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
         "https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
+        # Slack link
         "<https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/>",
         "<https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/>",
         "<https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/>",
+        # Named Slack link
         "<https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/|Tor_Post>",
         "<https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/|Partner_Post>",
         "<https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/|Transcription>",
+        # Wrong casing
+        "https://reddit.com/r/transcribersofreddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        "https://reddit.com/r/curatedtumblr/comments/t315gq/linguistics_fax/",
+        "https://www.reddit.com/r/curatedtumblr/comments/t315gq/linguistics_fax/hypuw2r/",
     ],
 )
 def test_check_cmd(client: Client, url: str) -> None:
