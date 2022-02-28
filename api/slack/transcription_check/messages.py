@@ -49,7 +49,7 @@ def update_check_message(check: TranscriptionCheck) -> None:
 def reply_to_action(data: Dict, text: str) -> Dict:
     """Reply to the given action with the given text."""
     channel_id = data["channel"]["id"]
-    message_ts = data["message_ts"]
+    message_ts = data.get("message", {}).get("ts")
 
     return client.chat_postMessage(channel=channel_id, thread_ts=message_ts, text=text)
 
