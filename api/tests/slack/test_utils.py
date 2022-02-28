@@ -1,3 +1,5 @@
+# Disable line length restrictions to allow long URLs
+# flake8: noqa: E501
 from typing import Dict
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -5,7 +7,12 @@ import pytest
 from django.test import Client
 
 from api.slack import client as slack_client
-from api.slack.utils import dict_to_table, send_transcription_check
+from api.slack.utils import (
+    dict_to_table,
+    extract_text_from_link,
+    extract_url_from_link,
+    send_transcription_check,
+)
 from blossom.strings import translation
 from utils.test_helpers import (
     create_submission,
@@ -117,3 +124,47 @@ def test_send_transcription_to_slack(
 
         actual_message = mock.call_args[1]["text"]
         assert actual_message == message
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Normal text", "Normal text"),
+        (
+            "<https://www.reddit.com/user/transcribersofreddit|u/transcribersofreddit>",
+            "u/transcribersofreddit",
+        ),
+        (
+            "<https://www.reddit.com/user/transcribersofreddit>",
+            "https://www.reddit.com/user/transcribersofreddit",
+        ),
+    ],
+)
+def test_extract_text_from_link(text: str, expected: str) -> None:
+    """Test that the text is extracted from a Slack link."""
+    actual = extract_text_from_link(text)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("Normal text", "Normal text"),
+        (
+            "<https://www.reddit.com/user/transcribersofreddit|u/transcribersofreddit>",
+            "https://www.reddit.com/user/transcribersofreddit",
+        ),
+        (
+            "<https://www.reddit.com/user/transcribersofreddit>",
+            "https://www.reddit.com/user/transcribersofreddit",
+        ),
+        (
+            "<https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/|Tor Post>",
+            "https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
+        ),
+    ],
+)
+def test_extract_url_from_link(text: str, expected: str) -> None:
+    """Test that the URL is extracted from a Slack link."""
+    actual = extract_url_from_link(text)
+    assert actual == expected

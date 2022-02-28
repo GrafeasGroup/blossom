@@ -1,5 +1,6 @@
 import logging
 import re
+from re import Match
 from typing import Dict, List, Optional
 
 from django.conf import settings
@@ -17,18 +18,37 @@ i18n = translation()
 # find a link in the slack format, then strip out the text at the end.
 # they're formatted like this: <https://example.com|Text!>
 SLACK_TEXT_EXTRACTOR = re.compile(
-    r"<(?:https?://)?[\w-]+(?:\.[\w-]+)+\.?(?::\d+)?(?:/\S*)?\|([^>]+)>"
+    # Allow long lines for the regex
+    # flake8: noqa: E501
+    r"<(?P<url>(?:https?://)?[\w-]+(?:\.[\w-]+)+\.?(?::\d+)?(?:/[^\s|]*)?)(?:\|(?P<text>[^>]+))?>"
 )
 
 
-def clean_links(text: str) -> str:
+def extract_text_from_link(text: str) -> str:
     """Strip link out of auto-generated slack fancy URLS and return the text only."""
     results = [_ for _ in re.finditer(SLACK_TEXT_EXTRACTOR, text)]
     # we'll replace things going backwards so that we don't mess up indexing
     results.reverse()
 
+    def extract_text(mx: Match) -> str:
+        return mx["text"] or mx["url"]
+
     for match in results:
-        text = text[: match.start()] + match.groups()[0] + text[match.end() :]
+        text = text[: match.start()] + extract_text(match) + text[match.end() :]
+    return text
+
+
+def extract_url_from_link(text: str) -> str:
+    """Strip link out of auto-generated slack fancy URLS and return the link only."""
+    results = [_ for _ in re.finditer(SLACK_TEXT_EXTRACTOR, text)]
+    # we'll replace things going backwards so that we don't mess up indexing
+    results.reverse()
+
+    def extract_link(m: Match) -> str:
+        return m["url"]
+
+    for match in results:
+        text = text[: match.start()] + extract_link(match) + text[match.end() :]
     return text
 
 
