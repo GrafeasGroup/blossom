@@ -138,3 +138,12 @@ def send_transcription_check(
         )
     except:  # noqa
         logger.warning(f"Cannot post message to slack. Msg: {msg}")
+
+
+def get_display_name(slack_client: WebClient, user: Dict) -> Optional[str]:
+    """Get the display name for the given user."""
+    response = slack_client.users_profile_get(user=user.get("id"))
+    if response.get("ok"):
+        return response.get("profile", {}).get("display_name")
+    else:
+        return None
