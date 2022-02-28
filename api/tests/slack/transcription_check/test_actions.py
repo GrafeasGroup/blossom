@@ -197,6 +197,43 @@ def test_process_check_action(client: Client) -> None:
         assert mock.call_count == 1
 
 
+def test_process_check_action_claim_own_transcription(client: Client) -> None:
+    """Test that a mod cannot claim their own transcription."""
+    setup_user_client(client, id=100)
+    mod = create_user(id=200, username="Moddington")
+    submission = create_submission(claimed_by=mod, completed_by=mod)
+    transcription = create_transcription(submission=submission, user=mod)
+    check = create_check(transcription, id=123)
+    assert check.moderator is None
+    assert check.status == CheckStatus.PENDING
+
+    # See https://api.slack.com/legacy/message-buttons
+    data = {
+        "channel": {"id": "C065W1189", "name": "forgotten-works"},
+        "actions": [{"name": "Claim", "value": "check_claim_123", "type": "button"}],
+        "user": {"id": "U045VRZFT", "name": "Moddington"},
+        "message_ts": "1458170866.000004",
+    }
+
+    with patch(
+        "api.slack.transcription_check.actions.update_check_message", return_value=None
+    ) as update_mock, patch(
+        "api.slack.transcription_check.actions.reply_to_action_with_ping",
+        return_value={},
+    ) as reply_mock, patch(
+        "api.slack.transcription_check.actions.get_display_name",
+        lambda _, us: us["name"],
+    ):
+        process_check_action(data)
+
+        check.refresh_from_db()
+
+        assert check.status == CheckStatus.PENDING
+        assert check.moderator is None
+        assert update_mock.call_count == 1
+        assert reply_mock.call_count == 1
+
+
 def test_process_check_action_unknown_check(client: Client) -> None:
     """Test that an action with invalid check ID sends an error message."""
     client, headers, user = setup_user_client(client, id=100, username="Userson")
