@@ -365,7 +365,9 @@ def check_cmd(channel: str, message: str) -> None:
         return
 
     url = parsed_message[1]
+    logger.info(f"URL: {url}")
     normalized_url = normalize_url(extract_url_from_link(url))
+    logger.info(f"Normalized: {normalized_url}")
 
     # Check if the URL is valid
     if normalized_url is None:
