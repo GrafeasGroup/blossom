@@ -349,8 +349,8 @@ def check_cmd(channel: str, message: str) -> None:
     """Generate a transcription check for a link."""
     parsed_message = message.split()
     if len(parsed_message) == 1:
-        # they didn't give a username
-        msg = i18n["slack"]["errors"]["missing_username"]
+        # URL not provided
+        msg = i18n["slack"]["check"]["no_url"]
         client.chat_postMessage(channel=channel, text=msg)
         return
     if len(parsed_message) > 2:
