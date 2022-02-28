@@ -7,7 +7,12 @@ from api.models import TranscriptionCheck
 from api.serializers import VolunteerSerializer
 from api.slack import client
 from api.slack.transcription_check.messages import send_check_message
-from api.slack.utils import clean_links, dict_to_table, get_message
+from api.slack.utils import (
+    dict_to_table,
+    extract_text_from_link,
+    extract_url_from_link,
+    get_message,
+)
 from api.views.find import find_by_url, normalize_url
 from api.views.misc import Summary
 from authentication.models import BlossomUser
@@ -115,7 +120,7 @@ def reset_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        username = clean_links(parsed_message[1])
+        username = extract_text_from_link(parsed_message[1])
         if user := BlossomUser.objects.filter(username__iexact=username).first():
             if user.accepted_coc:
                 user.accepted_coc = False
@@ -142,7 +147,7 @@ def watch_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) <= 3:
-        username = clean_links(parsed_message[1])
+        username = extract_text_from_link(parsed_message[1])
         if user := BlossomUser.objects.filter(username__iexact=username).first():
             if len(parsed_message) == 2:
                 # they didn't give a percentage, default to 100%
@@ -198,7 +203,7 @@ def unwatch_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        username = clean_links(parsed_message[1])
+        username = extract_text_from_link(parsed_message[1])
         if user := BlossomUser.objects.filter(username__iexact=username).first():
             # Set the check percentage back to automatic
             user.overwrite_check_percentage = None
@@ -222,7 +227,7 @@ def watchstatus_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        username = clean_links(parsed_message[1])
+        username = extract_text_from_link(parsed_message[1])
         if user := BlossomUser.objects.filter(username__iexact=username).first():
             status = user.transcription_check_reason(ignore_low_activity=True)
             msg = i18n["slack"]["watchstatus"]["success"].format(
@@ -327,7 +332,7 @@ def blacklist_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        username = clean_links(parsed_message[1])
+        username = extract_text_from_link(parsed_message[1])
         if user := BlossomUser.objects.filter(username__iexact=username).first():
             if user.blacklisted:
                 user.blacklisted = False
@@ -360,7 +365,7 @@ def check_cmd(channel: str, message: str) -> None:
         return
 
     url = parsed_message[1]
-    normalized_url = normalize_url(url)
+    normalized_url = normalize_url(extract_url_from_link(url))
 
     # Check if the URL is valid
     if normalized_url is None:
@@ -426,10 +431,10 @@ def check_cmd(channel: str, message: str) -> None:
                     tor_url=find_response["submission"].tor_url,
                 ),
             )
-            pass
+            return
     else:
         # URL not found
         client.chat_postMessage(
-            channel=channel, text=i18n["slack"]["check"]["not_found"].format(url=url,),
+            channel=channel, text=i18n["slack"]["check"]["not_found"].format(url=url),
         )
-        pass
+        return

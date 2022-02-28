@@ -394,8 +394,14 @@ def test_dadjoke_target(message: str) -> None:
     "url",
     [
         "https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
-        "https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/"
+        "https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
         "https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
+        "<https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/>",
+        "<https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/>",
+        "<https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/>",
+        "<https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/|Tor_Post>",
+        "<https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/|Partner_Post>",
+        "<https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/|Transcription>",
     ],
 )
 def test_check_cmd(client: Client, url: str) -> None:
@@ -410,7 +416,7 @@ def test_check_cmd(client: Client, url: str) -> None:
     transcription = create_transcription(
         submission=submission,
         user=user,
-        url="https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
+        url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
     )
 
     with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
@@ -423,7 +429,6 @@ def test_check_cmd(client: Client, url: str) -> None:
         assert link_mock.call_count == 1
 
         checks = TranscriptionCheck.objects.filter(transcription=transcription)
-
         assert len(checks) == 1
 
 
@@ -431,7 +436,7 @@ def test_check_cmd(client: Client, url: str) -> None:
     "url",
     [
         "https://reddit.com/r/TranscribersOfReddit/comments/t31715/curatedtumblr_image_linguistics_fax/",
-        "https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/"
+        "https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
         "https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
     ],
 )
