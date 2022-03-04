@@ -32,12 +32,33 @@ class Source(models.Model):
     """
     The source that the particular Submission or Transcription came from.
 
-    The majority of these will be "reddit", but to save on space and more easily
-    standardize we have the option of including other sources as we grow.
+    Most of these will be subreddits, but we might also expand to other
+    sources in the future.
     """
 
-    # Name of the origin of the content. For example: reddit, blossom, etc.
+    # Name of the source. In most cases this will be a subreddit name (without r/).
     name = models.CharField(max_length=36, primary_key=True)
+    # The origin of the source. This can be seen as a "category" of sources.
+    # For example, for subreddits this should be set to "reddit".
+    origin = models.CharField(max_length=36, null=True, blank=True, default=None)
+
+    # Whether the source is currently disabled.
+    # If this is true, no posts will be fetched from this source.
+    disabled = models.BooleanField(default=False)
+
+    # The moderator assigned to this source.
+    # They should be the main person to contact the source.
+    moderator = models.ForeignKey(
+        "authentication.BlossomUser",
+        on_delete=models.SET_DEFAULT,
+        null=True,
+        blank=True,
+        default=None,
+    )
+
+    # For subreddits, this determines the maximum number of upvotes needed
+    # for a post to appear in the queue.
+    reddit_upvote_filter = models.IntegerField(null=True, default=None)
 
     def __str__(self) -> str:  # pragma: no cover
         return self.name
