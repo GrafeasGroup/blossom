@@ -40,7 +40,7 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
 class SourceSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Source
-        fields = ("name",)
+        fields = ("name", "origin", "disabled", "moderator", "reddit_upvote_filter")
 
 
 class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
