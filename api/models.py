@@ -60,6 +60,9 @@ class Source(models.Model):
     # for a post to appear in the queue.
     reddit_upvote_filter = models.IntegerField(null=True, default=None)
 
+    # Time when the source was added
+    create_time = models.DateTimeField(default=timezone.now)
+
     def __str__(self) -> str:  # pragma: no cover
         return self.name
 
