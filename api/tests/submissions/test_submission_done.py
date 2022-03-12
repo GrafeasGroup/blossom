@@ -155,51 +155,6 @@ class TestSubmissionDone:
                 assert mock.call_count == 0
 
     @pytest.mark.parametrize(
-        "has_low_activity", [True, False],
-    )
-    def test_removed_transcription_check(
-        self, client: Client, has_low_activity: bool
-    ) -> None:
-        """Verify that a removed transcription is not sent to Slack.
-
-        This should only be done if the user activity has been low recently.
-        """
-        with patch(
-            "authentication.models.BlossomUser.has_low_activity",
-            new_callable=PropertyMock,
-            return_value=has_low_activity,
-        ), patch(
-            "authentication.models.BlossomUser.should_check_transcription",
-            return_value=True,
-        ), patch(
-            "api.views.submission.send_transcription_check"
-        ) as mock:
-            client, headers, user = setup_user_client(client)
-            ocr_bot = create_user(id=123123, username="ocr_bot", is_bot=True)
-
-            submission = create_submission(tor_url="asdf", claimed_by=user)
-            create_transcription(submission, ocr_bot, id=30, url=None)
-            transcription = create_transcription(
-                submission, user, id=40, url=None, removed_from_reddit=True
-            )
-
-            result = client.patch(
-                reverse("submission-done", args=[submission.id]),
-                json.dumps({"username": user.username}),
-                content_type="application/json",
-                **headers,
-            )
-
-            assert result.status_code == status.HTTP_201_CREATED
-
-            if has_low_activity:
-                assert mock.call_count == 1
-                # Make sure that the OCR transcription doesn't get picked up
-                assert mock.call_args[0][0].id == transcription.id
-            else:
-                assert mock.call_count == 0
-
-    @pytest.mark.parametrize(
         "gamma, expected", [(24, False), (25, True), (26, False)],
     )
     def test_check_for_rank_up(
