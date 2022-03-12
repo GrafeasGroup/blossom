@@ -575,11 +575,8 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         # Send the transcription to Slack if necessary
         if transcription is not None and user.should_check_transcription():
-            # Check to see if the transcription has been removed. If it has, only
-            # post the message to slack if they are new or inactive
-            if not transcription.removed_from_reddit or user.has_low_activity:
-                reason = user.transcription_check_reason()
-                send_transcription_check(transcription, submission, user, slack, reason)
+            reason = user.transcription_check_reason()
+            send_transcription_check(transcription, submission, user, slack, reason)
 
         # Send rank up message to Slack if necessary
         _check_for_rank_up(user, submission)
