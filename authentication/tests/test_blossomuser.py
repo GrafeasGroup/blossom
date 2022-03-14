@@ -38,6 +38,40 @@ def test_gamma(client: Client) -> None:
     assert user.gamma == 4
 
 
+def test_gamma_with_empty_times(client: Client) -> None:
+    """Make sure that the gamma works even if some times are missing.
+
+    Some older dummy submissions might not have the claim_time or create_time
+    fields set. We need to make sure that the gamma still includes them until
+    we fix the data.
+    """
+    client, headers, user = setup_user_client(client, id=123, username="Test")
+
+    times = [
+        None,
+        datetime(2022, 3, 1),
+        datetime(2022, 3, 3),
+        None,
+        datetime(2022, 4, 1),
+        datetime(2022, 5, 13),
+    ]
+
+    # Create the user's transcriptions
+    for time in times:
+        submission = create_submission(
+            create_time=time or datetime.now(),
+            claimed_by=user,
+            claim_time=time,
+            completed_by=user,
+            complete_time=time,
+        )
+        create_transcription(
+            submission=submission, user=user, create_time=time or time or datetime.now()
+        )
+
+    assert user.gamma == 6
+
+
 @pytest.mark.parametrize(
     "start_time, end_time, expected",
     [
