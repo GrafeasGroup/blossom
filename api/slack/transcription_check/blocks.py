@@ -1,14 +1,16 @@
 from typing import Dict, List
 
 from api.models import TranscriptionCheck
+from authentication.models import BlossomUser
 
 
 def _get_check_base_text(check: TranscriptionCheck) -> str:
     """Get basic info about the transcription check."""
     transcription = check.transcription
     submission = transcription.submission
-    user = transcription.author
-    gamma = user.gamma
+    user: BlossomUser = transcription.author
+    # Get the gamma at the time of the transcription that is checked
+    gamma = user.gamma_at_time(end_time=submission.complete_time)
 
     base_text = f"Transcription check for *u/{user.username}* ({gamma:,d} Γ):\n"
 

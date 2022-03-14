@@ -1,7 +1,7 @@
 """Models used within the Authentication application."""
 import random
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional
 
 import pytz
 from django.contrib.auth.models import AbstractUser, UserManager
@@ -110,9 +110,31 @@ class BlossomUser(AbstractUser):
 
         :return: the number of transcriptions written by the user.
         """
+        return self.gamma_at_time(start_time=None, end_time=None)
+
+    def gamma_at_time(
+        self,
+        *,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None
+    ) -> int:
+        """Return the number of transcriptions the user has made in the given time-frame.
+
+        :param start_time: The time to start counting transcriptions from.
+        :param end_time: The time to end counting transcriptions to.
+        """
         if self.blacklisted:
             return 0  # see https://github.com/GrafeasGroup/blossom/issues/15
-        return Submission.objects.filter(completed_by=self).count()
+
+        filters = {
+            "completed_by": self,
+        }
+        if start_time:
+            filters["complete_time__gte"] = start_time
+        if end_time:
+            filters["complete_time__lte"] = end_time
+
+        return Submission.objects.filter(**filters).count()
 
     def __str__(self) -> str:
         return self.username

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 from unittest.mock import PropertyMock, patch
 
@@ -11,6 +11,108 @@ from utils.test_helpers import (
     create_transcription,
     setup_user_client,
 )
+
+
+def test_gamma(client: Client) -> None:
+    """Test that a user's gamma is calculated correctly."""
+    client, headers, user = setup_user_client(client, id=123, username="Test")
+
+    times = [
+        datetime(2022, 3, 1),
+        datetime(2022, 3, 3),
+        datetime(2022, 4, 1),
+        datetime(2022, 5, 13),
+    ]
+
+    # Create the user's transcriptions
+    for time in times:
+        submission = create_submission(
+            create_time=time - timedelta(days=2),
+            claimed_by=user,
+            claim_time=time - timedelta(days=1),
+            completed_by=user,
+            complete_time=time,
+        )
+        create_transcription(submission=submission, user=user, create_time=time)
+
+    assert user.gamma == 4
+
+
+def test_gamma_with_empty_times(client: Client) -> None:
+    """Make sure that the gamma works even if some times are missing.
+
+    Some older dummy submissions might not have the claim_time or create_time
+    fields set. We need to make sure that the gamma still includes them until
+    we fix the data.
+    """
+    client, headers, user = setup_user_client(client, id=123, username="Test")
+
+    times = [
+        None,
+        datetime(2022, 3, 1),
+        datetime(2022, 3, 3),
+        None,
+        datetime(2022, 4, 1),
+        datetime(2022, 5, 13),
+    ]
+
+    # Create the user's transcriptions
+    for time in times:
+        submission = create_submission(
+            create_time=time or datetime.now(),
+            claimed_by=user,
+            claim_time=time,
+            completed_by=user,
+            complete_time=time,
+        )
+        create_transcription(
+            submission=submission, user=user, create_time=time or time or datetime.now()
+        )
+
+    assert user.gamma == 6
+
+
+@pytest.mark.parametrize(
+    "start_time, end_time, expected",
+    [
+        (None, None, 4),
+        (datetime(2022, 3, 1), datetime(2022, 5, 13), 4),
+        (None, datetime(2022, 3, 13), 2),
+        (datetime(2022, 3, 2), None, 3),
+        (datetime(2022, 3, 2), datetime(2022, 3, 12), 1),
+        (datetime(2023, 1, 1), None, 0),
+        (None, datetime(2021, 1, 1), 0),
+    ],
+)
+def test_gamma_at_time(
+    client: Client,
+    start_time: Optional[datetime],
+    end_time: Optional[datetime],
+    expected: int,
+) -> None:
+    """Test that the gamma is calculated correctly for a time frame."""
+    client, headers, user = setup_user_client(client, id=123, username="Test")
+
+    times = [
+        datetime(2022, 3, 1),
+        datetime(2022, 3, 3),
+        datetime(2022, 4, 1),
+        datetime(2022, 5, 13),
+    ]
+
+    # Create the user's transcriptions
+    for time in times:
+        submission = create_submission(
+            create_time=time - timedelta(days=2),
+            claimed_by=user,
+            claim_time=time - timedelta(days=1),
+            completed_by=user,
+            complete_time=time,
+        )
+        create_transcription(submission=submission, user=user, create_time=time)
+
+    actual = user.gamma_at_time(start_time=start_time, end_time=end_time)
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
