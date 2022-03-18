@@ -185,7 +185,7 @@ def test_process_check_action(client: Client) -> None:
     with patch(
         "api.slack.transcription_check.actions.update_check_message", return_value=None
     ) as mock, patch(
-        "api.slack.transcription_check.actions.get_display_name",
+        "api.slack.transcription_check.actions.get_reddit_username",
         lambda _, us: us["name"],
     ):
         process_check_action(data)
@@ -221,7 +221,7 @@ def test_process_check_action_claim_own_transcription(client: Client) -> None:
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock, patch(
-        "api.slack.transcription_check.actions.get_display_name",
+        "api.slack.transcription_check.actions.get_reddit_username",
         lambda _, us: us["name"],
     ):
         process_check_action(data)
@@ -265,7 +265,7 @@ def test_process_check_action_unknown_check(client: Client) -> None:
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock, patch(
-        "api.slack.transcription_check.actions.get_display_name",
+        "api.slack.transcription_check.actions.get_reddit_username",
         lambda _, us: us["name"],
     ):
         process_check_action(data)
@@ -307,7 +307,7 @@ def test_process_check_action_unknown_mod(client: Client) -> None:
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock, patch(
-        "api.slack.transcription_check.actions.get_display_name",
+        "api.slack.transcription_check.actions.get_reddit_username",
         lambda _, us: us["name"],
     ):
         process_check_action(data)
@@ -355,7 +355,7 @@ def test_process_check_action_no_mod(client: Client) -> None:
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock, patch(
-        "api.slack.transcription_check.actions.get_display_name",
+        "api.slack.transcription_check.actions.get_reddit_username",
         lambda _, us: us["name"],
     ):
         process_check_action(data)
@@ -403,7 +403,7 @@ def test_process_check_action_wrong_mod(client: Client) -> None:
         "api.slack.transcription_check.actions.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock, patch(
-        "api.slack.transcription_check.actions.get_display_name",
+        "api.slack.transcription_check.actions.get_reddit_username",
         lambda _, us: us["name"],
     ):
         process_check_action(data)
