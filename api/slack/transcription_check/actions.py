@@ -9,7 +9,7 @@ from api.slack.transcription_check.messages import (
     reply_to_action_with_ping,
     update_check_message,
 )
-from api.slack.utils import get_display_name
+from api.slack.utils import get_reddit_username
 from authentication.models import BlossomUser
 
 logger = logging.getLogger("api.slack.transcription_check.actions")
@@ -61,7 +61,7 @@ def process_check_action(data: Dict) -> None:
     parts = value.split("_")
     action = parts[1]
     check_id = parts[2]
-    mod_username = get_display_name(client, data["user"])
+    mod_username = get_reddit_username(client, data["user"])
 
     # Retrieve the corresponding objects form the DB
     check = TranscriptionCheck.objects.filter(id=check_id).first()

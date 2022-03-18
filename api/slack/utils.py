@@ -140,10 +140,15 @@ def send_transcription_check(
         logger.warning(f"Cannot post message to slack. Msg: {msg}")
 
 
-def get_display_name(slack_client: WebClient, user: Dict) -> Optional[str]:
-    """Get the display name for the given user."""
+def get_reddit_username(slack_client: WebClient, user: Dict) -> Optional[str]:
+    """Get the Reddit username for the given Slack user."""
     response = slack_client.users_profile_get(user=user.get("id"))
     if response.get("ok"):
-        return response.get("profile", {}).get("display_name")
+        profile = response.get("profile", {})
+        # First try to get the username from the custom Slack field.
+        username = profile.get("Reddit Username")
+        # If this is not defined, take the display name instead.
+        display_name = profile.get("display_name")
+        return username or display_name
     else:
         return None
