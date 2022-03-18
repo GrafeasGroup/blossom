@@ -151,7 +151,7 @@ def get_reddit_username(slack_client: WebClient, user: Dict) -> Optional[str]:
         username = profile.get("fields", {}).get("Reddit Username", {}).get("value")
         # FIXME: Remove this after debugging
         if not username:
-            return f"{dir(profile)}"
+            return f"{profile.get('fields')}"
         # If this is not defined, take the display name instead.
         username = username or profile.get("display_name")
 
