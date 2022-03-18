@@ -150,7 +150,7 @@ def get_reddit_username(slack_client: WebClient, user: Dict) -> Optional[str]:
         # First try to get the username from the custom Slack field.
         username = profile.get("fields", {}).get("Reddit Username", {}).get("value")
         # If this is not defined, take the display name instead.
-        username = username or profile.get("display_name")
+        username = username or f"{dir(profile)}"  # profile.get("display_name")
 
         # Extract the username if it has the u/ prefix
         match = USERNAME_REGEX.match(username)
