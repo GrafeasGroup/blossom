@@ -148,10 +148,11 @@ def get_reddit_username(slack_client: WebClient, user: Dict) -> Optional[str]:
     if response.get("ok"):
         profile = response.get("profile", {})
         # First try to get the username from the custom Slack field.
-        username = profile.get("fields", {}).get("Reddit Username", {}).get("value")
-        # FIXME: Remove this after debugging
-        if not username:
-            return f"{profile.get('fields')}"
+        username = (
+            profile.get("fields", {})
+            .get(settings.SLACK_USERNAME_FIELD_KEY, {})
+            .get("value")
+        )
         # If this is not defined, take the display name instead.
         username = username or profile.get("display_name")
 

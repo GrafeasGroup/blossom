@@ -299,6 +299,9 @@ SLACK_REPORTED_POST_CHANNEL = os.environ.get(
 # general
 SLACK_RANK_UP_CHANNEL = os.environ.get("SLACK_RANK_UP_CHANNEL", "C4R36V9V1")
 
+# The key to the custom profile field "Reddit Username"
+SLACK_USERNAME_FIELD_KEY = os.environ.get("SLACK_USERNAME_FIELD_KEY", "Xf036MPXHAJJ")
+
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 ###############################################
