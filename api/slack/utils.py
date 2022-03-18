@@ -23,6 +23,8 @@ SLACK_TEXT_EXTRACTOR = re.compile(
     r"<(?P<url>(?:https?://)?[\w-]+(?:\.[\w-]+)+\.?(?::\d+)?(?:/[^\s|]*)?)(?:\|(?P<text>[^>]+))?>"
 )
 
+USERNAME_REGEX = re.compile(r"(?:/?u/)?(?P<username>\S+)")
+
 
 def extract_text_from_link(text: str) -> str:
     """Strip link out of auto-generated slack fancy URLS and return the text only."""
@@ -140,10 +142,21 @@ def send_transcription_check(
         logger.warning(f"Cannot post message to slack. Msg: {msg}")
 
 
-def get_display_name(slack_client: WebClient, user: Dict) -> Optional[str]:
-    """Get the display name for the given user."""
+def get_reddit_username(slack_client: WebClient, user: Dict) -> Optional[str]:
+    """Get the Reddit username for the given Slack user."""
     response = slack_client.users_profile_get(user=user.get("id"))
     if response.get("ok"):
-        return response.get("profile", {}).get("display_name")
+        profile = response.get("profile", {})
+        # First try to get the username from the custom Slack field.
+        username = profile.get("fields", {}).get("Reddit Username", {}).get("value")
+        # If this is not defined, take the display name instead.
+        username = username or profile.get("display_name")
+
+        # Extract the username if it has the u/ prefix
+        match = USERNAME_REGEX.match(username)
+        if match:
+            username = match.group("username")
+
+        return username
     else:
         return None

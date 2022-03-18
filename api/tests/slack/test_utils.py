@@ -1,16 +1,18 @@
 # Disable line length restrictions to allow long URLs
 # flake8: noqa: E501
-from typing import Dict
+from typing import Dict, Optional
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from django.test import Client
+from slack import WebClient
 
 from api.slack import client as slack_client
 from api.slack.utils import (
     dict_to_table,
     extract_text_from_link,
     extract_url_from_link,
+    get_reddit_username,
     send_transcription_check,
 )
 from blossom.strings import translation
@@ -167,4 +169,87 @@ def test_extract_text_from_link(text: str, expected: str) -> None:
 def test_extract_url_from_link(text: str, expected: str) -> None:
     """Test that the URL is extracted from a Slack link."""
     actual = extract_url_from_link(text)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "user_obj,expected",
+    [
+        (
+            {
+                "avatar_hash": "ge3b51ca72de",
+                "status_text": "Print is dead",
+                "status_emoji": ":books:",
+                "status_expiration": 0,
+                "real_name": "Test Test",
+                "display_name": "test123",
+                "real_name_normalized": "Test Test",
+                "display_name_normalized": "test123",
+                "email": "test@example.org",
+                "image_24": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_32": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_48": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_72": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_192": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_512": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "team": "T012AB3C4",
+                "fields": {"Reddit Username": {"value": "test456"}},
+            },
+            "test456",
+        ),
+        (
+            {
+                "avatar_hash": "ge3b51ca72de",
+                "status_text": "Print is dead",
+                "status_emoji": ":books:",
+                "status_expiration": 0,
+                "real_name": "Test Test",
+                "display_name": "test123",
+                "real_name_normalized": "Test Test",
+                "display_name_normalized": "test123",
+                "email": "test@example.org",
+                "image_24": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_32": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_48": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_72": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_192": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_512": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "team": "T012AB3C4",
+                "fields": {"Reddit Username": {"value": "/u/test456"}},
+            },
+            "test456",
+        ),
+        (
+            {
+                "avatar_hash": "ge3b51ca72de",
+                "status_text": "Print is dead",
+                "status_emoji": ":books:",
+                "status_expiration": 0,
+                "real_name": "Test Test",
+                "display_name": "test123",
+                "real_name_normalized": "Test Test",
+                "display_name_normalized": "test123",
+                "email": "test@example.org",
+                "image_24": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_32": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_48": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_72": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_192": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "image_512": "https://.../avatar/e3b51ca72dee4ef87916ae2b9240df50.jpg",
+                "team": "T012AB3C4",
+            },
+            "test123",
+        ),
+    ],
+)
+def test_get_reddit_username(user_obj: Dict, expected: Optional[str]) -> None:
+    """Test that the Reddit username is properly extracted."""
+
+    class TestClient(WebClient):
+        def users_profile_get(self, user: str):
+            return {"ok": True, "profile": user_obj}
+
+    client = TestClient()
+    actual = get_reddit_username(client, {})
+
     assert actual == expected
