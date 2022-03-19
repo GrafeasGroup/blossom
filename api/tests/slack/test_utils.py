@@ -7,12 +7,14 @@ import pytest
 from django.test import Client
 from slack import WebClient
 
+from api.models import Source, Submission
 from api.slack import client as slack_client
 from api.slack.utils import (
     dict_to_table,
     extract_text_from_link,
     extract_url_from_link,
     get_reddit_username,
+    get_source,
     send_transcription_check,
 )
 from blossom.strings import translation
@@ -252,4 +254,26 @@ def test_get_reddit_username(user_obj: Dict, expected: Optional[str]) -> None:
     client = TestClient()
     actual = get_reddit_username(client, {})
 
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "submission, expected",
+    [
+        (
+            Submission(
+                url="https://reddit.com/r/assholedesign/comments/thrh7n/this_is_the_x_button_on_these_ads_literally_went/",
+                source=Source(name="reddit"),
+            ),
+            "r/assholedesign",
+        ),
+        (
+            Submission(url="https://example.com", source=Source(name="blossom")),
+            "blossom",
+        ),
+    ],
+)
+def test_get_source(submission: Submission, expected: str) -> None:
+    """Test that the source is extracted corrected from a submission."""
+    actual = get_source(submission)
     assert actual == expected
