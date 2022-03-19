@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 from api.models import TranscriptionCheck
+from api.slack.utils import get_source
 from authentication.models import BlossomUser
 
 
@@ -25,7 +26,8 @@ def _get_check_base_text(check: TranscriptionCheck) -> str:
         if transcription.url and not transcription.removed_from_reddit
         else "[Removed]"
     )
-    details = [tor_url, post_url, transcription_url]
+    source = get_source(submission)
+    details = [tor_url, post_url, transcription_url, source]
     # Indicate if the post is NSFW
     if is_nsfw:
         details.append("[NSFW]")
