@@ -9,6 +9,7 @@ def _get_check_base_text(check: TranscriptionCheck) -> str:
     transcription = check.transcription
     submission = transcription.submission
     user: BlossomUser = transcription.author
+    is_nsfw = submission.nsfw
     # Get the gamma at the time of the transcription that is checked
     gamma = user.gamma_at_time(end_time=submission.complete_time)
 
@@ -24,7 +25,11 @@ def _get_check_base_text(check: TranscriptionCheck) -> str:
         if transcription.url and not transcription.removed_from_reddit
         else "[Removed]"
     )
-    base_text += " | ".join([tor_url, post_url, transcription_url]) + "\n"
+    details = [tor_url, post_url, transcription_url]
+    # Indicate if the post is NSFW
+    if is_nsfw:
+        details.append("[NSFW]")
+    base_text += " | ".join(details) + "\n"
 
     # Add check trigger
     trigger = check.trigger or "_Not specified_"
@@ -210,22 +215,28 @@ def _get_check_status_text(check: TranscriptionCheck) -> str:
 def construct_transcription_check_blocks(check: TranscriptionCheck) -> List[Dict]:
     """Construct the Slack blocks for the transcription check message."""
     submission = check.transcription.submission
+    is_nsfw = submission.nsfw
 
     base_text = _get_check_base_text(check)
     actions = _get_check_actions(check)
     status_text = _get_check_status_text(check)
     text = f"{base_text}\n{status_text}"
 
+    text_section = {
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": text},
+    }
+
+    # Add image preview if the post is not NSFW
+    if not is_nsfw:
+        text_section["accessory"] = {
+            "type": "image",
+            "image_url": submission.content_url,
+            "alt_text": f"Image of submission {submission.id}",
+        }
+
     return [
-        {
-            "type": "section",
-            "text": {"type": "mrkdwn", "text": text},
-            "accessory": {
-                "type": "image",
-                "image_url": submission.content_url,
-                "alt_text": f"Image of submission {submission.id}",
-            },
-        },
+        text_section,
         {"type": "divider"},
         {"type": "actions", "elements": actions},
     ]
