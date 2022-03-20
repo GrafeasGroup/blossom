@@ -71,7 +71,6 @@ def _get_check_pending_actions(check: TranscriptionCheck) -> List[Dict]:
         },
         {
             "type": "button",
-            "style": "danger",
             "text": {"type": "plain_text", "text": "Warn"},
             "value": f"check_warning-pending_{check.id}",
         },
@@ -107,12 +106,6 @@ def _get_check_comment_pending_actions(check: TranscriptionCheck) -> List[Dict]:
             "type": "button",
             "text": {"type": "plain_text", "text": "Revert"},
             "value": f"check_pending_{check.id}",
-        },
-        {
-            "type": "button",
-            "style": "danger",
-            "text": {"type": "plain_text", "text": "Warn"},
-            "value": f"check_warning-pending_{check.id}",
         },
         {
             "type": "button",
