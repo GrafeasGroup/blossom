@@ -24,12 +24,13 @@ class TestSubmissionDone:
         create_transcription(submission, user)
         data = {"username": user.username}
 
-        result = client.patch(
-            reverse("submission-done", args=[submission.id]),
-            json.dumps(data),
-            content_type="application/json",
-            **headers,
-        )
+        with patch("api.views.submission.send_check_message"):
+            result = client.patch(
+                reverse("submission-done", args=[submission.id]),
+                json.dumps(data),
+                content_type="application/json",
+                **headers,
+            )
 
         submission.refresh_from_db()
         assert result.status_code == status.HTTP_201_CREATED
@@ -137,7 +138,7 @@ class TestSubmissionDone:
         with patch(
             "authentication.models.BlossomUser.should_check_transcription",
             return_value=should_check_transcription,
-        ), patch("api.views.submission.send_transcription_check") as mock:
+        ), patch("api.views.submission.send_check_message") as mock:
             client, headers, user = setup_user_client(client)
             submission = create_submission(url="abc", tor_url="def", claimed_by=user)
             create_transcription(submission, user, url="ghi")

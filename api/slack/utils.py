@@ -129,7 +129,7 @@ def get_reddit_username(slack_client: WebClient, user: Dict) -> Optional[str]:
 
 def get_source(submission: Submission) -> str:
     """Extract the source from the given submission."""
-    if "reddit.com" in submission.url:
+    if submission.url and "reddit.com" in submission.url:
         return "r/" + submission.url.split("/")[4]
     else:
         return submission.source.name

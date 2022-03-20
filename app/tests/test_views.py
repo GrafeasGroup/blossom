@@ -366,10 +366,13 @@ class TestTranscribeSubmission:
         )
         assert submission.completed_by is None
 
-        response = client.post(
-            reverse("transcribe_submission", kwargs={"submission_id": submission.id}),
-            data={"transcription": "AAA"},
-        )
+        with patch("api.views.submission.send_check_message"):
+            response = client.post(
+                reverse(
+                    "transcribe_submission", kwargs={"submission_id": submission.id}
+                ),
+                data={"transcription": "AAA"},
+            )
 
         submission.refresh_from_db()
         assert reverse("choose_transcription") in response.url
@@ -425,10 +428,17 @@ class TestTranscribeSubmission:
             title="a",
             claimed_by=user,
         )
-        client.post(
-            reverse("transcribe_submission", kwargs={"submission_id": submission.id}),
-            data={"transcription": "u/aaa ! Check this out!\n```\nabcde\n```\n\nayy"},
-        )
+
+        with patch("api.views.submission.send_check_message"):
+            client.post(
+                reverse(
+                    "transcribe_submission", kwargs={"submission_id": submission.id}
+                ),
+                data={
+                    "transcription": "u/aaa ! Check this out!\n```\nabcde\n```\n\nayy"
+                },
+            )
+
         assert "`" not in Transcription.objects.first().text
         assert "\\/" in Transcription.objects.first().text
 
