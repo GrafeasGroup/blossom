@@ -6,8 +6,7 @@ from typing import Dict, List, Optional
 from django.conf import settings
 from slack import WebClient
 
-from api.models import Submission, Transcription
-from authentication.models import BlossomUser
+from api.models import Submission
 from blossom.strings import translation
 
 logger = logging.getLogger("api.slack.utils")
@@ -102,44 +101,6 @@ def get_message(data: Dict) -> Optional[str]:
         return event["text"][event["text"].index(">") + 2 :].lower()  # noqa: E203
     except IndexError:
         return None
-
-
-def send_transcription_check(
-    transcription: Transcription,
-    submission: Submission,
-    user: BlossomUser,
-    slack_client: WebClient,
-    reason: str,
-) -> None:
-    """Notify slack for the transcription check."""
-    gamma = user.gamma
-    msg = f"*Transcription check* for u/{user.username} ({user.gamma:,d} Γ):\n"
-
-    # Add relevant links
-    tor_url = (
-        "<{}|ToR Post>".format(submission.tor_url) if submission.tor_url else "[N/A]"
-    )
-    post_url = "<{}|Partner Post>".format(submission.url) if submission.url else "[N/A]"
-    transcription_url = (
-        "<{}|Transcription>".format(transcription.url)
-        if transcription.url and not transcription.removed_from_reddit
-        else "[Removed]"
-    )
-    msg += " | ".join([tor_url, post_url, transcription_url]) + "\n"
-
-    # Add check reason
-    msg += f"Reason: {reason}\n"
-
-    # Is it the first transcription? Extra care has to be taken
-    if gamma == 1:
-        msg += ":rotating_light: First transcription! :rotating_light:"
-
-    try:
-        slack_client.chat_postMessage(
-            channel=settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL, text=msg.strip(),
-        )
-    except:  # noqa
-        logger.warning(f"Cannot post message to slack. Msg: {msg}")
 
 
 def get_reddit_username(slack_client: WebClient, user: Dict) -> Optional[str]:

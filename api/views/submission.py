@@ -36,7 +36,7 @@ from rest_framework.response import Response
 
 from api.authentication import BlossomApiPermission
 from api.helpers import validate_request
-from api.models import Source, Submission, Transcription
+from api.models import Source, Submission, Transcription, TranscriptionCheck
 from api.pagination import StandardResultsSetPagination
 from api.serializers import SubmissionSerializer
 from api.slack import client as slack
@@ -45,7 +45,7 @@ from api.slack.actions import (
     ask_about_removing_post,
     update_submission_report,
 )
-from api.slack.utils import send_transcription_check
+from api.slack.transcription_check.messages import send_check_message
 from api.views.volunteer import VolunteerViewSet
 from authentication.models import BlossomUser
 
@@ -575,8 +575,12 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         # Send the transcription to Slack if necessary
         if transcription is not None and user.should_check_transcription():
-            reason = user.transcription_check_reason()
-            send_transcription_check(transcription, submission, user, slack, reason)
+            # Create a new check object
+            check = TranscriptionCheck.objects.create(
+                transcription=transcription, trigger=user.transcription_check_reason()
+            )
+            # Send the check to the check channel
+            send_check_message(check)
 
         # Send rank up message to Slack if necessary
         _check_for_rank_up(user, submission)
