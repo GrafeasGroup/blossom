@@ -6,16 +6,32 @@ from django.conf import settings
 from api.models import TranscriptionCheck
 from api.slack import client
 from api.slack.transcription_check.blocks import construct_transcription_check_blocks
+from api.slack.utils import get_source
 
 logger = logging.getLogger("api.slack.transcription_check.messages")
+
+
+def _construct_transcription_check_text(check: TranscriptionCheck) -> str:
+    """Get the fallback text for the given check.
+
+    This text is displayed in notifications.
+    """
+    transcription = check.transcription
+    user = transcription.author.username
+    source = get_source(transcription.submission)
+    trigger = check.trigger
+
+    return f"Check for u/{user} on {source} | {trigger}"
 
 
 def send_check_message(
     check: TranscriptionCheck, channel: str = settings.SLACK_TRANSCRIPTION_CHECK_CHANNEL
 ) -> Optional[Dict]:
     """Send a transcription check message to the given channel."""
+    text = _construct_transcription_check_text(check)
     blocks = construct_transcription_check_blocks(check)
-    response = client.chat_postMessage(channel=channel, blocks=blocks)
+
+    response = client.chat_postMessage(channel=channel, text=text, blocks=blocks)
     if not response["ok"]:
         logger.error(f"Could not send check {check.id} to Slack!")
         return None
