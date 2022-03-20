@@ -1,10 +1,8 @@
-from datetime import datetime
-from typing import Optional
 from unittest.mock import patch
 
 from django.test import Client
 
-from api.models import Source, TranscriptionCheck
+from api.models import Source
 from api.slack.transcription_check.messages import _construct_transcription_check_text
 from utils.test_helpers import (
     create_check,
@@ -22,6 +20,7 @@ def test_construct_transcription_check_text(client: Client) -> None:
     submission = create_submission(
         claimed_by=user,
         completed_by=user,
+        # Allow long line for URL
         # flake8: noqa: E501
         url="https://www.reddit.com/r/CuratedTumblr/comments/tirg5d/surviving_a_sitcom_death_mention/",
         source=Source(name="reddit"),
@@ -29,7 +28,9 @@ def test_construct_transcription_check_text(client: Client) -> None:
     transcription = create_transcription(submission=submission, user=user)
     check = create_check(transcription, moderator=mod, trigger="Watched (100.0%)")
 
-    expected = "Check for u/Userson on r/CuratedTumblr | Watched (100.0%)"
-    actual = _construct_transcription_check_text(check)
+    expected = "Check for u/Userson (21 Γ) on r/CuratedTumblr | Watched (100.0%)"
+
+    with patch("authentication.models.BlossomUser.gamma_at_time", return_value=21):
+        actual = _construct_transcription_check_text(check)
 
     assert actual == expected

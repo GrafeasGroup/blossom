@@ -17,11 +17,15 @@ def _construct_transcription_check_text(check: TranscriptionCheck) -> str:
     This text is displayed in notifications.
     """
     transcription = check.transcription
-    user = transcription.author.username
-    source = get_source(transcription.submission)
+    submission = transcription.submission
+    user = transcription.author
+
+    username = user.username
+    gamma = user.gamma_at_time(end_time=submission.complete_time)
+    source = get_source(submission)
     trigger = check.trigger
 
-    return f"Check for u/{user} on {source} | {trigger}"
+    return f"Check for u/{username} ({gamma} Γ) on {source} | {trigger}"
 
 
 def send_check_message(
