@@ -1,7 +1,7 @@
 import logging
 import re
 from re import Match
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from django.conf import settings
 from slack import WebClient
@@ -56,10 +56,11 @@ def extract_url_from_link(text: str) -> str:
     return text
 
 
-def parse_username(text: str) -> str:
-    """Parse a username argument of a Slack command.
+def parse_user(text: str) -> Tuple[Optional[BlossomUser], str]:
+    """Parse a username argument of a Slack command to a user object.
 
     This takes care of link formatting, bold formatting and the u/ prefix.
+    Returns `None` if the user couldn't be found.
     """
     # Remove link formatting
     username = extract_text_from_link(text)
@@ -74,17 +75,10 @@ def parse_username(text: str) -> str:
     if prefix_match:
         username = prefix_match.group("username")
 
-    return username
+    # Try to fetch the given user
+    user = BlossomUser.objects.filter(username=username).first()
 
-
-def parse_user(text: str) -> Optional[BlossomUser]:
-    """Parse a username argument of a Slack command to a user object.
-
-    This takes care of link formatting, bold formatting and the u/ prefix.
-    Returns `None` if the user couldn't be found.
-    """
-    username = parse_username(text)
-    return BlossomUser.objects.filter(username=username).first()
+    return user, username
 
 
 def dict_to_table(dictionary: Dict, titles: List = None, width: int = None) -> List:
