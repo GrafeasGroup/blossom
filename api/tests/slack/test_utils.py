@@ -15,6 +15,7 @@ from api.slack.utils import (
     extract_url_from_link,
     get_reddit_username,
     get_source,
+    parse_user,
     parse_username,
 )
 from blossom.strings import translation
@@ -152,6 +153,26 @@ def test_parse_username(text: str, expected: str) -> None:
     """Test that a username is parsed correctly."""
     actual = parse_username(text)
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        # No formatting
+        ("user123", True),
+        ("*u/user123*", True),
+        ("USER123", True),
+        ("user567", False),
+    ],
+)
+def test_parse_user(client: Client, text: str, expected: bool) -> None:
+    """Test that a username is parsed correctly."""
+    client, headers, user = setup_user_client(client, id=100, username="user123")
+    actual = parse_user(text)
+    if expected:
+        assert actual == user
+    else:
+        assert actual is None
 
 
 @pytest.mark.parametrize(

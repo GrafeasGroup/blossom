@@ -7,6 +7,7 @@ from django.conf import settings
 from slack import WebClient
 
 from api.models import Submission
+from authentication.models import BlossomUser
 from blossom.strings import translation
 
 logger = logging.getLogger("api.slack.utils")
@@ -74,6 +75,16 @@ def parse_username(text: str) -> str:
         username = prefix_match.group("username")
 
     return username
+
+
+def parse_user(text: str) -> Optional[BlossomUser]:
+    """Parse a username argument of a Slack command to a user object.
+
+    This takes care of link formatting, bold formatting and the u/ prefix.
+    Returns `None` if the user couldn't be found.
+    """
+    username = parse_username(text)
+    return BlossomUser.objects.filter(username=username).first()
 
 
 def dict_to_table(dictionary: Dict, titles: List = None, width: int = None) -> List:
