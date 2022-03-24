@@ -9,9 +9,9 @@ from api.slack import client
 from api.slack.transcription_check.messages import send_check_message
 from api.slack.utils import (
     dict_to_table,
-    extract_text_from_link,
     extract_url_from_link,
     get_message,
+    parse_user,
 )
 from api.views.find import find_by_url, normalize_url
 from api.views.misc import Summary
@@ -93,9 +93,8 @@ def info_cmd(channel: str, message: str) -> None:
         return
 
     elif len(parsed_message) == 2:
-        if user := BlossomUser.objects.filter(
-            username__iexact=parsed_message[1]
-        ).first():
+        user, username = parse_user(parsed_message[1])
+        if user:
             v_data = VolunteerSerializer(user).data
             msg = i18n["slack"]["user_info"].format(
                 user.username, "\n".join(dict_to_table(v_data))
@@ -120,8 +119,8 @@ def reset_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        username = extract_text_from_link(parsed_message[1])
-        if user := BlossomUser.objects.filter(username__iexact=username).first():
+        user, username = parse_user(parsed_message[1])
+        if user:
             if user.accepted_coc:
                 user.accepted_coc = False
                 user.save()
@@ -147,8 +146,8 @@ def watch_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) <= 3:
-        username = extract_text_from_link(parsed_message[1])
-        if user := BlossomUser.objects.filter(username__iexact=username).first():
+        user, username = parse_user(parsed_message[1])
+        if user:
             if len(parsed_message) == 2:
                 # they didn't give a percentage, default to 100%
                 decimal_percentage = 1
@@ -184,7 +183,7 @@ def watch_cmd(channel: str, message: str) -> None:
                 user.save()
 
                 msg = i18n["slack"]["watch"]["success"].format(
-                    user=user.username, percentage=decimal_percentage, previous=previous
+                    user=username, percentage=decimal_percentage, previous=previous
                 )
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
@@ -203,13 +202,13 @@ def unwatch_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        username = extract_text_from_link(parsed_message[1])
-        if user := BlossomUser.objects.filter(username__iexact=username).first():
+        user, username = parse_user(parsed_message[1])
+        if user:
             # Set the check percentage back to automatic
             user.overwrite_check_percentage = None
             user.save()
 
-            msg = i18n["slack"]["unwatch"]["success"].format(user=user.username)
+            msg = i18n["slack"]["unwatch"]["success"].format(user=username)
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
 
@@ -227,11 +226,11 @@ def watchstatus_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        username = extract_text_from_link(parsed_message[1])
-        if user := BlossomUser.objects.filter(username__iexact=username).first():
+        user, username = parse_user(parsed_message[1])
+        if user:
             status = user.transcription_check_reason(ignore_low_activity=True)
             msg = i18n["slack"]["watchstatus"]["success"].format(
-                user=user.username, status=status
+                user=username, status=status
             )
         else:
             msg = i18n["slack"]["errors"]["unknown_username"]
@@ -332,8 +331,8 @@ def blacklist_cmd(channel: str, message: str) -> None:
         # they didn't give a username
         msg = i18n["slack"]["errors"]["missing_username"]
     elif len(parsed_message) == 2:
-        username = extract_text_from_link(parsed_message[1])
-        if user := BlossomUser.objects.filter(username__iexact=username).first():
+        user, username = parse_user(parsed_message[1])
+        if user:
             if user.blacklisted:
                 user.blacklisted = False
                 user.save()
