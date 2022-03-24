@@ -97,10 +97,10 @@ def info_cmd(channel: str, message: str) -> None:
         if user:
             v_data = VolunteerSerializer(user).data
             msg = i18n["slack"]["user_info"].format(
-                user.username, "\n".join(dict_to_table(v_data))
+                username, "\n".join(dict_to_table(v_data))
             )
         else:
-            msg = i18n["slack"]["errors"]["no_user_by_that_name"]
+            msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
@@ -130,7 +130,7 @@ def reset_cmd(channel: str, message: str) -> None:
                 user.save()
                 msg = i18n["slack"]["reset_coc"]["success_undo"].format(username)
         else:
-            msg = i18n["slack"]["errors"]["unknown_username"]
+            msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
 
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
@@ -186,7 +186,7 @@ def watch_cmd(channel: str, message: str) -> None:
                     user=username, percentage=decimal_percentage, previous=previous
                 )
         else:
-            msg = i18n["slack"]["errors"]["unknown_username"]
+            msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
 
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
@@ -210,7 +210,7 @@ def unwatch_cmd(channel: str, message: str) -> None:
 
             msg = i18n["slack"]["unwatch"]["success"].format(user=username)
         else:
-            msg = i18n["slack"]["errors"]["unknown_username"]
+            msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
 
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
@@ -233,7 +233,7 @@ def watchstatus_cmd(channel: str, message: str) -> None:
                 user=username, status=status
             )
         else:
-            msg = i18n["slack"]["errors"]["unknown_username"]
+            msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
 
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
@@ -342,7 +342,7 @@ def blacklist_cmd(channel: str, message: str) -> None:
                 user.save()
                 msg = i18n["slack"]["blacklist"]["success"].format(username)
         else:
-            msg = i18n["slack"]["errors"]["unknown_username"]
+            msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
 

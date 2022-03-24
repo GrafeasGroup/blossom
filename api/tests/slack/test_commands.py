@@ -71,7 +71,10 @@ def test_process_blacklist_with_slack_link() -> None:
     "message,response",
     [
         ("blacklist", i18n["slack"]["errors"]["missing_username"]),
-        ("blacklist asdf", i18n["slack"]["errors"]["unknown_username"]),
+        (
+            "blacklist asdf",
+            i18n["slack"]["errors"]["unknown_username"].format(username="asdf"),
+        ),
         ("a b c", i18n["slack"]["errors"]["too_many_params"]),
     ],
 )
@@ -127,7 +130,10 @@ def test_process_coc_reset_with_slack_link() -> None:
     "message,response",
     [
         ("reset", i18n["slack"]["errors"]["missing_username"]),
-        ("reset asdf", i18n["slack"]["errors"]["unknown_username"]),
+        (
+            "reset asdf",
+            i18n["slack"]["errors"]["unknown_username"].format(username="asdf"),
+        ),
         ("reset a b c", i18n["slack"]["errors"]["too_many_params"]),
     ],
 )
@@ -178,7 +184,10 @@ def test_process_watch(message: str, percentage: float) -> None:
     [
         ("watch", i18n["slack"]["errors"]["missing_username"]),
         ("watch u123 50 13", i18n["slack"]["errors"]["too_many_params"]),
-        ("watch u456 50", i18n["slack"]["errors"]["unknown_username"]),
+        (
+            "watch u456 50",
+            i18n["slack"]["errors"]["unknown_username"].format(username="u456"),
+        ),
         (
             "watch u123 -1",
             i18n["slack"]["watch"]["invalid_percentage"].format(percentage="-1"),
