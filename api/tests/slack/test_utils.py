@@ -15,6 +15,7 @@ from api.slack.utils import (
     extract_url_from_link,
     get_reddit_username,
     get_source,
+    parse_username,
 )
 from blossom.strings import translation
 from utils.test_helpers import (
@@ -120,6 +121,36 @@ def test_extract_text_from_link(text: str, expected: str) -> None:
 def test_extract_url_from_link(text: str, expected: str) -> None:
     """Test that the URL is extracted from a Slack link."""
     actual = extract_url_from_link(text)
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        # No formatting
+        ("user123", "user123"),
+        ("u/user123", "user123"),
+        ("/u/user123", "user123"),
+        # Link
+        ("<https://reddit.com/u/user123|user123>", "user123"),
+        ("<https://reddit.com/u/user123|u/user123>", "user123"),
+        ("<https://reddit.com/u/user123|/u/user123>", "user123"),
+        # Bold
+        ("*user123*", "user123"),
+        ("*u/user123*", "user123"),
+        ("*/u/user123*", "user123"),
+        # Link + Bold
+        ("<https://reddit.com/u/user123|*user123*>", "user123"),
+        ("<https://reddit.com/u/user123|*u/user123*>", "user123"),
+        ("<https://reddit.com/u/user123|*/u/user123*>", "user123"),
+        ("*<https://reddit.com/u/user123|user123>*", "user123"),
+        ("*<https://reddit.com/u/user123|u/user123>*", "user123"),
+        ("*<https://reddit.com/u/user123|/u/user123>*", "user123"),
+    ],
+)
+def test_parse_username(text: str, expected: str) -> None:
+    """Test that a username is parsed correctly."""
+    actual = parse_username(text)
     assert actual == expected
 
 

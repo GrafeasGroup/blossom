@@ -22,6 +22,8 @@ SLACK_TEXT_EXTRACTOR = re.compile(
     r"<(?P<url>(?:https?://)?[\w-]+(?:\.[\w-]+)+\.?(?::\d+)?(?:/[^\s|]*)?)(?:\|(?P<text>[^>]+))?>"
 )
 
+BOLD_REGEX = re.compile(r"\*(?P<content>[^*]+)\*")
+
 USERNAME_REGEX = re.compile(r"(?:/?u/)?(?P<username>\S+)")
 
 
@@ -51,6 +53,27 @@ def extract_url_from_link(text: str) -> str:
     for match in results:
         text = text[: match.start()] + extract_link(match) + text[match.end() :]
     return text
+
+
+def parse_username(text: str) -> str:
+    """Parse a username argument of a Slack command.
+
+    This takes care of link formatting, bold formatting and the u/ prefix.
+    """
+    # Remove link formatting
+    username = extract_text_from_link(text)
+
+    # Remove bold formatting
+    bold_match = BOLD_REGEX.match(username)
+    if bold_match:
+        username = bold_match.group("content")
+
+    # Remove u/ prefix
+    prefix_match = USERNAME_REGEX.match(username)
+    if prefix_match:
+        username = prefix_match.group("username")
+
+    return username
 
 
 def dict_to_table(dictionary: Dict, titles: List = None, width: int = None) -> List:
