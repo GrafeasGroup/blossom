@@ -78,6 +78,10 @@ def parse_user(text: str) -> Tuple[Optional[BlossomUser], str]:
     # Try to fetch the given user
     user = BlossomUser.objects.filter(username=username).first()
 
+    # Fix capitalization if user has been found
+    if user:
+        username = user.username
+
     return user, username
 
 
