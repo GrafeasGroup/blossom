@@ -1,14 +1,12 @@
 # Disable line length restrictions to allow long URLs
 # flake8: noqa: E501
 from typing import Dict, Optional
-from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 from django.test import Client
 from slack import WebClient
 
 from api.models import Source, Submission
-from api.slack import client as slack_client
 from api.slack.utils import (
     dict_to_table,
     extract_text_from_link,
@@ -16,14 +14,9 @@ from api.slack.utils import (
     get_reddit_username,
     get_source,
     parse_user,
-    parse_username,
 )
 from blossom.strings import translation
-from utils.test_helpers import (
-    create_submission,
-    create_transcription,
-    setup_user_client,
-)
+from utils.test_helpers import setup_user_client
 
 i18n = translation()
 
@@ -126,53 +119,38 @@ def test_extract_url_from_link(text: str, expected: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "text,expected",
+    "text, username, found",
     [
         # No formatting
-        ("user123", "user123"),
-        ("u/user123", "user123"),
-        ("/u/user123", "user123"),
+        ("user123", "user123", True),
+        ("u/user123", "user123", True),
+        ("/u/user123", "user123", True),
         # Link
-        ("<https://reddit.com/u/user123|user123>", "user123"),
-        ("<https://reddit.com/u/user123|u/user123>", "user123"),
-        ("<https://reddit.com/u/user123|/u/user123>", "user123"),
+        ("<https://reddit.com/u/user123|user123>", "user123", True),
+        ("<https://reddit.com/u/user123|u/user123>", "user123", True),
+        ("<https://reddit.com/u/user123|/u/user123>", "user123", True),
         # Bold
-        ("*user123*", "user123"),
-        ("*u/user123*", "user123"),
-        ("*/u/user123*", "user123"),
+        ("*user123*", "user123", True),
+        ("*u/user123*", "user123", True),
+        ("*/u/user123*", "user123", True),
         # Link + Bold
-        ("<https://reddit.com/u/user123|*user123*>", "user123"),
-        ("<https://reddit.com/u/user123|*u/user123*>", "user123"),
-        ("<https://reddit.com/u/user123|*/u/user123*>", "user123"),
-        ("*<https://reddit.com/u/user123|user123>*", "user123"),
-        ("*<https://reddit.com/u/user123|u/user123>*", "user123"),
-        ("*<https://reddit.com/u/user123|/u/user123>*", "user123"),
+        ("<https://reddit.com/u/user123|*user123*>", "user123", True),
+        ("<https://reddit.com/u/user123|*u/user123*>", "user123", True),
+        ("<https://reddit.com/u/user123|*/u/user123*>", "user123", True),
+        ("*<https://reddit.com/u/user123|user123>*", "user123", True),
+        ("*<https://reddit.com/u/user123|u/user123>*", "user123", True),
+        ("*<https://reddit.com/u/user123|/u/user123>*", "user123", True),
     ],
 )
-def test_parse_username(text: str, expected: str) -> None:
-    """Test that a username is parsed correctly."""
-    actual = parse_username(text)
-    assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "text,expected",
-    [
-        # No formatting
-        ("user123", True),
-        ("*u/user123*", True),
-        ("USER123", True),
-        ("user567", False),
-    ],
-)
-def test_parse_user(client: Client, text: str, expected: bool) -> None:
+def test_parse_user(client: Client, text: str, username: str, found: bool) -> None:
     """Test that a username is parsed correctly."""
     client, headers, user = setup_user_client(client, id=100, username="user123")
-    actual = parse_user(text)
-    if expected:
-        assert actual == user
-    else:
-        assert actual is None
+    expected_user = user if found else None
+
+    actual_user, actual_username = parse_user(text)
+
+    assert actual_username == username
+    assert actual_user == expected_user
 
 
 @pytest.mark.parametrize(
