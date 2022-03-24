@@ -140,6 +140,12 @@ def test_extract_url_from_link(text: str, expected: str) -> None:
         ("*<https://reddit.com/u/user123|user123>*", "user123", True),
         ("*<https://reddit.com/u/user123|u/user123>*", "user123", True),
         ("*<https://reddit.com/u/user123|/u/user123>*", "user123", True),
+        # Correct capitalization
+        ("/u/USeR123", "user123", True),
+        ("*usER123*", "user123", True),
+        # Invalid username
+        ("user456", "user456", False),
+        ("*/u/user456*", "user456", False),
     ],
 )
 def test_parse_user(client: Client, text: str, username: str, found: bool) -> None:
