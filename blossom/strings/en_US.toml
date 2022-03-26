@@ -105,3 +105,8 @@ no_url="You need to provide a Reddit URL to generate a check for! Use `@Blossom 
 invalid_url="Sorry, `{url}` is not a valid Reddit URL. Please provide a Reddit link to a ToR post, partner post or transcription."
 no_submission="Sorry, I couldn't find a submission for the URL `{url}`!"
 no_transcription="<{tor_url}|The post> does not have a transcription yet!"
+
+[slack.warnings]
+warning_entry="- {date} on {source} (<{check_url}|check> | <{tr_url}|transcription>)"
+warnings="u/{username} has *{count} warning(s)*:\n\n{warning_list}"
+no_warnings="u/{username} does not have a warning yet!"

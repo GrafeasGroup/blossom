@@ -13,6 +13,7 @@ from api.slack.commands.info import info_cmd
 from api.slack.commands.ping import ping_cmd
 from api.slack.commands.reset import reset_cmd
 from api.slack.commands.unwatch import unwatch_cmd
+from api.slack.commands.warnings import warnings_cmd
 from api.slack.commands.watch import watch_cmd
 from api.slack.commands.watchlist import watchlist_cmd
 from api.slack.commands.watchstatus import watchstatus_cmd
@@ -56,6 +57,7 @@ def process_command(data: Dict) -> None:
         "ping": ping_cmd,
         "reset": reset_cmd,
         "unwatch": unwatch_cmd,
+        "warnings": warnings_cmd,
         "watch": watch_cmd,
         "watchlist": watchlist_cmd,
         "watchstatus": watchstatus_cmd,
