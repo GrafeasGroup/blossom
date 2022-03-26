@@ -1,8 +1,7 @@
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 
-from api.slack import client as slack_client
 from api.slack.commands import watchlist_cmd
 from blossom.strings import translation
 from utils.test_helpers import create_user
@@ -60,8 +59,6 @@ u/fff (70%)
 )
 def test_process_watchlist(message: str, expected: str) -> None:
     """Test watchlist functionality."""
-    slack_client.chat_postMessage = MagicMock()
-
     # Test users
     # The order is scrambled intentionally to test sorting
     create_user(id=888, username="hhh", overwrite_check_percentage=None)
@@ -74,6 +71,7 @@ def test_process_watchlist(message: str, expected: str) -> None:
     create_user(id=666, username="fff", overwrite_check_percentage=0.7)
 
     # process the message
-    watchlist_cmd("", message)
-    slack_client.chat_postMessage.assert_called_once()
-    assert slack_client.chat_postMessage.call_args[1]["text"] == expected
+    with patch("api.slack.commands.watchlist.client.chat_postMessage") as mock:
+        watchlist_cmd("", message)
+        assert mock.call_count == 1
+        assert mock.call_args[1]["text"] == expected
