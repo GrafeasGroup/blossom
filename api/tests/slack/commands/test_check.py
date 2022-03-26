@@ -54,9 +54,13 @@ def test_check_cmd(client: Client, url: str) -> None:
         url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
     )
 
-    with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
-        "api.slack.commands.send_check_message"
-    ) as check_mock, patch("api.slack.commands.client.chat_getPermalink") as link_mock:
+    with patch(
+        "api.slack.commands.check.client.chat_postMessage"
+    ) as message_mock, patch(
+        "api.slack.commands.check.send_check_message"
+    ) as check_mock, patch(
+        "api.slack.commands.check.client.chat_getPermalink"
+    ) as link_mock:
         check_cmd("", f"check {url}")
 
         assert message_mock.call_count == 1
@@ -96,9 +100,13 @@ def test_check_cmd_existing_check(client: Client, url: str) -> None:
     checks = TranscriptionCheck.objects.filter(transcription=transcription)
     assert len(checks) == 1
 
-    with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
-        "api.slack.commands.send_check_message"
-    ) as check_mock, patch("api.slack.commands.client.chat_getPermalink") as link_mock:
+    with patch(
+        "api.slack.commands.check.client.chat_postMessage"
+    ) as message_mock, patch(
+        "api.slack.commands.check.send_check_message"
+    ) as check_mock, patch(
+        "api.slack.commands.client.chat_getPermalink"
+    ) as link_mock:
         check_cmd("", f"check {url}")
 
         assert message_mock.call_count == 1
@@ -126,9 +134,13 @@ def test_check_cmd_no_transcription(client: Client, url: str) -> None:
         url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
     )
 
-    with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
-        "api.slack.commands.send_check_message"
-    ) as check_mock, patch("api.slack.commands.client.chat_getPermalink") as link_mock:
+    with patch(
+        "api.slack.commands.check.client.chat_postMessage"
+    ) as message_mock, patch(
+        "api.slack.commands.check.send_check_message"
+    ) as check_mock, patch(
+        "api.slack.commands.check.client.chat_getPermalink"
+    ) as link_mock:
         check_cmd("", f"check {url}")
 
         assert message_mock.call_count == 1
@@ -163,9 +175,13 @@ def test_check_cmd_unknown_url(client: Client, url: str) -> None:
         transcription=transcription, slack_channel_id="asd", slack_message_ts="1234"
     )
 
-    with patch("api.slack.commands.client.chat_postMessage") as message_mock, patch(
-        "api.slack.commands.send_check_message"
-    ) as check_mock, patch("api.slack.commands.client.chat_getPermalink") as link_mock:
+    with patch(
+        "api.slack.commands.check.client.chat_postMessage"
+    ) as message_mock, patch(
+        "api.slack.commands.check.send_check_message"
+    ) as check_mock, patch(
+        "api.slack.commands.check.client.chat_getPermalink"
+    ) as link_mock:
         check_cmd("", f"check {url}")
 
         assert message_mock.call_count == 1
