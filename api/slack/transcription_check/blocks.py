@@ -104,6 +104,11 @@ def _get_check_comment_pending_actions(check: TranscriptionCheck) -> List[Dict]:
         },
         {
             "type": "button",
+            "text": {"type": "plain_text", "text": "Not fixed"},
+            "value": f"check_comment-unfixed_{check.id}",
+        },
+        {
+            "type": "button",
             "text": {"type": "plain_text", "text": "Revert"},
             "value": f"check_pending_{check.id}",
         },
@@ -126,6 +131,17 @@ def _get_check_comment_resolved_actions(check: TranscriptionCheck) -> List[Dict]
     ]
 
 
+def _get_check_comment_unfixed_actions(check: TranscriptionCheck) -> List[Dict]:
+    """Get the action buttons for a check with unfixed comment."""
+    return [
+        {
+            "type": "button",
+            "text": {"type": "plain_text", "text": "Revert"},
+            "value": f"check_comment-pending_{check.id}",
+        },
+    ]
+
+
 def _get_check_warning_pending_actions(check: TranscriptionCheck) -> List[Dict]:
     """Get the action buttons for a check with pending warning."""
     return [
@@ -134,6 +150,11 @@ def _get_check_warning_pending_actions(check: TranscriptionCheck) -> List[Dict]:
             "style": "primary",
             "text": {"type": "plain_text", "text": "Resolve"},
             "value": f"check_warning-resolved_{check.id}",
+        },
+        {
+            "type": "button",
+            "text": {"type": "plain_text", "text": "Not fixed"},
+            "value": f"check_warning-unfixed_{check.id}",
         },
         {
             "type": "button",
@@ -159,6 +180,17 @@ def _get_check_warning_resolved_actions(check: TranscriptionCheck) -> List[Dict]
     ]
 
 
+def _get_check_warning_unfixed_actions(check: TranscriptionCheck) -> List[Dict]:
+    """Get the action buttons for a check with unfixed warning."""
+    return [
+        {
+            "type": "button",
+            "text": {"type": "plain_text", "text": "Revert"},
+            "value": f"check_warning-pending_{check.id}",
+        },
+    ]
+
+
 def _get_check_actions(check: TranscriptionCheck) -> List[Dict]:
     """Get the action buttons for the check."""
     check_status = TranscriptionCheck.TranscriptionCheckStatus
@@ -173,10 +205,14 @@ def _get_check_actions(check: TranscriptionCheck) -> List[Dict]:
         return _get_check_comment_pending_actions(check)
     if check.status == check_status.COMMENT_RESOLVED:
         return _get_check_comment_resolved_actions(check)
+    if check.status == check_status.COMMENT_UNFIXED:
+        return _get_check_comment_unfixed_actions(check)
     if check.status == check_status.WARNING_PENDING:
         return _get_check_warning_pending_actions(check)
     if check.status == check_status.WARNING_RESOLVED:
         return _get_check_warning_resolved_actions(check)
+    if check.status == check_status.WARNING_UNFIXED:
+        return _get_check_warning_unfixed_actions(check)
 
     raise RuntimeError(f"Unexpected transcription check status: {check.status}")
 
@@ -197,10 +233,14 @@ def _get_check_status_text(check: TranscriptionCheck) -> str:
         if check.status == check_status.COMMENT_PENDING
         else f"*Comment resolved* by {mod_username}"
         if check.status == check_status.COMMENT_RESOLVED
+        else f"*Comment unfixed* by {mod_username}"
+        if check.status == check_status.COMMENT_UNFIXED
         else f"*Warning pending* by {mod_username}"
         if check.status == check_status.WARNING_PENDING
         else f"*Warning resolved* by {mod_username}"
         if check.status == check_status.WARNING_RESOLVED
+        else f"*Warning unfixed* by {mod_username}"
+        if check.status == check_status.WARNING_UNFIXED
         else f"_INVALID:_ {check.status}"
     )
 
