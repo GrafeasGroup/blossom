@@ -15,6 +15,8 @@ from authentication.models import BlossomUser
 logger = logging.getLogger("api.slack.transcription_check.actions")
 
 
+# Ignore complexity, I think it's still easy to understand
+# flake8: noqa: C901
 def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -> bool:
     """Update the DB model according to the action taken.
 
@@ -40,11 +42,17 @@ def _update_db_model(check: TranscriptionCheck, mod: BlossomUser, action: str) -
     elif action == "comment-resolved":
         check.status = check_status.COMMENT_RESOLVED
         check.complete_time = timezone.now()
+    elif action == "comment-unfixed":
+        check.status = check_status.COMMENT_UNFIXED
+        check.complete_time = timezone.now()
     elif action == "warning-pending":
         check.status = check_status.WARNING_PENDING
         check.complete_time = None
     elif action == "warning-resolved":
         check.status = check_status.WARNING_RESOLVED
+        check.complete_time = timezone.now()
+    elif action == "warning-unfixed":
+        check.status = check_status.WARNING_UNFIXED
         check.complete_time = timezone.now()
     else:
         # Unknown action
