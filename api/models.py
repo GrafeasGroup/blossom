@@ -340,12 +340,16 @@ class TranscriptionCheck(models.Model):
         COMMENT_PENDING = "comment_pending"
         # The moderator left a comment and the user has fixed the errors.
         COMMENT_RESOLVED = "comment_resolved"
+        # The moderator left a comment and the user has NOT fixed the errors.
+        COMMENT_UNFIXED = "comment_unfixed"
         # The moderator discovered major errors (e.g. a PI violation) and  is waiting
         # for the user to fix them (e.g. delete the transcription).
         WARNING_PENDING = "warning_pending"
         # The moderator warned the user and they responded and resolved any issues,
         # if applicable.
         WARNING_RESOLVED = "warning_resolved"
+        # The moderator warned the user and they didn't respond or resolve the issues.
+        WARNING_UNFIXED = "warning_unfixed"
 
     # The Transcription for which the check is made.
     transcription = models.ForeignKey(Transcription, on_delete=models.CASCADE)

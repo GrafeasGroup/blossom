@@ -37,10 +37,14 @@ def _is_time_recent(start: datetime, time: Optional[datetime]) -> bool:
         ("approved", CheckStatus.PENDING, CheckStatus.APPROVED),
         ("comment-pending", CheckStatus.PENDING, CheckStatus.COMMENT_PENDING),
         ("comment-pending", CheckStatus.COMMENT_RESOLVED, CheckStatus.COMMENT_PENDING),
+        ("comment-pending", CheckStatus.COMMENT_UNFIXED, CheckStatus.COMMENT_PENDING),
         ("comment-resolved", CheckStatus.COMMENT_PENDING, CheckStatus.COMMENT_RESOLVED),
+        ("comment-unfixed", CheckStatus.COMMENT_PENDING, CheckStatus.COMMENT_UNFIXED),
         ("warning-pending", CheckStatus.PENDING, CheckStatus.WARNING_PENDING),
         ("warning-pending", CheckStatus.WARNING_RESOLVED, CheckStatus.WARNING_PENDING),
+        ("warning-pending", CheckStatus.WARNING_UNFIXED, CheckStatus.WARNING_PENDING),
         ("warning-resolved", CheckStatus.WARNING_PENDING, CheckStatus.WARNING_RESOLVED),
+        ("warning-unfixed", CheckStatus.WARNING_PENDING, CheckStatus.WARNING_UNFIXED),
         ("pending", CheckStatus.COMMENT_PENDING, CheckStatus.PENDING),
         ("pending", CheckStatus.WARNING_PENDING, CheckStatus.PENDING),
         ("claim", CheckStatus.PENDING, CheckStatus.PENDING),
@@ -105,7 +109,14 @@ def test_update_db_model_unclaim(client: Client) -> None:
 
 
 @pytest.mark.parametrize(
-    "action", ["approved", "comment-resolved", "warning-resolved"],
+    "action",
+    [
+        "approved",
+        "comment-resolved",
+        "warning-resolved",
+        "comment-unfixed",
+        "warning-unfixed",
+    ],
 )
 def test_update_db_model_set_complete_time(client: Client, action: str) -> None:
     """Test that the complete time is updated after completing a check."""
