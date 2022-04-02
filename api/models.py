@@ -1,7 +1,7 @@
 """Specification of classes used within the API."""
 import logging
 import uuid
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import urlparse
 
 from django.conf import settings
@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 
+from api.slack import client
 from ocr.errors import OCRError
 from ocr.helpers import escape_reddit_links, process_image, replace_shortlinks
 
@@ -392,3 +393,17 @@ class TranscriptionCheck(models.Model):
     slack_message_ts = models.CharField(
         max_length=50, default=None, null=True, blank=True
     )
+
+    def get_slack_url(self) -> Optional[str]:
+        """Get the permalink for the check on Slack."""
+        if not self.slack_channel_id or not self.slack_message_ts:
+            return None
+
+        url_response = client.chat_getPermalink(
+            channel=self.slack_channel_id, message_ts=self.slack_message_ts,
+        )
+
+        if not url_response.get("ok"):
+            return None
+
+        return url_response.get("permalink")
