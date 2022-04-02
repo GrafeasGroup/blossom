@@ -6,7 +6,12 @@ from unittest.mock import patch
 from django.test import Client
 
 from api.models import TranscriptionCheck
-from api.slack.commands.warnings import _get_warning_checks, _warning_entry
+from api.slack.commands.warnings import (
+    _get_warning_checks,
+    _warning_entry,
+    _warning_text,
+    warnings_cmd,
+)
 from blossom.strings import translation
 from utils.test_helpers import (
     create_check,
@@ -79,3 +84,44 @@ def test_get_warning_checks(client: Client) -> None:
     actual = _get_warning_checks(user)
 
     assert [check.id for check in actual] == [13, 14]
+
+
+def test_warning_text_no_warnings(client: Client) -> None:
+    """Test that other text is displayed if no warnings are available."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+
+    check_properties = [
+        (10, CheckStatus.COMMENT_PENDING),
+        (11, CheckStatus.COMMENT_RESOLVED),
+        (12, CheckStatus.PENDING),
+        (15, CheckStatus.APPROVED),
+    ]
+
+    for (ch_id, status) in check_properties:
+        submission = create_submission(claimed_by=user, completed_by=user,)
+        transcription = create_transcription(
+            submission=submission, user=user, create_time=datetime(2022, 3, 2, ch_id)
+        )
+        create_check(transcription=transcription, status=status, id=ch_id)
+
+    expected = i18n["slack"]["warnings"]["no_warnings"].format(username="Userson")
+    actual = _warning_text(user)
+
+    assert actual == expected
+
+
+def test_warnings_cmd(client: Client) -> None:
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+
+    with patch(
+        "api.slack.commands.warnings._warning_text", return_value="Text"
+    ) as txt_mock, patch(
+        "api.slack.commands.warnings.client.chat_postMessage"
+    ) as msg_mock:
+        warnings_cmd(channel="", message="warnings Userson")
+
+        assert txt_mock.call_count == 1
+        assert txt_mock.call_args[0][0] == user
+
+        assert msg_mock.call_count == 1
+        assert msg_mock.call_args[1]["text"] == "Text"
