@@ -71,7 +71,8 @@ def test_get_warning_checks(client: Client) -> None:
         (12, CheckStatus.PENDING),
         (13, CheckStatus.WARNING_PENDING),
         (14, CheckStatus.WARNING_RESOLVED),
-        (15, CheckStatus.APPROVED),
+        (15, CheckStatus.WARNING_UNFIXED),
+        (16, CheckStatus.APPROVED),
     ]
 
     for (ch_id, status) in check_properties:
@@ -83,7 +84,7 @@ def test_get_warning_checks(client: Client) -> None:
 
     actual = _get_warning_checks(user)
 
-    assert [check.id for check in actual] == [13, 14]
+    assert [check.id for check in actual] == [13, 14, 15]
 
 
 def test_warning_text_no_warnings(client: Client) -> None:

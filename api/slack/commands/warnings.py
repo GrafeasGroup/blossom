@@ -39,11 +39,15 @@ def _get_warning_checks(user: BlossomUser) -> List[TranscriptionCheck]:
         transcription__author=user,
         status=TranscriptionCheck.TranscriptionCheckStatus.WARNING_RESOLVED,
     )
+    unfixed_warnings = TranscriptionCheck.objects.filter(
+        transcription__author=user,
+        status=TranscriptionCheck.TranscriptionCheckStatus.WARNING_UNFIXED,
+    )
 
     # Aggregate the warnings and sort them by the transcription date
     warnings: List[TranscriptionCheck] = list(pending_warnings) + list(
         resolved_warnings
-    )
+    ) + list(unfixed_warnings)
     warnings.sort(key=lambda ch: ch.transcription.create_time)
 
     return warnings
