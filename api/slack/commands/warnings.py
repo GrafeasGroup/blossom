@@ -12,10 +12,7 @@ i18n = translation()
 
 def _warning_entry(check: TranscriptionCheck) -> str:
     """Get the list entry for a single check."""
-    check_url_response = client.chat_getPermalink(
-        channel=check.slack_channel_id, message_ts=check.slack_message_ts,
-    )
-    check_url = check_url_response.data.get("permalink")
+    check_url = check.get_slack_url()
 
     transcription = check.transcription
     tr_url = transcription.url
