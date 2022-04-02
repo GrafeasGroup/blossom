@@ -6,7 +6,7 @@ from unittest.mock import patch
 from django.test import Client
 
 from api.models import TranscriptionCheck
-from api.slack.commands.warnings import _warning_entry
+from api.slack.commands.warnings import _get_warning_checks, _warning_entry
 from blossom.strings import translation
 from utils.test_helpers import (
     create_check,
@@ -16,6 +16,8 @@ from utils.test_helpers import (
 )
 
 i18n = translation()
+
+CheckStatus = TranscriptionCheck.TranscriptionCheckStatus
 
 
 def test_warning_entry(client: Client) -> None:
@@ -35,8 +37,7 @@ def test_warning_entry(client: Client) -> None:
         create_time=datetime(2022, 2, 3, 13, 2),
     )
     check = create_check(
-        transcription=transcription,
-        status=TranscriptionCheck.TranscriptionCheckStatus.WARNING_RESOLVED,
+        transcription=transcription, status=CheckStatus.WARNING_RESOLVED,
     )
 
     expected = i18n["slack"]["warnings"]["warning_entry"].format(
@@ -53,3 +54,28 @@ def test_warning_entry(client: Client) -> None:
         actual = _warning_entry(check)
 
     assert actual == expected
+
+
+def test_get_warning_checks(client: Client) -> None:
+    """Test that a warning checks are filtered correctly."""
+    client, headers, user = setup_user_client(client, id=100, username="Userson")
+
+    check_properties = [
+        (10, CheckStatus.COMMENT_PENDING),
+        (11, CheckStatus.COMMENT_RESOLVED),
+        (12, CheckStatus.PENDING),
+        (13, CheckStatus.WARNING_PENDING),
+        (14, CheckStatus.WARNING_RESOLVED),
+        (15, CheckStatus.APPROVED),
+    ]
+
+    for (ch_id, status) in check_properties:
+        submission = create_submission(claimed_by=user, completed_by=user,)
+        transcription = create_transcription(
+            submission=submission, user=user, create_time=datetime(2022, 3, 2, ch_id)
+        )
+        create_check(transcription=transcription, status=status, id=ch_id)
+
+    actual = _get_warning_checks(user)
+
+    assert [check.id for check in actual] == [13, 14]
