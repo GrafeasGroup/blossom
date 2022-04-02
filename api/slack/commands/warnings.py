@@ -44,7 +44,7 @@ def _get_warning_checks(user: BlossomUser) -> List[TranscriptionCheck]:
     warnings: List[TranscriptionCheck] = list(pending_warnings) + list(
         resolved_warnings
     )
-    warnings.sort(key=lambda ch: ch.transcription.create_time, reverse=True)
+    warnings.sort(key=lambda ch: ch.transcription.create_time)
 
     return warnings
 
