@@ -28,7 +28,10 @@ def check_cmd(channel: str, message: str) -> None:
     # Check if the URL is valid
     if normalized_url is None:
         client.chat_postMessage(
-            channel=channel, text=i18n["slack"]["check"]["invalid_url"].format(url=url),
+            channel=channel,
+            text=i18n["slack"]["check"]["invalid_url"].format(url=url),
+            unfurl_links=False,
+            unfurl_media=False,
         )
         return
 
@@ -54,6 +57,8 @@ def check_cmd(channel: str, message: str) -> None:
                             tr_url=transcription.url,
                             username=transcription.author.username,
                         ),
+                        unfurl_links=False,
+                        unfurl_media=False,
                     )
                     return
 
@@ -80,6 +85,8 @@ def check_cmd(channel: str, message: str) -> None:
                     tr_url=transcription.url,
                     username=transcription.author.username,
                 ),
+                unfurl_links=False,
+                unfurl_media=False,
             )
         else:
             # No transcription for post
@@ -88,6 +95,8 @@ def check_cmd(channel: str, message: str) -> None:
                 text=i18n["slack"]["check"]["no_transcription"].format(
                     tor_url=find_response["submission"].tor_url,
                 ),
+                unfurl_links=False,
+                unfurl_media=False,
             )
             return
     else:
@@ -95,5 +104,7 @@ def check_cmd(channel: str, message: str) -> None:
         client.chat_postMessage(
             channel=channel,
             text=i18n["slack"]["check"]["no_submission"].format(url=normalized_url),
+            unfurl_links=False,
+            unfurl_media=False,
         )
         return
