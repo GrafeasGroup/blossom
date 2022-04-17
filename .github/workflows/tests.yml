@@ -2,6 +2,9 @@ name: Tests
 
 on: [pull_request]
 
+env:
+  COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_SECRET }}
+
 jobs:
   build:
 
@@ -26,8 +29,6 @@ jobs:
         sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev -y
         poetry install
     - name: Run Tests
-      env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_SECRET }}
       run: |
         poetry run pytest --workers=auto
         poetry run coveralls
