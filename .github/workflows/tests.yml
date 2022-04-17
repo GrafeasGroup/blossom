@@ -32,6 +32,6 @@ jobs:
       # the job from exploding
       run: |
         poetry run pytest --workers=auto
-        if ["$COVERALLS_REPO_TOKEN" != ""]; then
+        if [ "$COVERALLS_REPO_TOKEN" != "" ]; then
           poetry run coveralls
         fi
