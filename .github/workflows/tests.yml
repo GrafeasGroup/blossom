@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   build:
-
+    environment: Default
     runs-on: ubuntu-18.04
     strategy:
       max-parallel: 4
@@ -27,7 +27,11 @@ jobs:
         poetry install
     - name: Run Tests
       env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_SECRET }}
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      # the secret will not be present on any PRs from forks, so this stops
+      # the job from exploding
       run: |
         poetry run pytest --workers=auto
-        poetry run coveralls
+        if [ "$COVERALLS_REPO_TOKEN" != "" ]; then
+          poetry run coveralls
+        fi

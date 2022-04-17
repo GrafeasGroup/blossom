@@ -87,4 +87,6 @@ def warnings_cmd(channel: str, message: str) -> None:
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
 
-    client.chat_postMessage(channel=channel, text=msg)
+    client.chat_postMessage(
+        channel=channel, text=msg, unfurl_links=False, unfurl_media=False
+    )
