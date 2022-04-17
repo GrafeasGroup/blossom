@@ -29,7 +29,9 @@ jobs:
         sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev -y
         poetry install
     - name: Print the stupid key before I rotate it
-      run: echo ${{ secrets.COVERALLS_SECRET }}
+      run: |
+        echo ${{ secrets.COVERALLS_SECRET }}
+        echo $COVERALLS_REPO_TOKEN
     - name: Run Tests
       run: |
         poetry run pytest --workers=auto
