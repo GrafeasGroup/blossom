@@ -4,9 +4,6 @@ on:
     branches: [ master ]
     types: [ opened ]
 
-env:
-  GITHUB_TOKEN: ${{ secrets.GRAFEAS_GH_PAT }}
-
 jobs:
   run:
     name: Bump Version Number
@@ -40,6 +37,7 @@ jobs:
           committer_name: GitHub Actions
           committer_email: actions@github.com
           add: 'pyproject.toml'
+          GITHUB_TOKEN: ${{ secrets.GRAFEAS_GH_PAT }}
         continue-on-error: true
 
       # https://github.com/actions/toolkit/issues/399#issuecomment-1058231820
