@@ -1,8 +1,8 @@
 name: Bump Version Number
 on:
-  push:
-    branches:
-      - master
+  pull_request:
+    branches: [ master ]
+    types: [ opened ]
 
 jobs:
   run:
@@ -37,3 +37,8 @@ jobs:
           committer_name: GitHub Actions
           committer_email: actions@github.com
           add: 'pyproject.toml'
+        continue-on-error: true
+
+      # https://github.com/actions/toolkit/issues/399#issuecomment-1058231820
+      - name: Allow failures
+        run: true
