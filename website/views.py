@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Dict
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpRequest, HttpResponse
@@ -68,17 +68,17 @@ class PostUpdate(GrafeasStaffRequired, UpdateView):
 class PostAdd(GrafeasStaffRequired, TemplateView):
 
     default_context = {
-            "form": PostAddForm(),
-            "header": "Add a new post!",
-            "subheader": (
-                'Remember to toggle "Published" if you want your post to appear!'
-            ),
-            # enable the WYSIWYG editor
-            "enable_trumbowyg": True,
-            # id of html element we want to attach the trumbowyg to
-            "trumbowyg_target": "id_body",
-            "fullwidth_view": True,
-        }
+        "form": PostAddForm(),
+        "header": "Add a new post!",
+        "subheader": (
+            'Remember to toggle "Published" if you want your post to appear!'
+        ),
+        # enable the WYSIWYG editor
+        "enable_trumbowyg": True,
+        # id of html element we want to attach the trumbowyg to
+        "trumbowyg_target": "id_body",
+        "fullwidth_view": True,
+    }
 
     def get(
         self, request: HttpRequest, *args: object, **kwargs: object
@@ -102,7 +102,7 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
             new_post.save()
             return HttpResponseRedirect(f"{new_post.get_absolute_url()}edit")
         context = get_additional_context(self.default_context)
-        context.update({'form': form})
+        context.update({"form": form})
         return render(request, "website/generic_form.html", context)
 
 
@@ -134,7 +134,7 @@ def user_create(request: HttpRequest) -> HttpResponse:
     return render(request, "website/generic_form.html", context)
 
 
-def handler404(request: HttpRequest, exception: Any) -> HttpResponse:
+def handler404(request: HttpRequest, exception: Exception) -> HttpResponse:
     """View to handle 404 errors."""
     context = get_additional_context(
         {
