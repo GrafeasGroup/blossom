@@ -14,7 +14,9 @@ SECRET_KEY = (
 )
 
 CACHES = {
-    "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache",}  # noqa: E231
+    "default": {
+        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+    }  # noqa: E231
 }
 
 DATABASES = {
@@ -27,7 +29,11 @@ DATABASES = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},  # noqa: E231
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },  # noqa: E231
     "loggers": {
         "django": {
             "handlers": ["console"],

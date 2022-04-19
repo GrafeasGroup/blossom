@@ -38,7 +38,7 @@ django-decorator-include = "^3.0"
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.2.2"
-black = "^19.10b0"
+black = "^22.3.0"
 flake8 = { version = "^3.7.9", allow-prereleases = true }
 flake8-annotations = "^2.0.1"
 flake8-black = "^0.1.1"

@@ -160,7 +160,11 @@ DATABASES = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},  # noqa: E231
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },  # noqa: E231
     "loggers": {
         "django": {
             "handlers": ["console"],
