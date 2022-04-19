@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Dict
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpRequest, HttpResponse
@@ -47,14 +47,7 @@ class PostUpdate(GrafeasStaffRequired, UpdateView):
     """Modify a post on the website."""
 
     model = Post
-    fields = [
-        "title",
-        "body",
-        "published",
-        "standalone_section",
-        "header_order",
-        "engineeringblogpost",
-    ]
+    form_class = PostAddForm
     template_name = "website/generic_form.html"
 
     def get_context_data(self, **kwargs: object) -> Dict:
@@ -73,6 +66,20 @@ class PostUpdate(GrafeasStaffRequired, UpdateView):
 
 
 class PostAdd(GrafeasStaffRequired, TemplateView):
+
+    default_context = {
+        "form": PostAddForm(),
+        "header": "Add a new post!",
+        "subheader": (
+            'Remember to toggle "Published" if you want your post to appear!'
+        ),
+        # enable the WYSIWYG editor
+        "enable_trumbowyg": True,
+        # id of html element we want to attach the trumbowyg to
+        "trumbowyg_target": "id_body",
+        "fullwidth_view": True,
+    }
+
     def get(
         self, request: HttpRequest, *args: object, **kwargs: object
     ) -> HttpResponse:
@@ -81,19 +88,7 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
 
         This applies to both main site and the engineering blog.
         """
-        context = {
-            "form": PostAddForm(),
-            "header": "Add a new post!",
-            "subheader": (
-                'Remember to toggle "Published" if you want your post to appear!'
-            ),
-            # enable the WYSIWYG editor
-            "enable_trumbowyg": True,
-            # id of html element we want to attach the trumbowyg to
-            "trumbowyg_target": "id_body",
-            "fullwidth_view": True,
-        }
-        context = get_additional_context(context)
+        context = get_additional_context(self.default_context)
         return render(request, "website/generic_form.html", context)
 
     def post(
@@ -106,6 +101,9 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
             new_post.author = request.user
             new_post.save()
             return HttpResponseRedirect(f"{new_post.get_absolute_url()}edit")
+        context = get_additional_context(self.default_context)
+        context.update({"form": form})
+        return render(request, "website/generic_form.html", context)
 
 
 class AdminView(GrafeasStaffRequired, TemplateView):
@@ -113,7 +111,7 @@ class AdminView(GrafeasStaffRequired, TemplateView):
         self, request: HttpRequest, *args: object, **kwargs: object
     ) -> HttpResponse:
         """Render the admin view."""
-        context = {"posts": Post.objects.all()}
+        context = {"posts": Post.objects.all(), "fullwidth_view": True}
         context = get_additional_context(context)
         return render(request, "website/admin.html", context)
 
@@ -136,7 +134,7 @@ def user_create(request: HttpRequest) -> HttpResponse:
     return render(request, "website/generic_form.html", context)
 
 
-def handler404(request: HttpRequest, exception: Any) -> HttpResponse:
+def handler404(request: HttpRequest, exception: Exception) -> HttpResponse:
     """View to handle 404 errors."""
     context = get_additional_context(
         {

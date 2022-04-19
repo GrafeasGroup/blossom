@@ -4,7 +4,6 @@ on: [pull_request]
 
 jobs:
   build:
-    environment: Default
     runs-on: ubuntu-18.04
     strategy:
       max-parallel: 4
