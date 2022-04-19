@@ -4,6 +4,16 @@
 {% load string_helpers %}
 
 {% block content %}
+    <!-- Popperjs -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.2/dist/umd/popper.min.js"
+            crossorigin="anonymous"></script>
+    <!-- Tempus Dominus JavaScript -->
+    <script src="https://cdn.jsdelivr.net/gh/Eonasdan/tempus-dominus@master/dist/js/tempus-dominus.js"
+            crossorigin="anonymous"></script>
+
+    <!-- Tempus Dominus Styles -->
+    <link href="https://cdn.jsdelivr.net/gh/Eonasdan/tempus-dominus@master/dist/css/tempus-dominus.css"
+          rel="stylesheet" crossorigin="anonymous">
     <div class="container mt-4">
         {% if slim_form %}
             <div class="row">
@@ -232,6 +242,22 @@
                 }
             });
         })
+        new tempusDominus.TempusDominus(document.getElementById('id_date'), {
+            display: {
+                components: {
+                    calendar: true,
+                    date: true,
+                    month: true,
+                    year: true,
+                    decades: true,
+                    clock: true,
+                    hours: true,
+                    minutes: true,
+                    seconds: false,
+                    useTwentyfourHour: false,
+                }
+            }
+        });
     </script>
 
     {% if enable_trumbowyg %}

@@ -11,12 +11,19 @@ class LoginForm(forms.Form):
 
 
 class PostAddForm(forms.ModelForm):
+    # is AM / PM not being detected correctly?
+    date = forms.DateTimeField(input_formats=['%m/%d/%Y, %H:%M %p'], widget=forms.DateTimeInput(attrs={
+        'class': 'form-control datetimepicker-input',
+        'data-target': '#datetimepicker1'
+    }))
+
     class Meta:
         model = Post
         fields = [
             "title",
             "body",
             "published",
+            "date",
             "standalone_section",
             "engineeringblogpost",
             "header_order",

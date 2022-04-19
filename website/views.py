@@ -47,14 +47,7 @@ class PostUpdate(GrafeasStaffRequired, UpdateView):
     """Modify a post on the website."""
 
     model = Post
-    fields = [
-        "title",
-        "body",
-        "published",
-        "standalone_section",
-        "header_order",
-        "engineeringblogpost",
-    ]
+    form_class = PostAddForm
     template_name = "website/generic_form.html"
 
     def get_context_data(self, **kwargs: object) -> Dict:
@@ -73,15 +66,8 @@ class PostUpdate(GrafeasStaffRequired, UpdateView):
 
 
 class PostAdd(GrafeasStaffRequired, TemplateView):
-    def get(
-        self, request: HttpRequest, *args: object, **kwargs: object
-    ) -> HttpResponse:
-        """
-        Build and render the page for adding a new post.
 
-        This applies to both main site and the engineering blog.
-        """
-        context = {
+    default_context = {
             "form": PostAddForm(),
             "header": "Add a new post!",
             "subheader": (
@@ -93,7 +79,16 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
             "trumbowyg_target": "id_body",
             "fullwidth_view": True,
         }
-        context = get_additional_context(context)
+
+    def get(
+        self, request: HttpRequest, *args: object, **kwargs: object
+    ) -> HttpResponse:
+        """
+        Build and render the page for adding a new post.
+
+        This applies to both main site and the engineering blog.
+        """
+        context = get_additional_context(self.default_context)
         return render(request, "website/generic_form.html", context)
 
     def post(
@@ -106,6 +101,9 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
             new_post.author = request.user
             new_post.save()
             return HttpResponseRedirect(f"{new_post.get_absolute_url()}edit")
+        context = get_additional_context(self.default_context)
+        context.update({'form': form})
+        return render(request, "website/generic_form.html", context)
 
 
 class AdminView(GrafeasStaffRequired, TemplateView):
@@ -113,7 +111,7 @@ class AdminView(GrafeasStaffRequired, TemplateView):
         self, request: HttpRequest, *args: object, **kwargs: object
     ) -> HttpResponse:
         """Render the admin view."""
-        context = {"posts": Post.objects.all()}
+        context = {"posts": Post.objects.all(), "fullwidth_view": True}
         context = get_additional_context(context)
         return render(request, "website/admin.html", context)
 

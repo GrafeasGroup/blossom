@@ -23,7 +23,7 @@
         </div>
         <div class="col-xs-0 col-sm-4"></div>
         <div class="col-xs-12 col-sm-4">
-            <span class="text-muted">Disclaimer:<br>Grafeas Group, Ltd. is a registered 501(c)(3) nonprofit in the state of Indiana, U.S.A. Continued use of content associated with Grafeas Group indicates acceptance of our <a
+            <span class="text-muted">Grafeas Group, Ltd. is recognized by the IRS as a 501(c)(3) tax-exempt charity. Continued use of content associated with Grafeas Group indicates acceptance of our <a
                     href="{{ tos.get_absolute_url }}" class="real-link text-muted">terms of service.</a></span>
         </div>
     </div>
