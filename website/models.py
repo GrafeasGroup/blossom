@@ -19,7 +19,7 @@ class Post(models.Model):
     # about page, for example
     standalone_section = models.BooleanField(default=False)
 
-    slug = models.SlugField(default="", editable=False, max_length=70)
+    slug = models.SlugField(default="", editable=False, max_length=300)
     published = models.BooleanField(default=False)
     header_order = models.IntegerField(
         help_text="Optional: an integer from 1-99 -- lower numbers will appear "
