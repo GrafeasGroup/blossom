@@ -90,6 +90,18 @@ def user_transcription_quality_info(user: BlossomUser) -> Dict:
     check_ratio = check_count / gamma if gamma > 0 else 0
     checks = f"{check_count} ({check_ratio:.1%} of transcriptions)"
 
+    # The comments for the given user
+    user_comments_pending = user_checks.filter(status=check_status.COMMENT_PENDING)
+    user_comments_resolved = user_checks.filter(status=check_status.COMMENT_RESOLVED)
+    user_comments_unfixed = user_checks.filter(status=check_status.COMMENT_UNFIXED)
+    comments_count = (
+        user_comments_pending.count()
+        + user_comments_resolved.count()
+        + user_comments_unfixed.count()
+    )
+    comments_ratio = comments_count / check_count if check_count > 0 else 0
+    comments = f"{comments_count} ({comments_ratio:.1%} of checks)"
+
     # The warnings for the given user
     user_warnings_pending = user_checks.filter(status=check_status.WARNING_PENDING)
     user_warnings_resolved = user_checks.filter(status=check_status.WARNING_RESOLVED)
@@ -102,11 +114,13 @@ def user_transcription_quality_info(user: BlossomUser) -> Dict:
     warnings_ratio = warnings_count / check_count if check_count > 0 else 0
     warnings = f"{warnings_count} ({warnings_ratio:.1%} of checks)"
 
+    # Watch status
     watch_status = user.transcription_check_reason(ignore_low_activity=True)
 
     return {
         "Checks": checks,
         "Warnings": warnings,
+        "Comments": comments,
         "Watch status": watch_status,
     }
 
