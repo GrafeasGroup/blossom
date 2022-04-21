@@ -3,6 +3,7 @@ from typing import Dict
 
 from django.utils import timezone
 
+from api.models import TranscriptionCheck
 from api.serializers import VolunteerSerializer
 from api.slack import client
 from api.slack.utils import dict_to_table, parse_user
@@ -43,8 +44,9 @@ def info_cmd(channel: str, message: str) -> None:
 def user_info_text(user: BlossomUser) -> str:
     """Get the info message for the given user."""
     general = user_general_info(user)
+    transcription_quality = user_transcription_quality_info(user)
 
-    return f"TODO\n{general}"
+    return f"TODO\n{general}\n{transcription_quality}"
 
 
 def user_general_info(user: BlossomUser) -> Dict:
@@ -59,6 +61,38 @@ def user_general_info(user: BlossomUser) -> Dict:
         "Gamma": gamma,
         "Joined on": joined_on,
         "Last active": last_active,
+    }
+
+
+def user_transcription_quality_info(user: BlossomUser) -> Dict:
+    """Get info about the transcription quality of the given user."""
+    gamma = user.gamma
+    check_status = TranscriptionCheck.TranscriptionCheckStatus
+
+    # The checks for the given user
+    user_checks = TranscriptionCheck.objects.filter(transcription__author=user)
+    check_count = user_checks.count()
+    check_ratio = check_count / gamma if gamma > 0 else 0
+    checks = f"{check_count} ({check_ratio:.1%} of transcriptions)"
+
+    # The warnings for the given user
+    user_warnings_pending = user_checks.filter(status=check_status.WARNING_PENDING)
+    user_warnings_resolved = user_checks.filter(status=check_status.WARNING_RESOLVED)
+    user_warnings_unfixed = user_checks.filter(status=check_status.WARNING_UNFIXED)
+    warnings_count = (
+        user_warnings_pending.count()
+        + user_warnings_resolved.count()
+        + user_warnings_unfixed.count()
+    )
+    warnings_ratio = warnings_count / check_count if check_count > 0 else 0
+    warnings = f"{warnings_count} ({warnings_ratio:.1%} of checks)"
+
+    watch_status = user.transcription_check_reason()
+
+    return {
+        "Checks": checks,
+        "Warnings": warnings,
+        "Watch status": watch_status,
     }
 
 
