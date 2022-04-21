@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Dict
+from typing import Dict, Optional
 
 from django.utils import timezone
 
@@ -39,7 +39,7 @@ def info_cmd(channel: str, message: str) -> None:
 
 def user_info_text(user: BlossomUser) -> str:
     """Get the info message for the given user."""
-    name_link = f"<https://reddit.com/u/{user.username}|{user.username}>"
+    name_link = f"<https://reddit.com/u/{user.username}|u/{user.username}>"
     title = f"Info about *{name_link}*:"
 
     general = _format_info_section("General", user_general_info(user))
@@ -70,7 +70,7 @@ def user_general_info(user: BlossomUser) -> Dict:
     recent_gamma = user.gamma_at_time(start_time=timezone.now() - timedelta(weeks=2))
     gamma = f"{total_gamma} Γ ({recent_gamma} Γ in last 2 weeks)"
     joined_on = _format_time(user.date_joined)
-    last_active = _format_time(user.date_last_active())
+    last_active = _format_time(user.date_last_active()) or "Never"
 
     return {
         "Gamma": gamma,
@@ -102,7 +102,7 @@ def user_transcription_quality_info(user: BlossomUser) -> Dict:
     warnings_ratio = warnings_count / check_count if check_count > 0 else 0
     warnings = f"{warnings_count} ({warnings_ratio:.1%} of checks)"
 
-    watch_status = user.transcription_check_reason()
+    watch_status = user.transcription_check_reason(ignore_low_activity=True)
 
     return {
         "Checks": checks,
@@ -131,8 +131,11 @@ def bool_str(bl: bool) -> str:
     return "Yes" if bl else "No"
 
 
-def _format_time(time: datetime) -> str:
+def _format_time(time: Optional[datetime]) -> Optional[str]:
     """Format the given time in absolute and relative strings."""
+    if time is None:
+        return None
+
     now = timezone.now()
     absolute = time.date().isoformat()
 
