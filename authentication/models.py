@@ -37,14 +37,14 @@ LOW_ACTIVITY_THRESHOLD = 5
 
 class BlossomUserManager(UserManager):
     # https://stackoverflow.com/a/7774039
-    def filter(self, **kwargs: Any) -> QuerySet:
+    def filter(self, **kwargs: Any) -> QuerySet:  # noqa: ANN401
         """Override `filter` to make usernames case insensitive."""
         if "username" in kwargs:
             kwargs["username__iexact"] = kwargs["username"]
             del kwargs["username"]
         return super().filter(**kwargs)
 
-    def get(self, **kwargs: Any) -> QuerySet:
+    def get(self, **kwargs: Any) -> QuerySet:  # noqa: ANN401
         """Override `get` to make usernames case insensitive."""
         if "username" in kwargs:
             kwargs["username__iexact"] = kwargs["username"]
@@ -99,6 +99,30 @@ class BlossomUser(AbstractUser):
     blacklisted = models.BooleanField(default=False)
 
     objects = BlossomUserManager()
+
+    def date_last_active(self) -> Optional[datetime]:
+        """Return the time where the user was last active.
+
+        This will give the time where the user last claimed or completed a post.
+        """
+        recently_claimed = (
+            Submission.objects.filter(claimed_by=self).order_by("-claim_time").first()
+        )
+        recent_claim_time = recently_claimed.claim_time if recently_claimed else None
+
+        recently_completed = (
+            Submission.objects.filter(completed_by=self)
+            .order_by("-complete_time")
+            .first()
+        )
+        recent_complete_time = (
+            recently_completed.complete_time if recently_completed else None
+        )
+
+        if recent_claim_time and recent_complete_time:
+            return max(recent_complete_time, recent_claim_time)
+
+        return recent_claim_time or recent_complete_time
 
     @property
     def gamma(self) -> int:
@@ -184,7 +208,8 @@ class BlossomUser(AbstractUser):
         """
         recent_date = datetime.now(tz=pytz.UTC) - LOW_ACTIVITY_TIMEDELTA
         recent_transcriptions = Submission.objects.filter(
-            completed_by=self, complete_time__gte=recent_date,
+            completed_by=self,
+            complete_time__gte=recent_date,
         ).count()
 
         return recent_transcriptions <= LOW_ACTIVITY_THRESHOLD
