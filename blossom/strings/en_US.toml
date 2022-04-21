@@ -56,14 +56,6 @@ Here's a status update on everything!
 ```
 """
 
-user_info="""
-User info for {0}:
-
-```
-{1}
-```
-"""
-
 github_sponsor_update="{0} GitHub Sponsors: [{1}] - {2} | {3} {0}"
 
 [slack.errors]

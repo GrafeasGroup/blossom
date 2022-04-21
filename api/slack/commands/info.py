@@ -4,7 +4,6 @@ from typing import Dict
 from django.utils import timezone
 
 from api.models import TranscriptionCheck
-from api.serializers import VolunteerSerializer
 from api.slack import client
 from api.slack.utils import dict_to_table, parse_user
 from api.views.misc import Summary
@@ -29,10 +28,7 @@ def info_cmd(channel: str, message: str) -> None:
     elif len(parsed_message) == 2:
         user, username = parse_user(parsed_message[1])
         if user:
-            v_data = VolunteerSerializer(user).data
-            msg = i18n["slack"]["user_info"].format(
-                username, "\n".join(dict_to_table(v_data))
-            )
+            msg = user_info_text(user)
         else:
             msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
     else:
@@ -43,11 +39,29 @@ def info_cmd(channel: str, message: str) -> None:
 
 def user_info_text(user: BlossomUser) -> str:
     """Get the info message for the given user."""
-    general = user_general_info(user)
-    transcription_quality = user_transcription_quality_info(user)
-    debug = user_debug_info(user)
+    name_link = f"<https://reddit.com/u/{user.username}|{user.username}>"
+    title = f"Info about *{name_link}*:"
 
-    return f"TODO\n{general}\n{transcription_quality}\n{debug}"
+    general = _format_info_section("General", user_general_info(user))
+    transcription_quality = _format_info_section(
+        "Transcription Quality", user_transcription_quality_info(user)
+    )
+    debug = _format_info_section("Debug Info", user_debug_info(user))
+
+    return f"{title}\n\n{general}\n\n{transcription_quality}\n\n{debug}"
+
+
+def _format_info_section(name: str, section: Dict) -> str:
+    """Format a given info section to a readable string.
+
+    Example:
+    *Section name*:
+    - Key 1: Value 1
+    - Key 2: Value 2
+    """
+    section_items = "\n".join([f"- {key}: {value}" for key, value in section.items()])
+
+    return f"*{name}*:\n{section_items}"
 
 
 def user_general_info(user: BlossomUser) -> Dict:
