@@ -45,8 +45,9 @@ def user_info_text(user: BlossomUser) -> str:
     """Get the info message for the given user."""
     general = user_general_info(user)
     transcription_quality = user_transcription_quality_info(user)
+    debug = user_debug_info(user)
 
-    return f"TODO\n{general}\n{transcription_quality}"
+    return f"TODO\n{general}\n{transcription_quality}\n{debug}"
 
 
 def user_general_info(user: BlossomUser) -> Dict:
@@ -94,6 +95,26 @@ def user_transcription_quality_info(user: BlossomUser) -> Dict:
         "Warnings": warnings,
         "Watch status": watch_status,
     }
+
+
+def user_debug_info(user: BlossomUser) -> Dict:
+    """Get debug info about the given user."""
+    user_id = f"`{user.id}`"
+    blacklisted = bool_str(user.blacklisted)
+    bot = bool_str(user.is_bot)
+    accepted_coc = bool_str(user.accepted_coc)
+
+    return {
+        "ID": user_id,
+        "Blacklisted": blacklisted,
+        "Bot": bot,
+        "Accepted CoC": accepted_coc,
+    }
+
+
+def bool_str(bl: bool) -> str:
+    """Convert a bool to a Yes/No string."""
+    return "Yes" if bl else "No"
 
 
 def _format_time(time: datetime) -> str:
