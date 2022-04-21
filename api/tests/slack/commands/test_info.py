@@ -35,6 +35,7 @@ def test_user_info_text_new_user(client: Client) -> None:
 *Transcription Quality*:
 - Checks: 0 (0.0% of transcriptions)
 - Warnings: 0 (0.0% of checks)
+- Comments: 0 (0.0% of checks)
 - Watch status: Automatic (100.0%)
 
 *Debug Info*:
@@ -64,14 +65,14 @@ def test_user_info_text_old_user(client: Client) -> None:
     )
 
     tr_data = [
-        (datetime(2020, 7, 3, tzinfo=pytz.UTC), True, False),
-        (datetime(2020, 7, 7, tzinfo=pytz.UTC), False, False),
-        (datetime(2020, 7, 9, tzinfo=pytz.UTC), False, False),
-        (datetime(2021, 4, 10, tzinfo=pytz.UTC), True, True),
-        (datetime(2021, 4, 12, tzinfo=pytz.UTC), False, False),
+        (datetime(2020, 7, 3, tzinfo=pytz.UTC), True, True, False),
+        (datetime(2020, 7, 7, tzinfo=pytz.UTC), False, False, False),
+        (datetime(2020, 7, 9, tzinfo=pytz.UTC), False, False, False),
+        (datetime(2021, 4, 10, tzinfo=pytz.UTC), True, False, True),
+        (datetime(2021, 4, 12, tzinfo=pytz.UTC), True, False, False),
     ]
 
-    for idx, (date, has_check, is_warning) in enumerate(tr_data):
+    for idx, (date, has_check, is_comment, is_warning) in enumerate(tr_data):
         submission = create_submission(
             id=100 + idx,
             create_time=date - timedelta(days=1),
@@ -87,7 +88,11 @@ def test_user_info_text_old_user(client: Client) -> None:
         if has_check:
             check_status = TranscriptionCheck.TranscriptionCheckStatus
             status = (
-                check_status.WARNING_RESOLVED if is_warning else check_status.APPROVED
+                check_status.COMMENT_RESOLVED
+                if is_comment
+                else check_status.WARNING_RESOLVED
+                if is_warning
+                else check_status.APPROVED
             )
             create_check(transcription, status=status)
 
@@ -99,8 +104,9 @@ def test_user_info_text_old_user(client: Client) -> None:
 - Last active: 2021-04-13 (1.1 weeks ago)
 
 *Transcription Quality*:
-- Checks: 2 (40.0% of transcriptions)
-- Warnings: 1 (50.0% of checks)
+- Checks: 3 (60.0% of transcriptions)
+- Warnings: 1 (33.3% of checks)
+- Comments: 1 (33.3% of checks)
 - Watch status: Automatic (100.0%)
 
 *Debug Info*:
