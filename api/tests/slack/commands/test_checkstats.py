@@ -49,29 +49,37 @@ def test_check_stats_msg(client: Client) -> None:
 
     for idx, (date, status, mod_usr) in enumerate(check_data):
         submission = create_submission(id=100 + idx)
+        date: datetime = date.astimezone(pytz.UTC)
         transcription = create_transcription(
-            submission, user, id=200 + idx, create_time=date.replace(tzinfo=pytz.UTC)
+            submission,
+            user,
+            id=200 + idx,
+            create_time=date,
         )
         create_check(
             transcription,
             moderator=mod_usr,
-            create_time=date.replace(tzinfo=pytz.UTC),
+            create_time=date,
+            complete_time=date,
             status=status,
         )
 
     expected = """Mod check stats for *<https://reddit.com/u/Moddington|u/Moddington>*:
 
-*All checks*:
+*Completed Checks*:
 - All-time: 7 (58.3% of all checks)
 - Last 2 weeks: 4 (66.7% of all recent checks)
+- Last completed: 2020-07-12 (1.6 weeks ago)
 
-*Warnings*:
+*Completed Warnings*:
 - All-time: 1 (14.3% of checks, 50.0% of all warnings)
 - Last 2 weeks: 0 (0.0% of recent checks, 0.0% of all recent warnings)
+- Last completed: 2020-07-05 (2.6 weeks ago)
 
-*Comments*:
+*Completed Comments*:
 - All-time: 3 (42.9% of checks, 75.0% of all comments)
-- Last 2 weeks: 2 (50.0% of recent checks, 100.0% of all recent comments)"""
+- Last 2 weeks: 2 (50.0% of recent checks, 100.0% of all recent comments)
+- Last completed: 2020-07-12 (1.6 weeks ago)"""
 
     with patch(
         "api.slack.commands.checkstats.timezone.now",
