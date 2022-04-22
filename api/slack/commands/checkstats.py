@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from api.models import TranscriptionCheck
 from api.slack import client
-from api.slack.commands.utils import format_stats_section
+from api.slack.commands.utils import format_stats_section, format_time
 from api.slack.utils import parse_user
 from authentication.models import BlossomUser
 from blossom.strings import translation
@@ -47,31 +47,29 @@ def check_stats_msg(mod: BlossomUser) -> str:
     """Get the message showing the check stats for the given mod."""
     recent_date = timezone.now() - RECENT_DELTA
 
-    server_checks = TranscriptionCheck.objects.all()
-    mod_checks = TranscriptionCheck.objects.filter(moderator=mod)
+    server_checks = TranscriptionCheck.objects.filter(complete_time__isnull=False)
+    mod_checks = server_checks.filter(moderator=mod)
 
-    recent_server_checks = server_checks.filter(
-        transcription__create_time__gte=recent_date
-    )
-    recent_mod_checks = mod_checks.filter(transcription__create_time__gte=recent_date)
+    recent_server_checks = server_checks.filter(complete_time__gte=recent_date)
+    recent_mod_checks = mod_checks.filter(complete_time__gte=recent_date)
 
     name_link = f"<https://reddit.com/u/{mod.username}|u/{mod.username}>"
     title = f"Mod check stats for *{name_link}*:"
 
     all_stats = format_stats_section(
-        "All checks",
+        "Completed Checks",
         _all_check_stats(
             server_checks, mod_checks, recent_server_checks, recent_mod_checks
         ),
     )
     warning_stats = format_stats_section(
-        "Warnings",
+        "Completed Warnings",
         _warning_check_stats(
             server_checks, mod_checks, recent_server_checks, recent_mod_checks
         ),
     )
     comment_stats = format_stats_section(
-        "Comments",
+        "Completed Comments",
         _comment_check_stats(
             server_checks, mod_checks, recent_server_checks, recent_mod_checks
         ),
@@ -101,9 +99,15 @@ def _all_check_stats(
         f"{recent_mod_check_count} ({recent_check_ratio:.1%} of all recent checks)"
     )
 
+    # Last check
+    last_check = mod_checks.order_by("-complete_time").first()
+    last_check_date = last_check.complete_time if last_check else None
+    last_check_msg = format_time(last_check_date)
+
     return {
         "All-time": check_msg,
         "Last 2 weeks": recent_check_msg,
+        "Last completed": last_check_msg,
     }
 
 
@@ -147,9 +151,15 @@ def _warning_check_stats(
         f"{recent_warning_ratio_all:.1%} of all recent warnings)"
     )
 
+    # Last warning
+    last_warning = mod_warnings.order_by("-complete_time").first()
+    last_warning_date = last_warning.complete_time if last_warning else None
+    last_warning_msg = format_time(last_warning_date)
+
     return {
         "All-time": warning_msg,
         "Last 2 weeks": recent_warning_msg,
+        "Last completed": last_warning_msg,
     }
 
 
@@ -192,9 +202,16 @@ def _comment_check_stats(
         f"({recent_comment_ratio_checks:.1%} of recent checks, "
         f"{recent_comment_ratio_all:.1%} of all recent comments)"
     )
+
+    # Last comment
+    last_comment = mod_comments.order_by("-complete_time").first()
+    last_comment_date = last_comment.complete_time if last_comment else None
+    last_comment_msg = format_time(last_comment_date)
+
     return {
         "All-time": comment_msg,
         "Last 2 weeks": recent_comment_msg,
+        "Last completed": last_comment_msg,
     }
 
 
