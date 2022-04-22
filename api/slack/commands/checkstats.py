@@ -48,7 +48,7 @@ def check_stats_msg(mod: BlossomUser) -> str:
     recent_date = timezone.now() - RECENT_DELTA
 
     server_checks = TranscriptionCheck.objects.all()
-    mod_checks = TranscriptionCheck.objects.filter(mod=mod)
+    mod_checks = TranscriptionCheck.objects.filter(moderator=mod)
 
     recent_server_checks = server_checks.filter(
         transcription__create_time__gte=recent_date
@@ -98,7 +98,7 @@ def _all_check_stats(
     recent_mod_check_count = recent_mod_checks.count()
     recent_check_ratio = _get_ratio(recent_mod_check_count, recent_server_check_count)
     recent_check_msg = (
-        f"{recent_mod_check_count} ({recent_check_ratio:.1%} of recent checks)"
+        f"{recent_mod_check_count} ({recent_check_ratio:.1%} of all recent checks)"
     )
 
     return {
