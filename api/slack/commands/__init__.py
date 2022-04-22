@@ -7,6 +7,7 @@ from typing import Dict
 from api.slack import client
 from api.slack.commands.blacklist import blacklist_cmd
 from api.slack.commands.check import check_cmd
+from api.slack.commands.checkstats import checkstats_cmd
 from api.slack.commands.dadjoke import dadjoke_cmd
 from api.slack.commands.help import help_cmd
 from api.slack.commands.info import info_cmd
@@ -36,13 +37,15 @@ def process_command(data: Dict) -> None:
 
     if not message and not actions:
         client.chat_postMessage(
-            channel=channel, text=i18n["slack"]["errors"]["message_parse_error"],
+            channel=channel,
+            text=i18n["slack"]["errors"]["message_parse_error"],
         )
         return
 
     if not message:
         client.chat_postMessage(
-            channel=channel, text=i18n["slack"]["errors"]["empty_message_error"],
+            channel=channel,
+            text=i18n["slack"]["errors"]["empty_message_error"],
         )
         return
 
@@ -51,6 +54,7 @@ def process_command(data: Dict) -> None:
     options = {
         "blacklist": blacklist_cmd,
         "check": check_cmd,
+        "checkstats": checkstats_cmd,
         "dadjoke": dadjoke_cmd,
         "help": help_cmd,
         "info": info_cmd,
