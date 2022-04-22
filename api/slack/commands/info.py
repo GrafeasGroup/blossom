@@ -1,10 +1,11 @@
-from datetime import datetime, timedelta
-from typing import Dict, Optional
+from datetime import timedelta
+from typing import Dict
 
 from django.utils import timezone
 
 from api.models import TranscriptionCheck
 from api.slack import client
+from api.slack.commands.utils import bool_str, format_stats_section, format_time
 from api.slack.utils import dict_to_table, parse_user
 from api.views.misc import Summary
 from authentication.models import BlossomUser
@@ -42,26 +43,13 @@ def user_info_text(user: BlossomUser) -> str:
     name_link = f"<https://reddit.com/u/{user.username}|u/{user.username}>"
     title = f"Info about *{name_link}*:"
 
-    general = _format_info_section("General", user_general_info(user))
-    transcription_quality = _format_info_section(
+    general = format_stats_section("General", user_general_info(user))
+    transcription_quality = format_stats_section(
         "Transcription Quality", user_transcription_quality_info(user)
     )
-    debug = _format_info_section("Debug Info", user_debug_info(user))
+    debug = format_stats_section("Debug Info", user_debug_info(user))
 
     return f"{title}\n\n{general}\n\n{transcription_quality}\n\n{debug}"
-
-
-def _format_info_section(name: str, section: Dict) -> str:
-    """Format a given info section to a readable string.
-
-    Example:
-    *Section name*:
-    - Key 1: Value 1
-    - Key 2: Value 2
-    """
-    section_items = "\n".join([f"- {key}: {value}" for key, value in section.items()])
-
-    return f"*{name}*:\n{section_items}"
 
 
 def user_general_info(user: BlossomUser) -> Dict:
@@ -69,8 +57,8 @@ def user_general_info(user: BlossomUser) -> Dict:
     total_gamma = user.gamma
     recent_gamma = user.gamma_at_time(start_time=timezone.now() - timedelta(weeks=2))
     gamma = f"{total_gamma} Γ ({recent_gamma} Γ in last 2 weeks)"
-    joined_on = _format_time(user.date_joined)
-    last_active = _format_time(user.date_last_active()) or "Never"
+    joined_on = format_time(user.date_joined)
+    last_active = format_time(user.date_last_active()) or "Never"
 
     return {
         "Gamma": gamma,
@@ -138,66 +126,3 @@ def user_debug_info(user: BlossomUser) -> Dict:
         "Bot": bot,
         "Accepted CoC": accepted_coc,
     }
-
-
-def bool_str(bl: bool) -> str:
-    """Convert a bool to a Yes/No string."""
-    return "Yes" if bl else "No"
-
-
-def _format_time(time: Optional[datetime]) -> Optional[str]:
-    """Format the given time in absolute and relative strings."""
-    if time is None:
-        return None
-
-    now = timezone.now()
-    absolute = time.date().isoformat()
-
-    relative_delta = now - time
-    relative = _relative_duration(relative_delta)
-
-    if now >= time:
-        return f"{absolute} ({relative} ago)"
-    else:
-        return f"{absolute} (in {relative})"
-
-
-def _relative_duration(delta: timedelta) -> str:
-    """Format the delta into a relative time string."""
-    seconds = abs(delta.total_seconds())
-    minutes = seconds / 60
-    hours = minutes / 60
-    days = hours / 24
-    weeks = days / 7
-    months = days / 30
-    years = days / 365
-
-    # Determine major time unit
-    if years >= 1:
-        value, unit = years, "year"
-    elif months >= 1:
-        value, unit = months, "month"
-    elif weeks >= 1:
-        value, unit = weeks, "week"
-    elif days >= 1:
-        value, unit = days, "day"
-    elif hours >= 1:
-        value, unit = hours, "hour"
-    elif minutes >= 1:
-        value, unit = minutes, "min"
-    elif seconds > 5:
-        value, unit = seconds, "sec"
-    else:
-        duration_ms = seconds / 1000
-        value, unit = duration_ms, "ms"
-
-    if unit == "ms":
-        duration_str = f"{value:0.0f} ms"
-    else:
-        # Add plural s if necessary
-        if value != 1:
-            unit += "s"
-
-        duration_str = f"{value:.1f} {unit}"
-
-    return duration_str
