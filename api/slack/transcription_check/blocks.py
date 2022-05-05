@@ -10,11 +10,13 @@ def _get_check_base_text(check: TranscriptionCheck) -> str:
     transcription = check.transcription
     submission = transcription.submission
     user: BlossomUser = transcription.author
+    username = user.username
+    user_link = f"<https://reddit.com/u/{username}?sort=new|u/{username}>"
     is_nsfw = submission.nsfw
     # Get the gamma at the time of the transcription that is checked
     gamma = user.gamma_at_time(end_time=submission.complete_time)
 
-    base_text = f"Transcription check for *u/{user.username}* ({gamma:,d} Γ):\n"
+    base_text = f"Transcription check for *{user_link}* ({gamma:,d} Γ):\n"
 
     # Add relevant links
     tor_url = (
