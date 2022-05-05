@@ -25,9 +25,12 @@ def _get_check_base_text(check: TranscriptionCheck) -> str:
     post_url = "<{}|Partner Post>".format(submission.url) if submission.url else "[N/A]"
     transcription_url = (
         "<{}|Transcription>".format(transcription.url)
-        if transcription.url and not transcription.removed_from_reddit
+        if transcription.url
         else "[Removed]"
     )
+    if transcription.removed_from_reddit and transcription.url:
+        transcription_url += " [Removed]"
+
     source = get_source(submission)
     details = [tor_url, post_url, transcription_url, source]
     # Indicate if the post is NSFW
