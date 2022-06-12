@@ -32,7 +32,7 @@ HIGH_GAMMA_CHECK_PERCENTAGE = 0.005
 # Time period to check low activity
 LOW_ACTIVITY_TIMEDELTA = timedelta(days=30)
 # Transcription count where a volunteer activity is marked as low
-LOW_ACTIVITY_THRESHOLD = 5
+LOW_ACTIVITY_THRESHOLD = 10
 
 
 class BlossomUserManager(UserManager):
