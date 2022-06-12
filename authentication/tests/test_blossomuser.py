@@ -117,7 +117,7 @@ def test_gamma_at_time(
 
 @pytest.mark.parametrize(
     "recent_gamma, total_gamma, expected",
-    [(0, 10000, True), (5, 10000, True), (6, 6, False), (10, 10000, False)],
+    [(0, 10000, True), (10, 10000, True), (11, 11, False), (15, 10000, False)],
 )
 def test_has_low_activity(
     client: Client, recent_gamma: int, total_gamma: int, expected: bool,
