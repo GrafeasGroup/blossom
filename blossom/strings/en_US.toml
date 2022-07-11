@@ -35,17 +35,18 @@ messages = [
 help_message="""
 Help is on the way!
 
-Get information about a user: `@Blossom info <username>`
-Get general server information: `@Blossom info`
-Blacklist / unblacklist user: `@Blossom blacklist <username>`
-Toggle CoC status of user: `@Blossom reset <username>`
-Overwrite check percentage: `@Blossom watch <username> <percentage>`, where `<percentage>` is a number between 0 and 100
-Reset check percentage: `@Blossom unwatch <username>`
-Get the check percentage for a user: `@Blossom watchlist <username>`
-List all overwritten check percentages: `@Blossom watchlist <sorting>`, where `<sorting>` is either "percentage" (default) or "alphabetical".
-Create a new transcription check for a given Reddit URL: `@Blossom check <url>`
-Get the warnings of a given user: `@Blossom warnings <username>`
-Render this message: `@Blossom help`
+`@Blossom info <username>`: Get information about a user.
+`@Blossom info`: Get general server information.
+`@Blossom blacklist <username>`: Blacklist / unblacklist user.
+`@Blossom reset <username>`: Toggle CoC status of user.
+`@Blossom watch <username> <percentage>`, where `<percentage>` is a number between 0 and 100: Overwrite check percentage.
+`@Blossom unwatch <username>`: Reset check percentage.
+`@Blossom watchstatus <username>`: Get the check percentage for a user.
+`@Blossom watchlist <sorting>`, where `<sorting>` is either "percentage" (default) or "alphabetical".: List all overwritten check percentages.
+`@Blossom check <url>`: Create a new transcription check for a given Reddit URL.
+`@Blossom warnings <username>`: Get the warnings of a given user.
+`@Blossom help`: Render this message.
+`@Blossom checkstats <username>`: Get the stats about the checks the given mode has done.
 """
 
 server_summary="""
