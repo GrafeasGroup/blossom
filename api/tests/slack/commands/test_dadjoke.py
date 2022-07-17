@@ -8,10 +8,7 @@ from blossom.strings import translation
 i18n = translation()
 
 
-@pytest.mark.parametrize(
-    "message",
-    ["dadjoke", "dadjoke <@asdf>", "dadjoke a b c"],
-)
+@pytest.mark.parametrize("message", ["dadjoke", "dadjoke <@asdf>", "dadjoke a b c"])
 def test_dadjoke_target(message: str) -> None:
     """Verify that dadjokes are delivered appropriately."""
     with patch("api.slack.commands.dadjoke.client.chat_postMessage") as mock:

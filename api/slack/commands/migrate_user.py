@@ -20,6 +20,13 @@ HEADER_BLOCK = {
         ),
     },
 }
+MOD_BLOCK = {
+    "type": "section",
+    "text": {
+        "type": "plain_text",
+        "text": "Approved by *u/{0}*.",
+    },
+}
 DIVIDER_BLOCK = {"type": "divider"}
 ACTION_BLOCK = {"type": "actions", "elements": []}
 APPROVE_BUTTON = {
@@ -83,15 +90,24 @@ def _create_blocks(
         migration.old_user.username, migration.new_user.username
     )
     blocks["blocks"].append(header)
+
+    if migration.moderator and revert:
+        # show who approved it while when we show the button to revert it
+        mod_block = copy(MOD_BLOCK)
+        mod_block["text"]["text"] = MOD_BLOCK["text"]["text"].format(
+            migration.moderator.username
+        )
+        blocks["blocks"].append(mod_block)
+
     blocks["blocks"].append(DIVIDER_BLOCK)
 
     action_block = copy(ACTION_BLOCK)
 
     if approve_cancel:
         approve_button = copy(APPROVE_BUTTON)
-        approve_button["value"] = approve_button["value"].format(migration.id)
+        approve_button["value"] = APPROVE_BUTTON["value"].format(migration.id)
         cancel_button = copy(CANCEL_BUTTON)
-        cancel_button["value"] = cancel_button["value"].format(migration.id)
+        cancel_button["value"] = CANCEL_BUTTON["value"].format(migration.id)
         action_block["elements"].append(approve_button)
         action_block["elements"].append(cancel_button)
 

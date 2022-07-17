@@ -124,10 +124,7 @@ def process_check_action(data: Dict) -> None:
     # If the action isn't a claim, the check must already be claimed
     if action != "claim" and check.moderator is None:
         logger.warning(f"Check {check_id} has not been claimed yet!")
-        reply_to_action_with_ping(
-            data,
-            f"Check {check_id} has not been claimed yet!",
-        )
+        reply_to_action_with_ping(data, f"Check {check_id} has not been claimed yet!")
         # Update to make sure the proper controls are shown
         update_check_message(check)
         return
