@@ -790,7 +790,10 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         responses={404: "No volunteer with the specified ID."},
     )
     @action(detail=False, methods=["get"])
-    def leaderboard(self, request: Request,) -> Response:
+    def leaderboard(
+        self,
+        request: Request,
+    ) -> Response:
         """Get the leaderboard for the given user."""
         user_id = request.GET.get("user_id", None)
         if user_id is not None:

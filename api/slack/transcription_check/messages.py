@@ -60,7 +60,9 @@ def update_check_message(check: TranscriptionCheck) -> None:
 
     blocks = construct_transcription_check_blocks(check)
     response = client.chat_update(
-        channel=check.slack_channel_id, ts=check.slack_message_ts, blocks=blocks,
+        channel=check.slack_channel_id,
+        ts=check.slack_message_ts,
+        blocks=blocks,
     )
     if not response["ok"]:
         logger.error(f"Could not update check {check.id} on Slack!")

@@ -28,7 +28,9 @@ class TestSubmissionsInProgress:
         client, headers, user = setup_user_client(client)
         reddit, _ = Source.objects.get_or_create(name="reddit")
         create_submission(
-            claimed_by=user, claim_time=timezone.now(), source=reddit,
+            claimed_by=user,
+            claim_time=timezone.now(),
+            source=reddit,
         )
 
         result = client.get(

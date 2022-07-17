@@ -42,7 +42,8 @@ class Summary(object):
                 is_volunteer=True, is_bot=False
             ).count(),
             "active_volunteer_count": Submission.objects.filter(
-                completed_by__isnull=False, complete_time__gte=date_minus_two_weeks,
+                completed_by__isnull=False,
+                complete_time__gte=date_minus_two_weeks,
             )
             .values("completed_by")
             .distinct()

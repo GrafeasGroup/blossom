@@ -42,7 +42,8 @@ def test_warning_entry(client: Client) -> None:
         create_time=datetime(2022, 2, 3, 13, 2),
     )
     check = create_check(
-        transcription=transcription, status=CheckStatus.WARNING_RESOLVED,
+        transcription=transcription,
+        status=CheckStatus.WARNING_RESOLVED,
     )
 
     expected = i18n["slack"]["warnings"]["warning_entry"].format(
@@ -76,7 +77,10 @@ def test_get_warning_checks(client: Client) -> None:
     ]
 
     for (ch_id, status) in check_properties:
-        submission = create_submission(claimed_by=user, completed_by=user,)
+        submission = create_submission(
+            claimed_by=user,
+            completed_by=user,
+        )
         transcription = create_transcription(
             submission=submission, user=user, create_time=datetime(2022, 3, 2, ch_id)
         )
@@ -99,7 +103,10 @@ def test_warning_text_no_warnings(client: Client) -> None:
     ]
 
     for (ch_id, status) in check_properties:
-        submission = create_submission(claimed_by=user, completed_by=user,)
+        submission = create_submission(
+            claimed_by=user,
+            completed_by=user,
+        )
         transcription = create_transcription(
             submission=submission, user=user, create_time=datetime(2022, 3, 2, ch_id)
         )

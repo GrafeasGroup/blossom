@@ -123,9 +123,10 @@ def process_check_action(data: Dict) -> None:
         return
     # If the action isn't a claim, the check must already be claimed
     if action != "claim" and check.moderator is None:
-        logger.warning(f"Check {check_id} has not been claimed yet!",)
+        logger.warning(f"Check {check_id} has not been claimed yet!")
         reply_to_action_with_ping(
-            data, f"Check {check_id} has not been claimed yet!",
+            data,
+            f"Check {check_id} has not been claimed yet!",
         )
         # Update to make sure the proper controls are shown
         update_check_message(check)
@@ -146,9 +147,10 @@ def process_check_action(data: Dict) -> None:
     # Try to update the DB model based on the action
     if not _update_db_model(check, mod, action):
         # Unknown action type
-        logger.warning(f"Action '{action}' is invalid for check {check_id}!",)
+        logger.warning(f"Action '{action}' is invalid for check {check_id}!")
         reply_to_action_with_ping(
-            data, f"Action '{action}' is invalid for check {check_id}!",
+            data,
+            f"Action '{action}' is invalid for check {check_id}!",
         )
         return
 

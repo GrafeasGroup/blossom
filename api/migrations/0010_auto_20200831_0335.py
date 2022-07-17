@@ -11,7 +11,12 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameField(
-            model_name="submission", old_name="image_url", new_name="content_url",
+            model_name="submission",
+            old_name="image_url",
+            new_name="content_url",
         ),
-        migrations.RemoveField(model_name="submission", name="is_image",),
+        migrations.RemoveField(
+            model_name="submission",
+            name="is_image",
+        ),
     ]

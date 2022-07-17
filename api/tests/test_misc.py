@@ -17,7 +17,10 @@ from utils.test_helpers import create_submission, create_user, setup_user_client
 
 def test_ping(client: Client) -> None:
     """Test whether the ping request returns correctly."""
-    result = client.get(reverse("ping"), content_type="application/json",)
+    result = client.get(
+        reverse("ping"),
+        content_type="application/json",
+    )
     assert result.json() == {"ping?!": "PONG"}
     assert result.status_code == status.HTTP_200_OK
 
@@ -26,7 +29,11 @@ def test_summary(client: Client) -> None:
     """Test whether the summary request provides a correctly formatted summary."""
     client, headers, _ = setup_user_client(client)
 
-    result = client.get(reverse("summary"), content_type="application/json", **headers,)
+    result = client.get(
+        reverse("summary"),
+        content_type="application/json",
+        **headers,
+    )
 
     assert "transcription_count" in result.json().keys()
     assert "days_since_inception" in result.json().keys()
@@ -53,7 +60,11 @@ def test_active_volunteer_count(client: Client) -> None:
     create_submission(completed_by=user_2, complete_time=three_weeks_ago)
     create_submission(completed_by=user_3, complete_time=one_week_ago)
 
-    result = client.get(reverse("summary"), content_type="application/json", **headers,)
+    result = client.get(
+        reverse("summary"),
+        content_type="application/json",
+        **headers,
+    )
 
     assert result.status_code == status.HTTP_200_OK
     assert result.json()["active_volunteer_count"] == 2
@@ -77,7 +88,11 @@ def test_active_volunteer_count_aggregation(client: Client) -> None:
     create_submission(completed_by=user_1, complete_time=three_weeks_ago)
     create_submission(completed_by=user_2, complete_time=two_days_ago)
 
-    result = client.get(reverse("summary"), content_type="application/json", **headers,)
+    result = client.get(
+        reverse("summary"),
+        content_type="application/json",
+        **headers,
+    )
 
     assert result.status_code == status.HTTP_200_OK
     assert result.json()["active_volunteer_count"] == 2

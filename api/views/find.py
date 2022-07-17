@@ -143,7 +143,10 @@ class FindView(APIView):
         url = request.query_params.get("url")
         normalized_url = normalize_url(url)
         if normalized_url is None:
-            return Response(data="Invalid URL.", status=status.HTTP_400_BAD_REQUEST,)
+            return Response(
+                data="Invalid URL.",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         data = find_by_url(normalized_url)
         if data is None:

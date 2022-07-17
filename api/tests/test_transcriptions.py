@@ -142,13 +142,22 @@ class TestTranscriptionCreation:
         submission = create_submission(id=1)
 
         create_transcription(
-            submission, user, id=2, text="This is a very interesting text and such.",
+            submission,
+            user,
+            id=2,
+            text="This is a very interesting text and such.",
         )
         create_transcription(
-            submission, user, id=3, text="A text is a form of literature.",
+            submission,
+            user,
+            id=3,
+            text="A text is a form of literature.",
         )
         create_transcription(
-            submission, user, id=4, text="Bla bla bla bla.",
+            submission,
+            user,
+            id=4,
+            text="Bla bla bla bla.",
         )
 
         result = client.get(

@@ -36,7 +36,10 @@ class TestSubmissionLeaderboard:
         ],
     )
     def test_top_leaderboard(
-        self, client: Client, data: List[UserData], expected: List[UserData],
+        self,
+        client: Client,
+        data: List[UserData],
+        expected: List[UserData],
     ) -> None:
         """Test if the top leaderboard is set up correctly."""
         BlossomUser.objects.all().delete()
@@ -45,7 +48,9 @@ class TestSubmissionLeaderboard:
         for obj in data:
             user_id = obj.get("id")
             cur_user = create_user(
-                id=user_id, username=f"user-{user_id}", is_volunteer=True,
+                id=user_id,
+                username=f"user-{user_id}",
+                is_volunteer=True,
             )
             for _ in range(obj.get("gamma")):
                 create_submission(completed_by=cur_user)
@@ -120,7 +125,10 @@ class TestSubmissionLeaderboard:
         assert extract_ids(results["above"]) == expected_above
         assert extract_ids(results["below"]) == expected_below
 
-    def test_filtered_leaderboard(self, client: Client,) -> None:
+    def test_filtered_leaderboard(
+        self,
+        client: Client,
+    ) -> None:
         """Test if the submissions for the rate is calculated on are filtered."""
         BlossomUser.objects.all().delete()
         date_joined = datetime(2021, 11, 3, tzinfo=pytz.UTC)
