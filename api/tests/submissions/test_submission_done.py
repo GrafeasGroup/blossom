@@ -129,10 +129,13 @@ class TestSubmissionDone:
         assert result.status_code == status.HTTP_409_CONFLICT
 
     @pytest.mark.parametrize(
-        "should_check_transcription", [True, False],
+        "should_check_transcription",
+        [True, False],
     )
     def test_done_random_checks(
-        self, client: Client, should_check_transcription: bool,
+        self,
+        client: Client,
+        should_check_transcription: bool,
     ) -> None:
         """Test whether the random checks for the done process are invoked correctly."""
         with patch(
@@ -156,7 +159,8 @@ class TestSubmissionDone:
                 assert mock.call_count == 0
 
     @pytest.mark.parametrize(
-        "gamma, expected", [(24, False), (25, True), (26, False)],
+        "gamma, expected",
+        [(24, False), (25, True), (26, False)],
     )
     def test_check_for_rank_up(
         self, client: Client, gamma: int, expected: bool

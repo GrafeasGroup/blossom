@@ -256,7 +256,10 @@ def test_get_reddit_username(user_obj: Dict, expected: Optional[str]) -> None:
             Submission(url="https://example.com", source=Source(name="blossom")),
             "blossom",
         ),
-        (Submission(url=None, source=Source(name="blossom")), "blossom",),
+        (
+            Submission(url=None, source=Source(name="blossom")),
+            "blossom",
+        ),
     ],
 )
 def test_get_source(submission: Submission, expected: str) -> None:

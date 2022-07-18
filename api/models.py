@@ -376,7 +376,10 @@ class TranscriptionCheck(models.Model):
 
     # An internal note for the moderators
     internal_note = models.CharField(
-        max_length=1000, null=True, blank=True, default=None,
+        max_length=1000,
+        null=True,
+        blank=True,
+        default=None,
     )
 
     # The time the check has been created.
@@ -400,10 +403,64 @@ class TranscriptionCheck(models.Model):
             return None
 
         url_response = client.chat_getPermalink(
-            channel=self.slack_channel_id, message_ts=self.slack_message_ts,
+            channel=self.slack_channel_id,
+            message_ts=self.slack_message_ts,
         )
 
         if not url_response.get("ok"):
             return None
 
         return url_response.get("permalink")
+
+
+class AccountMigration(models.Model):
+    create_time = models.DateTimeField(default=timezone.now)
+    old_user = models.ForeignKey(
+        "authentication.BlossomUser",
+        on_delete=models.SET_NULL,
+        related_name="old_user",
+        null=True,
+        blank=True,
+    )
+    new_user = models.ForeignKey(
+        "authentication.BlossomUser",
+        on_delete=models.SET_NULL,
+        related_name="new_user",
+        null=True,
+        blank=True,
+    )
+    # keep track of submissions that were modified in case we need to roll back
+    affected_submissions = models.ManyToManyField(Submission)
+    # who has approved this migration?
+    moderator = models.ForeignKey(
+        "authentication.BlossomUser",
+        default=None,
+        null=True,
+        on_delete=models.SET_DEFAULT,
+    )
+    # The info needed to update the Slack message of the check
+    slack_channel_id = models.CharField(
+        max_length=50, default=None, null=True, blank=True
+    )
+    slack_message_ts = models.CharField(
+        max_length=50, default=None, null=True, blank=True
+    )
+
+    def perform_migration(self) -> None:
+        """Move all submissions attributed to one account to another."""
+        existing_submissions = Submission.objects.filter(completed_by=self.old_user)
+        self.affected_submissions.add(*existing_submissions)
+
+        existing_submissions.update(
+            claimed_by=self.new_user, completed_by=self.new_user
+        )
+
+    def get_number_affected(self) -> int:
+        """Get the number of records that have been modified."""
+        return self.affected_submissions.count()
+
+    def revert(self) -> None:
+        """Undo the account migration."""
+        self.affected_submissions.update(
+            claimed_by=self.old_user, completed_by=self.old_user
+        )
