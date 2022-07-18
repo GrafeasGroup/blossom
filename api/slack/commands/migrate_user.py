@@ -22,7 +22,7 @@ HEADER_BLOCK = {
 MOD_BLOCK = {
     "type": "section",
     "text": {
-        "type": "plain_text",
+        "type": "mrkdwn",
         "text": "Approved by *u/{0}*.",
     },
 }
