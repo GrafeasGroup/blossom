@@ -70,9 +70,9 @@ def test_create_blocks() -> None:
     # no buttons requested
     blocks = _create_blocks(migration)
     # header and divider
-    assert len(blocks["blocks"]) == 2
-    assert "Paddington" in blocks["blocks"][0]["text"]["text"]
-    assert "Moddington" in blocks["blocks"][0]["text"]["text"]
+    assert len(blocks) == 2
+    assert "Paddington" in blocks[0]["text"]["text"]
+    assert "Moddington" in blocks[0]["text"]["text"]
 
 
 def test_create_blocks_with_revert_button() -> None:
@@ -82,12 +82,9 @@ def test_create_blocks_with_revert_button() -> None:
     migration = AccountMigration.objects.create(old_user=user1, new_user=user2)
 
     blocks = _create_blocks(migration, revert=True)
-    assert len(blocks["blocks"]) == 3
-    assert len(blocks["blocks"][2]["elements"]) == 1
-    assert (
-        blocks["blocks"][2]["elements"][0]["value"]
-        == f"revert_migration_{migration.id}"
-    )
+    assert len(blocks) == 3
+    assert len(blocks[2]["elements"]) == 1
+    assert blocks[2]["elements"][0]["value"] == f"revert_migration_{migration.id}"
 
 
 def test_create_blocks_with_approve_cancel_buttons() -> None:
@@ -97,16 +94,10 @@ def test_create_blocks_with_approve_cancel_buttons() -> None:
     migration = AccountMigration.objects.create(old_user=user1, new_user=user2)
 
     blocks = _create_blocks(migration, approve_cancel=True)
-    assert len(blocks["blocks"]) == 3
-    assert len(blocks["blocks"][2]["elements"]) == 2
-    assert (
-        blocks["blocks"][2]["elements"][0]["value"]
-        == f"approve_migration_{migration.id}"
-    )
-    assert (
-        blocks["blocks"][2]["elements"][1]["value"]
-        == f"cancel_migration_{migration.id}"
-    )
+    assert len(blocks) == 3
+    assert len(blocks[2]["elements"]) == 2
+    assert blocks[2]["elements"][0]["value"] == f"approve_migration_{migration.id}"
+    assert blocks[2]["elements"][1]["value"] == f"cancel_migration_{migration.id}"
 
 
 def test_create_blocks_with_mod() -> None:
@@ -119,8 +110,8 @@ def test_create_blocks_with_mod() -> None:
     )
 
     blocks = _create_blocks(migration, revert=True)
-    assert len(blocks["blocks"]) == 4
-    assert blocks["blocks"][1] == {
+    assert len(blocks) == 4
+    assert blocks[1] == {
         "type": "section",
         "text": {
             "type": "plain_text",
@@ -141,7 +132,7 @@ def test_migrate_user_cmd() -> None:
         migrate_user_cmd(channel="abc", message="migrate paddington moddington")
 
     mock.assert_called_once()
-    assert len(mock.call_args.kwargs["blocks"]["blocks"]) == 3
+    assert len(mock.call_args.kwargs["blocks"]) == 3
     assert mock.call_args.kwargs["channel"] == "abc"
 
     assert AccountMigration.objects.count() == 1
@@ -239,9 +230,9 @@ def test_process_migrate_user() -> None:
 
     message_mock.assert_called_once()
     # header, mod approved, divider, revert button
-    assert len(message_mock.call_args.kwargs["blocks"]["blocks"]) == 4
+    assert len(message_mock.call_args.kwargs["blocks"]) == 4
 
-    revert_button = message_mock.call_args.kwargs["blocks"]["blocks"][3]["elements"][0]
+    revert_button = message_mock.call_args.kwargs["blocks"][3]["elements"][0]
     assert revert_button["value"] == f"revert_migration_{migration.id}"
 
     with patch(
@@ -264,7 +255,7 @@ def test_process_migrate_user() -> None:
     assert Submission.objects.filter(completed_by=user2).count() == 1
 
     # we've reverted -- no more buttons for you
-    assert len(message_mock.call_args.kwargs["blocks"]["blocks"]) == 2
+    assert len(message_mock.call_args.kwargs["blocks"]) == 2
 
     with patch(
         "api.slack.commands.migrate_user.get_reddit_username",
