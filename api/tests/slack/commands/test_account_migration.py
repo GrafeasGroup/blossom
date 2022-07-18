@@ -255,7 +255,7 @@ def test_process_migrate_user() -> None:
     assert Submission.objects.filter(completed_by=user2).count() == 1
 
     # we've reverted -- no more buttons for you
-    assert len(message_mock.call_args.kwargs["blocks"]) == 2
+    assert len(message_mock.call_args.kwargs["blocks"]) == 3
 
     with patch(
         "api.slack.commands.migrate_user.get_reddit_username",
@@ -273,9 +273,12 @@ def test_process_migrate_user() -> None:
             }
         )
 
-    # the cancel button, as of right now, should fall through and nothing
-    # should happen.
-    message_mock.assert_not_called()
+    message_mock.assert_called_once()
+    assert (
+        message_mock.call_args.kwargs["blocks"][-1]["text"]["text"]
+        == "Action cancelled."
+    )
+
     reply_mock.assert_not_called()
 
 

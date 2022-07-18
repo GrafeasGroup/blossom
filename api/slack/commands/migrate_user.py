@@ -26,6 +26,23 @@ MOD_BLOCK = {
         "text": "Approved by *u/{0}*.",
     },
 }
+CANCEL_BLOCK = {
+    "type": "section",
+    "text": {
+        "type": "plain_text",
+        "text": "Action cancelled.",
+    },
+}
+FINAL_BLOCK = {
+    "type": "section",
+    "text": {
+        "type": "plain_text",
+        "text": (
+            "This can no longer be acted upon. Please start the process from the"
+            " beginning if you wish to repeat this action."
+        ),
+    },
+}
 DIVIDER_BLOCK = {"type": "divider"}
 ACTION_BLOCK = {"type": "actions", "elements": []}
 APPROVE_BUTTON = {
@@ -81,7 +98,11 @@ REVERT_BUTTON = {
 
 
 def _create_blocks(
-    migration: AccountMigration, approve_cancel: bool = False, revert: bool = False
+    migration: AccountMigration,
+    approve_cancel: bool = False,
+    revert: bool = False,
+    cancel: bool = False,
+    final: bool = False,
 ) -> list[dict]:
     blocks = []
     header = deepcopy(HEADER_BLOCK)
@@ -114,6 +135,12 @@ def _create_blocks(
         revert_button = deepcopy(REVERT_BUTTON)
         revert_button["value"] = revert_button["value"].format(migration.id)
         action_block["elements"].append(revert_button)
+
+    if cancel:
+        blocks.append(CANCEL_BLOCK)
+
+    if final:
+        blocks.append(FINAL_BLOCK)
 
     if len(action_block["elements"]) > 0:
         # can't have an action block with zero elements.
@@ -198,10 +225,9 @@ def process_migrate_user(data: dict) -> None:
         blocks = _create_blocks(migration, revert=True)
     elif action == "revert":
         migration.revert()
-        blocks = _create_blocks(migration)  # Show no buttons here.
+        blocks = _create_blocks(migration, final=True)  # Show no buttons here.
     else:
-        # maybe do something with the cancel button here?
-        return
+        blocks = _create_blocks(migration, cancel=True)
 
     client.chat_update(
         channel=migration.slack_channel_id,
