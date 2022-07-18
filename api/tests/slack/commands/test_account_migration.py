@@ -223,7 +223,7 @@ def test_process_migrate_user() -> None:
         lambda _, us: us["name"],
     ), patch(
         "api.slack.commands.migrate_user.client.chat_update"
-    ) as messageMock, patch(
+    ) as message_mock, patch(
         "api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -237,11 +237,11 @@ def test_process_migrate_user() -> None:
     assert Submission.objects.filter(completed_by=user1).count() == 0
     assert Submission.objects.filter(completed_by=user2).count() == 2
 
-    messageMock.assert_called_once()
+    message_mock.assert_called_once()
     # header, mod approved, divider, revert button
-    assert len(messageMock.call_args.kwargs["blocks"]["blocks"]) == 4
+    assert len(message_mock.call_args.kwargs["blocks"]["blocks"]) == 4
 
-    revert_button = messageMock.call_args.kwargs["blocks"]["blocks"][3]["elements"][0]
+    revert_button = message_mock.call_args.kwargs["blocks"]["blocks"][3]["elements"][0]
     assert revert_button["value"] == f"revert_migration_{migration.id}"
 
     with patch(
@@ -249,7 +249,7 @@ def test_process_migrate_user() -> None:
         lambda _, us: us["name"],
     ), patch(
         "api.slack.commands.migrate_user.client.chat_update"
-    ) as messageMock, patch(
+    ) as message_mock, patch(
         "api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -264,14 +264,14 @@ def test_process_migrate_user() -> None:
     assert Submission.objects.filter(completed_by=user2).count() == 1
 
     # we've reverted -- no more buttons for you
-    assert len(messageMock.call_args.kwargs["blocks"]["blocks"]) == 2
+    assert len(message_mock.call_args.kwargs["blocks"]["blocks"]) == 2
 
     with patch(
         "api.slack.commands.migrate_user.get_reddit_username",
         lambda _, us: us["name"],
     ), patch(
         "api.slack.commands.migrate_user.client.chat_update"
-    ) as messageMock, patch(
+    ) as message_mock, patch(
         "api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -284,7 +284,7 @@ def test_process_migrate_user() -> None:
 
     # the cancel button, as of right now, should fall through and nothing
     # should happen.
-    messageMock.assert_not_called()
+    message_mock.assert_not_called()
     reply_mock.assert_not_called()
 
 
@@ -297,7 +297,7 @@ def test_migrate_user_no_migration() -> None:
         lambda _, us: us["name"],
     ), patch(
         "api.slack.commands.migrate_user.client.chat_update"
-    ) as messageMock, patch(
+    ) as message_mock, patch(
         "api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -308,7 +308,7 @@ def test_migrate_user_no_migration() -> None:
             }
         )
 
-    messageMock.assert_not_called()
+    message_mock.assert_not_called()
     reply_mock.assert_called_once()
     assert reply_mock.call_args.args[-1] == "I couldn't find a check with ID 1!"
 
@@ -324,7 +324,7 @@ def test_migrate_user_wrong_username() -> None:
         lambda _, us: us["name"],
     ), patch(
         "api.slack.commands.migrate_user.client.chat_update"
-    ) as messageMock, patch(
+    ) as message_mock, patch(
         "api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -335,6 +335,6 @@ def test_migrate_user_wrong_username() -> None:
             }
         )
 
-    messageMock.assert_not_called()
+    message_mock.assert_not_called()
     reply_mock.assert_called_once()
     assert "I couldn't find a mod with username u/AA." in reply_mock.call_args.args[-1]
