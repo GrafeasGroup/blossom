@@ -114,7 +114,7 @@ def test_create_blocks_with_mod() -> None:
     assert blocks[1] == {
         "type": "section",
         "text": {
-            "type": "plain_text",
+            "type": "mrkdwn",
             "text": "Approved by *u/Mod Moddington*.",
         },
     }
