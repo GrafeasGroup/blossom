@@ -1,4 +1,4 @@
-from copy import copy
+from copy import deepcopy
 
 from api.models import AccountMigration
 from api.slack import client
@@ -82,18 +82,18 @@ REVERT_BUTTON = {
 
 
 def _create_blocks(
-    migration: AccountMigration, approve_cancel: bool = True, revert: bool = False
+    migration: AccountMigration, approve_cancel: bool = False, revert: bool = False
 ) -> dict:
-    blocks = copy(BASE)
-    header = copy(HEADER_BLOCK)
-    header["text"]["text"] = header["text"]["text"].format(
+    blocks = deepcopy(BASE)
+    header = deepcopy(HEADER_BLOCK)
+    header["text"]["text"] = HEADER_BLOCK["text"]["text"].format(
         migration.old_user.username, migration.new_user.username
     )
     blocks["blocks"].append(header)
 
     if migration.moderator and revert:
         # show who approved it while when we show the button to revert it
-        mod_block = copy(MOD_BLOCK)
+        mod_block = deepcopy(MOD_BLOCK)
         mod_block["text"]["text"] = MOD_BLOCK["text"]["text"].format(
             migration.moderator.username
         )
@@ -101,18 +101,18 @@ def _create_blocks(
 
     blocks["blocks"].append(DIVIDER_BLOCK)
 
-    action_block = copy(ACTION_BLOCK)
+    action_block = deepcopy(ACTION_BLOCK)
 
     if approve_cancel:
-        approve_button = copy(APPROVE_BUTTON)
+        approve_button = deepcopy(APPROVE_BUTTON)
         approve_button["value"] = APPROVE_BUTTON["value"].format(migration.id)
-        cancel_button = copy(CANCEL_BUTTON)
+        cancel_button = deepcopy(CANCEL_BUTTON)
         cancel_button["value"] = CANCEL_BUTTON["value"].format(migration.id)
         action_block["elements"].append(approve_button)
         action_block["elements"].append(cancel_button)
 
     if revert:
-        revert_button = copy(REVERT_BUTTON)
+        revert_button = deepcopy(REVERT_BUTTON)
         revert_button["value"] = revert_button["value"].format(migration.id)
         action_block["elements"].append(revert_button)
 
@@ -127,9 +127,10 @@ def migrate_user_cmd(channel: str, message: str) -> None:
     parsed_message = message.split()
     blocks = None
     msg = None
+    migration = None  # appease linter
     if len(parsed_message) < 3:
         # Needs to have two usernames
-        msg = i18n["slack"]["errors"]["missing_username"]
+        msg = i18n["slack"]["errors"]["missing_multiple_usernames"]
     elif len(parsed_message) == 3:
         old_user, old_username = parse_user(parsed_message[1])
         new_user, new_username = parse_user(parsed_message[2])
@@ -144,9 +145,9 @@ def migrate_user_cmd(channel: str, message: str) -> None:
 
         if old_user and new_user:
             migration = AccountMigration.objects.create(
-                delay_minutes=3, old_user=old_user, new_user=new_user
+                old_user=old_user, new_user=new_user
             )
-            blocks = _create_blocks(migration)
+            blocks = _create_blocks(migration, approve_cancel=True)
 
     else:
         msg = i18n["slack"]["errors"]["too_many_params"]
@@ -160,8 +161,8 @@ def migrate_user_cmd(channel: str, message: str) -> None:
     response = client.chat_postMessage(**args)
 
     if blocks:
-        migration.report_slack_channel_id = response["channel"]
-        migration.report_slack_message_ts = response["message"]["ts"]
+        migration.slack_channel_id = response["channel"]
+        migration.slack_message_ts = response["message"]["ts"]
         migration.save()
 
 
@@ -195,7 +196,7 @@ def process_migrate_user(data: dict) -> None:
 
     if action == "approve":
         migration.perform_migration()
-        blocks = _create_blocks(migration, approve_cancel=False, revert=True)
+        blocks = _create_blocks(migration, revert=True)
     elif action == "revert":
         migration.revert()
         blocks = _create_blocks(migration)  # Show no buttons here.

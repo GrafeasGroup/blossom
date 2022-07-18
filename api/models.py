@@ -425,11 +425,10 @@ class AccountMigration(models.Model):
     new_user = models.ForeignKey(
         "authentication.BlossomUser",
         on_delete=models.SET_NULL,
-        related_name="old_user",
+        related_name="new_user",
         null=True,
         blank=True,
     )
-    completed = models.BooleanField(default=False)
     # keep track of submissions that were modified in case we need to roll back
     affected_submissions = models.ManyToManyField(Submission)
     # who has approved this migration?
@@ -450,7 +449,7 @@ class AccountMigration(models.Model):
     def perform_migration(self) -> None:
         """Move all submissions attributed to one account to another."""
         existing_submissions = Submission.objects.filter(completed_by=self.old_user)
-        self.affected_submissions.add(existing_submissions)
+        self.affected_submissions.add(*existing_submissions)
 
         existing_submissions.update(
             claimed_by=self.new_user, completed_by=self.new_user
@@ -465,4 +464,3 @@ class AccountMigration(models.Model):
         self.affected_submissions.update(
             claimed_by=self.old_user, completed_by=self.old_user
         )
-        self.completed = False
