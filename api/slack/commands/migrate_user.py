@@ -9,7 +9,6 @@ from blossom.strings import translation
 
 i18n = translation()
 
-BASE = {"blocks": []}
 HEADER_BLOCK = {
     "type": "section",
     "text": {
@@ -83,13 +82,13 @@ REVERT_BUTTON = {
 
 def _create_blocks(
     migration: AccountMigration, approve_cancel: bool = False, revert: bool = False
-) -> dict:
-    blocks = deepcopy(BASE)
+) -> list[dict]:
+    blocks = []
     header = deepcopy(HEADER_BLOCK)
     header["text"]["text"] = HEADER_BLOCK["text"]["text"].format(
         migration.old_user.username, migration.new_user.username
     )
-    blocks["blocks"].append(header)
+    blocks.append(header)
 
     if migration.moderator and revert:
         # show who approved it while when we show the button to revert it
@@ -97,9 +96,9 @@ def _create_blocks(
         mod_block["text"]["text"] = MOD_BLOCK["text"]["text"].format(
             migration.moderator.username
         )
-        blocks["blocks"].append(mod_block)
+        blocks.append(mod_block)
 
-    blocks["blocks"].append(DIVIDER_BLOCK)
+    blocks.append(DIVIDER_BLOCK)
 
     action_block = deepcopy(ACTION_BLOCK)
 
@@ -118,7 +117,7 @@ def _create_blocks(
 
     if len(action_block["elements"]) > 0:
         # can't have an action block with zero elements.
-        blocks["blocks"].append(action_block)
+        blocks.append(action_block)
     return blocks
 
 
