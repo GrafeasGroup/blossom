@@ -41,6 +41,7 @@ Help is on the way!
 `@Blossom help`: Render this message.
 `@Blossom info`: Get general server information.
 `@Blossom info <username>`: Get information about a user.
+`@Blossom migrate <source> <target>`: Creates a request to migrate the gamma count of the source to the target. Needs verification.
 `@Blossom reset <username>`: Toggle CoC status of user.
 `@Blossom unwatch <username>`: Reset check percentage.
 `@Blossom warnings <username>`: Get the warnings of a given user.
