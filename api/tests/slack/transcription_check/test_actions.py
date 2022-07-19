@@ -56,7 +56,10 @@ def _is_time_recent(start: datetime, time: Optional[datetime]) -> bool:
     ],
 )
 def test_update_db_model_status(
-    client: Client, action: str, pre_status: CheckStatus, post_status: CheckStatus,
+    client: Client,
+    action: str,
+    pre_status: CheckStatus,
+    post_status: CheckStatus,
 ) -> None:
     """Test the updating of the status of the check DB model."""
     client, headers, user = setup_user_client(client, id=100, username="Userson")
@@ -135,7 +138,8 @@ def test_update_db_model_set_complete_time(client: Client, action: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "action", ["pending", "comment-pending", "warning-pending"],
+    "action",
+    ["pending", "comment-pending", "warning-pending"],
 )
 def test_update_db_model_unset_complete_time(client: Client, action: str) -> None:
     """Test that the complete time is updated after reverting completion."""
@@ -143,7 +147,11 @@ def test_update_db_model_unset_complete_time(client: Client, action: str) -> Non
     mod = create_user(id=200, username="Moddington")
     submission = create_submission(claimed_by=user, completed_by=user)
     transcription = create_transcription(submission=submission, user=user)
-    check = create_check(transcription, moderator=mod, complete_time=timezone.now(),)
+    check = create_check(
+        transcription,
+        moderator=mod,
+        complete_time=timezone.now(),
+    )
     assert check.complete_time is not None
 
     assert _update_db_model(check, mod, action)

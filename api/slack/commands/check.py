@@ -73,7 +73,8 @@ def check_cmd(channel: str, message: str) -> None:
 
             # Get the link for the check
             response = client.chat_getPermalink(
-                channel=check.slack_channel_id, message_ts=check.slack_message_ts,
+                channel=check.slack_channel_id,
+                message_ts=check.slack_message_ts,
             )
             permalink = response.data.get("permalink")
 

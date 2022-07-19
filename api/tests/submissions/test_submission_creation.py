@@ -121,7 +121,11 @@ class TestSubmissionCreation:
         ],
     )
     def test_ocr_on_create(
-        self, client: Client, settings: SettingsWrapper, test_input: str, output: str,
+        self,
+        client: Client,
+        settings: SettingsWrapper,
+        test_input: str,
+        output: str,
     ) -> None:
         """Verify that a new submission completes the OCR process."""
         settings.ENABLE_OCR = True

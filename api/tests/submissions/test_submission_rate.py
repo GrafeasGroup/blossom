@@ -259,7 +259,10 @@ class TestSubmissionRate:
         response = result.json()
         assert response["results"] == results
 
-    def test_rate_filtering(self, client: Client,) -> None:
+    def test_rate_filtering(
+        self,
+        client: Client,
+    ) -> None:
         """Verify that filters can be applied to the submissions."""
         client, headers, user = setup_user_client(client, id=123456)
 
@@ -299,7 +302,10 @@ class TestSubmissionRate:
             {"count": 3, "date": "2021-06-20T00:00:00Z"},
         ]
 
-    def test_rate_timezones(self, client: Client,) -> None:
+    def test_rate_timezones(
+        self,
+        client: Client,
+    ) -> None:
         """Verify that the timezone is applied correctly, if specified."""
         client, headers, user = setup_user_client(client, id=123456)
 

@@ -82,7 +82,11 @@ def test_extract_core_url() -> None:
         # Submission URL
         ("https://reddit.com/r/antiwork/comments/q1tlcf/work_is_work/", "url", True),
         # ToR Submission Core URL
-        ("https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc", "tor_url", True,),
+        (
+            "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc",
+            "tor_url",
+            True,
+        ),
         # ToR Submission URL
         (
             "https://reddit.com/r/TranscribersOfReddit/comments/q1tnhc/antiwork_image_work_is_work/",
@@ -198,7 +202,9 @@ def test_find_in_progress(client: Client, url: str, expected: bool) -> None:
     )
 
     result = client.get(
-        reverse("find") + f"?url={url}", content_type="application/json", **headers,
+        reverse("find") + f"?url={url}",
+        content_type="application/json",
+        **headers,
     )
 
     if expected:
@@ -299,7 +305,9 @@ def test_find_completed(client: Client, url: str, expected: bool) -> None:
     )
 
     result = client.get(
-        reverse("find") + f"?url={url}", content_type="application/json", **headers,
+        reverse("find") + f"?url={url}",
+        content_type="application/json",
+        **headers,
     )
 
     if expected:

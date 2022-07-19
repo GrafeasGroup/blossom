@@ -11,6 +11,7 @@ from api.slack.commands.checkstats import checkstats_cmd
 from api.slack.commands.dadjoke import dadjoke_cmd
 from api.slack.commands.help import help_cmd
 from api.slack.commands.info import info_cmd
+from api.slack.commands.migrate_user import migrate_user_cmd
 from api.slack.commands.ping import ping_cmd
 from api.slack.commands.reset import reset_cmd
 from api.slack.commands.unwatch import unwatch_cmd
@@ -58,6 +59,7 @@ def process_command(data: Dict) -> None:
         "dadjoke": dadjoke_cmd,
         "help": help_cmd,
         "info": info_cmd,
+        "migrate": migrate_user_cmd,
         "ping": ping_cmd,
         "reset": reset_cmd,
         "unwatch": unwatch_cmd,

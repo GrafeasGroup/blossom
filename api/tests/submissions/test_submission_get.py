@@ -288,13 +288,16 @@ class TestSubmissionGet:
         client, headers, user = setup_user_client(client, id=123)
 
         create_submission(
-            id=1, title="This is a title",
+            id=1,
+            title="This is a title",
         )
         create_submission(
-            id=2, title="Another title",
+            id=2,
+            title="Another title",
         )
         create_submission(
-            id=3, title="TITLE IS GOOD",
+            id=3,
+            title="TITLE IS GOOD",
         )
 
         result = client.get(
@@ -316,10 +319,12 @@ class TestSubmissionGet:
         client, headers, user = setup_user_client(client, id=123)
 
         create_submission(
-            id=1, removed_from_queue=True,
+            id=1,
+            removed_from_queue=True,
         )
         create_submission(
-            id=2, removed_from_queue=False,
+            id=2,
+            removed_from_queue=False,
         )
 
         result = client.get(

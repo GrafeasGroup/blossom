@@ -122,7 +122,9 @@ class TestSubmissionExpired:
         client, headers, user = setup_user_client(client)
 
         result = client.get(
-            reverse("submission-expired"), content_type="application/json", **headers,
+            reverse("submission-expired"),
+            content_type="application/json",
+            **headers,
         )
 
         assert result.status_code == status.HTTP_400_BAD_REQUEST

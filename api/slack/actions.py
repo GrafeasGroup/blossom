@@ -11,6 +11,7 @@ from django.http import HttpRequest
 
 from api.models import Submission
 from api.slack import client
+from api.slack.commands.migrate_user import process_migrate_user
 from api.slack.transcription_check.actions import process_check_action
 from app.reddit_actions import approve_post, remove_post
 from blossom.strings import translation
@@ -34,8 +35,12 @@ def process_action(data: Dict) -> None:
     value: str = data["actions"][0].get("value")
     if value.startswith("check"):
         process_check_action(data)
-    elif "approve" in value or "remove" in value:
+    elif "submission" in value:
+        # buttons related to approving or removing submissions on the app and on Reddit
         process_submission_report_update(data)
+    elif "migration" in value:
+        # buttons related to account gamma migrations
+        process_migrate_user(data)
     else:
         client.chat_postMessage(
             channel=data["channel"]["id"],
@@ -151,7 +156,8 @@ def process_submission_report_update(data: dict) -> None:
 
     # Find the submission corresponding to the message
     submissions = Submission.objects.filter(
-        report_slack_channel_id=channel_id, report_slack_message_ts=message_ts,
+        report_slack_channel_id=channel_id,
+        report_slack_message_ts=message_ts,
     )
 
     if len(submissions) == 0:
