@@ -451,16 +451,22 @@ class AccountMigration(models.Model):
         existing_submissions = Submission.objects.filter(completed_by=self.old_user)
         self.affected_submissions.add(*existing_submissions)
 
+        # need to process transcriptions first because the submissions they're
+        # linked to are about to change
+        transcriptions = Transcription.objects.filter(
+            submission__in=existing_submissions, author=self.old_user
+        )
+        transcriptions.update(author=self.new_user)
         existing_submissions.update(
             claimed_by=self.new_user, completed_by=self.new_user
         )
 
-    def get_number_affected(self) -> int:
-        """Get the number of records that have been modified."""
-        return self.affected_submissions.count()
-
     def revert(self) -> None:
         """Undo the account migration."""
+        transcriptions = Transcription.objects.filter(
+            submission__in=self.affected_submissions.all(), author=self.new_user
+        )
+        transcriptions.update(author=self.old_user)
         self.affected_submissions.update(
             claimed_by=self.old_user, completed_by=self.old_user
         )
