@@ -1,13 +1,13 @@
 from unittest.mock import patch
 
-from api.models import AccountMigration, Submission
+from api.models import AccountMigration, Submission, Transcription
 from api.slack.commands.migrate_user import (
     _create_blocks,
     migrate_user_cmd,
     process_migrate_user,
 )
 from blossom.strings import translation
-from utils.test_helpers import create_submission, create_user
+from utils.test_helpers import create_submission, create_transcription, create_user
 
 i18n = translation()
 
@@ -18,20 +18,31 @@ def test_perform_migration() -> None:
     user2 = create_user(id=200, username="Moddington")
 
     submission1 = create_submission(claimed_by=user1, completed_by=user1)
-    create_submission(claimed_by=user2, completed_by=user2)
+    submission2 = create_submission(claimed_by=user2, completed_by=user2)
+
+    transcription1 = create_transcription(submission=submission1, user=user1)
+    transcription2 = create_transcription(submission=submission2, user=user2)
 
     assert Submission.objects.filter(completed_by=user1).count() == 1
     assert Submission.objects.filter(completed_by=user2).count() == 1
+    assert Transcription.objects.filter(author=user1).count() == 1
+    assert Transcription.objects.filter(author=user2).count() == 1
 
     migration = AccountMigration.objects.create(old_user=user1, new_user=user2)
     migration.perform_migration()
     assert migration.affected_submissions.count() == 1
     assert Submission.objects.filter(completed_by=user1).count() == 0
     assert Submission.objects.filter(completed_by=user2).count() == 2
+    assert Transcription.objects.filter(author=user1).count() == 0
+    assert Transcription.objects.filter(author=user2).count() == 2
 
     submission1.refresh_from_db()
+    transcription1.refresh_from_db()
+    transcription2.refresh_from_db()
     assert submission1.claimed_by == user2
     assert submission1.completed_by == user2
+    assert transcription1.author == user2
+    assert transcription2.author == user2
 
 
 def test_revert() -> None:
@@ -40,7 +51,11 @@ def test_revert() -> None:
     user2 = create_user(id=200, username="Moddington")
 
     submission1 = create_submission(claimed_by=user1, completed_by=user1)
-    create_submission(claimed_by=user2, completed_by=user2)
+    submission2 = create_submission(claimed_by=user2, completed_by=user2)
+    transcription1 = create_transcription(submission=submission1, user=user1)
+    transcription2 = create_transcription(submission=submission2, user=user2)
+    assert Transcription.objects.filter(author=user1).count() == 1
+    assert Transcription.objects.filter(author=user2).count() == 1
 
     assert Submission.objects.filter(completed_by=user1).count() == 1
     assert Submission.objects.filter(completed_by=user2).count() == 1
@@ -50,15 +65,27 @@ def test_revert() -> None:
 
     assert Submission.objects.filter(completed_by=user1).count() == 0
     assert Submission.objects.filter(completed_by=user2).count() == 2
+    assert Transcription.objects.filter(author=user1).count() == 0
+    assert Transcription.objects.filter(author=user2).count() == 2
+    transcription1.refresh_from_db()
+    transcription2.refresh_from_db()
+    assert transcription1.author == user2
+    assert transcription2.author == user2
 
     migration.revert()
 
     assert Submission.objects.filter(completed_by=user1).count() == 1
     assert Submission.objects.filter(completed_by=user2).count() == 1
+    assert Submission.objects.filter(completed_by=user1).count() == 1
+    assert Submission.objects.filter(completed_by=user2).count() == 1
 
     submission1.refresh_from_db()
+    transcription1.refresh_from_db()
+    transcription2.refresh_from_db()
     assert submission1.claimed_by == user1
     assert submission1.completed_by == user1
+    assert transcription1.author == user1
+    assert transcription2.author == user2
 
 
 def test_create_blocks() -> None:
