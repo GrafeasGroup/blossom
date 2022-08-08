@@ -28,7 +28,8 @@ class TestSubmissionClaim:
         assert submission.claimed_by == user
 
     def test_claim_with_other_archived_claim(self, client: Client) -> None:
-        """Test whether a user can claim a submission when another claim has been archived.
+        """
+        Test whether a user can claim a submission when another claim has been archived.
 
         The claim limit should not consider submissions that are already archived.
         """
@@ -50,7 +51,8 @@ class TestSubmissionClaim:
         assert submission.claimed_by == user
 
     def test_claim_with_other_completed_claim(self, client: Client) -> None:
-        """Test whether a user can claim a submission when another claim has been completed.
+        """
+        Test whether a user can claim a submission when another claim has been completed.
 
         The claim limit should not consider submissions that are already completed.
         """

@@ -1,6 +1,6 @@
-from django.apps import AppConfig as AC
+from django.apps import AppConfig as DjangoAppConfig
 
 
-class AppConfig(AC):
+class AppConfig(DjangoAppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "blossom.app"
