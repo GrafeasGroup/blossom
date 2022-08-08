@@ -1,5 +1,5 @@
 setup:
-	poetry run python manage.py collectstatic --noinput > /dev/null
+	poetry run python manage.py collectstatic --noinput --settings=blossom.settings.testing > /dev/null
 	poetry run poetry2setup > setup.py
 
 build: setup shiv
