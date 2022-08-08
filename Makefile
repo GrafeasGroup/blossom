@@ -1,6 +1,6 @@
 setup:
-	python manage.py collectstatic --noinput > /dev/null
-	poetry2setup > setup.py
+	poetry run python manage.py collectstatic --noinput > /dev/null
+	poetry run poetry2setup > setup.py
 
 build: setup shiv
 
@@ -9,4 +9,4 @@ clean:
 
 shiv:
 	mkdir -p build
-	shiv -c blossom -o build/blossom.pyz . --compressed
+	poetry run shiv -c blossom -o build/blossom.pyz . --compressed
