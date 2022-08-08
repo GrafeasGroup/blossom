@@ -10,14 +10,14 @@ from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.urls import path
 
-from authentication.views import LoginView
-from website.views import user_create
+from blossom.authentication.views import LoginView
+from blossom.website.views import user_create
 
 admin.autodiscover()
 admin.site.login = LoginView.as_view()
 
-handler404 = "website.views.handler404"
-handler500 = "website.views.handler500"
+handler404 = "blossom.website.views.handler404"
+handler500 = "blossom.website.views.handler500"
 
 
 def force_domain(domain: [str, None]) -> Any:
@@ -57,25 +57,29 @@ def force_domain(domain: [str, None]) -> Any:
 urlpatterns = [
     path("superadmin/newuser", user_create, name="user_create"),
     path("superadmin/", admin.site.urls),
-    path("", decorator_include(force_domain(None), "authentication.urls")),
-    path("api/", decorator_include(force_domain(None), "api.urls")),
+    path("", decorator_include(force_domain(None), "blossom.authentication.urls")),
+    path("api/", decorator_include(force_domain(None), "blossom.api.urls")),
 ]
 
 # grafeas urls
 urlpatterns += [
-    path("payments/", decorator_include(force_domain("grafeas.org"), "payments.urls")),
+    path(
+        "payments/",
+        decorator_include(force_domain("grafeas.org"), "blossom.payments.urls"),
+    ),
     path(
         "engineering/",
-        decorator_include(force_domain("grafeas.org"), "engineeringblog.urls"),
+        decorator_include(force_domain("grafeas.org"), "blossom.engineeringblog.urls"),
     ),
-    path("", decorator_include(force_domain("grafeas.org"), "website.urls")),
+    path("", decorator_include(force_domain("grafeas.org"), "blossom.website.urls")),
 ]
 
 # thetranscription.app urls
 if settings.ENABLE_APP:
     urlpatterns += [
         path(
-            "app/", decorator_include(force_domain("thetranscription.app"), "app.urls")
+            "app/",
+            decorator_include(force_domain("thetranscription.app"), "blossom.app.urls"),
         ),
         url(
             "",

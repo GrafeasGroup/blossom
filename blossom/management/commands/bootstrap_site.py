@@ -5,9 +5,9 @@ from typing import Any
 import dotenv
 from django.core.management.base import BaseCommand
 
-from api.models import Source
-from authentication.models import BlossomUser
-from website.models import Post
+from blossom.api.models import Source
+from blossom.authentication.models import BlossomUser
+from blossom.website.models import Post
 
 dotenv.load_dotenv()
 
