@@ -56,7 +56,7 @@ def main(ctx: Context, command: str, gunicorn: bool) -> None:
             " --access-logfile -"
             " --workers 3"
             " --bind unix:/run/gunicorn.sock",
-            "blossom.wsgi:application",
+            " blossom.wsgi:application",
         ]
         wsgi.run()
     else:
