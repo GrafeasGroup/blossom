@@ -41,8 +41,17 @@ def main(ctx: Context, command: str, gunicorn: bool) -> None:
         return
 
     if gunicorn:
+        import blossom.instrumentation
+
         # This is just a simple way to supply args to gunicorn
-        sys.argv = [".", "blossom.wsgi", "--bind=0.0.0.0:80"]
+        sys.argv = [
+            ".",
+            f"-c {blossom.instrumentation.__file__}"
+            "--access-logfile -"
+            "--workers 3"
+            "--bind unix:/run/gunicorn.sock"
+            "blossom.wsgi:application",
+        ]
         wsgi.run()
     else:
         call_command("runserver")
