@@ -21,7 +21,14 @@ from blossom import __version__
     "command",
     help="Pass a command back to Django.",
 )
-@click.option("-g", "--gunicorn", "gunicorn", help="Start server with Gunicorn.")
+@click.option(
+    "-g",
+    "--gunicorn",
+    "gunicorn",
+    is_flag=True,
+    default=False,
+    help="Start server with Gunicorn.",
+)
 @click.version_option(version=__version__, prog_name="blossom")
 def main(ctx: Context, command: str, gunicorn: bool) -> None:
     """Run Blossom!"""  # noqa: D400
@@ -45,11 +52,10 @@ def main(ctx: Context, command: str, gunicorn: bool) -> None:
 
         # This is just a simple way to supply args to gunicorn
         sys.argv = [
-            ".",
-            f"-c {blossom.instrumentation.__file__}"
-            "--access-logfile -"
-            "--workers 3"
-            "--bind unix:/run/gunicorn.sock"
+            f"-c {blossom.instrumentation.__file__}.py"
+            " --access-logfile -"
+            " --workers 3"
+            " --bind unix:/run/gunicorn.sock",
             "blossom.wsgi:application",
         ]
         wsgi.run()
