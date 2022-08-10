@@ -14,7 +14,7 @@ omit =
   blossom/middleware.py,
   blossom/instrumentation.py,
   blossom/settings/*,
-  bootstrap/*,
+  blossom/bootstrap/*,
   blossom/social_auth/*,
   blossom/conftest.py,
   blossom/docs/*

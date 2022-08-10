@@ -27,7 +27,7 @@ from django.db.backends.utils import CursorWrapper
 from django.db.models import Max
 from mimesis import Person, Text, locales
 
-from api.models import Source, Submission, Transcription
+from blossom.api.models import Source, Submission, Transcription
 from blossom.management.commands import bootstrap_site
 
 if settings.DEBUG:

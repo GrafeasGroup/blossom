@@ -30,7 +30,7 @@ COPY . /app
 
 COPY ./docker/blossom-entrypoint.sh /docker-entrypoint.sh
 
-COPY --from=builder /app/requirements.txt /app/requirements.txt
+COPY --from=builder /blossom/app/requirements.txt /app/requirements.txt
 
 # hadolint ignore=DL3013,DL3042
 RUN pip install -r requirements.txt

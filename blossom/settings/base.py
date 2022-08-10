@@ -12,9 +12,11 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import logging
 import os
+import pathlib
 
 import dotenv
 from django.urls import reverse_lazy
+from shiv.bootstrap import current_zipfile
 
 from blossom import __version__
 
@@ -31,8 +33,16 @@ Otherwise, please change the required other environment files in
 blossom/settings/!
 """
 
+with current_zipfile() as archive:
+    dotenv_path: str | None
+    if archive:
+        # if archive is none, we're not in the zipfile and are probably
+        # in development mode right now.
+        dotenv_path = str(pathlib.Path(archive.filename).parent / ".env")
+    else:
+        dotenv_path = None
+dotenv.load_dotenv(dotenv_path=dotenv_path)
 
-dotenv.load_dotenv()
 logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -85,13 +95,13 @@ INSTALLED_APPS = [
     "mathfilters",
     # blossom internal apps
     "blossom",
-    "app",
-    "api",
-    "authentication",
-    "engineeringblog",
-    "payments",
-    "ocr",
-    "website",
+    "blossom.api",
+    "blossom.app",
+    "blossom.authentication",
+    "blossom.engineeringblog",
+    "blossom.ocr",
+    "blossom.payments",
+    "blossom.website",
     # API
     "rest_framework",
     "django_filters",
@@ -111,7 +121,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "app.middleware.RedditMiddleware",
+    "blossom.app.middleware.RedditMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -133,7 +143,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "social_django.context_processors.backends",
                 "social_django.context_processors.login_redirect",
-                "app.context_processors.app_enable_check",
+                "blossom.app.context_processors.app_enable_check",
             ],
         },
     },
@@ -178,10 +188,10 @@ LOGGING = {
 }
 
 REST_FRAMEWORK = {
-    "DEFAULT_PAGINATION_CLASS": "api.pagination.StandardResultsSetPagination",
-    "DEFAULT_PERMISSION_CLASSES": ("api.authentication.BlossomApiPermission",),
+    "DEFAULT_PAGINATION_CLASS": "blossom.api.pagination.StandardResultsSetPagination",
+    "DEFAULT_PERMISSION_CLASSES": ("blossom.api.authentication.BlossomApiPermission",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "authentication.backends.BlossomRestFrameworkAuth",
+        "blossom.authentication.backends.BlossomRestFrameworkAuth",
     ),
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
@@ -200,7 +210,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
-    "authentication.backends.EmailBackend",
+    "blossom.authentication.backends.EmailBackend",
     "social_core.backends.reddit.RedditOAuth2",
     "django.contrib.auth.backends.ModelBackend",
 ]

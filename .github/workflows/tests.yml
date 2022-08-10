@@ -4,20 +4,16 @@ on: [pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-18.04
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.9]
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout current branch
       uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
       with:
-        python-version: ${{ matrix.python-version }}
-    - uses: snok/install-poetry@v1.1.1
+        python-version: '3.10.x'
+    - uses: snok/install-poetry@v1.3.1
       with:
         virtualenvs-create: true
     - name: Install Dependencies

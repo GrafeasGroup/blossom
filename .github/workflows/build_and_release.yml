@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10.x'
+    - uses: snok/install-poetry@v1.3.1
+      with:
+        virtualenvs-create: true
+    - name: Install Dependencies
+      run: |
+        pip install --upgrade pip
+        sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev -y
+        poetry install
+    - name: Add CURRENT_TIME env property
+      # the smart thing to do here would be to use the commit hash, but
+      # github releases are ALPHABETIZED, so a commit hash of `abcdef` will
+      # not be listed as the latest release if `defabc` came before. (╥﹏╥)
+      run: echo "CURRENT_TIME_VERSION=v$(date '+%s')" >> $GITHUB_ENV
+    - name: Build the sucker
+      run: |
+        sed -i -e "s/?????/${{ env.CURRENT_TIME_VERSION }}/g" blossom/__init__.py
+        make build
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "build/blossom.pyz"
+        body: "It's releasin' time"
+        generateReleaseNotes: true
+        tag: ${{ env.CURRENT_TIME_VERSION }}
+        commit: master
+        token: ${{ secrets.GITHUB_TOKEN }}

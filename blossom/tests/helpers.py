@@ -1,8 +1,6 @@
 from types import SimpleNamespace
-from typing import Tuple, Dict, Union
 
-from api.models import Submission
-from authentication.models import BlossomUser, APIKey
+from blossom.authentication.models import BlossomUser
 
 guy = SimpleNamespace(
     username="guymontag",
@@ -16,8 +14,12 @@ jane = SimpleNamespace(
 
 
 def create_test_user(
-    user_info=None, superuser=False, is_volunteer=True, is_grafeas_staff=False
-):
+    user_info: dict = None,
+    superuser: bool = False,
+    is_volunteer: bool = True,
+    is_grafeas_staff: bool = False,
+) -> BlossomUser:
+    """Create a configurable test user."""
     if not user_info:
         user_info = guy
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "blossom"
-version = "1.78.0"
+version = "0.0.0"
 description = "The site!"
 authors = ["Grafeas Group Ltd. <devs@grafeas.org>"]
 
@@ -35,27 +35,30 @@ Markdown = "^3.3.6"
 django-ipware = "^4.0.0"
 django-mathfilters = "^1.0.0"
 django-decorator-include = "^3.0"
-
-[tool.poetry.dev-dependencies]
-better-exceptions = "^0.2.2"
-black = "^22.3.0"
-flake8 = { version = "^3.7.9", allow-prereleases = true }
-flake8-annotations = "^2.0.1"
-flake8-black = "^0.1.1"
-flake8-docstrings = "^1.5.0"
-flake8-import-order = "^0.18.1"
-flake8-variables-names = "^0.0.3"
-pep8-naming = "^0.9.1"
-pre-commit = "^2.4.0"
-seed-isort-config = "^2.1.1"
-isort = "^4.3.21"
 pytest-django = "^3.7"
 pytest-cov = "^2.8"
 pytest-mock = "^1.13"
+pytest-parallel = "^0.1.1"
+shiv = "^1.0.1"
+click = "^8.1.3"
+
+[tool.poetry.dev-dependencies]
+better-exceptions = "^0.3.3"
+black = "^22.3.0"
+flake8 = "^5.0.4"
+flake8-annotations = "^2.9.1"
+flake8-black = "^0.3.3"
+flake8-docstrings = "^1.6.0"
+flake8-import-order = "^0.18.1"
+flake8-variables-names = "^0.0.5"
+pep8-naming = "^0.9.1"
+pre-commit = "^2.4.0"
+seed-isort-config = "^2.2.0"
+isort = "^5.10.1"
 coveralls = "^1.11.1"
 mimesis = "^4.0.0"
 blossom-wrapper = { git = "https://github.com/GrafeasGroup/blossom-wrapper.git", branch = "master" }
-pytest-parallel = "^0.1.1"
+poetry2setup = "^1.0.0"
 
 [tool.black]
 include = '\.pyi?$'
@@ -80,3 +83,6 @@ build-backend = "poetry.masonry.api"
 DJANGO_SETTINGS_MODULE = "blossom.settings.testing"
 python_files = "tests.py test_*.py *_tests.py"
 addopts = "--nomigrations --cov=. --cov-report=html --cov-report=term:skip-covered -p no:warnings"
+
+[tool.poetry.plugins."console_scripts"]
+"blossom" = "blossom.main:main"
