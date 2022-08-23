@@ -35,12 +35,14 @@ blossom/settings/!
 
 with current_zipfile() as archive:
     dotenv_path: str | None
+
     if archive:
         # if archive is none, we're not in the zipfile and are probably
         # in development mode right now.
         dotenv_path = str(pathlib.Path(archive.filename).parent / ".env")
     else:
         dotenv_path = None
+
 dotenv.load_dotenv(dotenv_path=dotenv_path)
 
 logger = logging.getLogger(__name__)
@@ -93,6 +95,7 @@ INSTALLED_APPS = [
     "widget_tweaks",
     "ipware",
     "mathfilters",
+    "django_webserver",
     # blossom internal apps
     "blossom",
     "blossom.api",
@@ -186,6 +189,27 @@ LOGGING = {
         },
     },
 }
+
+PYUWSGI_ARGS = [
+    "--master",
+    "--strict",
+    "--need-app",
+    "--module",
+    ":".join(WSGI_APPLICATION.rsplit(".", 1)),
+    "--no-orphans",
+    # "--vacuum",
+    # "--auto-procname",
+    "--enable-threads",
+    "--offload-threads=4",
+    "--thunder-lock",
+    "--static-map",
+    "=".join([STATIC_URL.rstrip("/"), STATIC_ROOT]),
+    "--static-expires",
+    "/* 7776000",
+    "--socket",
+    "unix:/run/gunicorn.sock" "--http",
+    ":8001",
+]
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "blossom.api.pagination.StandardResultsSetPagination",

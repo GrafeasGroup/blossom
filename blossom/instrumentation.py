@@ -1,14 +1,14 @@
 import atexit
 import logging
 import os
-from typing import Any
 
 import beeline
 
 
-def post_worker_init(worker: Any) -> None:
+# todo: this is currently dead code.
+def post_worker_init() -> None:
     """
-    Gunicorn post-forking hook, initializing new process.
+    uWSGI post-forking hook, initializing new process.  # noqa: D403.
 
     In this case, we use it primarily for instrumentation and telemetry
     setup. Data will only get sent to honeycomb when we define the

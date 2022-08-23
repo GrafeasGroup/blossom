@@ -370,6 +370,25 @@ reference = "master"
 resolved_reference = "9f83971c199b537809b8b3ea6cd508268db8e258"
 
 [[package]]
+name = "django-webserver"
+version = "1.2.0"
+description = "Django management commands for production webservers"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+Django = "*"
+pyuwsgi = {version = "*", optional = true, markers = "extra == \"pyuwsgi\""}
+
+[package.extras]
+waitress = ["waitress"]
+uvicorn = ["uvicorn (>0.6)"]
+test = ["mock", "pytest"]
+pyuwsgi = ["pyuwsgi"]
+gunicorn = ["gunicorn"]
+
+[[package]]
 name = "django-widget-tweaks"
 version = "1.4.12"
 description = "Tweak the form field rendering in templates, not in python-level form definitions."
@@ -1072,6 +1091,14 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "pyuwsgi"
+version = "2.0.20"
+description = "The uWSGI server"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "pyyaml"
 version = "5.4.1"
 description = "YAML parser and emitter for Python"
@@ -1423,7 +1450,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "74c437713d58f733caa6c889df3e40bb2104a6ae5a39079d24fb1a59cca0cc8d"
+content-hash = "e70b6d37f78087b13ffb3d8e980da86feeb4c8b8cf324d32453535b246ba2d9f"
 
 [metadata.files]
 aiohttp = [
@@ -1630,6 +1657,7 @@ django-mathfilters = [
     {file = "django_mathfilters-1.0.0-py3-none-any.whl", hash = "sha256:64200a21bb249fbf27be601d4bbb788779e09c6e063170c097cd82c4d18ebb83"},
 ]
 django-revproxy = []
+django-webserver = []
 django-widget-tweaks = [
     {file = "django-widget-tweaks-1.4.12.tar.gz", hash = "sha256:9bfc5c705684754a83cc81da328b39ad1b80f32bd0f4340e2a810cbab4b0c00e"},
     {file = "django_widget_tweaks-1.4.12-py3-none-any.whl", hash = "sha256:fe6b17d5d595c63331f300917980db2afcf71f240ab9341b954aea8f45d25b9a"},
@@ -1963,6 +1991,7 @@ pytz = [
     {file = "pytz-2022.1-py2.py3-none-any.whl", hash = "sha256:e68985985296d9a66a881eb3193b0906246245294a881e7c8afe623866ac6a5c"},
     {file = "pytz-2022.1.tar.gz", hash = "sha256:1e760e2fe6a8163bc0b3d9a19c4f84342afa0a2affebfaa84b01b978a02ecaa7"},
 ]
+pyuwsgi = []
 pyyaml = [
     {file = "PyYAML-5.4.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:3b2b1824fe7112845700f815ff6a489360226a5609b96ec2190a45e62a9fc922"},
     {file = "PyYAML-5.4.1-cp27-cp27m-win32.whl", hash = "sha256:129def1b7c1bf22faffd67b8f3724645203b79d8f4cc81f674654d9902cb4393"},
