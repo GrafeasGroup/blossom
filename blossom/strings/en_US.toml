@@ -35,7 +35,7 @@ messages = [
 help_message="""
 Help is on the way!
 
-`@Blossom blacklist <username>`: Blacklist / unblacklist user.
+`@Blossom block <username>`: block and unblock user.
 `@Blossom check <url>`: Create a new transcription check for a given Reddit URL.
 `@Blossom checkstats <username>`: Get the stats about the checks the given mode has done.
 `@Blossom help`: Render this message.
@@ -70,9 +70,9 @@ missing_multiple_usernames="This command uses multiple usernames -- make sure yo
 unknown_username="Sorry, I couldn't find a user with the name `u/{username}`. Please check your spelling."
 unknown_payload="Received unknown payload from Slack with key I don't recognize. Unknown key: {}"
 
-[slack.blacklist]
-success="User '{0}' blacklisted."
-success_undo="User '{0}' unblacklisted."
+[slack.block]
+success="User '{0}' blocked."
+success_undo="User '{0}' unblocked."
 
 [slack.reset_coc]
 success="Code of Conduct acceptance revoked for user '{0}'."

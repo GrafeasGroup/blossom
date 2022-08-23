@@ -226,10 +226,10 @@ class TestSubmissionDone:
         assert submission.claimed_by == user
         assert submission.completed_by is None
 
-    def test_claim_blacklisted_user(self, client: Client) -> None:
-        """Test whether claim process errors with blacklisted user."""
+    def test_claim_blocked_user(self, client: Client) -> None:
+        """Test whether claim process errors with blocked user."""
         client, headers, user = setup_user_client(client)
-        user.blacklisted = True
+        user.blocked = True
         user.save()
 
         submission = create_submission()

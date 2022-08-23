@@ -32,7 +32,7 @@ class VolunteerSerializer(serializers.HyperlinkedModelSerializer):
             "last_login",
             "last_update_time",
             "accepted_coc",
-            "blacklisted",
+            "blocked",
             "is_bot",
         )
 

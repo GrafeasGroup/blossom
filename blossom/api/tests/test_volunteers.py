@@ -36,10 +36,10 @@ class TestVolunteerSummary:
         result = client.get(reverse("volunteer-summary") + "?username=404", **headers)
         assert result.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_summary_blacklisted_user(self, client: Client) -> None:
-        """Test that a blacklisted user is reported as having 0 gamma."""
+    def test_summary_blocked_user(self, client: Client) -> None:
+        """Test that a blocked user is reported as having 0 gamma."""
         client, headers, user = setup_user_client(client)
-        user.blacklisted = True
+        user.blocked = True
         user.save()
 
         for _ in range(3):
@@ -55,7 +55,7 @@ class TestVolunteerSummary:
         assert result.json().get("username") == user.username
         assert result.json()["gamma"] == 0
 
-        user.blacklisted = False
+        user.blocked = False
         user.save()
 
         result = client.get(
