@@ -53,7 +53,7 @@ def process_command(data: Dict) -> None:
     # format: first word command -> function to call
     # Reformatted this way because E228 hates the if / elif routing tree.
     options = {
-        "blacklist": block_cmd,
+        "block": block_cmd,
         "check": check_cmd,
         "checkstats": checkstats_cmd,
         "dadjoke": dadjoke_cmd,
