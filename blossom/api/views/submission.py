@@ -400,7 +400,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             406: "The specified volunteer has not claimed the specified submission",
             409: "The submission has already been completed",
             412: "The submission has not yet been claimed",
-            423: "The user is blacklisted",
+            423: "The user is blocked",
         },
     )
     @validate_request(data_params={"username"})
@@ -414,7 +414,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission = get_object_or_404(Submission, id=pk)
         user = get_object_or_404(BlossomUser, username=username)
 
-        if user.blacklisted:
+        if user.blocked:
             return Response(status=status.HTTP_423_LOCKED)
 
         if submission.claimed_by is None:
@@ -445,7 +445,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             403: "The volunteer has not accepted the Code of Conduct",
             404: "The specified volunteer or submission is not found",
             409: "The submission is already claimed",
-            423: "The user is blacklisted",
+            423: "The user is blocked",
             460: "The volunteer has already claimed too many posts",
         },
     )
@@ -460,7 +460,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission = get_object_or_404(Submission, id=pk)
         user = get_object_or_404(BlossomUser, username=username)
 
-        if user.blacklisted:
+        if user.blocked:
             return Response(status=status.HTTP_423_LOCKED)
 
         if not user.accepted_coc:
@@ -518,7 +518,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             404: "The specified volunteer or submission is not found",
             409: "The submission is already completed",
             412: "The submission is not claimed or claimed by someone else",
-            423: "The user is blacklisted",
+            423: "The user is blocked",
             428: "A transcription belonging to the volunteer was not found",
         },
     )
@@ -538,7 +538,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         submission = get_object_or_404(Submission, id=pk)
         user: BlossomUser = get_object_or_404(BlossomUser, username=username)
 
-        if user.blacklisted:
+        if user.blocked:
             return Response(status=status.HTTP_423_LOCKED)
 
         if not user.accepted_coc:

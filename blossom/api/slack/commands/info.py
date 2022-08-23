@@ -116,13 +116,13 @@ def user_transcription_quality_info(user: BlossomUser) -> Dict:
 def user_debug_info(user: BlossomUser) -> Dict:
     """Get debug info about the given user."""
     user_id = f"`{user.id}`"
-    blacklisted = bool_str(user.blacklisted)
+    blocked = bool_str(user.blocked)
     bot = bool_str(user.is_bot)
     accepted_coc = bool_str(user.accepted_coc)
 
     return {
         "ID": user_id,
-        "Blacklisted": blacklisted,
+        "Blocked": blocked,
         "Bot": bot,
         "Accepted CoC": accepted_coc,
     }

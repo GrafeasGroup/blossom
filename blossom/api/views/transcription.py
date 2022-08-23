@@ -77,7 +77,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
             400: "The request does not adhere to the specified HTTP body",
             403: "The volunteer has not accepted the Code of Conduct",
             404: "Either the specified submission or volunteer is not found",
-            423: "The user is blacklisted",
+            423: "The user is blocked",
         },
     )
     @validate_request(
@@ -120,7 +120,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         source = get_object_or_404(Source, name=source)
         removed_from_reddit = request.data.get("removed_from_reddit", "False") == "True"
 
-        if user.blacklisted:
+        if user.blocked:
             return Response(status=status.HTTP_423_LOCKED)
 
         if not user.accepted_coc:

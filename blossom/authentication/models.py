@@ -94,9 +94,9 @@ class BlossomUser(AbstractUser):
     # Whether this particular user has accepted our Code of Conduct.
     accepted_coc = models.BooleanField(default=False)
 
-    # Whether the user is blacklisted; if so, all bots will refuse to interact
-    # with this user.
-    blacklisted = models.BooleanField(default=False)
+    # Whether the user is blocked; if so, any transcribing activity will not be
+    # processed.
+    blocked = models.BooleanField(default=False)
 
     objects = BlossomUserManager()
 
@@ -147,7 +147,7 @@ class BlossomUser(AbstractUser):
         :param start_time: The time to start counting transcriptions from.
         :param end_time: The time to end counting transcriptions to.
         """
-        if self.blacklisted:
+        if self.blocked:
             return 0  # see https://github.com/GrafeasGroup/blossom/issues/15
 
         filters = {

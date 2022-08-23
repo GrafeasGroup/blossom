@@ -87,10 +87,10 @@ class TestSubmissionUnclaim:
         assert result.status_code == status.HTTP_406_NOT_ACCEPTABLE
         assert submission.claimed_by == claiming_user
 
-    def test_unclaim_blacklisted_user(self, client: Client) -> None:
+    def test_unclaim_blocked_user(self, client: Client) -> None:
         """Test whether the unclaim process works correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
-        user.blacklisted = True
+        user.blocked = True
         user.save()
 
         submission = create_submission(claimed_by=user)

@@ -412,10 +412,10 @@ class TestTranscriptionCreation:
         )
         assert result.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_with_blacklisted_user(self, client: Client) -> None:
-        """Test whether a creation with a blacklisted user is rejected."""
+    def test_with_blocked_user(self, client: Client) -> None:
+        """Test whether a creation with a blocked user is rejected."""
         client, headers, user = setup_user_client(client)
-        user.blacklisted = True
+        user.blocked = True
         user.save()
 
         submission = create_submission()
