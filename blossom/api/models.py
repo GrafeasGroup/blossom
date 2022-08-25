@@ -72,7 +72,18 @@ class Submission(models.Model):
     """
 
     class Meta:
-        indexes = [models.Index(fields=["url", "tor_url"])]
+        indexes = [
+            # For finding posts
+            models.Index(fields=["url"], name="url_idx"),
+            # For claim/done
+            models.Index(fields=["tor_url"], name="tor_url_idx"),
+            # For gamma counts
+            models.Index(fields=["completed_by"], name="completed_by_idx"),
+            # For time-restricted gamma counts (used in transcription checks)
+            models.Index(fields=["completed_time"], name="completed_time_idx"),
+            # For identifying old posts
+            models.Index(fields=["create_time"], name="create_time_idx"),
+        ]
 
     # The ID of the Submission on the "source" platform.
     # Note that this field is not used as a primary key; an underlying
@@ -331,6 +342,12 @@ class Transcription(models.Model):
 
 
 class TranscriptionCheck(models.Model):
+    class Meta:
+        indexes = [
+            # For counting checks/comments/warnings
+            models.Index(fields=["status"], name="status_idx"),
+        ]
+
     class TranscriptionCheckStatus(models.TextChoices):
         # The default. The check needs to be claimed by a moderator.
         PENDING = "pending"

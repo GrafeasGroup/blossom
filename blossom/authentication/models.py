@@ -7,6 +7,7 @@ import pytz
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.db.models import QuerySet
+from django.db.models.functions import Lower
 from django.utils import timezone
 from rest_framework_api_key.models import APIKey
 
@@ -61,7 +62,12 @@ class BlossomUser(AbstractUser):
     """
 
     class Meta:
-        indexes = [models.Index(fields=["username", "email"])]
+        indexes = [
+            # For looking up users by username
+            models.Index(fields=["username"], name="username_idx"),
+            # For case-insensitive lookup of users by username
+            models.Index(Lower("username"), name="lower_username_idx"),
+        ]
 
     # The backend class which is used to authenticate the BlossomUser.
     backend = "blossom.authentication.backends.EmailBackend"
