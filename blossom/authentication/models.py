@@ -64,9 +64,9 @@ class BlossomUser(AbstractUser):
     class Meta:
         indexes = [
             # For looking up users by username
-            models.Index(fields=["username"], name="username_idx"),
+            models.Index(fields=["username"], name="user_username_idx"),
             # For case-insensitive lookup of users by username
-            models.Index(Lower("username"), name="lower_username_idx"),
+            models.Index(Lower("username"), name="user_lower_username_idx"),
         ]
 
     # The backend class which is used to authenticate the BlossomUser.
