@@ -70,6 +70,7 @@ missing_username="I don't see a username in your request -- make sure you're for
 missing_multiple_usernames="This command uses multiple usernames -- make sure you're formatting your command as \"@Blossom {action} {argument} {argument} ...\"."
 unknown_username="Sorry, I couldn't find a user with the name `u/{username}`. Please check your spelling."
 unknown_payload="Received unknown payload from Slack with key I don't recognize. Unknown key: {}"
+invalid_url="Sorry, `{url}` is not a valid Reddit URL. Please provide a Reddit link to a ToR post, partner post or transcription."
 
 [slack.block]
 success="User '{0}' blocked."
@@ -99,9 +100,14 @@ success="Generated <{check_url}|a check> for <{tr_url}|this transcription> by u/
 already_checked="There's already <{check_url}|a check> for <{tr_url}|this transcription> by u/{username}!"
 failed_to_send="Sorry, there was a problem sending the check to Slack!"
 no_url="You need to provide a Reddit URL to generate a check for! Use `@Blossom check <url>`."
-invalid_url="Sorry, `{url}` is not a valid Reddit URL. Please provide a Reddit link to a ToR post, partner post or transcription."
 no_submission="Sorry, I couldn't find a submission for the URL `{url}`!"
 no_transcription="<{tor_url}|The post> does not have a transcription yet!"
+
+[slack.unclaim]
+no_url="You need to provide a Reddit URL for the post to unclaim! Use `@Blossom unclaim <url>`."
+not_claimed="I'm not sure what you want me to do here, <{tor_url}|this submission> is *not claimed* by anyone..."
+already_completed="I can't unclaim <{tor_url}|this submission>, it has *already been completed* by u/{username}!"
+
 
 [slack.warnings]
 warning_entry="- {date} on {source} (<{check_url}|check> | <{tr_url}|transcription>)"
