@@ -66,11 +66,6 @@ def unclaim_cmd(channel: str, message: str) -> None:
 
         # FIXME: Ask mod for confirmation
 
-        # Actually unclaim the submission
-        submission.claimed_by = None
-        submission.claim_time = None
-        submission.save()
-
         # FIXME: Send confirmation message
 
         # FIXME: Send message to mod that the post was unclaimed?

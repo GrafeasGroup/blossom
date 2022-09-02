@@ -69,6 +69,8 @@ class BlossomUser(AbstractUser):
             models.Index(Lower("username"), name="user_lower_username_idx"),
         ]
 
+    objects: QuerySet
+
     # The backend class which is used to authenticate the BlossomUser.
     backend = "blossom.authentication.backends.EmailBackend"
 
