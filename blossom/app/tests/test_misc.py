@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 from blossom.api.models import Source
 from blossom.api.slack import client as slack_client
-from blossom.api.slack.actions import ask_about_removing_post
+from blossom.api.slack.actions.report import ask_about_removing_post
 from blossom.app.views import get_blossom_app_source
 from blossom.utils.test_helpers import create_submission
 
