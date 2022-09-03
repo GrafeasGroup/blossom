@@ -1,6 +1,8 @@
 setup:
 	poetry run python manage.py collectstatic --noinput --settings=blossom.settings.testing > /dev/null
-	poetry run poetry2setup > setup.py
+	# poetry2setup is currently broken due to a deprecation in poetry. See https://github.com/abersheeran/poetry2setup/pull/1
+	# poetry run poetry2setup > setup.py
+	poetry run python -c "from pathlib import Path;from poetry.core.factory import Factory;from poetry.core.masonry.builders.sdist import SdistBuilder;print(SdistBuilder(Factory().create_poetry(Path('.').resolve())).build_setup().decode('utf8'))" > setup.py
 
 build: setup shiv
 
