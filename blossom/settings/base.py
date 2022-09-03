@@ -343,6 +343,9 @@ SLACK_USERNAME_FIELD_KEY = os.environ.get("SLACK_USERNAME_FIELD_KEY", "Xf036MPXH
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
+# compress and uniquely name static files when serving
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 ###############################################
 # simple validation -- add new keys above this
 ###############################################
