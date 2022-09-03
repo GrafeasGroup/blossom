@@ -119,7 +119,6 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = "authentication.BlossomUser"
 
 MIDDLEWARE = [
-    "beeline.middleware.django.HoneyMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",

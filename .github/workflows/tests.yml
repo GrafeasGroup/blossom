@@ -12,7 +12,7 @@ jobs:
     - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10.x'
+        python-version: 3.10.x
     - uses: snok/install-poetry@v1.3.1
       with:
         virtualenvs-create: true
@@ -22,10 +22,11 @@ jobs:
         poetry install
     - name: Run Tests
       env:
-        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
-      # the secret will not be present on any PRs from forks, so this stops
-      # the job from exploding
+        # the secret will not be present on any PRs from forks, so this stops
+        # the job from exploding
+        - COVERALLS_REPO_TOKEN: '${{ secrets.COVERALLS_REPO_TOKEN }}'
       run: |
+        poetry run make setup
         poetry run pytest --workers=auto
         if [ "$COVERALLS_REPO_TOKEN" != "" ]; then
           poetry run coveralls
