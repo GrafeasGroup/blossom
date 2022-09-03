@@ -5,8 +5,8 @@ from blossom.strings import translation
 i18n = translation()
 
 
-def blacklist_cmd(channel: str, message: str) -> None:
-    """Blacklist a user based on a message from slack."""
+def block_cmd(channel: str, message: str) -> None:
+    """Block a user based on a message from slack."""
     parsed_message = message.split()
     if len(parsed_message) == 1:
         # they didn't give a username
@@ -14,14 +14,14 @@ def blacklist_cmd(channel: str, message: str) -> None:
     elif len(parsed_message) == 2:
         user, username = parse_user(parsed_message[1])
         if user:
-            if user.blacklisted:
-                user.blacklisted = False
+            if user.blocked:
+                user.blocked = False
                 user.save()
-                msg = i18n["slack"]["blacklist"]["success_undo"].format(username)
+                msg = i18n["slack"]["block"]["success_undo"].format(username)
             else:
-                user.blacklisted = True
+                user.blocked = True
                 user.save()
-                msg = i18n["slack"]["blacklist"]["success"].format(username)
+                msg = i18n["slack"]["block"]["success"].format(username)
         else:
             msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
     else:

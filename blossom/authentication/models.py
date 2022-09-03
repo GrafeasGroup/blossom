@@ -7,6 +7,7 @@ import pytz
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.db.models import QuerySet
+from django.db.models.functions import Lower
 from django.utils import timezone
 from rest_framework_api_key.models import APIKey
 
@@ -61,7 +62,12 @@ class BlossomUser(AbstractUser):
     """
 
     class Meta:
-        indexes = [models.Index(fields=["username", "email"])]
+        indexes = [
+            # For looking up users by username
+            models.Index(fields=["username"], name="user_username_idx"),
+            # For case-insensitive lookup of users by username
+            models.Index(Lower("username"), name="user_lower_username_idx"),
+        ]
 
     # The backend class which is used to authenticate the BlossomUser.
     backend = "blossom.authentication.backends.EmailBackend"
@@ -94,9 +100,9 @@ class BlossomUser(AbstractUser):
     # Whether this particular user has accepted our Code of Conduct.
     accepted_coc = models.BooleanField(default=False)
 
-    # Whether the user is blacklisted; if so, all bots will refuse to interact
-    # with this user.
-    blacklisted = models.BooleanField(default=False)
+    # Whether the user is blocked; if so, any transcribing activity will not be
+    # processed.
+    blocked = models.BooleanField(default=False)
 
     objects = BlossomUserManager()
 
@@ -147,7 +153,7 @@ class BlossomUser(AbstractUser):
         :param start_time: The time to start counting transcriptions from.
         :param end_time: The time to end counting transcriptions to.
         """
-        if self.blacklisted:
+        if self.blocked:
             return 0  # see https://github.com/GrafeasGroup/blossom/issues/15
 
         filters = {

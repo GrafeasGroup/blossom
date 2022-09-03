@@ -196,10 +196,10 @@ class TestSubmissionClaim:
         submission.refresh_from_db()
         assert submission.claimed_by is None
 
-    def test_claim_blacklisted_user(self, client: Client) -> None:
-        """Test whether claim process errors with a blacklisted user."""
+    def test_claim_blocked_user(self, client: Client) -> None:
+        """Test whether claim process errors with a blocked user."""
         client, headers, user = setup_user_client(client)
-        user.blacklisted = True
+        user.blocked = True
         user.save()
 
         submission = create_submission()

@@ -40,7 +40,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     basename = "volunteer"
     permission_classes = (BlossomApiPermission,)
     filter_backends = [CaseInsensitiveUsernameFilter, DjangoFilterBackend]
-    filterset_fields = ["id", "is_volunteer", "is_bot", "accepted_coc", "blacklisted"]
+    filterset_fields = ["id", "is_volunteer", "is_bot", "accepted_coc", "blocked"]
 
     @csrf_exempt
     @swagger_auto_schema(

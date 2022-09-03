@@ -40,7 +40,7 @@ def test_user_info_text_new_user(client: Client) -> None:
 
 *Debug Info*:
 - ID: `123`
-- Blacklisted: No
+- Blocked: No
 - Bot: No
 - Accepted CoC: No"""
 
@@ -111,7 +111,7 @@ def test_user_info_text_old_user(client: Client) -> None:
 
 *Debug Info*:
 - ID: `123`
-- Blacklisted: No
+- Blocked: No
 - Bot: No
 - Accepted CoC: Yes"""
 

@@ -5,7 +5,7 @@ Every command must be registered in the __init__.py file.
 from typing import Dict
 
 from blossom.api.slack import client
-from blossom.api.slack.commands.blacklist import blacklist_cmd
+from blossom.api.slack.commands.block import block_cmd
 from blossom.api.slack.commands.check import check_cmd
 from blossom.api.slack.commands.checkstats import checkstats_cmd
 from blossom.api.slack.commands.dadjoke import dadjoke_cmd
@@ -53,7 +53,7 @@ def process_command(data: Dict) -> None:
     # format: first word command -> function to call
     # Reformatted this way because E228 hates the if / elif routing tree.
     options = {
-        "blacklist": blacklist_cmd,
+        "block": block_cmd,
         "check": check_cmd,
         "checkstats": checkstats_cmd,
         "dadjoke": dadjoke_cmd,

@@ -23,7 +23,7 @@ class BlossomUserAdmin(UserAdmin):
                     "is_volunteer",
                     "accepted_coc",
                     "api_key",
-                    "blacklisted",
+                    "blocked",
                 )
             },
         ),
