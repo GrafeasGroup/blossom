@@ -591,18 +591,6 @@ setproctitle = ["setproctitle"]
 tornado = ["tornado (>=0.2)"]
 
 [[package]]
-name = "honeycomb-beeline"
-version = "2.18.0"
-description = "Honeycomb library for easy instrumentation"
-category = "main"
-optional = false
-python-versions = ">=2.7"
-
-[package.dependencies]
-libhoney = ">=1.7.0"
-wrapt = ">=1.12.1,<2.0.0"
-
-[[package]]
 name = "identify"
 version = "2.5.3"
 description = "File identification library for Python"
@@ -688,18 +676,6 @@ MarkupSafe = ">=2.0"
 
 [package.extras]
 i18n = ["Babel (>=2.7)"]
-
-[[package]]
-name = "libhoney"
-version = "2.1.1"
-description = "Python library for sending data to Honeycomb"
-category = "main"
-optional = false
-python-versions = ">=3.5,<4"
-
-[package.dependencies]
-requests = ">=2.24.0,<3.0.0"
-statsd = ">=3.3.0,<4.0.0"
 
 [[package]]
 name = "markdown"
@@ -1381,14 +1357,6 @@ optional = false
 python-versions = ">=3.5"
 
 [[package]]
-name = "statsd"
-version = "3.3.0"
-description = "A simple statsd client."
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "stripe"
 version = "2.76.0"
 description = "Python bindings for the Stripe API"
@@ -1575,7 +1543,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "9e6fefaa5e49ebcd50ddbadace29361a44c5b48687cda99e866fa7f6e2d491aa"
+content-hash = "a80d7da65876c71ff2ab5a3ef9576d8e65d3aca1ebcb813303bd70976d9cc8fa"
 
 [metadata.files]
 aiohttp = [
@@ -1895,10 +1863,6 @@ gunicorn = [
     {file = "gunicorn-20.1.0-py3-none-any.whl", hash = "sha256:9dcc4547dbb1cb284accfb15ab5667a0e5d1881cc443e0677b4882a4067a807e"},
     {file = "gunicorn-20.1.0.tar.gz", hash = "sha256:e0a968b5ba15f8a328fdfd7ab1fcb5af4470c28aaf7e55df02a99bc13138e6e8"},
 ]
-honeycomb-beeline = [
-    {file = "honeycomb-beeline-2.18.0.tar.gz", hash = "sha256:53a694c42107f98167a2c610a3029a930f7e648c20641a07c6a401fd7990ff18"},
-    {file = "honeycomb_beeline-2.18.0-py2.py3-none-any.whl", hash = "sha256:934e12987641faec7c56f831506d341a3e639a46c6fde3f8e83183bb2a3c212f"},
-]
 identify = []
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
@@ -1922,7 +1886,6 @@ itypes = [
     {file = "itypes-1.2.0.tar.gz", hash = "sha256:af886f129dea4a2a1e3d36595a2d139589e4dd287f5cab0b40e799ee81570ff1"},
 ]
 jinja2 = []
-libhoney = []
 markdown = []
 markupsafe = [
     {file = "MarkupSafe-2.1.1-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:86b1f75c4e7c2ac2ccdaec2b9022845dbb81880ca318bb7a0a01fbf7813e3812"},
@@ -2307,10 +2270,6 @@ social-auth-core = []
 sqlparse = [
     {file = "sqlparse-0.4.2-py3-none-any.whl", hash = "sha256:48719e356bb8b42991bdbb1e8b83223757b93789c00910a616a071910ca4a64d"},
     {file = "sqlparse-0.4.2.tar.gz", hash = "sha256:0c00730c74263a94e5a9919ade150dfc3b19c574389985446148402998287dae"},
-]
-statsd = [
-    {file = "statsd-3.3.0-py2.py3-none-any.whl", hash = "sha256:c610fb80347fca0ef62666d241bce64184bd7cc1efe582f9690e045c25535eaa"},
-    {file = "statsd-3.3.0.tar.gz", hash = "sha256:e3e6db4c246f7c59003e51c9720a51a7f39a396541cb9b147ff4b14d15b5dd1f"},
 ]
 stripe = []
 tblib = [
