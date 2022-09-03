@@ -6,6 +6,7 @@ import click
 import django
 import pyuwsgi
 from click.core import Context
+from opentelemetry.instrumentation.django import DjangoInstrumentor
 
 from blossom import __version__
 
@@ -51,6 +52,9 @@ def main(ctx: Context, command: str, use_pyuwsgi: bool) -> None:
     if use_pyuwsgi:
         call_command("migrate")
         call_command("bootstrap_site")
+        if not settings.DEBUG:
+            # enable telemetry to Honeycomb
+            DjangoInstrumentor().instrument()
         pyuwsgi.run(settings.PYUWSGI_ARGS)
     else:
         call_command("runserver")

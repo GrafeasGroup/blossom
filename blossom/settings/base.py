@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import logging
 import os
-import pathlib
+from pathlib import Path
 
 import dotenv
 from django.urls import reverse_lazy
@@ -39,7 +39,7 @@ with current_zipfile() as archive:
     if archive:
         # if archive is none, we're not in the zipfile and are probably
         # in development mode right now.
-        dotenv_path = str(pathlib.Path(archive.filename).parent / ".env")
+        dotenv_path = str(Path(archive.filename).parent / ".env")
     else:
         dotenv_path = None
 
@@ -47,8 +47,8 @@ dotenv.load_dotenv(dotenv_path=dotenv_path)
 
 logger = logging.getLogger(__name__)
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Build paths inside the project like this: BASE_DIR / "myfolder"
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -72,11 +72,11 @@ ALLOWED_HOSTS = [
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_ROOT = BASE_DIR / "static"
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "static_dev")]
+STATICFILES_DIRS = [BASE_DIR / "static_dev"]
 
 LOGIN_URL = reverse_lazy("login")
 LOGOUT_URL = reverse_lazy("logout")
@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.humanize",
     "django.forms",
+    "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
     # additional functionality
     "widget_tweaks",
@@ -120,6 +121,7 @@ AUTH_USER_MODEL = "authentication.BlossomUser"
 MIDDLEWARE = [
     "beeline.middleware.django.HoneyMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -203,11 +205,10 @@ PYUWSGI_ARGS = [
     "--offload-threads=4",
     "--thunder-lock",
     "--static-map",
-    "=".join([STATIC_URL.rstrip("/"), STATIC_ROOT]),
+    "=".join([str(STATIC_URL).rstrip("/"), str(STATIC_ROOT)]),
     "--static-expires",
     "/* 7776000",
-    "--socket",
-    "unix:/run/gunicorn.sock" "--http",
+    "--http",
     ":8001",
 ]
 
