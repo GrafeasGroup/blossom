@@ -33,22 +33,24 @@ Otherwise, please change the required other environment files in
 blossom/settings/!
 """
 
+logger = logging.getLogger(__name__)
+
+# Build paths inside the project like this: BASE_DIR / "myfolder"
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
+
 with current_zipfile() as archive:
     dotenv_path: str | None
 
     if archive:
         # if archive is none, we're not in the zipfile and are probably
         # in development mode right now.
-        dotenv_path = str(Path(archive.filename).parent / ".env")
+        ARCHIVE_DIR = Path(archive.filename).parent
+        dotenv_path = str(ARCHIVE_DIR / ".env")
     else:
+        ARCHIVE_DIR = None
         dotenv_path = None
 
 dotenv.load_dotenv(dotenv_path=dotenv_path)
-
-logger = logging.getLogger(__name__)
-
-# Build paths inside the project like this: BASE_DIR / "myfolder"
-BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
