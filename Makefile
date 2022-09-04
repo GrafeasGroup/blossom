@@ -1,4 +1,5 @@
 setup:
+	rm -rf blossom/static/
 	poetry run python manage.py collectstatic --noinput --settings=blossom.settings.testing > /dev/null
 	# poetry2setup is currently broken due to a deprecation in poetry. See https://github.com/abersheeran/poetry2setup/pull/1
 	# poetry run poetry2setup > setup.py

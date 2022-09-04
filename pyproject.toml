@@ -3,6 +3,7 @@ name = "blossom"
 version = "0.0.0"
 description = "The site!"
 authors = ["Grafeas Group Ltd. <devs@grafeas.org>"]
+include = ["blossom/static/*"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
