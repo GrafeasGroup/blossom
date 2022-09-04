@@ -210,6 +210,7 @@ class Command(BaseCommand):
 
         if Post.objects.filter(slug__in=slugs).count() == len(slugs):
             logger.debug(self.style.SUCCESS("No articles created; all present."))
+            return
 
         if not Post.objects.filter(slug=slugs[0]).first():
             Post.objects.create(
