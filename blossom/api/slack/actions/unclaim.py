@@ -35,7 +35,9 @@ def process_unclaim_action(data: Dict) -> None:
         )
 
 
-def _process_unclaim_confirm(channel_id: str, message_ts: str, submission: Submission, user: BlossomUser) -> None:
+def _process_unclaim_confirm(
+    channel_id: str, message_ts: str, submission: Submission, user: BlossomUser
+) -> None:
     """The mod confirmed the unclaim action."""
     tor_url = submission.tor_url
 
@@ -72,7 +74,9 @@ def _process_unclaim_confirm(channel_id: str, message_ts: str, submission: Submi
     # FIXME: Post confirmation message
 
 
-def _process_unclaim_cancel(channel_id: str, message_ts: str, submission: Submission, user: BlossomUser) -> None:
+def _process_unclaim_cancel(
+    channel_id: str, message_ts: str, submission: Submission, user: BlossomUser
+) -> None:
     """The mod cancelled the unclaim action."""
     # FIXME: Edit message
     pass

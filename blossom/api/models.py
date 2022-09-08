@@ -37,6 +37,7 @@ class Source(models.Model):
     The majority of these will be "reddit", but to save on space and more easily
     standardize we have the option of including other sources as we grow.
     """
+
     objects: QuerySet
 
     # Name of the origin of the content. For example: reddit, blossom, etc.
@@ -72,6 +73,7 @@ class Submission(models.Model):
     An OCR transcription as well as a human transcription can be seen as a
     common example of this phenomenon.
     """
+
     class Meta:
         indexes = [
             # For finding posts
