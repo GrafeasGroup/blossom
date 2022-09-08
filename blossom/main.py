@@ -4,8 +4,9 @@ import sys
 
 import click
 import django
-import gunicorn.app.wsgiapp as wsgi
+import pyuwsgi
 from click.core import Context
+from opentelemetry.instrumentation.django import DjangoInstrumentor
 
 from blossom import __version__
 
@@ -22,15 +23,15 @@ from blossom import __version__
     help="Pass a command back to Django.",
 )
 @click.option(
-    "-g",
-    "--gunicorn",
-    "gunicorn",
+    "-p",
+    "--pyuwsgi",
+    "use_pyuwsgi",
     is_flag=True,
     default=False,
-    help="Start server with Gunicorn.",
+    help="Start server with Pyuwsgi.",
 )
 @click.version_option(version=__version__, prog_name="blossom")
-def main(ctx: Context, command: str, gunicorn: bool) -> None:
+def main(ctx: Context, command: str, use_pyuwsgi: bool) -> None:
     """Run Blossom!"""  # noqa: D400
     if ctx.invoked_subcommand:
         # If we asked for a specific command, don't run the server. Instead, pass control
@@ -41,24 +42,20 @@ def main(ctx: Context, command: str, gunicorn: bool) -> None:
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "blossom.settings.routing")
     django.setup()
 
+    from django.conf import settings
     from django.core.management import call_command
 
     if command:
         call_command(command)
         return
 
-    if gunicorn:
-        import blossom.instrumentation
-
-        # This is just a simple way to supply args to gunicorn
-        sys.argv = [
-            f"-c {blossom.instrumentation.__file__}.py"
-            " --access-logfile -"
-            " --workers 3"
-            " --bind unix:/run/gunicorn.sock",
-            " blossom.wsgi:application",
-        ]
-        wsgi.run()
+    if use_pyuwsgi:
+        call_command("migrate")
+        call_command("bootstrap_site")
+        if not settings.DEBUG:
+            # enable telemetry to Honeycomb
+            DjangoInstrumentor().instrument()
+        pyuwsgi.run(settings.PYUWSGI_ARGS)
     else:
         call_command("runserver")
 
@@ -81,7 +78,6 @@ def selfcheck(verbose: bool) -> None:
 
     import blossom
 
-    # breakpoint()
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "blossom.settings.testing")
     django.setup()
     # -x is 'exit immediately if a test fails'
