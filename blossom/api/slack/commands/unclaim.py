@@ -69,7 +69,7 @@ def unclaim_cmd(channel: str, message: str) -> None:
             return
 
         # Send a message with buttons, to ask the mod for confirmation
-        # The actual unclaiming is handled in the Slack action that is sent from the button
+        # The actual unclaiming is handled in the Slack action from the button
         client.chat_postMessage(
             channel=channel,
             blocks=get_ask_confirmation_blocks(submission, user),

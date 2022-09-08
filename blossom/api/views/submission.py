@@ -41,9 +41,9 @@ from blossom.api.pagination import StandardResultsSetPagination
 from blossom.api.serializers import SubmissionSerializer
 from blossom.api.slack import client as slack
 from blossom.api.slack.actions.report import (
+    ReportMessageStatus,
     ask_about_removing_post,
     update_submission_report,
-    ReportMessageStatus,
 )
 from blossom.api.slack.transcription_check.messages import send_check_message
 from blossom.api.views.volunteer import VolunteerViewSet

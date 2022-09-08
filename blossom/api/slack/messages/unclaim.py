@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict, List
 
 from blossom.api.models import Submission
 from blossom.api.slack.utils import get_source

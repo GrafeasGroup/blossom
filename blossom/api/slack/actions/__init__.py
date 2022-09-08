@@ -1,3 +1,4 @@
+"""Handlers for Slack actions (e.g. button clicks)."""
 import binascii
 import hashlib
 import hmac
@@ -12,7 +13,6 @@ from blossom.api.slack import client
 from blossom.api.slack.actions.report import process_submission_report_update
 from blossom.api.slack.commands.migrate_user import process_migrate_user
 from blossom.api.slack.transcription_check.actions import process_check_action
-
 from blossom.strings import translation
 
 logger = logging.getLogger("blossom.api.slack.actions")

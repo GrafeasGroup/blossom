@@ -4,8 +4,8 @@ from typing import Dict
 
 from praw.models.reddit.submission import SubmissionModeration
 
-from blossom.api.slack import client
 from blossom.api.models import Submission
+from blossom.api.slack import client
 from blossom.api.slack.messages.unclaim import (
     get_cancel_blocks,
     get_cancel_text,
@@ -24,7 +24,7 @@ UNCLAIM_REDDIT_FLAIR_ID = os.getenv("UNCLAIM_REDDIT_FLAIR_ID")
 
 
 def process_unclaim_action(data: Dict) -> None:
-    """A mod clicked a button on an unclaim confirmation message."""
+    """Handle a mod clicking a button on an unclaim confirmation message."""
     value = data["actions"][0].get("value")
     parts = value.split("_")
 
@@ -53,7 +53,7 @@ def process_unclaim_action(data: Dict) -> None:
 def _process_unclaim_confirm(
     channel_id: str, message_ts: str, submission: Submission, user: BlossomUser
 ) -> None:
-    """The mod confirmed the unclaim action."""
+    """Handle a mod confirming the unclaim action."""
     tor_url = submission.tor_url
 
     if submission.claimed_by is None:
@@ -105,7 +105,7 @@ def _process_unclaim_confirm(
 def _process_unclaim_cancel(
     channel_id: str, message_ts: str, submission: Submission, user: BlossomUser
 ) -> None:
-    """The mod cancelled the unclaim action."""
+    """Handle a mod cancelling the unclaim action."""
     # Notify the mods
     response = client.chat_update(
         channel=channel_id,

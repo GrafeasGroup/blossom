@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Dict
+from typing import Dict, List
 
 from django.conf import settings
 
