@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 from typing import Dict, List
 
@@ -5,9 +6,10 @@ from django.conf import settings
 
 from blossom.api.models import Submission
 from blossom.api.slack import client
-from blossom.api.slack.actions import logger
 from blossom.app.reddit_actions import approve_post, remove_post
 from blossom.utils.workers import send_to_worker
+
+logger = logging.getLogger("blossom.api.slack.actions.report")
 
 
 class ReportMessageStatus(Enum):
