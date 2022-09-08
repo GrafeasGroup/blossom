@@ -1,11 +1,20 @@
+import logging
 from typing import Dict
 
 from blossom.api.slack import client
 from blossom.api.models import Submission
+from blossom.api.slack.messages.unclaim import (
+    get_cancel_blocks,
+    get_cancel_text,
+    get_confirm_blocks,
+    get_confirm_text,
+)
 from blossom.authentication.models import BlossomUser
 from blossom.strings import translation
 
 i18n = translation()
+
+logger = logging.getLogger("blossom.api.actions.unclaim")
 
 
 def process_unclaim_action(data: Dict) -> None:
@@ -71,12 +80,31 @@ def _process_unclaim_confirm(
     submission.claim_time = None
     submission.save()
 
-    # FIXME: Post confirmation message
+    # Notify the mods
+    response = client.chat_update(
+        channel=channel_id,
+        ts=message_ts,
+        blocks=get_confirm_blocks(submission, user),
+        text=get_confirm_text(),
+    )
+    if not response["ok"]:
+        logger.error(
+            f"Could not update unclaim for submission {submission.id} on Slack!"
+        )
 
 
 def _process_unclaim_cancel(
     channel_id: str, message_ts: str, submission: Submission, user: BlossomUser
 ) -> None:
     """The mod cancelled the unclaim action."""
-    # FIXME: Edit message
-    pass
+    # Notify the mods
+    response = client.chat_update(
+        channel=channel_id,
+        ts=message_ts,
+        blocks=get_cancel_blocks(submission, user),
+        text=get_cancel_text(),
+    )
+    if not response["ok"]:
+        logger.error(
+            f"Could not update unclaim for submission {submission.id} on Slack!"
+        )

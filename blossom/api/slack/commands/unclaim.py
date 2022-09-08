@@ -1,4 +1,8 @@
 from blossom.api.slack import client
+from blossom.api.slack.messages.unclaim import (
+    get_ask_confirmation_blocks,
+    get_ask_confirmation_text,
+)
 from blossom.api.slack.utils import extract_url_from_link
 from blossom.api.views.find import find_by_url, normalize_url
 from blossom.strings import translation
@@ -49,8 +53,8 @@ def unclaim_cmd(channel: str, message: str) -> None:
             )
             return
 
-        author = submission.claimed_by
-        username = author.username
+        user = submission.claimed_by
+        username = user.username
 
         if submission.completed_by is not None:
             # The submission is already completed, abort
@@ -64,11 +68,13 @@ def unclaim_cmd(channel: str, message: str) -> None:
             )
             return
 
-        # FIXME: Ask mod for confirmation
-
-        # FIXME: Send confirmation message
-
-        # FIXME: Send message to mod that the post was unclaimed?
+        # Send a message with buttons, to ask the mod for confirmation
+        # The actual unclaiming is handled in the Slack action that is sent from the button
+        client.chat_postMessage(
+            channel=channel,
+            blocks=get_ask_confirmation_blocks(submission, user),
+            text=get_ask_confirmation_text(),
+        )
     else:
         # URL not found
         client.chat_postMessage(
