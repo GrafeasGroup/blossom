@@ -1,5 +1,8 @@
 import logging
+import os
 from typing import Dict
+
+from praw.models.reddit.submission import SubmissionModeration
 
 from blossom.api.slack import client
 from blossom.api.models import Submission
@@ -10,11 +13,14 @@ from blossom.api.slack.messages.unclaim import (
     get_confirm_text,
 )
 from blossom.authentication.models import BlossomUser
+from blossom.reddit import REDDIT
 from blossom.strings import translation
 
 i18n = translation()
 
 logger = logging.getLogger("blossom.api.actions.unclaim")
+
+UNCLAIM_REDDIT_FLAIR_ID = os.getenv("UNCLAIM_REDDIT_FLAIR_ID")
 
 
 def process_unclaim_action(data: Dict) -> None:
@@ -80,6 +86,9 @@ def _process_unclaim_confirm(
     submission.claim_time = None
     submission.save()
 
+    # Update the Reddit flair
+    _unclaim_reddit_flair(submission)
+
     # Notify the mods
     response = client.chat_update(
         channel=channel_id,
@@ -108,3 +117,9 @@ def _process_unclaim_cancel(
         logger.error(
             f"Could not update unclaim for submission {submission.id} on Slack!"
         )
+
+
+def _unclaim_reddit_flair(submission: Submission) -> None:
+    """Update the Reddit flair of the submission to indicate that it's unclaimed."""
+    r_tor_submission: SubmissionModeration = REDDIT.submission(submission.tor_url).mod()
+    r_tor_submission.flair.select(flair_template_id=UNCLAIM_REDDIT_FLAIR_ID)
