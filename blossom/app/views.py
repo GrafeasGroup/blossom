@@ -25,7 +25,7 @@ from django.views.generic import View
 from rest_framework import status
 
 from blossom.api.models import Source, Submission, Transcription
-from blossom.api.slack.actions import ask_about_removing_post
+from blossom.api.slack.actions.report import ask_about_removing_post
 from blossom.api.views.submission import SubmissionViewSet
 from blossom.app.permissions import RequireCoCMixin, require_coc, require_reddit_auth
 from blossom.app.reddit_actions import (

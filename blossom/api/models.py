@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import QuerySet
 from django.utils import timezone
 
 from blossom.api.slack import client
@@ -36,6 +37,8 @@ class Source(models.Model):
     The majority of these will be "reddit", but to save on space and more easily
     standardize we have the option of including other sources as we grow.
     """
+
+    objects: QuerySet
 
     # Name of the origin of the content. For example: reddit, blossom, etc.
     name = models.CharField(max_length=36, primary_key=True)
@@ -84,6 +87,8 @@ class Submission(models.Model):
             # For identifying old posts
             models.Index(fields=["create_time"], name="submission_create_time_idx"),
         ]
+
+    objects: QuerySet
 
     # The ID of the Submission on the "source" platform.
     # Note that this field is not used as a primary key; an underlying
@@ -294,6 +299,8 @@ class Transcription(models.Model):
             models.Index(fields=["url"], name="transcription_url_idx"),
         ]
 
+    objects: QuerySet
+
     # The Submission for which the Transcription is made.
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE)
 
@@ -368,6 +375,8 @@ class TranscriptionCheck(models.Model):
         WARNING_RESOLVED = "warning_resolved"
         # The moderator warned the user and they didn't respond or resolve the issues.
         WARNING_UNFIXED = "warning_unfixed"
+
+    objects: QuerySet
 
     # The Transcription for which the check is made.
     transcription = models.ForeignKey(Transcription, on_delete=models.CASCADE)

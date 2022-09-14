@@ -14,6 +14,7 @@ from blossom.api.slack.commands.info import info_cmd
 from blossom.api.slack.commands.migrate_user import migrate_user_cmd
 from blossom.api.slack.commands.ping import ping_cmd
 from blossom.api.slack.commands.reset import reset_cmd
+from blossom.api.slack.commands.unclaim import unclaim_cmd
 from blossom.api.slack.commands.unwatch import unwatch_cmd
 from blossom.api.slack.commands.warnings import warnings_cmd
 from blossom.api.slack.commands.watch import watch_cmd
@@ -67,6 +68,7 @@ def process_command(data: Dict) -> None:
         "watch": watch_cmd,
         "watchlist": watchlist_cmd,
         "watchstatus": watchstatus_cmd,
+        "unclaim": unclaim_cmd,
     }
 
     tokens = message.split()
