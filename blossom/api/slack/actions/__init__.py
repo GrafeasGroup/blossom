@@ -11,6 +11,7 @@ from django.http import HttpRequest
 
 from blossom.api.slack import client
 from blossom.api.slack.actions.report import process_submission_report_update
+from blossom.api.slack.actions.unclaim import process_unclaim_action
 from blossom.api.slack.commands.migrate_user import process_migrate_user
 from blossom.api.slack.transcription_check.actions import process_check_action
 from blossom.strings import translation
@@ -24,6 +25,8 @@ def process_action(data: Dict) -> None:
     value: str = data["actions"][0].get("value")
     if value.startswith("check"):
         process_check_action(data)
+    elif value.startswith("unclaim"):
+        process_unclaim_action(data)
     elif "submission" in value:
         # buttons related to approving or removing submissions on the app and on Reddit
         process_submission_report_update(data)
