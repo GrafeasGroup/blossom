@@ -43,6 +43,7 @@ Help is on the way!
 `@Blossom info <username>`: Get information about a user.
 `@Blossom migrate <source> <target>`: Creates a request to migrate the gamma count of the source to the target. Needs verification.
 `@Blossom reset <username>`: Toggle CoC status of user.
+`@Blossom unclaim <url>`: Forcibly unclaim the post with the given Reddit URL from the user.
 `@Blossom unwatch <username>`: Reset check percentage.
 `@Blossom warnings <username>`: Get the warnings of a given user.
 `@Blossom watch <username> <percentage>`, where `<percentage>` is a number between 0 and 100: Overwrite check percentage.
@@ -69,6 +70,7 @@ missing_username="I don't see a username in your request -- make sure you're for
 missing_multiple_usernames="This command uses multiple usernames -- make sure you're formatting your command as \"@Blossom {action} {argument} {argument} ...\"."
 unknown_username="Sorry, I couldn't find a user with the name `u/{username}`. Please check your spelling."
 unknown_payload="Received unknown payload from Slack with key I don't recognize. Unknown key: {}"
+invalid_url="Sorry, `{url}` is not a valid Reddit URL. Please provide a Reddit link to a ToR post, partner post or transcription."
 
 [slack.block]
 success="User '{0}' blocked."
@@ -98,9 +100,14 @@ success="Generated <{check_url}|a check> for <{tr_url}|this transcription> by u/
 already_checked="There's already <{check_url}|a check> for <{tr_url}|this transcription> by u/{username}!"
 failed_to_send="Sorry, there was a problem sending the check to Slack!"
 no_url="You need to provide a Reddit URL to generate a check for! Use `@Blossom check <url>`."
-invalid_url="Sorry, `{url}` is not a valid Reddit URL. Please provide a Reddit link to a ToR post, partner post or transcription."
 no_submission="Sorry, I couldn't find a submission for the URL `{url}`!"
 no_transcription="<{tor_url}|The post> does not have a transcription yet!"
+
+[slack.unclaim]
+no_url="You need to provide a Reddit URL for the post to unclaim! Use `@Blossom unclaim <url>`."
+not_claimed="I'm not sure what you want me to do here, <{tor_url}|this submission> is *not claimed* by anyone..."
+already_completed="I can't unclaim <{tor_url}|this submission>, it has *already been completed* by u/{username}!"
+invalid_action="The action '{action}' is invalid for unclaiming, you should loudly complain to a Dev about this."
 
 [slack.warnings]
 warning_entry="- {date} on {source} (<{check_url}|check> | <{tr_url}|transcription>)"

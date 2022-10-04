@@ -10,8 +10,8 @@ from blossom.api.slack.actions import (
     is_valid_github_request,
     is_valid_slack_request,
     process_action,
-    send_github_sponsors_message,
 )
+from blossom.api.slack.actions.github_sponsors import send_github_sponsors_message
 from blossom.api.slack.commands import process_command
 
 

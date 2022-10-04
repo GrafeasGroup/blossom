@@ -40,7 +40,7 @@ from blossom.api.models import Source, Submission, Transcription, TranscriptionC
 from blossom.api.pagination import StandardResultsSetPagination
 from blossom.api.serializers import SubmissionSerializer
 from blossom.api.slack import client as slack
-from blossom.api.slack.actions import (
+from blossom.api.slack.actions.report import (
     ReportMessageStatus,
     ask_about_removing_post,
     update_submission_report,

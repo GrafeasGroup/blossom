@@ -6,6 +6,8 @@ from praw import Reddit
 
 # This is abstracted out for testing purposes so that it's easy to override.
 
+REDDIT: Reddit
+
 if settings.ENABLE_REDDIT:
     REDDIT = Reddit(
         client_id=os.getenv("REDDIT_CLIENT_ID"),

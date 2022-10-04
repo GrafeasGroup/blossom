@@ -1,25 +1,15 @@
-import binascii
-import hashlib
-import hmac
 import logging
-import time
 from enum import Enum
 from typing import Dict, List
 
 from django.conf import settings
-from django.http import HttpRequest
 
 from blossom.api.models import Submission
 from blossom.api.slack import client
-from blossom.api.slack.commands.migrate_user import process_migrate_user
-from blossom.api.slack.transcription_check.actions import process_check_action
 from blossom.app.reddit_actions import approve_post, remove_post
-from blossom.strings import translation
 from blossom.utils.workers import send_to_worker
 
-logger = logging.getLogger("blossom.api.slack.events")
-
-i18n = translation()
+logger = logging.getLogger("blossom.api.slack.actions.report")
 
 
 class ReportMessageStatus(Enum):
@@ -28,94 +18,6 @@ class ReportMessageStatus(Enum):
     REPORTED = "reported"
     REMOVED = "removed"
     APPROVED = "approved"
-
-
-def process_action(data: Dict) -> None:
-    """Process a Slack action, e.g. a button press."""
-    value: str = data["actions"][0].get("value")
-    if value.startswith("check"):
-        process_check_action(data)
-    elif "submission" in value:
-        # buttons related to approving or removing submissions on the app and on Reddit
-        process_submission_report_update(data)
-    elif "migration" in value:
-        # buttons related to account gamma migrations
-        process_migrate_user(data)
-    else:
-        client.chat_postMessage(
-            channel=data["channel"]["id"],
-            text=i18n["slack"]["errors"]["unknown_payload"].format(value),
-        )
-
-
-def send_github_sponsors_message(data: Dict, action: str) -> None:
-    """
-    Process the POST request from GitHub Sponsors.
-
-    Every time someone performs an action on GitHub Sponsors, we'll get
-    a POST request with the intent and some other information. This translates
-    the GitHub call to something that Slack can understand, then forwards it
-    to the #org_running channel.
-    """
-    emote = ":tada:"
-    if action == "cancelled" or action == "pending_cancellation":
-        emote = ":sob:"
-    if (
-        action == "edited"
-        or action == "tier_changed"
-        or action == "pending_tier_change"
-    ):
-        emote = ":rotating_light:"
-    username = data["sponsorship"]["sponsor"]["login"]
-    sponsorlevel = data["sponsorship"]["tier"]["name"]
-
-    msg = i18n["slack"]["github_sponsor_update"].format(
-        emote, action, username, sponsorlevel
-    )
-    client.chat_postMessage(channel=settings.SLACK_GITHUB_SPONSORS_CHANNEL, text=msg)
-
-
-def is_valid_github_request(request: HttpRequest) -> bool:
-    """Verify that a webhook from github sponsors is encoded using our key."""
-    if (github_signature := request.headers.get("x-hub-signature")) is None:
-        return False
-
-    body_hex = binascii.hexlify(
-        hmac.digest(
-            msg=request.body,
-            key=settings.GITHUB_SPONSORS_SECRET_KEY.encode(),
-            digest="sha1",
-        )
-    ).decode()
-
-    body_hex = f"sha1={body_hex}"
-    return hmac.compare_digest(body_hex, github_signature)
-
-
-def is_valid_slack_request(request: HttpRequest) -> bool:
-    """Verify that a webhook from Slack is actually from them."""
-    # adapted from https://api.slack.com/authentication/verifying-requests-from-slack
-    if (slack_signature := request.headers.get("X-Slack-Signature")) is None:
-        return False
-
-    timestamp = request.headers["X-Slack-Request-Timestamp"]
-    if abs(time.time() - int(timestamp)) > 60 * 5:
-        # The request timestamp is more than five minutes from local time.
-        # It could be a replay attack, so let's ignore it.
-        return False
-
-    sig_basestring = "v0:" + timestamp + ":" + request.body.decode()
-
-    signature = (
-        "v0="
-        + hmac.new(
-            bytes(settings.SLACK_SIGNING_SECRET, "latin-1"),
-            msg=bytes(sig_basestring, "latin-1"),
-            digestmod=hashlib.sha256,
-        ).hexdigest()
-    )
-
-    return hmac.compare_digest(signature, slack_signature)
 
 
 @send_to_worker

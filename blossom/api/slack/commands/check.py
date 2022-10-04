@@ -29,7 +29,7 @@ def check_cmd(channel: str, message: str) -> None:
     if normalized_url is None:
         client.chat_postMessage(
             channel=channel,
-            text=i18n["slack"]["check"]["invalid_url"].format(url=url),
+            text=i18n["slack"]["errors"]["invalid_url"].format(url=url),
             unfurl_links=False,
             unfurl_media=False,
         )
