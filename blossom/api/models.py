@@ -140,17 +140,17 @@ class Submission(models.Model):
     title = models.CharField(max_length=300, blank=True, null=True)
 
     # The URL to the Submission directly on its source.
-    url = models.URLField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True, max_length=2000)
 
     # The URL to the Submission on /r/TranscribersOfReddit.
-    tor_url = models.URLField(null=True, blank=True)
+    tor_url = models.URLField(null=True, blank=True, max_length=2000)
 
     # Whether the post has been archived, for example by /u/tor_archivist.
     archived = models.BooleanField(default=False)
 
     # A link to the content that the submission is about. An image, audio, video, etc.
     # If this is an image, it is sent to ocr.space for automatic transcription.
-    content_url = models.URLField(null=True, blank=True)
+    content_url = models.URLField(null=True, blank=True, max_length=2000)
 
     # If this is from Reddit, then it mirrors the status on Reddit's side that we get
     # from PRAW. Otherwise it can be set manually to mark something that shouldn't be
@@ -331,7 +331,7 @@ class Transcription(models.Model):
     )
 
     # The URL to the Transcription on the source platform.
-    url = models.URLField(null=True, blank=True)
+    url = models.URLField(null=True, blank=True, max_length=2000)
 
     # The text of the transcription. We force the SQL longtext type, per
     # https://stackoverflow.com/a/23169977.
