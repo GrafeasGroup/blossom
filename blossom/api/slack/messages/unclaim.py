@@ -21,7 +21,7 @@ def get_ask_confirmation_blocks(
         text_block,
         _get_submission_info_block(submission, user),
         {"type": "divider"},
-        _get_ask_confirmation_buttons_block(submission),
+        _get_ask_confirmation_buttons_block(submission, user),
     ]
 
 
@@ -86,7 +86,9 @@ def _get_submission_info_block(submission: Submission, user: BlossomUser) -> Dic
     }
 
 
-def _get_ask_confirmation_buttons_block(submission: Submission) -> Dict:
+def _get_ask_confirmation_buttons_block(
+    submission: Submission, user: BlossomUser
+) -> Dict:
     """Get the action buttons for the confirmation of an unclaim request."""
     return {
         "type": "actions",
@@ -95,12 +97,12 @@ def _get_ask_confirmation_buttons_block(submission: Submission) -> Dict:
                 "type": "button",
                 "style": "primary",
                 "text": {"type": "plain_text", "text": "Confirm"},
-                "value": f"unclaim_confirm_{submission.id}",
+                "value": f"unclaim_confirm_{submission.id}_{user.id}",
             },
             {
                 "type": "button",
                 "text": {"type": "plain_text", "text": "Cancel"},
-                "value": f"unclaim_cancel_{submission.id}",
+                "value": f"unclaim_cancel_{submission.id}_{user.id}",
             },
         ],
     }
