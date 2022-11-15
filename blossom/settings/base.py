@@ -116,6 +116,8 @@ INSTALLED_APPS = [
     "revproxy",
     # Social authentication
     "social_django",
+    # Token authentication
+    "knox",
 ]
 
 AUTH_USER_MODEL = "authentication.BlossomUser"
@@ -218,6 +220,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("blossom.api.authentication.BlossomApiPermission",),
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "blossom.authentication.backends.BlossomRestFrameworkAuth",
+        "knox.auth.TokenAuthentication",
     ),
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }

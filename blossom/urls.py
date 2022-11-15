@@ -8,7 +8,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import HttpRequest
 from django.shortcuts import redirect
-from django.urls import path
+from django.urls import include, path
 
 from blossom.authentication.views import LoginView
 from blossom.website.views import user_create
@@ -59,6 +59,7 @@ urlpatterns = [
     path("superadmin/", admin.site.urls),
     path("", decorator_include(force_domain(None), "blossom.authentication.urls")),
     path("api/", decorator_include(force_domain(None), "blossom.api.urls")),
+    url(r"api/auth/", include("knox.urls")),
 ]
 
 # grafeas urls
