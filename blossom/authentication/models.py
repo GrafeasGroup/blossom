@@ -180,7 +180,9 @@ class BlossomUser(AbstractUser):
         """
         gamma = override if override else self.gamma
 
-        if gamma >= 20000:
+        if gamma >= 30000:
+            return "Garnet"
+        elif gamma >= 20000:
             return "Sapphire"
         elif gamma >= 10000:
             return "Jade"
