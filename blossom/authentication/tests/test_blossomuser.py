@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import List, Optional, Tuple
 from unittest.mock import PropertyMock, patch
 
 import pytest
@@ -269,3 +269,47 @@ def test_transcription_check_reason(
         return_value=check_percentage,
     ):
         assert user.transcription_check_reason() == expected
+
+
+@pytest.mark.parametrize(
+    "submission_times, expected",
+    [
+        ([(None, None)], None),
+        ([(None, datetime(2023, 1, 10))], datetime(2023, 1, 10)),
+        (
+            [(None, None), (datetime(2023, 1, 10), datetime(2023, 1, 11))],
+            datetime(2023, 1, 11),
+        ),
+        (
+            [
+                (datetime(2023, 1, 3), datetime(2023, 1, 4)),
+                (datetime(2023, 1, 10), datetime(2023, 1, 11)),
+            ],
+            datetime(2023, 1, 11),
+        ),
+    ],
+)
+def test_date_last_active(
+    client: Client,
+    submission_times: List[Tuple[datetime, datetime]],
+    expected: Optional[datetime],
+) -> None:
+    """Ensure that the last activity date is calculated correctly."""
+    client, headers, user = setup_user_client(client, id=123, username="Test")
+
+    for idx, (claim_time, complete_time) in enumerate(submission_times):
+        create_submission(
+            id=idx + 100,
+            claimed_by=user,
+            completed_by=user,
+            claim_time=None
+            if claim_time is None
+            else claim_time.replace(tzinfo=pytz.UTC),
+            complete_time=None
+            if complete_time is None
+            else complete_time.replace(tzinfo=pytz.UTC),
+        )
+
+    expected = None if expected is None else expected.replace(tzinfo=pytz.UTC)
+
+    assert user.date_last_active() == expected
