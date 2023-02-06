@@ -114,12 +114,14 @@ class BlossomUser(AbstractUser):
         This will give the time where the user last claimed or completed a post.
         """
         recently_claimed = (
-            Submission.objects.filter(claimed_by=self).order_by("-claim_time").first()
+            Submission.objects.filter(claimed_by=self, claim_time__isnull=False)
+            .order_by("-claim_time")
+            .first()
         )
         recent_claim_time = recently_claimed.claim_time if recently_claimed else None
 
         recently_completed = (
-            Submission.objects.filter(completed_by=self)
+            Submission.objects.filter(completed_by=self, complete_time__isnull=False)
             .order_by("-complete_time")
             .first()
         )
