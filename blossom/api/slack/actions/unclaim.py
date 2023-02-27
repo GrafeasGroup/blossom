@@ -2,8 +2,6 @@ import logging
 import os
 from typing import Dict
 
-from praw.models.reddit.submission import SubmissionModeration
-
 from blossom.api.models import Submission
 from blossom.api.slack import client
 from blossom.api.slack.messages.unclaim import (
@@ -121,5 +119,10 @@ def _process_unclaim_cancel(
 
 def _unclaim_reddit_flair(submission: Submission) -> None:
     """Update the Reddit flair of the submission to indicate that it's unclaimed."""
-    r_tor_submission: SubmissionModeration = REDDIT.submission(submission.tor_url).mod()
-    r_tor_submission.flair.select(flair_template_id=UNCLAIM_REDDIT_FLAIR_ID)
+    if UNCLAIM_REDDIT_FLAIR_ID is None:
+        logger.error("The env variable UNCLAIM_REDDIT_FLAIR_ID is not defined!")
+        return
+
+    REDDIT.submission(submission.tor_url).flair.select(
+        flair_template_id=UNCLAIM_REDDIT_FLAIR_ID
+    )
