@@ -1,6 +1,7 @@
 """Views that specifically relate to submissions."""
 import datetime
 import logging
+from collections import OrderedDict
 from datetime import timedelta
 from typing import Union
 
@@ -36,7 +37,13 @@ from rest_framework.response import Response
 
 from blossom.api.authentication import BlossomApiPermission
 from blossom.api.helpers import validate_request
-from blossom.api.models import Source, Submission, Transcription, TranscriptionCheck
+from blossom.api.models import (
+    Source,
+    Submission,
+    Transcription,
+    TranscriptionCheck,
+    extract_subreddit_from_url,
+)
 from blossom.api.pagination import StandardResultsSetPagination
 from blossom.api.serializers import SubmissionSerializer
 from blossom.api.slack import client as slack
@@ -387,6 +394,36 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         )
 
         return Response(heatmap)
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        operation_summary="Get the submission count by subreddit.",
+    )
+    @action(detail=False, methods=["get"])
+    def subreddits(self) -> Response:
+        """Count the submissions by subreddit."""
+        subreddit_query = (
+            self.filter_queryset(Submission.objects)
+            # Only include Reddit posts with the expected URL format
+            .filter(url__startswith="https://reddit.com/r/")
+            # Return only the relevant values
+            .values("id", "url")
+        )
+
+        subreddit_counts: dict[str, int] = dict()
+
+        # Count the number of submissions per subreddit
+        # TODO: Make this more efficient (at the database level)
+        for item in subreddit_query:
+            subreddit = extract_subreddit_from_url(item["url"])
+            subreddit_counts[subreddit] = subreddit_counts.get(subreddit, 0) + 1
+
+        # Sort descending by submission count
+        sorted_subreddits = OrderedDict(
+            sorted(subreddit_counts.items(), key=lambda _, count: count, reverse=True)
+        )
+
+        return Response(sorted_subreddits)
 
     @csrf_exempt
     @swagger_auto_schema(

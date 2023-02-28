@@ -287,7 +287,8 @@ class Submission(models.Model):
         """
         if self.source.name != "reddit":
             return self.source.name
-        return f'/r/{self.url.split("/r/")[1].split("/")[0]}'
+
+        return f"/r/{extract_subreddit_from_url(str(self.url))}"
 
 
 class Transcription(models.Model):
@@ -496,3 +497,22 @@ class AccountMigration(models.Model):
         self.affected_submissions.update(
             claimed_by=self.old_user, completed_by=self.old_user
         )
+
+
+def extract_subreddit_from_url(url: str) -> Optional[str]:
+    """
+    Given a Reddit URL, extract the subreddit.
+
+    The name will be without the `r/` prefix.
+
+    :returns: The subreddit name or `None` if it's not a Reddit URL.
+    """
+    if "reddit.com" not in url:
+        return None
+
+    sub_split = url.split("/r/")
+
+    if len(sub_split) < 2:
+        return None
+
+    return sub_split[1].split("/")[0]
