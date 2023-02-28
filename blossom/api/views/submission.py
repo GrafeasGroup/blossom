@@ -400,7 +400,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         operation_summary="Get the submission count by subreddit.",
     )
     @action(detail=False, methods=["get"])
-    def subreddits(self) -> Response:
+    def subreddits(self, request: Request) -> Response:
         """Count the submissions by subreddit."""
         subreddit_query = (
             self.filter_queryset(Submission.objects)
@@ -420,7 +420,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
         # Sort descending by submission count
         sorted_subreddits = OrderedDict(
-            sorted(subreddit_counts.items(), key=lambda _, count: count, reverse=True)
+            sorted(subreddit_counts.items(), key=lambda x: x[1], reverse=True)
         )
 
         return Response(sorted_subreddits)
