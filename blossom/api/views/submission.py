@@ -1,15 +1,18 @@
 """Views that specifically relate to submissions."""
 import datetime
 import logging
+from collections import OrderedDict
 from datetime import timedelta
 from typing import Union
 
 from django.conf import settings
-from django.db.models import Count, F
+from django.db.models import Count, F, Value
 from django.db.models.functions import (
     ExtractHour,
     ExtractIsoWeekDay,
     Length,
+    StrIndex,
+    Substr,
     TruncDate,
     TruncDay,
     TruncHour,
@@ -387,6 +390,40 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         )
 
         return Response(heatmap)
+
+    @csrf_exempt
+    @swagger_auto_schema(
+        operation_summary="Get the submission count by subreddit.",
+    )
+    @action(detail=False, methods=["get"])
+    def subreddits(self, request: Request) -> Response:
+        """Count the submissions by subreddit."""
+        subreddit_query = (
+            self.filter_queryset(Submission.objects)
+            # https://reddit.com/r/testing/comments/12345/hi/
+            .filter(url__startswith="https://reddit.com/r/")
+            # testing/comments/12345/hi/
+            .annotate(subreddit=Substr("url", 22, 50))
+            # 8
+            .annotate(slash_index=StrIndex("subreddit", Value("/")))
+            # testing
+            .annotate(subreddit_name=Substr("subreddit", 1, F("slash_index") - 1))
+            .values("subreddit_name")
+            .annotate(Count("subreddit_name"))
+        )
+
+        subreddit_counts: dict[str, int] = dict()
+
+        # Make the query response a little prettier
+        for item in subreddit_query:
+            subreddit_counts[item["subreddit_name"]] = item["subreddit_name__count"]
+
+        # Sort descending by submission count
+        sorted_subreddits = OrderedDict(
+            sorted(subreddit_counts.items(), key=lambda x: x[1], reverse=True)
+        )
+
+        return Response(sorted_subreddits)
 
     @csrf_exempt
     @swagger_auto_schema(
