@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.http.response import HttpResponse
 from django.shortcuts import HttpResponseRedirect, render, reverse
@@ -39,7 +40,12 @@ class LoginView(TemplateView):
                     location = "/"
 
                 return HttpResponseRedirect(location)
-            return HttpResponseRedirect(request.build_absolute_uri())
+            else:
+                messages.error(request, "Sorry, that didn't look right. Try again?")
+                return HttpResponseRedirect(request.build_absolute_uri())
+        else:
+            messages.error(request, "Sorry, something went wrong. Try again?")
+            return HttpResponseRedirect(reverse("login"))
 
 
 def logout_view(request: Request) -> HttpResponseRedirect:
