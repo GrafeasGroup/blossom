@@ -1,6 +1,11 @@
 from unittest.mock import patch
 
-from blossom.api.models import AccountMigration, Submission, Transcription
+from blossom.api.models import (
+    AccountMigration,
+    Submission,
+    Transcription,
+    TranscriptionCheck,
+)
 from blossom.api.slack.commands.migrate_user import (
     _create_blocks,
     migrate_user_cmd,
@@ -8,6 +13,7 @@ from blossom.api.slack.commands.migrate_user import (
 )
 from blossom.strings import translation
 from blossom.utils.test_helpers import (
+    create_check,
     create_submission,
     create_transcription,
     create_user,
@@ -47,6 +53,31 @@ def test_perform_migration() -> None:
     assert submission1.completed_by == user2
     assert transcription1.author == user2
     assert transcription2.author == user2
+
+
+def test_perform_migration_with_warnings() -> None:
+    """Verify that a warnings still work as expected after migration."""
+    user1 = create_user(id=100, username="Paddington")
+    user2 = create_user(id=200, username="Moddington")
+    the_mod = create_user(id=300, username="SEÑOR MODDINGTON")
+
+    submission1 = create_submission(claimed_by=user1, completed_by=user1)
+
+    transcription1 = create_transcription(submission=submission1, user=user1)
+
+    warning_1 = create_check(
+        transcription=transcription1,
+        moderator=the_mod,
+        status=TranscriptionCheck.TranscriptionCheckStatus.WARNING_UNFIXED,
+    )
+
+    assert warning_1.transcription.author == user1
+    migration = AccountMigration.objects.create(old_user=user1, new_user=user2)
+    migration.perform_migration()
+    assert migration.affected_submissions.count() == 1
+
+    warning_1.refresh_from_db()
+    assert warning_1.transcription.author == user2
 
 
 def test_revert() -> None:
