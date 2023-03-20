@@ -40,9 +40,11 @@ class LoginView(TemplateView):
                     location = "/"
 
                 return HttpResponseRedirect(location)
-            return HttpResponseRedirect(request.build_absolute_uri())
+            else:
+                messages.error(request, "Sorry, that didn't look right. Try again?")
+                return HttpResponseRedirect(request.build_absolute_uri())
         else:
-            messages.error(request, "Sorry, we don't recognize that login. Try again?")
+            messages.error(request, "Sorry, something went wrong. Try again?")
             return HttpResponseRedirect(reverse("login"))
 
 

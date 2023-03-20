@@ -35,9 +35,10 @@ def test_login_bad_password(client: Client) -> None:
     create_test_user()
 
     response = client.post(
-        "/login/", {"email": guy.email, "password": "wrong password"}
+        "/login/", {"email": guy.email, "password": "wrong password"}, follow=True
     )
-    assert response.status_code == 302
+    assert response.status_code == 200
+    assert len(list(response.context["messages"])) == 1
     assert response.wsgi_request.user.is_anonymous
     assert not response.wsgi_request.user.is_authenticated
 
@@ -45,9 +46,29 @@ def test_login_bad_password(client: Client) -> None:
 def test_login_bad_user_info(client: Client) -> None:
     """Assert that attempting a login with the wrong username and password fails."""
     response = client.post(
-        "/login/", {"email": "a@a.com", "password": "wrong password"}
+        "/login/", {"email": "a@a.com", "password": "wrong password"}, follow=True
     )
-    assert response.status_code == 302
+    assert response.status_code == 200
+
+    messages = [m.message for m in response.context["messages"]]
+
+    assert len(messages) == 1
+    assert "didn't look right" in messages[0]
+    assert response.wsgi_request.user.is_anonymous
+    assert not response.wsgi_request.user.is_authenticated
+
+
+def test_login_garbage_info(client: Client) -> None:
+    """Assert that attempting a login with garbage fails cleanly."""
+    response = client.post(
+        "/login/", {"AAAAAA": "BBBBBBBB", "CCCCCCC": "DDDDDDD"}, follow=True
+    )
+    assert response.status_code == 200
+
+    messages = [m.message for m in response.context["messages"]]
+
+    assert len(messages) == 1
+    assert "something went wrong" in messages[0]
     assert response.wsgi_request.user.is_anonymous
     assert not response.wsgi_request.user.is_authenticated
 
