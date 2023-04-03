@@ -16,7 +16,7 @@ pygments = "^2.4"
 djangorestframework = "^3.11.0"
 djangorestframework-api-key = "^1.4.1"
 psaw = "^0.0.7"
-redis = "^3.3.11"
+redis = "^4.4.4"
 social-auth-app-django = "^3.1.0"
 python-dotenv = "^0.10.3"
 dpath = "^1.4.2"
@@ -46,6 +46,7 @@ tomli = "^2.0.1"
 whitenoise = {extras = ["brotli"], version = "^6.2.0"}
 opentelemetry-sdk = "^1.12.0"
 opentelemetry-instrumentation-django = "0.33b0"
+py = "^1.11.0"  # see https://github.com/kevlened/pytest-parallel/pull/119#issuecomment-1294035423
 
 [tool.poetry.dev-dependencies]
 better-exceptions = "^0.3.3"
