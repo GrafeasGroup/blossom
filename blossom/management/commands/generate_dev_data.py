@@ -93,10 +93,12 @@ def get_image_urls(num: int) -> List[str]:
     return results
 
 
-def gen_datetime(min_year: int = 2017, max_year: datetime = datetime.now().year) -> datetime:
+def gen_datetime(
+    min_year: int = 2017, max_year: datetime = datetime.now(tz=pytz.UTC).year
+) -> datetime:
     """Create a random tz-aware datetime for submissions / transcriptions."""
     # Adapted from https://gist.github.com/rg3915/db907d7455a4949dbe69
-    start = datetime(min_year, 1, 1, 00, 00, 00)
+    start = datetime(min_year, 1, 1, 00, 00, 00, tzinfo=pytz.UTC)
     years = max_year - min_year + 1
     end = start + timedelta(days=365 * years)
     return (start + (end - start) * random.random()).replace(tzinfo=pytz.UTC)

@@ -4,6 +4,7 @@ select = [
     "D",  # pydocstyle
     "I",  # isort
     "ANN",  # flake8-annotations
+    "DTZ",  # flake8-datetimez
 ]
 ignore = [
     "ANN101",  # missing-type-self
@@ -30,7 +31,10 @@ exclude = [
 line-length = 100  # Same as black
 
 [per-file-ignores]
-"test_*" = ["D"]  # Disable documentation lints for test files
+"test_*" = [
+    "D",  # Disable documentation lints for test files
+    "DTZ",  # Disable timezone lints for test files
+]
 
 [isort]
 known-third-party = [
