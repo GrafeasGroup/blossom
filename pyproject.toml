@@ -48,26 +48,18 @@ opentelemetry-sdk = "^1.12.0"
 opentelemetry-instrumentation-django = "0.33b0"
 py = "^1.11.0"  # see https://github.com/kevlened/pytest-parallel/pull/119#issuecomment-1294035423
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 better-exceptions = "^0.3.3"
 black = "^22.3.0"
-flake8 = "^5.0.4"
-flake8-annotations = "^2.9.1"
-flake8-black = "^0.3.3"
-flake8-docstrings = "^1.6.0"
-flake8-import-order = "^0.18.1"
-flake8-variables-names = "^0.0.5"
 pep8-naming = "^0.9.1"
 pre-commit = "^2.4.0"
+ruff = "^0.0.265"
 seed-isort-config = "^2.2.0"
-isort = "^5.10.1"
 coveralls = "^1.11.1"
 mimesis = "^4.0.0"
 blossom-wrapper = { git = "https://github.com/GrafeasGroup/blossom-wrapper.git", branch = "master" }
 poetry2setup = "^1.0.0"
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.0.265"
 
 [tool.black]
 include = '\.pyi?$'
