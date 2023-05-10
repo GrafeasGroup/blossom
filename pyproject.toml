@@ -66,6 +66,9 @@ mimesis = "^4.0.0"
 blossom-wrapper = { git = "https://github.com/GrafeasGroup/blossom-wrapper.git", branch = "master" }
 poetry2setup = "^1.0.0"
 
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.0.265"
+
 [tool.black]
 include = '\.pyi?$'
 exclude = '''
