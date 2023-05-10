@@ -1,5 +1,4 @@
-"""
-Serializers for the model classes used within the API.
+"""Serializers for the model classes used within the API.
 
 These serializers are used to generate a dictionary from a specific model. The
 fields and model used per serializer are specified in the Meta class included

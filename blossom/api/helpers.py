@@ -10,8 +10,7 @@ from rest_framework.response import Response
 
 
 def _retrieve_keys(data: Dict, keys: Set, name: str) -> Dict[str, str]:
-    """
-    Retrieve all values from the data with the given keys, creating key-value pairs.
+    """Retrieve all values from the data with the given keys, creating key-value pairs.
 
     :param data: the dictionary from which to extract values
     :param keys: the keys required to be in the data and to return the key-value pair for
@@ -28,8 +27,7 @@ def _retrieve_keys(data: Dict, keys: Set, name: str) -> Dict[str, str]:
 
 
 def validate_request(query_params: Set = None, data_params: Set = None) -> Callable:
-    """
-    Validate arguments of the Request within inner method.
+    """Validate arguments of the Request within inner method.
 
     This decorator is to be used ONLY around a method which has access to
     a Request object as its first positional argument, as this object is
@@ -67,8 +65,7 @@ def validate_request(query_params: Set = None, data_params: Set = None) -> Calla
 def get_time_since_open(
     days: bool = False,
 ) -> Tuple[Union[int, float], Union[int, float]]:
-    """
-    Return the number of days since the day we opened.
+    """Return the number of days since the day we opened.
 
     Returns a tuple of (years, remainder days in year). For example, (3, 103)
     would be three years, 103 days.
@@ -87,8 +84,7 @@ def get_time_since_open(
 def fire_and_forget(
     func: Callable[[Any], Any], *args: Tuple, **kwargs: Dict
 ) -> Callable[[Any], Any]:
-    """
-    Decorate functions to build a thread for a given function and trigger it.
+    """Decorate functions to build a thread for a given function and trigger it.
 
     Originally from https://stackoverflow.com/a/59043636, this function
     prepares a thread for a given function and then starts it, intentionally

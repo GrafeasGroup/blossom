@@ -1,5 +1,4 @@
-"""
-WSGI config for blossom project.
+"""WSGI config for blossom project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

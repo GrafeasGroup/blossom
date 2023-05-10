@@ -7,8 +7,7 @@ from django.http import HttpRequest, HttpResponse
 
 class BetterExceptionsMiddleware(object):
     def __init__(self, get_response: Callable) -> None:
-        """
-        For debug purposes only.
+        """For debug purposes only.
 
         Link to local_settings by adding
         `blossom.middleware.BetterExceptionsMiddleware`

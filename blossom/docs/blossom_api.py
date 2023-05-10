@@ -32,8 +32,7 @@ class BlossomAPI:
         api_base_url: str = "http://localhost:8000/api/",
         num_retries: int = 1,
     ) -> None:
-        """
-        Initialize the Blossom API with the necessary parameters.
+        """Initialize the Blossom API with the necessary parameters.
 
         :param email: the email address which the bot should use to log into Blossom
         :param password: the password to use to log into Blossom
@@ -59,8 +58,7 @@ class BlossomAPI:
         self.http.headers.update({"Authorization": f"Api-Key {api_key}"})
 
     def _call(self, method: str, path: str, data: Dict = None, params: Dict = None) -> Response:
-        """
-        Create a call to the API using the requests package.
+        """Create a call to the API using the requests package.
 
         In this method, a request is retried if a 403 and a message on authentication
         credentials is returned. In this case, it seems that tor is not yet logged in and

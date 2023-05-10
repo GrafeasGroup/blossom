@@ -22,8 +22,7 @@ from blossom.api.views import (
 
 
 class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
-    """
-    Custom schema generator required for Swagger to point the requests to correct URL.
+    """Custom schema generator required for Swagger to point the requests to correct URL.
 
     See https://github.com/axnsan12/drf-yasg/issues/146#issuecomment-478757552.
     """

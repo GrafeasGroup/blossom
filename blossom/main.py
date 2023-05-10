@@ -69,8 +69,7 @@ def main(ctx: Context, command: str, use_pyuwsgi: bool) -> None:
     help="Show Pytest output instead of running quietly.",
 )
 def selfcheck(verbose: bool) -> None:
-    """
-    Verify the binary passes all tests internally.
+    """Verify the binary passes all tests internally.
 
     Add any other self-check related code here.
     """

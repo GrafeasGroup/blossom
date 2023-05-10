@@ -24,8 +24,7 @@ class Summary(object):
 
     @staticmethod
     def generate_summary() -> Dict:
-        """
-        Generate a summary based on the current state of the system.
+        """Generate a summary based on the current state of the system.
 
         The summary is a dictionary consisting of the following elements:
         - volunteer_count: the number of volunteers

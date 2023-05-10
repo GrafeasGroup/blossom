@@ -99,8 +99,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         *args: object,
         **kwargs: object,
     ) -> Response:
-        """
-        Create a new transcription.
+        """Create a new transcription.
 
         The following fields are passed in the HTTP Body:
             - original_id           the base36 ID of the comment
@@ -155,8 +154,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         *args: object,
         **kwargs: object,
     ) -> Response:
-        """
-        Search for the transcriptions of a specific submission.
+        """Search for the transcriptions of a specific submission.
 
         Note that providing the id of the submission as a query parameter is mandatory.
         """
@@ -176,8 +174,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["get"])
     def review_random(self, request: Request, *args: object, **kwargs: object) -> Response:
-        """
-        Pull a random transcription that was completed in the last hour and return it.
+        """Pull a random transcription that was completed in the last hour and return it.
 
         Note that if there are no transcriptions in the last hour, this request
         returns an empty HTTP body.

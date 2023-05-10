@@ -54,8 +54,7 @@ class BlossomUserManager(UserManager):
 
 
 class BlossomUser(AbstractUser):
-    """
-    The user class used within the program.
+    """The user class used within the program.
 
     Note that this class provides some additional properties based on the current
     status of the user and the roles they fulfill.
@@ -132,8 +131,7 @@ class BlossomUser(AbstractUser):
 
     @property
     def gamma(self) -> int:
-        """
-        Return the number of transcriptions the user has made.
+        """Return the number of transcriptions the user has made.
 
         Note that this is a calculated property, computed by the number of
         transcriptions in the database.
@@ -168,8 +166,7 @@ class BlossomUser(AbstractUser):
 
     # Disable complexity check, it's not really hard to understand
     def get_rank(self, override: int = None) -> str:  # noqa: C901
-        """
-        Return the name of the volunteer's current rank.
+        """Return the name of the volunteer's current rank.
 
         Override provided for the purposes of checking ranks.
         """

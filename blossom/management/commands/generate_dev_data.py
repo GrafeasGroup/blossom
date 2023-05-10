@@ -1,5 +1,4 @@
-"""
-Generate fake data for development purposes.
+"""Generate fake data for development purposes.
 
 When doing development on Blossom, it is useful to have data to work on, even if it's
 not real. This bootstrap command creates a bunch of fake data just for you! As an added
@@ -53,8 +52,7 @@ TRANSCRIBOT_TEMPLATE = (
 
 
 def generate_text() -> str:
-    """
-    Generate random transcription bodies.
+    """Generate random transcription bodies.
 
     The mimesis text package is actually only a handful of sentences for the
     default English, and there's no reason to add more dependencies. This just
@@ -69,8 +67,7 @@ def generate_text() -> str:
 
 
 def get_image_urls(num: int) -> List[str]:
-    """
-    Retrieve the requested number of URLs from https://dog.ceo's API.
+    """Retrieve the requested number of URLs from https://dog.ceo's API.
 
     This is used so that submission objects have actual URLs with content
     attached to them in case you're working on something that needs that
@@ -186,8 +183,7 @@ def gen_title() -> str:
 
 
 def gen_id() -> str:
-    """
-    Create a random ID that is shorter than UUID4.
+    """Create a random ID that is shorter than UUID4.
 
     This allows us to mock real data that we get in while still allowing us to
     filter out data created with UUID4, which is what we use for temporary unsubmitted

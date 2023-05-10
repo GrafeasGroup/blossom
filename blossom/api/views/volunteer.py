@@ -62,8 +62,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["patch"])
     def gamma_plusone(self, request: Request, pk: int) -> Response:
-        """
-        Add one gamma through a fake completed transcription by the volunteer.
+        """Add one gamma through a fake completed transcription by the volunteer.
 
         This method should only be called in the case of erroneous behavior of
         the proper procedure of awarding gamma.

@@ -79,8 +79,7 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
     }
 
     def get(self, request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
-        """
-        Build and render the page for adding a new post.
+        """Build and render the page for adding a new post.
 
         This applies to both main site and the engineering blog.
         """

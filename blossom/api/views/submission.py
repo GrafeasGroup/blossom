@@ -58,8 +58,7 @@ logger = logging.getLogger("blossom.api.views.submission")
 
 
 def _check_for_rank_up(user: BlossomUser, submission: Submission = None) -> None:
-    """
-    Check if a volunteer has changed rank and, if so, notify Slack.
+    """Check if a volunteer has changed rank and, if so, notify Slack.
 
     Because gamma is calculated off of transcriptions and the `done` endpoint
     is called after the transcription is posted, by the time that we go to
@@ -81,8 +80,7 @@ def _check_for_rank_up(user: BlossomUser, submission: Submission = None) -> None
 
 
 def _get_limit_value(request: Request, default: int = 10) -> Union[int, None]:
-    """
-    Retrieve an optional limit parameter for get_transcribot_queue.
+    """Retrieve an optional limit parameter for get_transcribot_queue.
 
     If no limit is passed in, a default of 10 is used. Passing in "none"
     will return the entire queryset.
@@ -175,8 +173,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
     def expired(self, request: Request, source: str = None) -> Response:
-        """
-        Return all old submissions that have not been claimed or completed yet.
+        """Return all old submissions that have not been claimed or completed yet.
 
         A set definition for old is when a Submission has been submitted 18
         hours or longer ago. If the query string of ctq is passed in with a
@@ -217,8 +214,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
     def in_progress(self, request: Request, source: str = None) -> Response:
-        """
-        Return all old submissions that are still in progress.
+        """Return all old submissions that are still in progress.
 
         Sometimes submissions get lost in the ether because volunteers forget
         to complete them. This function accepts a query string of `hours` that
@@ -251,8 +247,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
     def unarchived(self, request: Request, source: str = None) -> Response:
-        """
-        Return all completed old submissions which are not archived.
+        """Return all completed old submissions which are not archived.
 
         The definition of old in this method is half an hour. When no posts are
         found, an empty array is returned in the body.
@@ -436,8 +431,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @validate_request(data_params={"username"})
     @action(detail=True, methods=["patch"])
     def unclaim(self, request: Request, pk: int, username: str = None) -> Response:
-        """
-        Unclaim the specified submission, from the specified volunteer.
+        """Unclaim the specified submission, from the specified volunteer.
 
         The volunteer is specified in the HTTP body.
         """
@@ -480,8 +474,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @validate_request(data_params={"username"})
     @action(detail=True, methods=["patch"])
     def claim(self, request: Request, pk: int, username: str = None) -> Response:
-        """
-        Claim the specified submission from the specified volunteer.
+        """Claim the specified submission from the specified volunteer.
 
         The volunteer is specified in the HTTP body.
         """
@@ -553,8 +546,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @validate_request(data_params={"username"})
     @action(detail=True, methods=["patch"])
     def done(self, request: Request, pk: int, username: str = None) -> Response:
-        """
-        Mark the submission as done from the specified volunteer.
+        """Mark the submission as done from the specified volunteer.
 
         When "mod_override" is provided as a field in the HTTP body and is true,
         and the requesting user is a mod, then the check of whether the
@@ -648,8 +640,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         *args: object,
         **kwargs: object,
     ) -> Response:
-        """
-        Create a new submission.
+        """Create a new submission.
 
         Note that both the original id, source, and content_url should be supplied.
         """
@@ -686,8 +677,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
     def get_transcribot_queue(self, request: Request, source: str = None) -> JsonResponse:
-        """
-        Get the submissions that still need to be attempted by transcribot.
+        """Get the submissions that still need to be attempted by transcribot.
 
         The helper method of `.has_ocr_transcription` exists, but you cannot
         filter a django queryset on a property because it's generated in Python,
@@ -738,8 +728,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @validate_request(data_params={"username"})
     @action(detail=False, methods=["post"])
     def yeet(self, request: Request, username: str = None) -> Response:
-        """
-        Manually fix users who have too many auto-generated submissions.
+        """Manually fix users who have too many auto-generated submissions.
 
         For an unidentified reason, sometimes the bootstrap script is creating
         too many submissions for a given user. This function allows us to yeet
@@ -880,8 +869,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["patch"])
     def remove(self, request: Request, pk: int) -> Response:
-        """
-        Remove the submission from the queue.
+        """Remove the submission from the queue.
 
         It is also possible to revert the removal by setting removed_from_queue to false
         in the body of the request.
@@ -955,8 +943,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["patch"])
     def approve(self, request: Request, pk: int) -> Response:
-        """
-        Approve the submission.
+        """Approve the submission.
 
         This will prevent future reports from being generated for this submission.
         """
@@ -989,8 +976,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["patch"])
     def nsfw(self, request: Request, pk: int) -> Response:
-        """
-        Mark a submission as NSFW.
+        """Mark a submission as NSFW.
 
         It is also possible to set it back to SFW by setting nsfw to false
         in the body of the request.

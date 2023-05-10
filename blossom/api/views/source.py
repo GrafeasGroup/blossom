@@ -9,8 +9,7 @@ from blossom.api.serializers import SourceSerializer
 
 
 class SourceViewSet(viewsets.ModelViewSet):
-    """
-    The API view to view and edit information regarding Sources.
+    """The API view to view and edit information regarding Sources.
 
     This information is required for both Submissions and Transcriptions.
     """

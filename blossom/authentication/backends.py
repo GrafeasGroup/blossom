@@ -11,8 +11,7 @@ from blossom.authentication.models import BlossomUser
 
 
 class EmailBackend(ModelBackend):
-    """
-    Custom backend which uses the email instead of the username to login.
+    """Custom backend which uses the email instead of the username to login.
 
     Note that this backend is copied from https://stackoverflow.com/a/37332393.
     """
@@ -20,8 +19,7 @@ class EmailBackend(ModelBackend):
     def authenticate(
         self, username: str = None, password: str = None, **kwargs: object
     ) -> Union[User, None]:
-        """
-        Authenticate the user if proper authentication is provided.
+        """Authenticate the user if proper authentication is provided.
 
         Note that the username parameter is abused to instead be the email address
         of the user, which is in turn used to authenticate. This is in line with
@@ -43,8 +41,7 @@ class EmailBackend(ModelBackend):
 
 class BlossomRestFrameworkAuth(authentication.BaseAuthentication):
     def authenticate(self, request: Request) -> Tuple[BlossomUser, bool]:
-        """
-        Handle authentication for the API side.
+        """Handle authentication for the API side.
 
         DRF needs to handle authentication in a tuple as opposed to a boolean,
         so it's easier to just expand it into its own type of auth handler.

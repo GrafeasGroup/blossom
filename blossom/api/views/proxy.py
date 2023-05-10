@@ -13,8 +13,7 @@ def generate_request_id() -> str:
 
 
 class iReddItProxyView(ProxyView):  # noqa: N801
-    """
-    Retrieve images for OpenSeaDragon from Reddit's image host.
+    """Retrieve images for OpenSeaDragon from Reddit's image host.
 
     Reddit does not set the appropriate CORS headers on their image host so that
     images can be pulled using AJAX (which is what OpenSeaDragon uses). The only ways

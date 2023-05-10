@@ -7,8 +7,7 @@ from blossom.api.slack.actions import i18n
 
 
 def send_github_sponsors_message(data: Dict, action: str) -> None:
-    """
-    Process the POST request from GitHub Sponsors.
+    """Process the POST request from GitHub Sponsors.
 
     Every time someone performs an action on GitHub Sponsors, we'll get
     a POST request with the intent and some other information. This translates

@@ -28,8 +28,7 @@ def _process_slack_message(data: Dict) -> None:
 
 @csrf_exempt
 def slack_endpoint(request: HttpRequest) -> HttpResponse:
-    """
-    Handle post requests from Slack.
+    """Handle post requests from Slack.
 
     Slack plays a lot of games with its API, and honestly it's one of the
     most frustrating things I've ever worked with. There are a couple of
@@ -86,8 +85,7 @@ def slack_endpoint(request: HttpRequest) -> HttpResponse:
 
 @csrf_exempt
 def github_sponsors_endpoint(request: HttpRequest) -> HttpResponse:
-    """
-    Translate GitHub Sponsors webhook to Slack webhook.
+    """Translate GitHub Sponsors webhook to Slack webhook.
 
     GitHub does not provide the ability to change the format of their webhooks,
     so we have to provide a translation layer. This function is an adaptation
