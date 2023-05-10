@@ -2,9 +2,8 @@ from typing import Optional, TypedDict
 from urllib.parse import urlparse
 
 from django.views.decorators.csrf import csrf_exempt
-from drf_yasg.openapi import Parameter
+from drf_yasg.openapi import Parameter, Schema
 from drf_yasg.openapi import Response as DocResponse
-from drf_yasg.openapi import Schema
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.request import Request
