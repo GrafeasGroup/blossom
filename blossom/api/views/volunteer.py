@@ -5,9 +5,8 @@ from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
-from drf_yasg.openapi import Parameter
+from drf_yasg.openapi import Parameter, Schema
 from drf_yasg.openapi import Response as DocResponse
-from drf_yasg.openapi import Schema
 from drf_yasg.utils import no_body, swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action

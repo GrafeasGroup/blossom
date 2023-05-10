@@ -23,10 +23,6 @@ jobs:
       run: |
         sudo apt-get install libjpeg8 libjpeg-dev libpng-dev libpq-dev git -y
         poetry install
-    - name: Install latest pyflakes and pycodestyle version
-      run: |
-        poetry run pip install pyflakes
-        poetry run pip install pycodestyle
     - name: Run Static Analysis
       run: |
-        /usr/bin/git diff -u ${{ github.event.pull_request.base.sha }} | poetry run flake8 --diff
+        poetry run ruff .
