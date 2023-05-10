@@ -129,8 +129,7 @@ class TestHeatmap:
         utc_offset = 90 * 60
 
         result = client.get(
-            reverse("submission-heatmap")
-            + f"?completed_by=123456&utc_offset={utc_offset}",
+            reverse("submission-heatmap") + f"?completed_by=123456&utc_offset={utc_offset}",
             content_type="application/json",
             **headers,
         )

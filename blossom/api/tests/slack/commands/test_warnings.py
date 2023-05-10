@@ -123,9 +123,7 @@ def test_warnings_cmd(client: Client) -> None:
 
     with patch(
         "blossom.api.slack.commands.warnings._warning_text", return_value="Text"
-    ) as txt_mock, patch(
-        "blossom.api.slack.commands.warnings.client.chat_postMessage"
-    ) as msg_mock:
+    ) as txt_mock, patch("blossom.api.slack.commands.warnings.client.chat_postMessage") as msg_mock:
         warnings_cmd(channel="", message="warnings Userson")
 
         assert txt_mock.call_count == 1

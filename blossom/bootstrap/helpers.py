@@ -123,9 +123,7 @@ def get_transcribot_comment(comments: List, post_id: str):
             i for i in comments if i.parent_id == post_id and i.author == "transcribot"
         ][0]
         transcribot_c = [
-            i
-            for i in comments
-            if i.parent_id == top_level_comment.id and i.author == "transcribot"
+            i for i in comments if i.parent_id == top_level_comment.id and i.author == "transcribot"
         ][0]
     except Exception:
         transcribot_c = None

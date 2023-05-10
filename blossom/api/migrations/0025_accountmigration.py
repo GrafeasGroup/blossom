@@ -32,15 +32,11 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "slack_channel_id",
-                    models.CharField(
-                        blank=True, default=None, max_length=50, null=True
-                    ),
+                    models.CharField(blank=True, default=None, max_length=50, null=True),
                 ),
                 (
                     "slack_message_ts",
-                    models.CharField(
-                        blank=True, default=None, max_length=50, null=True
-                    ),
+                    models.CharField(blank=True, default=None, max_length=50, null=True),
                 ),
                 ("affected_submissions", models.ManyToManyField(to="api.Submission")),
                 (

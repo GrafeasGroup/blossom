@@ -81,9 +81,7 @@ def test_user_info_text_old_user(client: Client) -> None:
             claimed_by=user,
             completed_by=user,
         )
-        transcription = create_transcription(
-            submission, user, id=200 + idx, create_time=date
-        )
+        transcription = create_transcription(submission, user, id=200 + idx, create_time=date)
 
         if has_check:
             check_status = TranscriptionCheck.TranscriptionCheckStatus

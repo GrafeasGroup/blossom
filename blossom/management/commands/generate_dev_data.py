@@ -1,5 +1,4 @@
-"""
-Generate fake data for development purposes.
+"""Generate fake data for development purposes.
 
 When doing development on Blossom, it is useful to have data to work on, even if it's
 not real. This bootstrap command creates a bunch of fake data just for you! As an added
@@ -33,9 +32,7 @@ from blossom.management.commands import bootstrap_site
 if settings.DEBUG:
     # adapted from https://stackoverflow.com/a/7769117
     # if we don't do this, you _will_ run out of memory
-    BaseDatabaseWrapper.make_debug_cursor = lambda self, cursor: CursorWrapper(
-        cursor, self
-    )
+    BaseDatabaseWrapper.make_debug_cursor = lambda self, cursor: CursorWrapper(cursor, self)
 
 logger = logging.getLogger("blossom.management.generate_dev_data")
 TRANSCRIPTION_TEMPLATE = (
@@ -55,8 +52,7 @@ TRANSCRIBOT_TEMPLATE = (
 
 
 def generate_text() -> str:
-    """
-    Generate random transcription bodies.
+    """Generate random transcription bodies.
 
     The mimesis text package is actually only a handful of sentences for the
     default English, and there's no reason to add more dependencies. This just
@@ -71,8 +67,7 @@ def generate_text() -> str:
 
 
 def get_image_urls(num: int) -> List[str]:
-    """
-    Retrieve the requested number of URLs from https://dog.ceo's API.
+    """Retrieve the requested number of URLs from https://dog.ceo's API.
 
     This is used so that submission objects have actual URLs with content
     attached to them in case you're working on something that needs that
@@ -84,10 +79,7 @@ def get_image_urls(num: int) -> List[str]:
     for _ in range(number_of_calls):
         # the maximum the api will accept in a single call is 50, so we batch them
         results = (
-            results
-            + requests.get("https://dog.ceo/api/breeds/image/random/50").json()[
-                "message"
-            ]
+            results + requests.get("https://dog.ceo/api/breeds/image/random/50").json()["message"]
         )
         # be nice to their API so we don't overload it with requests
         sleep(0.5)
@@ -95,20 +87,18 @@ def get_image_urls(num: int) -> List[str]:
     if remainder > 0:
         results = (
             results
-            + requests.get(
-                f"https://dog.ceo/api/breeds/image/random/{remainder}"
-            ).json()["message"]
+            + requests.get(f"https://dog.ceo/api/breeds/image/random/{remainder}").json()["message"]
         )
 
     return results
 
 
 def gen_datetime(
-    min_year: int = 2017, max_year: datetime = datetime.now().year
+    min_year: int = 2017, max_year: datetime = datetime.now(tz=pytz.UTC).year
 ) -> datetime:
     """Create a random tz-aware datetime for submissions / transcriptions."""
     # Adapted from https://gist.github.com/rg3915/db907d7455a4949dbe69
-    start = datetime(min_year, 1, 1, 00, 00, 00)
+    start = datetime(min_year, 1, 1, 00, 00, 00, tzinfo=pytz.UTC)
     years = max_year - min_year + 1
     end = start + timedelta(days=365 * years)
     return (start + (end - start) * random.random()).replace(tzinfo=pytz.UTC)
@@ -195,8 +185,7 @@ def gen_title() -> str:
 
 
 def gen_id() -> str:
-    """
-    Create a random ID that is shorter than UUID4.
+    """Create a random ID that is shorter than UUID4.
 
     This allows us to mock real data that we get in while still allowing us to
     filter out data created with UUID4, which is what we use for temporary unsubmitted
@@ -308,11 +297,7 @@ class Command(BaseCommand):
                 logger.info(self.style.ERROR("Exiting!"))
                 sys.exit(0)
 
-        logger.info(
-            self.style.WARNING(
-                "This process will take a few minutes. Please be patient."
-            )
-        )
+        logger.info(self.style.WARNING("This process will take a few minutes. Please be patient."))
         logger.info(self.style.NOTICE("Creating volunteers..."))
         create_dummy_volunteers(1000)
         logger.info(self.style.SUCCESS("OK!\n"))

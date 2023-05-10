@@ -138,14 +138,10 @@ class TestSubmissionLeaderboard:
 
         # Submissions before filter
         for _ in range(4):
-            create_submission(
-                completed_by=user, complete_time=make_aware(datetime(2021, 11, 3))
-            )
+            create_submission(completed_by=user, complete_time=make_aware(datetime(2021, 11, 3)))
         # Submissions after filter
         for _ in range(7):
-            create_submission(
-                completed_by=user, complete_time=make_aware(datetime(2021, 11, 5))
-            )
+            create_submission(completed_by=user, complete_time=make_aware(datetime(2021, 11, 5)))
 
         results = client.get(
             reverse("submission-leaderboard")

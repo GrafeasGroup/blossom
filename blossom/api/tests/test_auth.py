@@ -21,9 +21,7 @@ def test_creation_without_authentication(client: Client) -> None:
 
 def test_creation_without_api_key(client: Client) -> None:
     """Test whether creation without sending the API key whilst logged in is forbidden."""
-    client, headers, _ = setup_user_client(
-        client, is_staff=False, is_grafeas_staff=False
-    )
+    client, headers, _ = setup_user_client(client, is_staff=False, is_grafeas_staff=False)
     result = client.get(reverse("volunteer-list"), USER_CREATION_DATA)
     assert result.status_code == status.HTTP_403_FORBIDDEN
 
@@ -37,9 +35,7 @@ def test_creation_without_login(client: Client) -> None:
 
 def test_creation_wrong_header_format(client: Client) -> None:
     """Test whether creation without proper header format is forbidden."""
-    client, headers, _ = setup_user_client(
-        client, is_staff=False, is_grafeas_staff=False
-    )
+    client, headers, _ = setup_user_client(client, is_staff=False, is_grafeas_staff=False)
     # Deform the header, so that it looks like {Authorization: mykey} instead of
     # {Authorization: Api-Key mykey}.
     headers["HTTP_AUTHORIZATION"] = headers.get("HTTP_AUTHORIZATION").split()[1]
@@ -49,9 +45,7 @@ def test_creation_wrong_header_format(client: Client) -> None:
 
 def test_creation_with_normal_user(client: Client) -> None:
     """Test whether creation is not allowed to a user which is not a staff member."""
-    client, headers, _ = setup_user_client(
-        client, is_grafeas_staff=False, is_staff=False
-    )
+    client, headers, _ = setup_user_client(client, is_grafeas_staff=False, is_staff=False)
     result = client.post(reverse("volunteer-list"), USER_CREATION_DATA)
     assert result.status_code == status.HTTP_403_FORBIDDEN
 
@@ -96,9 +90,7 @@ class TestPermissionsCheck:
         request.user = user
         assert not BlossomApiPermission().has_permission(request, None)
 
-    def test_permissions_grafeas_staff_api_key(
-        self, client: Client, rf: RequestFactory
-    ) -> None:
+    def test_permissions_grafeas_staff_api_key(self, client: Client, rf: RequestFactory) -> None:
         """Test whether the API allows access to Grafeas staff members."""
         client, headers, _ = setup_user_client(client)
         # four system accounts first

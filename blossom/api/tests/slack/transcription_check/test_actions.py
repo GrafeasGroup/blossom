@@ -276,9 +276,7 @@ def test_process_check_action_unknown_check(client: Client) -> None:
     # See https://api.slack.com/legacy/message-buttons
     data = {
         "channel": {"id": "C065W1189", "name": "forgotten-works"},
-        "actions": [
-            {"name": "Approve", "value": "check_approved_777", "type": "button"}
-        ],
+        "actions": [{"name": "Approve", "value": "check_approved_777", "type": "button"}],
         "user": {"id": "U045VRZFT", "name": "Moddington"},
         "message_ts": "1458170866.000004",
     }
@@ -319,9 +317,7 @@ def test_process_check_action_unknown_mod(client: Client) -> None:
     # See https://api.slack.com/legacy/message-buttons
     data = {
         "channel": {"id": "C065W1189", "name": "forgotten-works"},
-        "actions": [
-            {"name": "Approve", "value": f"check_claim_{check.id}", "type": "button"}
-        ],
+        "actions": [{"name": "Approve", "value": f"check_claim_{check.id}", "type": "button"}],
         "user": {"id": "U045VRZFT", "name": "Impostor"},
         "message_ts": "1458170866.000004",
     }

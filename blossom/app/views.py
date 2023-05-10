@@ -94,14 +94,10 @@ def view_previous_transcriptions(request: HttpRequest) -> HttpResponse:
     """Show the user their latest transcriptions so that they can edit them if needed."""
     transcriptions = (
         Transcription.objects.annotate(original_id_len=Length("original_id"))
-        .filter(
-            author=request.user, original_id_len__lt=14, submission__title__isnull=False
-        )
+        .filter(author=request.user, original_id_len__lt=14, submission__title__isnull=False)
         .order_by("-create_time")[:25]
     )
-    context = get_additional_context(
-        {"transcriptions": transcriptions, "fullwidth_view": True}
-    )
+    context = get_additional_context({"transcriptions": transcriptions, "fullwidth_view": True})
     return render(request, "app/view_transcriptions.html", context)
 
 
@@ -115,9 +111,7 @@ def choose_transcription(request: HttpRequest) -> HttpResponse:
         if settings.OVERRIDE_ARCHIVIST_DELAY_TIME
         else settings.ARCHIVIST_DELAY_TIME
     )
-    submissions = Submission.objects.annotate(
-        original_id_len=Length("original_id")
-    ).filter(
+    submissions = Submission.objects.annotate(original_id_len=Length("original_id")).filter(
         original_id_len__lt=10,
         completed_by=None,
         claimed_by=None,
@@ -180,9 +174,7 @@ def choose_transcription(request: HttpRequest) -> HttpResponse:
 def get_and_format_templates() -> list:
     """Load all templates and format them appropriately."""
     md = markdown.Markdown(output_format="html")
-    with open(
-        pathlib.Path(__file__).parent / "transcription_templates.json", "r"
-    ) as file:
+    with open(pathlib.Path(__file__).parent / "transcription_templates.json", "r") as file:
         data = json.load(file)
         for template in data.keys():
             if notes := data[template].get("notes"):
@@ -216,9 +208,7 @@ def update_context_with_session_data(request: HttpRequest, context: dict) -> dic
         context.update({"heading": heading})
 
     if issues := request.session.get("issues"):
-        context.update(
-            {"issues": [f"app/partials/errors/{issue}.partial" for issue in issues]}
-        )
+        context.update({"issues": [f"app/partials/errors/{issue}.partial" for issue in issues]})
     return context
 
 
@@ -256,9 +246,7 @@ def add_transcription_data_to_session_and_redirect(
     return redirect("transcribe_submission", submission_id=submission_id)
 
 
-class EditSubmissionTranscription(
-    CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin, View
-):
+class EditSubmissionTranscription(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin, View):
     def get(self, request: HttpRequest, submission_id: int) -> HttpResponse:
         """Render the transcription view with data from an existing transcription."""
         submission = get_object_or_404(Submission, id=submission_id)
@@ -292,14 +280,12 @@ class EditSubmissionTranscription(
             text = transcription.text
             context.update(
                 {
-                    "transcription": text[
-                        text.index("---") + 5 : text.rindex("---") - 2
-                    ].replace("`", r"\`")
+                    "transcription": text[text.index("---") + 5 : text.rindex("---") - 2].replace(
+                        "`", r"\`"
+                    )
                 }
             )
-            context.update(
-                {"heading": text[text.index(":") + 1 : text.index("---") - 3].strip()}
-            )
+            context.update({"heading": text[text.index(":") + 1 : text.index("---") - 3].strip()})
 
         return render(request, "app/transcribing.html", context)
 
@@ -323,9 +309,9 @@ class EditSubmissionTranscription(
             if check_for_fenced_code_block(transcription):
                 transcription = clean_fenced_code_block(transcription)
 
-            if check_for_unescaped_subreddit(
+            if check_for_unescaped_subreddit(transcription) or check_for_unescaped_username(
                 transcription
-            ) or check_for_unescaped_username(transcription):
+            ):
                 transcription = escape_reddit_links(transcription)
             transcription = replace_shortlinks(transcription)
 
@@ -342,13 +328,9 @@ class EditSubmissionTranscription(
 
 
 class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin, View):
-    def get(  # noqa: C901
-        self, request: HttpRequest, submission_id: int
-    ) -> HttpResponse:
+    def get(self, request: HttpRequest, submission_id: int) -> HttpResponse:  # noqa: C901
         """Provide the transcription view."""
-        drf_request = convert_to_drf_request(
-            request, data={"username": request.user.username}
-        )
+        drf_request = convert_to_drf_request(request, data={"username": request.user.username})
         viewset = SubmissionViewSet()
         # prepare the viewset for handling this request
         viewset.request = drf_request
@@ -422,9 +404,9 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
             if check_for_fenced_code_block(transcription):
                 transcription = clean_fenced_code_block(transcription)
 
-            if check_for_unescaped_subreddit(
+            if check_for_unescaped_subreddit(transcription) or check_for_unescaped_username(
                 transcription
-            ) or check_for_unescaped_username(transcription):
+            ):
                 transcription = escape_reddit_links(transcription)
             transcription = replace_shortlinks(transcription)
 
@@ -448,9 +430,7 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
                 removed_from_reddit=True,
             )
 
-            drf_request = convert_to_drf_request(
-                request, data={"username": request.user.username}
-            )
+            drf_request = convert_to_drf_request(request, data={"username": request.user.username})
             viewset = SubmissionViewSet()
             # prepare the viewset for handling this request
             viewset.request = drf_request
@@ -477,43 +457,33 @@ class TranscribeSubmission(CSRFExemptMixin, LoginRequiredMixin, RequireCoCMixin,
             submit_transcription(request, transcription_obj, submission_obj)
             advertise(submission_obj)
 
-            messages.success(
-                request, "Nice work! Thanks for helping make somebody's day better!"
-            )
+            messages.success(request, "Nice work! Thanks for helping make somebody's day better!")
 
             return redirect("choose_transcription")
 
 
 @login_required
 @require_coc
-def unclaim_submission(
-    request: HttpRequest, submission_id: int
-) -> HttpResponseRedirect:
+def unclaim_submission(request: HttpRequest, submission_id: int) -> HttpResponseRedirect:
     """Process unclaims that originate from the web app side."""
-    drf_request = convert_to_drf_request(
-        request, data={"username": request.user.username}
-    )
+    drf_request = convert_to_drf_request(request, data={"username": request.user.username})
     response = SubmissionViewSet().unclaim(drf_request, submission_id)
 
     if response.status_code == status.HTTP_423_LOCKED:
-        messages.error(
-            request, "There is a problem with your account. Please contact the mods."
-        )
+        messages.error(request, "There is a problem with your account. Please contact the mods.")
         return redirect("logout")
 
     if response.status_code == status.HTTP_406_NOT_ACCEPTABLE:
         messages.error(
             request,
-            "Not sure how you got there, but that submission is being handled by someone"
-            " else.",
+            "Not sure how you got there, but that submission is being handled by someone" " else.",
         )
         return redirect("choose_transcription")
 
     if response.status_code == status.HTTP_409_CONFLICT:
         messages.error(
             request,
-            "That submission is already completed, so you'll want to choose a different"
-            " one.",
+            "That submission is already completed, so you'll want to choose a different" " one.",
         )
         return redirect("choose_transcription")
     submission_obj = Submission.objects.get(id=submission_id)

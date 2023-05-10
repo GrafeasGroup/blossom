@@ -43,9 +43,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "internal_note",
-                    models.CharField(
-                        blank=True, default=None, max_length=1000, null=True
-                    ),
+                    models.CharField(blank=True, default=None, max_length=1000, null=True),
                 ),
                 (
                     "create_time",

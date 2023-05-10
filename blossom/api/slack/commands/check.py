@@ -38,9 +38,7 @@ def check_cmd(channel: str, message: str) -> None:
     if find_response := find_by_url(normalized_url):
         if transcription := find_response.get("transcription"):
             # Does a check already exist for this transcription?
-            if prev_check := TranscriptionCheck.objects.filter(
-                transcription=transcription
-            ).first():
+            if prev_check := TranscriptionCheck.objects.filter(transcription=transcription).first():
                 # Make sure that the check actually got sent to Slack
                 if prev_check.slack_channel_id and prev_check.slack_message_ts:
                     response = client.chat_getPermalink(

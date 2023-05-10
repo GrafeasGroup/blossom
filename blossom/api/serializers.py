@@ -1,5 +1,4 @@
-"""
-Serializers for the model classes used within the API.
+"""Serializers for the model classes used within the API.
 
 These serializers are used to generate a dictionary from a specific model. The
 fields and model used per serializer are specified in the Meta class included
@@ -44,12 +43,8 @@ class SourceSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
-    claimed_by = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail", read_only=True
-    )
-    completed_by = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail", read_only=True
-    )
+    claimed_by = serializers.HyperlinkedRelatedField(view_name="volunteer-detail", read_only=True)
+    completed_by = serializers.HyperlinkedRelatedField(view_name="volunteer-detail", read_only=True)
 
     class Meta:
         model = Submission
@@ -85,9 +80,7 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class TranscriptionSerializer(serializers.HyperlinkedModelSerializer):
-    author = serializers.HyperlinkedRelatedField(
-        view_name="volunteer-detail", read_only=True
-    )
+    author = serializers.HyperlinkedRelatedField(view_name="volunteer-detail", read_only=True)
 
     class Meta:
         model = Transcription

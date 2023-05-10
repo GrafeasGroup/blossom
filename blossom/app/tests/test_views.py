@@ -40,9 +40,7 @@ def test_unclaim_submission(client: Client) -> None:
 
     submission = create_submission(claimed_by=user)
 
-    response = client.get(
-        reverse("app_unclaim", kwargs={"submission_id": submission.id})
-    )
+    response = client.get(reverse("app_unclaim", kwargs={"submission_id": submission.id}))
     assert reverse("choose_transcription") in response.url
 
 
@@ -71,9 +69,7 @@ def test_unclaim_errors(client: Client, error: int, expected_redirect: str) -> N
         "blossom.api.views.submission.SubmissionViewSet.unclaim",
         lambda a, b, c: response,
     ):
-        response = client.get(
-            reverse("app_unclaim", kwargs={"submission_id": submission.id})
-        )
+        response = client.get(reverse("app_unclaim", kwargs={"submission_id": submission.id}))
         assert reverse(expected_redirect) in response.url
 
     # the unclaim should not have succeeded
@@ -153,9 +149,7 @@ class TestChooseSubmission:
                 """Return a mocked response from Reddit."""
                 return self.Response()
 
-        with patch(
-            "blossom.app.middleware.configure_reddit", lambda a: RedditSubmission()
-        ):
+        with patch("blossom.app.middleware.configure_reddit", lambda a: RedditSubmission()):
             submission = create_submission(
                 original_id=int(random.random() * 1000),
                 content_url="http://imgur.com",
@@ -252,9 +246,7 @@ class TestTranscribeSubmission:
             (status.HTTP_409_CONFLICT, "choose_transcription"),
         ],
     )
-    def test_get_errors(
-        self, client: Client, error: int, expected_redirect: str
-    ) -> None:
+    def test_get_errors(self, client: Client, error: int, expected_redirect: str) -> None:
         """Verify that errors from the API translate correctly to responses."""
         client, _, user = setup_user_client(client)
         add_social_auth_to_user(user)
@@ -276,9 +268,7 @@ class TestTranscribeSubmission:
             lambda a, b, c: response,
         ):
             response = client.get(
-                reverse(
-                    "transcribe_submission", kwargs={"submission_id": submission.id}
-                )
+                reverse("transcribe_submission", kwargs={"submission_id": submission.id})
             )
             assert reverse(expected_redirect) in response.url
 
@@ -373,9 +363,7 @@ class TestTranscribeSubmission:
 
         with patch("blossom.api.views.submission.send_check_message"):
             response = client.post(
-                reverse(
-                    "transcribe_submission", kwargs={"submission_id": submission.id}
-                ),
+                reverse("transcribe_submission", kwargs={"submission_id": submission.id}),
                 data={"transcription": "AAA"},
             )
 
@@ -391,9 +379,7 @@ class TestTranscribeSubmission:
             (status.HTTP_409_CONFLICT, "choose_transcription"),
         ],
     )
-    def test_post_errors(
-        self, client: Client, error: int, expected_redirect: str
-    ) -> None:
+    def test_post_errors(self, client: Client, error: int, expected_redirect: str) -> None:
         """Verify that errors from the API translate correctly to responses."""
         client, _, user = setup_user_client(client)
         add_social_auth_to_user(user)
@@ -416,9 +402,7 @@ class TestTranscribeSubmission:
             lambda a, b, c: response,
         ):
             response = client.post(
-                reverse(
-                    "transcribe_submission", kwargs={"submission_id": submission.id}
-                ),
+                reverse("transcribe_submission", kwargs={"submission_id": submission.id}),
                 data={"transcription": "AAA"},
             )
             assert reverse(expected_redirect) in response.url
@@ -437,12 +421,8 @@ class TestTranscribeSubmission:
 
         with patch("blossom.api.views.submission.send_check_message"):
             client.post(
-                reverse(
-                    "transcribe_submission", kwargs={"submission_id": submission.id}
-                ),
-                data={
-                    "transcription": "u/aaa ! Check this out!\n```\nabcde\n```\n\nayy"
-                },
+                reverse("transcribe_submission", kwargs={"submission_id": submission.id}),
+                data={"transcription": "u/aaa ! Check this out!\n```\nabcde\n```\n\nayy"},
             )
 
         assert "`" not in Transcription.objects.first().text

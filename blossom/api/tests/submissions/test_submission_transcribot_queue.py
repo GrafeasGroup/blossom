@@ -149,9 +149,7 @@ class TestSubmissionTranscribotQueue:
         transcribot = user_model.objects.get(username="transcribot")
 
         submission1 = create_submission(source="reddit", original_id="A")
-        submission2 = create_submission(
-            source="reddit", original_id="B", removed_from_queue=True
-        )
+        submission2 = create_submission(source="reddit", original_id="B", removed_from_queue=True)
         submission3 = create_submission(source="reddit", original_id="C")
 
         create_transcription(submission1, transcribot, original_id=None)

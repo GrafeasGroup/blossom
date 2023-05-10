@@ -167,9 +167,7 @@ def test_create_blocks_with_mod() -> None:
     user1 = create_user(id=100, username="Paddington")
     user2 = create_user(id=200, username="Bear")
     user3 = create_user(id=201, username="Mod Moddington")
-    migration = AccountMigration.objects.create(
-        old_user=user1, new_user=user2, moderator=user3
-    )
+    migration = AccountMigration.objects.create(old_user=user1, new_user=user2, moderator=user3)
 
     blocks = _create_blocks(migration, revert=True)
     assert len(blocks) == 4
@@ -189,9 +187,7 @@ def test_migrate_user_cmd() -> None:
 
     assert AccountMigration.objects.count() == 0
 
-    with patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_postMessage"
-    ) as mock:
+    with patch("blossom.api.slack.commands.migrate_user.client.chat_postMessage") as mock:
         mock.return_value = {"channel": "AAA", "message": {"ts": 1234}}
         migrate_user_cmd(channel="abc", message="migrate paddington moddington")
 
@@ -209,56 +205,45 @@ def test_migrate_user_cmd() -> None:
 
 def test_migrate_user_cmd_missing_users() -> None:
     """Verify error for missing users."""
-    with patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_postMessage"
-    ) as mock:
+    with patch("blossom.api.slack.commands.migrate_user.client.chat_postMessage") as mock:
         migrate_user_cmd(channel="abc", message="migrate")
 
     # no blocks when there's text here
     assert mock.call_args.kwargs.get("blocks") is None
-    assert (
-        mock.call_args.kwargs["text"]
-        == i18n["slack"]["errors"]["missing_multiple_usernames"]
-    )
+    assert mock.call_args.kwargs["text"] == i18n["slack"]["errors"]["missing_multiple_usernames"]
     assert mock.call_args.kwargs["channel"] == "abc"
 
 
 def test_migrate_user_cmd_wrong_first_user() -> None:
     """Verify error for missing first user."""
     create_user(id=100, username="Paddington")
-    with patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_postMessage"
-    ) as mock:
+    with patch("blossom.api.slack.commands.migrate_user.client.chat_postMessage") as mock:
         migrate_user_cmd(channel="abc", message="migrate AAAA Paddington")
 
     # no blocks when there's text here
     assert mock.call_args.kwargs.get("blocks") is None
-    assert mock.call_args.kwargs["text"] == i18n["slack"]["errors"][
-        "unknown_username"
-    ].format(username="AAAA")
+    assert mock.call_args.kwargs["text"] == i18n["slack"]["errors"]["unknown_username"].format(
+        username="AAAA"
+    )
     assert mock.call_args.kwargs["channel"] == "abc"
 
 
 def test_migrate_user_cmd_wrong_second_user() -> None:
     """Verify error for missing second user."""
     create_user(id=100, username="Paddington")
-    with patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_postMessage"
-    ) as mock:
+    with patch("blossom.api.slack.commands.migrate_user.client.chat_postMessage") as mock:
         migrate_user_cmd(channel="abc", message="migrate Paddington BBBB")
 
     assert mock.call_args.kwargs.get("blocks") is None
-    assert mock.call_args.kwargs["text"] == i18n["slack"]["errors"][
-        "unknown_username"
-    ].format(username="BBBB")
+    assert mock.call_args.kwargs["text"] == i18n["slack"]["errors"]["unknown_username"].format(
+        username="BBBB"
+    )
     assert mock.call_args.kwargs["channel"] == "abc"
 
 
 def test_migrate_user_cmd_too_many_users() -> None:
     """Verify error for too many users."""
-    with patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_postMessage"
-    ) as mock:
+    with patch("blossom.api.slack.commands.migrate_user.client.chat_postMessage") as mock:
         migrate_user_cmd(channel="abc", message="migrate A B C")
 
     assert mock.call_args.kwargs.get("blocks") is None
@@ -284,9 +269,7 @@ def test_process_migrate_user() -> None:
     with patch(
         "blossom.api.slack.commands.migrate_user.get_reddit_username",
         lambda _, us: us["name"],
-    ), patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_update"
-    ) as message_mock, patch(
+    ), patch("blossom.api.slack.commands.migrate_user.client.chat_update") as message_mock, patch(
         "blossom.api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -310,9 +293,7 @@ def test_process_migrate_user() -> None:
     with patch(
         "blossom.api.slack.commands.migrate_user.get_reddit_username",
         lambda _, us: us["name"],
-    ), patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_update"
-    ) as message_mock, patch(
+    ), patch("blossom.api.slack.commands.migrate_user.client.chat_update") as message_mock, patch(
         "blossom.api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -332,9 +313,7 @@ def test_process_migrate_user() -> None:
     with patch(
         "blossom.api.slack.commands.migrate_user.get_reddit_username",
         lambda _, us: us["name"],
-    ), patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_update"
-    ) as message_mock, patch(
+    ), patch("blossom.api.slack.commands.migrate_user.client.chat_update") as message_mock, patch(
         "blossom.api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -346,10 +325,7 @@ def test_process_migrate_user() -> None:
         )
 
     message_mock.assert_called_once()
-    assert (
-        message_mock.call_args.kwargs["blocks"][-1]["text"]["text"]
-        == "Action cancelled."
-    )
+    assert message_mock.call_args.kwargs["blocks"][-1]["text"]["text"] == "Action cancelled."
 
     reply_mock.assert_not_called()
 
@@ -361,9 +337,7 @@ def test_migrate_user_no_migration() -> None:
     with patch(
         "blossom.api.slack.commands.migrate_user.get_reddit_username",
         lambda _, us: us["name"],
-    ), patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_update"
-    ) as message_mock, patch(
+    ), patch("blossom.api.slack.commands.migrate_user.client.chat_update") as message_mock, patch(
         "blossom.api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:
@@ -388,9 +362,7 @@ def test_migrate_user_wrong_username() -> None:
     with patch(
         "blossom.api.slack.commands.migrate_user.get_reddit_username",
         lambda _, us: us["name"],
-    ), patch(
-        "blossom.api.slack.commands.migrate_user.client.chat_update"
-    ) as message_mock, patch(
+    ), patch("blossom.api.slack.commands.migrate_user.client.chat_update") as message_mock, patch(
         "blossom.api.slack.commands.migrate_user.reply_to_action_with_ping",
         return_value={},
     ) as reply_mock:

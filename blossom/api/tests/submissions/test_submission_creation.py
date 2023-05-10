@@ -140,9 +140,7 @@ class TestSubmissionCreation:
             "content_url": "http://example.com/a.jpg",
         }
 
-        with patch(
-            "blossom.api.models.process_image", return_value={"text": test_input}
-        ) as mock:
+        with patch("blossom.api.models.process_image", return_value={"text": test_input}) as mock:
             result = client.post(
                 reverse("submission-list"),
                 data,
@@ -174,9 +172,7 @@ class TestSubmissionCreation:
             "cannot_ocr": "True",
         }
 
-        with patch(
-            "blossom.api.models.process_image", return_value={"text": "AAA"}
-        ) as mock:
+        with patch("blossom.api.models.process_image", return_value={"text": "AAA"}) as mock:
             # mock it anyway just in case this fails -- we don't want to actually
             # call OCR
             result = client.post(
@@ -190,9 +186,7 @@ class TestSubmissionCreation:
         assert result.status_code == status.HTTP_201_CREATED
         assert Transcription.objects.count() == 0
 
-    def test_failed_ocr_on_create(
-        self, client: Client, settings: SettingsWrapper
-    ) -> None:
+    def test_failed_ocr_on_create(self, client: Client, settings: SettingsWrapper) -> None:
         """Verify that a new submission completes the OCR process."""
         settings.ENABLE_OCR = True
         settings.IMAGE_DOMAINS = ["example.com"]

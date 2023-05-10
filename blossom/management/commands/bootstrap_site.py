@@ -173,15 +173,11 @@ class Command(BaseCommand):
             logger.debug(self.style.SUCCESS("Created user transcribersofreddit"))
 
         if not BlossomUser.objects.filter(username="transcribot").exists():
-            BlossomUser.objects.create_user(
-                username="transcribot", email="transcribot@grafeas.org"
-            )
+            BlossomUser.objects.create_user(username="transcribot", email="transcribot@grafeas.org")
             logger.debug(self.style.SUCCESS("Created user transcribot"))
 
         if not BlossomUser.objects.filter(username="tor_archivist").exists():
-            BlossomUser.objects.create_user(
-                username="tor_archivist", email="archivist@grafeas.org"
-            )
+            BlossomUser.objects.create_user(username="tor_archivist", email="archivist@grafeas.org")
             logger.debug(self.style.SUCCESS("Created user tor_archivist"))
 
         # First we gotta create a new author, otherwise this whole thing will
@@ -234,9 +230,7 @@ class Command(BaseCommand):
             standalone_section=True,
             header_order=20,
         )
-        donation_post.body.replace(
-            "key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'"
-        )
+        donation_post.body.replace("key: ''", f"key: '{os.environ.get('STRIPE_PROD_KEY')}'")
         donation_post.save()
         logger.debug(self.style.SUCCESS("Wrote donation page!"))
 

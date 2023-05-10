@@ -15,18 +15,14 @@ class TestSourceViewset:
         """Verify that listing all Source objects works correctly."""
         Source.objects.all().delete()  # clear out system ones for test
         client, headers, _ = setup_user_client(client)
-        result = client.get(
-            reverse("source-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("source-list"), content_type="application/json", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 0
 
         source = get_default_test_source()
 
-        result = client.get(
-            reverse("source-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("source-list"), content_type="application/json", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 1
@@ -41,9 +37,7 @@ class TestSourceViewset:
         Source.objects.get_or_create(name="BBB")
         Source.objects.get_or_create(name="CCC")
 
-        result = client.get(
-            reverse("source-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("source-list"), content_type="application/json", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == 3

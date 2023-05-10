@@ -70,9 +70,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
             },
         ),
         responses={
-            201: DocResponse(
-                "Successful transcription creation", schema=serializer_class
-            ),
+            201: DocResponse("Successful transcription creation", schema=serializer_class),
             400: "The request does not adhere to the specified HTTP body",
             403: "The volunteer has not accepted the Code of Conduct",
             404: "Either the specified submission or volunteer is not found",
@@ -101,8 +99,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         *args: object,
         **kwargs: object,
     ) -> Response:
-        """
-        Create a new transcription.
+        """Create a new transcription.
 
         The following fields are passed in the HTTP Body:
             - original_id           the base36 ID of the comment
@@ -139,9 +136,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
 
         transcription = Transcription.objects.create(**transcription_create_data)
         return Response(
-            data=self.serializer_class(
-                transcription, context={"request": request}
-            ).data,
+            data=self.serializer_class(transcription, context={"request": request}).data,
             status=status.HTTP_201_CREATED,
         )
 
@@ -159,16 +154,13 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         *args: object,
         **kwargs: object,
     ) -> Response:
-        """
-        Search for the transcriptions of a specific submission.
+        """Search for the transcriptions of a specific submission.
 
         Note that providing the id of the submission as a query parameter is mandatory.
         """
         queryset = Transcription.objects.filter(submission__id=submission_id)
         return Response(
-            data=self.serializer_class(
-                queryset, many=True, context={"request": request}
-            ).data
+            data=self.serializer_class(queryset, many=True, context={"request": request}).data
         )
 
     @csrf_exempt
@@ -181,11 +173,8 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
         }
     )
     @action(detail=False, methods=["get"])
-    def review_random(
-        self, request: Request, *args: object, **kwargs: object
-    ) -> Response:
-        """
-        Pull a random transcription that was completed in the last hour and return it.
+    def review_random(self, request: Request, *args: object, **kwargs: object) -> Response:
+        """Pull a random transcription that was completed in the last hour and return it.
 
         Note that if there are no transcriptions in the last hour, this request
         returns an empty HTTP body.

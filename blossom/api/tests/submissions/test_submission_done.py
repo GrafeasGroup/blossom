@@ -162,9 +162,7 @@ class TestSubmissionDone:
         "gamma, expected",
         [(24, False), (25, True), (26, False)],
     )
-    def test_check_for_rank_up(
-        self, client: Client, gamma: int, expected: bool
-    ) -> None:
+    def test_check_for_rank_up(self, client: Client, gamma: int, expected: bool) -> None:
         """Verify that a slack message fires when a volunteer ranks up."""
         client, headers, user = setup_user_client(client)
         for iteration in range(24):

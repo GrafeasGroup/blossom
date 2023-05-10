@@ -54,8 +54,7 @@ class BlossomUserManager(UserManager):
 
 
 class BlossomUser(AbstractUser):
-    """
-    The user class used within the program.
+    """The user class used within the program.
 
     Note that this class provides some additional properties based on the current
     status of the user and the roles they fulfill.
@@ -87,9 +86,7 @@ class BlossomUser(AbstractUser):
     # Each person is allowed one API key, but advanced security around this
     # means that it is not fully implemented at this time. It is used by
     # u/transcribersofreddit and the other bots, though.
-    api_key = models.OneToOneField(
-        APIKey, on_delete=models.CASCADE, null=True, blank=True
-    )
+    api_key = models.OneToOneField(APIKey, on_delete=models.CASCADE, null=True, blank=True)
 
     # The percentage used to determine if a transcription should be checked by the mods.
     # If this is set, it will overwrite the automatically determined percentage
@@ -125,9 +122,7 @@ class BlossomUser(AbstractUser):
             .order_by("-complete_time")
             .first()
         )
-        recent_complete_time = (
-            recently_completed.complete_time if recently_completed else None
-        )
+        recent_complete_time = recently_completed.complete_time if recently_completed else None
 
         if recent_claim_time and recent_complete_time:
             return max(recent_complete_time, recent_claim_time)
@@ -136,8 +131,7 @@ class BlossomUser(AbstractUser):
 
     @property
     def gamma(self) -> int:
-        """
-        Return the number of transcriptions the user has made.
+        """Return the number of transcriptions the user has made.
 
         Note that this is a calculated property, computed by the number of
         transcriptions in the database.
@@ -147,10 +141,7 @@ class BlossomUser(AbstractUser):
         return self.gamma_at_time(start_time=None, end_time=None)
 
     def gamma_at_time(
-        self,
-        *,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None
+        self, *, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
     ) -> int:
         """Return the number of transcriptions the user has made in the given time-frame.
 
@@ -175,8 +166,7 @@ class BlossomUser(AbstractUser):
 
     # Disable complexity check, it's not really hard to understand
     def get_rank(self, override: int = None) -> str:  # noqa: C901
-        """
-        Return the name of the volunteer's current rank.
+        """Return the name of the volunteer's current rank.
 
         Override provided for the purposes of checking ranks.
         """

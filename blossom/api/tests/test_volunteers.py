@@ -16,9 +16,7 @@ class TestVolunteerSummary:
     def test_summary(self, client: Client) -> None:
         """Test whether the process functions correctly when invoked correctly."""
         client, headers, user = setup_user_client(client)
-        result = client.get(
-            reverse("volunteer-summary") + f"?username={user.username}", **headers
-        )
+        result = client.get(reverse("volunteer-summary") + f"?username={user.username}", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json().get("username") == user.username
@@ -47,9 +45,7 @@ class TestVolunteerSummary:
 
         assert Submission.objects.filter(completed_by=user).count() == 3
 
-        result = client.get(
-            reverse("volunteer-summary") + f"?username={user.username}", **headers
-        )
+        result = client.get(reverse("volunteer-summary") + f"?username={user.username}", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json().get("username") == user.username
@@ -58,9 +54,7 @@ class TestVolunteerSummary:
         user.blocked = False
         user.save()
 
-        result = client.get(
-            reverse("volunteer-summary") + f"?username={user.username}", **headers
-        )
+        result = client.get(reverse("volunteer-summary") + f"?username={user.username}", **headers)
 
         assert result.json()["gamma"] == 3
 
@@ -72,18 +66,14 @@ class TestVolunteerAssortedFunctions:
         """Verify that getting the list of users works correctly."""
         BlossomUser.objects.all().delete()  # clear out system accounts for test
         client, headers, user = setup_user_client(client)
-        result = client.get(
-            reverse("volunteer-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("volunteer-list"), content_type="application/json", **headers)
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 1
         assert result.json()["results"][0]["username"] == user.username
 
         create_user(email="a@a.com", username="AAA")
 
-        result = client.get(
-            reverse("volunteer-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("volunteer-list"), content_type="application/json", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 2
@@ -99,9 +89,7 @@ class TestVolunteerAssortedFunctions:
         create_user(username="C")
         create_user(username="D")
 
-        result = client.get(
-            reverse("volunteer-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("volunteer-list"), content_type="application/json", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == 5
@@ -161,9 +149,7 @@ class TestVolunteerAssortedFunctions:
         """Test whether querying with a username provides the specific user."""
         client, headers, user = setup_user_client(client)
         create_user(username="another_user")
-        result = client.get(
-            reverse("volunteer-list") + f"?username={user.username}", **headers
-        )
+        result = client.get(reverse("volunteer-list") + f"?username={user.username}", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == 1
@@ -177,9 +163,7 @@ class TestVolunteerGammaPlusOne:
         """Test whether an artificial gamma is provided when invoked correctly."""
         client, headers, user = setup_user_client(client)
 
-        result = client.patch(
-            reverse("volunteer-gamma-plusone", args=[user.id]), **headers
-        )
+        result = client.patch(reverse("volunteer-gamma-plusone", args=[user.id]), **headers)
 
         user.refresh_from_db()
         assert result.status_code == status.HTTP_200_OK
@@ -242,9 +226,7 @@ class TestVolunteerCreation:
         BlossomUser.objects.all().delete()  # clear out system accounts for test
         client, headers, _ = setup_user_client(client)
 
-        result = client.post(
-            reverse("volunteer-list"), content_type="application/json", **headers
-        )
+        result = client.post(reverse("volunteer-list"), content_type="application/json", **headers)
         assert result.status_code == status.HTTP_400_BAD_REQUEST
         assert BlossomUser.objects.count() == 1
 
@@ -270,9 +252,7 @@ class TestVolunteerCoCAcceptance:
         client, headers, user = setup_user_client(client, accepted_coc=False)
 
         assert user.accepted_coc is False
-        result = client.post(
-            reverse("volunteer-accept-coc") + "?username=AAAAAAAAA", **headers
-        )
+        result = client.post(reverse("volunteer-accept-coc") + "?username=AAAAAAAAA", **headers)
         assert result.status_code == status.HTTP_404_NOT_FOUND
         user.refresh_from_db()
         assert user.accepted_coc is False

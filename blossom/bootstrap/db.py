@@ -97,9 +97,7 @@ def generate_dummy_post(vlntr: Dict = None) -> None:
         content_url="https://example.com",
     )
     if vlntr:
-        blossom.claim(
-            submission_id=new_submission.data["id"], username=vlntr["username"]
-        )
+        blossom.claim(submission_id=new_submission.data["id"], username=vlntr["username"])
         blossom.done(
             submission_id=new_submission.data["id"],
             username=vlntr["username"],

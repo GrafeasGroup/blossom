@@ -10,9 +10,7 @@ from requests.models import Response as RequestsResponse
 
 from blossom.ocr.errors import OCRError
 
-URL_RE = (
-    r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]" r"|[*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
-)
+URL_RE = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]" r"|[*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 SPECIAL_CHARS = ["(", ")", "!", ".", ","]
 
 
@@ -20,8 +18,7 @@ def process_image(image_url: str) -> Union[None, Dict]:
     """Process an image with OCR using ocr.space."""
 
     def _set_error_state(response: Dict) -> Dict:
-        """
-        Build an error dictionary for a bad response.
+        """Build an error dictionary for a bad response.
 
         The information that's given in the full response is more than we need,
         so build a "lite" version and use that to present an error message.
@@ -119,8 +116,7 @@ def _get_results_from_ocrspace(payload: Dict) -> RequestsResponse:
 def decode_image_from_url(
     url: str, overlay: bool = False, api_key: str = settings.OCR_API_KEY
 ) -> Dict:
-    """
-    OCR.space API request with remote file.
+    """OCR.space API request with remote file.
 
     This code was originally borrowed from
     https://github.com/Zaargh/ocr.space_code_example/blob/master/ocrspace_example.py
@@ -154,8 +150,7 @@ def decode_image_from_url(
 
 
 def escape_reddit_links(body: str) -> str:
-    r"""
-    Escape u/ and r/ links in a message.
+    r"""Escape u/ and r/ links in a message.
 
     There is no (known) way to escape u/ or r/ (without a preceding slash),
     so those will also be changed to \/u/ and \/r/.  # noqa: W605
@@ -200,8 +195,7 @@ def _is_shortlink(url: str) -> bool:
 
 
 def replace_shortlinks(content: str, replacement: str = "<redacted link>") -> str:
-    """
-    Pull out anything that looks like a shortlink and replace with a redacted string.
+    """Pull out anything that looks like a shortlink and replace with a redacted string.
 
     So that we don't actually have to deal with _following_ the link, we adapt
     this answer from SO (https://stackoverflow.com/a/9557685) so that it it _looks_

@@ -43,9 +43,7 @@ class TestProcessImage:
         ocrspace_response["OCRExitCode"] = 4  # fatal error
         del ocrspace_response["ParsedResults"]
 
-        with patch(
-            "blossom.ocr.helpers.decode_image_from_url", return_value=ocrspace_response
-        ):
+        with patch("blossom.ocr.helpers.decode_image_from_url", return_value=ocrspace_response):
             with raises(OCRError):
                 process_image("A")
 
@@ -54,9 +52,7 @@ class TestProcessImage:
         ocrspace_response = deepcopy(DEFAULT_OCRSPACE_RESPONSE)
         del ocrspace_response["IsErroredOnProcessing"]
 
-        with patch(
-            "blossom.ocr.helpers.decode_image_from_url", return_value=ocrspace_response
-        ):
+        with patch("blossom.ocr.helpers.decode_image_from_url", return_value=ocrspace_response):
             with raises(OCRError):
                 process_image("A")
 
@@ -64,9 +60,7 @@ class TestProcessImage:
         """Verify that an image with no text is returned as None."""
         ocrspace_response = deepcopy(DEFAULT_OCRSPACE_RESPONSE)
         ocrspace_response["ParsedResults"][0]["ParsedText"] = ""
-        with patch(
-            "blossom.ocr.helpers.decode_image_from_url", return_value=ocrspace_response
-        ):
+        with patch("blossom.ocr.helpers.decode_image_from_url", return_value=ocrspace_response):
             result = process_image("A")
 
         assert result is None
@@ -77,9 +71,7 @@ class TestProcessImage:
         ocrspace_response.update(OCRSPACE_ERROR_FIELDS)
         ocrspace_response["IsErroredOnProcessing"] = True
 
-        with patch(
-            "blossom.ocr.helpers.decode_image_from_url", return_value=ocrspace_response
-        ):
+        with patch("blossom.ocr.helpers.decode_image_from_url", return_value=ocrspace_response):
             with raises(OCRError):
                 process_image("A")
 
@@ -123,10 +115,7 @@ class TestDecodeImage:
             with raises(ConnectionError) as e:
                 decode_image_from_url("AAA")
 
-            assert (
-                e.value.args[0]
-                == "Attempted all three OCR.space APIs -- cannot connect!"
-            )
+            assert e.value.args[0] == "Attempted all three OCR.space APIs -- cannot connect!"
 
     def test_ocr_timeout(self) -> None:
         """# noqa: D205,D210,D400

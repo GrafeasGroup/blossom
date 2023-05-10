@@ -22,9 +22,9 @@ def test_process_coc_reset() -> None:
 
         assert mock.call_count == 1
         assert test_user.accepted_coc is False
-        assert mock.call_args[1]["text"] == i18n["slack"]["reset_coc"][
-            "success"
-        ].format(test_user.username)
+        assert mock.call_args[1]["text"] == i18n["slack"]["reset_coc"]["success"].format(
+            test_user.username
+        )
 
     # Now we approve them
     with patch("blossom.api.slack.commands.reset.client.chat_postMessage") as mock:
@@ -33,9 +33,9 @@ def test_process_coc_reset() -> None:
 
         assert mock.call_count == 1
         assert test_user.accepted_coc is True
-        assert mock.call_args[1]["text"] == i18n["slack"]["reset_coc"][
-            "success_undo"
-        ].format(test_user.username)
+        assert mock.call_args[1]["text"] == i18n["slack"]["reset_coc"]["success_undo"].format(
+            test_user.username
+        )
 
 
 def test_process_coc_reset_with_slack_link() -> None:

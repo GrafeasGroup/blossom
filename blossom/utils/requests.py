@@ -3,8 +3,7 @@ from rest_framework.request import Request
 
 
 def convert_to_drf_request(request: HttpRequest, data: dict = None) -> Request:
-    """
-    Convert a standard Django request to the DRF equivalent.
+    """Convert a standard Django request to the DRF equivalent.
 
     DRF ViewSets can't take normal Django requests, so any interaction with the
     API side must involve converting the request object before sending it off.

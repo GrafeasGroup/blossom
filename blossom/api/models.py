@@ -16,8 +16,7 @@ from blossom.ocr.helpers import escape_reddit_links, process_image, replace_shor
 
 
 def create_id() -> uuid.UUID:  # pragma: no cover
-    """
-    Create a random UUID for elements as needed.
+    """Create a random UUID for elements as needed.
 
     Sometimes we won't have the original ID of transcriptions or submissions,
     so instead we fake them using UUIDs. For example, this is used when
@@ -31,8 +30,7 @@ def create_id() -> uuid.UUID:  # pragma: no cover
 
 
 class Source(models.Model):
-    """
-    The source that the particular Submission or Transcription came from.
+    """The source that the particular Submission or Transcription came from.
 
     The majority of these will be "reddit", but to save on space and more easily
     standardize we have the option of including other sources as we grow.
@@ -48,8 +46,7 @@ class Source(models.Model):
 
 
 def get_default_source() -> str:
-    """
-    Grabs the proper default ID for submissions and transcriptions.
+    """Grabs the proper default ID for submissions and transcriptions.
 
     Django cannot serialize lambda functions, so we need to have a helper
     function to handle the default action of the `source` foreign keys.
@@ -65,8 +62,7 @@ def get_default_source() -> str:
 
 
 class Submission(models.Model):
-    """
-    Submission which is to be transcribed.
+    """Submission which is to be transcribed.
 
     Note that it is possible that multiple Transcriptions link to the same
     Submission due to multiple users possibly transcribing the same Submission.
@@ -132,9 +128,7 @@ class Submission(models.Model):
     complete_time = models.DateTimeField(default=None, null=True, blank=True)
 
     # The source platform from which the Submission originates.
-    source = models.ForeignKey(
-        Source, default=get_default_source, on_delete=models.CASCADE
-    )
+    source = models.ForeignKey(Source, default=get_default_source, on_delete=models.CASCADE)
 
     # The title of the submission.
     title = models.CharField(max_length=300, blank=True, null=True)
@@ -184,8 +178,7 @@ class Submission(models.Model):
 
     @property
     def has_ocr_transcription(self) -> bool:
-        """
-        Whether the Submission has an OCR transcription.
+        """Whether the Submission has an OCR transcription.
 
         This property is determined by checking whether a Transcription by the
         user "transcribot" exists for the Submission.
@@ -195,11 +188,7 @@ class Submission(models.Model):
         return (
             False
             if self.cannot_ocr
-            else bool(
-                Transcription.objects.filter(
-                    submission=self, author__username="transcribot"
-                )
-            )
+            else bool(Transcription.objects.filter(submission=self, author__username="transcribot"))
         )
 
     @property
@@ -210,14 +199,10 @@ class Submission(models.Model):
     @property
     def has_slack_report_message(self) -> bool:
         """Determine whether a Slack report message exists for this submission."""
-        return (
-            self.report_slack_channel_id is not None
-            and self.report_slack_message_ts is not None
-        )
+        return self.report_slack_channel_id is not None and self.report_slack_message_ts is not None
 
     def _create_ocr_transcription(self, text: str) -> None:
-        """
-        Handle creation of an OCR transcription in a testable way.
+        """Handle creation of an OCR transcription in a testable way.
 
         This function creates a transcription object, but deliberately leaves
         `original_id` out because it will be handled with a patch call from
@@ -243,9 +228,7 @@ class Submission(models.Model):
         try:
             result = process_image(self.content_url)
         except OCRError as e:
-            logging.warning(
-                "There was an error in generating the OCR transcription: " + str(e)
-            )
+            logging.warning("There was an error in generating the OCR transcription: " + str(e))
             self.cannot_ocr = True
             return
 
@@ -260,8 +243,7 @@ class Submission(models.Model):
         self._create_ocr_transcription(text=result["text"])
 
     def save(self, *args: Any, skip_extras: bool = False, **kwargs: Any) -> None:
-        """
-        Save the submission object.
+        """Save the submission object.
 
         The submission must be saved before the OCR is run, because otherwise
         we'd assign an unsaved object as the other end of the foreign key for
@@ -279,8 +261,7 @@ class Submission(models.Model):
                 self.generate_ocr_transcription()
 
     def get_subreddit_name(self) -> str:
-        """
-        Return the subreddit name.
+        """Return the subreddit name.
 
         Once we get everything transitioned to sources, this will continue to
         work. In the meantime, we can pull the subreddit from the urls.
@@ -417,12 +398,8 @@ class TranscriptionCheck(models.Model):
     complete_time = models.DateTimeField(default=None, null=True, blank=True)
 
     # The info needed to update the Slack message of the check
-    slack_channel_id = models.CharField(
-        max_length=50, default=None, null=True, blank=True
-    )
-    slack_message_ts = models.CharField(
-        max_length=50, default=None, null=True, blank=True
-    )
+    slack_channel_id = models.CharField(max_length=50, default=None, null=True, blank=True)
+    slack_message_ts = models.CharField(max_length=50, default=None, null=True, blank=True)
 
     def get_slack_url(self) -> Optional[str]:
         """Get the permalink for the check on Slack."""
@@ -466,12 +443,8 @@ class AccountMigration(models.Model):
         on_delete=models.SET_DEFAULT,
     )
     # The info needed to update the Slack message of the check
-    slack_channel_id = models.CharField(
-        max_length=50, default=None, null=True, blank=True
-    )
-    slack_message_ts = models.CharField(
-        max_length=50, default=None, null=True, blank=True
-    )
+    slack_channel_id = models.CharField(max_length=50, default=None, null=True, blank=True)
+    slack_message_ts = models.CharField(max_length=50, default=None, null=True, blank=True)
 
     def perform_migration(self) -> None:
         """Move all submissions attributed to one account to another."""
@@ -484,9 +457,7 @@ class AccountMigration(models.Model):
             submission__in=existing_submissions, author=self.old_user
         )
         transcriptions.update(author=self.new_user)
-        existing_submissions.update(
-            claimed_by=self.new_user, completed_by=self.new_user
-        )
+        existing_submissions.update(claimed_by=self.new_user, completed_by=self.new_user)
 
     def revert(self) -> None:
         """Undo the account migration."""
@@ -494,14 +465,11 @@ class AccountMigration(models.Model):
             submission__in=self.affected_submissions.all(), author=self.new_user
         )
         transcriptions.update(author=self.old_user)
-        self.affected_submissions.update(
-            claimed_by=self.old_user, completed_by=self.old_user
-        )
+        self.affected_submissions.update(claimed_by=self.old_user, completed_by=self.old_user)
 
 
 def extract_subreddit_from_url(url: str) -> Optional[str]:
-    """
-    Given a Reddit URL, extract the subreddit.
+    """Given a Reddit URL, extract the subreddit.
 
     The name will be without the `r/` prefix.
 

@@ -32,8 +32,7 @@ class BlossomAPI:
         api_base_url: str = "http://localhost:8000/api/",
         num_retries: int = 1,
     ) -> None:
-        """
-        Initialize the Blossom API with the necessary parameters.
+        """Initialize the Blossom API with the necessary parameters.
 
         :param email: the email address which the bot should use to log into Blossom
         :param password: the password to use to log into Blossom
@@ -58,11 +57,8 @@ class BlossomAPI:
         self.http = Session()
         self.http.headers.update({"Authorization": f"Api-Key {api_key}"})
 
-    def _call(
-        self, method: str, path: str, data: Dict = None, params: Dict = None
-    ) -> Response:
-        """
-        Create a call to the API using the requests package.
+    def _call(self, method: str, path: str, data: Dict = None, params: Dict = None) -> Response:
+        """Create a call to the API using the requests package.
 
         In this method, a request is retried if a 403 and a message on authentication
         credentials is returned. In this case, it seems that tor is not yet logged in and
@@ -84,23 +80,17 @@ class BlossomAPI:
             self._call("GET", path, data, params)
             if "csrftoken" in self.http.cookies:
                 data.update({"csrfmiddlewaretoken": self.http.cookies.get("csrftoken")})
-        req = Request(
-            method=method, url=urljoin(self.base_url, path), data=data, params=params
-        )
+        req = Request(method=method, url=urljoin(self.base_url, path), data=data, params=params)
 
         resp = None
 
         for _ in range(self.num_retries):
             prepped = self.http.prepare_request(req)
-            settings = self.http.merge_environment_settings(
-                prepped.url, {}, None, None, None
-            )
+            settings = self.http.merge_environment_settings(prepped.url, {}, None, None, None)
             resp = self.http.send(prepped, **settings)
 
             if resp.status_code == 403:
-                raise Exception(
-                    "Unable to authenticate! Check your email and password!"
-                )
+                raise Exception("Unable to authenticate! Check your email and password!")
 
             break
 
@@ -188,9 +178,7 @@ class BlossomAPI:
 
     def claim_submission(self, submission_id: str, username: str) -> BlossomResponse:
         """Claim the specified submission with the specified username."""
-        response = self.patch(
-            f"submission/{submission_id}/claim/", data={"username": username}
-        )
+        response = self.patch(f"submission/{submission_id}/claim/", data={"username": username})
         if response.status_code == 201:
             return BlossomResponse(data=response.json())
         elif response.status_code == 403:
@@ -204,9 +192,7 @@ class BlossomAPI:
 
     def unclaim(self, submission_id: str, username: str) -> BlossomResponse:
         """Unclaim a given Submission and release it from a user."""
-        response = self.patch(
-            f"submission/{submission_id}/unclaim", data={"username": username}
-        )
+        response = self.patch(f"submission/{submission_id}/unclaim", data={"username": username})
         if response.status_code == 201:
             return BlossomResponse(data=response.json())
         elif response.status_code == 404:

@@ -26,8 +26,7 @@ class AdminApiKeyCustomCheck(rfperms.BasePermission):
     message = "Sorry, this resource can only be accessed by an admin API key."
 
     def has_permission(self, request: Request, view: View) -> bool:
-        """
-        Check whether the user is a valid admin.
+        """Check whether the user is a valid admin.
 
         :param request: the request which is evaluated
         :param view: the view to which the request is sent
@@ -66,8 +65,7 @@ class BlossomApiPermission(rfperms.BasePermission):
     message = "Sorry, this resource can only be accessed by an admin."
 
     def has_permission(self, request: Request, view: View) -> bool:
-        """
-        Check whether the user is an admin through either of the two definitions.
+        """Check whether the user is an admin through either of the two definitions.
 
         These definitions are determined either through our custom admin check,
         or the default check supplied by Django REST.

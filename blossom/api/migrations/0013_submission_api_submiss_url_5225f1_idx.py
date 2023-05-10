@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddIndex(
             model_name="submission",
-            index=models.Index(
-                fields=["url", "tor_url"], name="api_submiss_url_5225f1_idx"
-            ),
+            index=models.Index(fields=["url", "tor_url"], name="api_submiss_url_5225f1_idx"),
         ),
     ]

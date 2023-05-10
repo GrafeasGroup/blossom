@@ -57,11 +57,7 @@ def check_for_heading_with_dashes(transcription: str) -> Optional[str]:
 
     Will be a level 2 heading.
     """
-    return (
-        "heading_with_dashes"
-        if HEADING_WITH_DASHES_PATTERN.search(transcription)
-        else None
-    )
+    return "heading_with_dashes" if HEADING_WITH_DASHES_PATTERN.search(transcription) else None
 
 
 def check_for_fenced_code_block(transcription: str) -> Optional[bool]:
@@ -120,9 +116,7 @@ def check_for_unescaped_heading(transcription: str) -> Optional[str]:
     Invalid: #Test
     """
     return (
-        "unescaped_heading"
-        if UNESCAPED_HEADING_PATTERN.search(transcription) is not None
-        else None
+        "unescaped_heading" if UNESCAPED_HEADING_PATTERN.search(transcription) is not None else None
     )
 
 

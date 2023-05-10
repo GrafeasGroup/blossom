@@ -32,9 +32,7 @@ def test_construct_transcription_check_text(client: Client) -> None:
 
     expected = "Check for u/Userson (21 Γ) on r/CuratedTumblr | Watched (100.0%)"
 
-    with patch(
-        "blossom.authentication.models.BlossomUser.gamma_at_time", return_value=21
-    ):
+    with patch("blossom.authentication.models.BlossomUser.gamma_at_time", return_value=21):
         actual = _construct_transcription_check_text(check)
 
     assert actual == expected

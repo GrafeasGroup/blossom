@@ -97,9 +97,7 @@ def main():
     done_data: List[DoneData] = []
     for user in redis_data:
         if "posts_completed" in redis_data[user]:
-            done_data += [
-                (user, done_id) for done_id in redis_data[user]["posts_completed"]
-            ]
+            done_data += [(user, done_id) for done_id in redis_data[user]["posts_completed"]]
     done_data = filter_by_id(done_data)
     process_done_ids(done_data)
 
@@ -180,15 +178,9 @@ def filter_by_id(done_data: List[DoneData]) -> List[DoneData]:
     """Filter out unwanted done IDs."""
     old_count = len(done_data)
     if ID_WHITELIST is not None:
-        done_data = [
-            (user, done_id) for user, done_id in done_data if done_id in ID_WHITELIST
-        ]
+        done_data = [(user, done_id) for user, done_id in done_data if done_id in ID_WHITELIST]
     if ID_BLACKLIST is not None:
-        done_data = [
-            (user, done_id)
-            for user, done_id in done_data
-            if done_id not in ID_BLACKLIST
-        ]
+        done_data = [(user, done_id) for user, done_id in done_data if done_id not in ID_BLACKLIST]
     new_count = len(done_data)
     logging.info("Filtered IDs, %s/%s allowed.", new_count, old_count)
     return done_data
@@ -280,9 +272,7 @@ def submit_data_to_blossom(data: RedditData) -> RedditData:
         if user is None:
             continue
         user_data = grouped_data[username]
-        user_data_list = [
-            v for k, v in user_data.items() if v["done_comment"] is not None
-        ]
+        user_data_list = [v for k, v in user_data.items() if v["done_comment"] is not None]
         dummy_subs = get_dummy_submissions(username, len(user_data))
         for blossom_submission, entry in zip(dummy_subs, user_data_list):
             new_entry = submit_entry_to_blossom(user, blossom_submission, entry)
@@ -364,12 +354,8 @@ def get_incomplete_data_dict(entry: RedditEntry) -> Dict:
     """Get a dict from the entry that can be saved to a JSON file."""
     data_dict = {
         "done_comment": entry["done_comment"]["id"] if entry["done_comment"] else None,
-        "claim_comment": entry["claim_comment"]["id"]
-        if entry["claim_comment"]
-        else None,
-        "tor_submission": entry["tor_submission"]["id"]
-        if entry["tor_submission"]
-        else None,
+        "claim_comment": entry["claim_comment"]["id"] if entry["claim_comment"] else None,
+        "tor_submission": entry["tor_submission"]["id"] if entry["tor_submission"] else None,
         "partner_submission": entry["partner_submission"]["id"]
         if entry["partner_submission"]
         else None,
@@ -530,18 +516,13 @@ def patch_or_create_transcription(
     blossom_tr_response = blossom.get_transcription(
         submission=blossom_submission_id, author=user["id"]
     )
-    if (
-        blossom_tr_response.status == BlossomStatus.ok
-        and len(blossom_tr_response.data) > 0
-    ):
+    if blossom_tr_response.status == BlossomStatus.ok and len(blossom_tr_response.data) > 0:
         # We already have a dummy transcription, patch it
         blossom_tr_id: int = blossom_tr_response.data[0]["id"]
 
         tr_data = {
             "submission": f"https://grafeas.org/api/submission/{blossom_submission_id}/",
-            "create_time": pytz.utc.localize(
-                transcriptions[0]["created_utc"]
-            ).isoformat(),
+            "create_time": pytz.utc.localize(transcriptions[0]["created_utc"]).isoformat(),
             "original_id": transcriptions[0]["id"],
             "source": f"https://grafeas.org/api/source/{source}/",
             "url": "https://reddit.com" + transcriptions[0]["permalink"],
@@ -565,9 +546,7 @@ def patch_or_create_transcription(
             "username": user["username"],
             "submission_id": blossom_submission_id,
             "source": source,
-            "create_time": pytz.utc.localize(
-                transcriptions[0]["created_utc"]
-            ).isoformat(),
+            "create_time": pytz.utc.localize(transcriptions[0]["created_utc"]).isoformat(),
             "original_id": transcriptions[0]["id"],
             "url": "https://reddit.com" + transcriptions[0]["permalink"],
             "text": transcription_text,
@@ -692,9 +671,7 @@ def fetch_tor_submissions(data: RedditData) -> None:
         if done is None:
             continue
         matching_subs = [
-            tor_sub
-            for tor_sub in tor_submissions
-            if tor_sub["id"] == done["link_id"][3:]
+            tor_sub for tor_sub in tor_submissions if tor_sub["id"] == done["link_id"][3:]
         ]
         if len(matching_subs) > 0:
             data[done_id]["tor_submission"] = matching_subs[0]
@@ -714,12 +691,8 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
     """
     start = time.time()
     partner_submissions = [data[done_id]["tor_submission"] for done_id in data]
-    partner_submission_urls = [
-        sub["url"] for sub in partner_submissions if sub is not None
-    ]
-    partner_submission_ids = [
-        extract_id_from_reddit_url(url) for url in partner_submission_urls
-    ]
+    partner_submission_urls = [sub["url"] for sub in partner_submissions if sub is not None]
+    partner_submission_ids = [extract_id_from_reddit_url(url) for url in partner_submission_urls]
     partner_submissions = (
         list(
             push.search_submissions(
@@ -731,9 +704,7 @@ def fetch_partner_submissions(data: RedditData) -> RedditData:
         if len(partner_submission_ids) > 0
         else []
     )
-    partner_submissions = [
-        dict_from_submission(partner_sub) for partner_sub in partner_submissions
-    ]
+    partner_submissions = [dict_from_submission(partner_sub) for partner_sub in partner_submissions]
     for done_id in data:
         tor_sub = data[done_id]["tor_submission"]
         if tor_sub is None:

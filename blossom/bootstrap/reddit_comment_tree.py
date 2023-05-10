@@ -64,12 +64,8 @@ class RedditCommentTree(object):
         dpath.util.set(self.tree, path + f"/children/{item.id}/object", item)
 
     def create_tree(self):
-        top_level_comments = [
-            i for i in self.raw_comments if i.parent_id.startswith("t3_")
-        ]
-        child_comments = [
-            i for i in self.raw_comments if not i.parent_id.startswith("t3_")
-        ]
+        top_level_comments = [i for i in self.raw_comments if i.parent_id.startswith("t3_")]
+        child_comments = [i for i in self.raw_comments if not i.parent_id.startswith("t3_")]
         logger.debug(
             f"Found {len(top_level_comments)} top level comments and {len(child_comments)} "
             f"child comments."

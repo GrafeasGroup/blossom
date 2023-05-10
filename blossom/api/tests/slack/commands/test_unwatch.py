@@ -14,9 +14,7 @@ def test_process_unwatch() -> None:
     test_user = create_user(username="u123", overwrite_check_percentage=0.5)
     assert test_user.overwrite_check_percentage == 0.5
 
-    expected_message = i18n["slack"]["unwatch"]["success"].format(
-        user=test_user.username
-    )
+    expected_message = i18n["slack"]["unwatch"]["success"].format(user=test_user.username)
 
     # process the message
     with patch("blossom.api.slack.commands.unwatch.client.chat_postMessage") as mock:

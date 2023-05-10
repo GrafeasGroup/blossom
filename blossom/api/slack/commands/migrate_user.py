@@ -57,8 +57,7 @@ APPROVE_BUTTON = {
         "text": {
             "type": "mrkdwn",
             "text": (
-                "Make sure you've doublechecked the account names"
-                " before you approve this!"
+                "Make sure you've doublechecked the account names" " before you approve this!"
             ),
         },
         "confirm": {"type": "plain_text", "text": "Do it"},
@@ -86,8 +85,7 @@ REVERT_BUTTON = {
         "text": {
             "type": "mrkdwn",
             "text": (
-                "Make sure you've doublechecked the account names"
-                " before you approve this!"
+                "Make sure you've doublechecked the account names" " before you approve this!"
             ),
         },
         "confirm": {"type": "plain_text", "text": "Do it"},
@@ -114,9 +112,7 @@ def _create_blocks(
     if migration.moderator and revert:
         # show who approved it while when we show the button to revert it
         mod_block = deepcopy(MOD_BLOCK)
-        mod_block["text"]["text"] = MOD_BLOCK["text"]["text"].format(
-            migration.moderator.username
-        )
+        mod_block["text"]["text"] = MOD_BLOCK["text"]["text"].format(migration.moderator.username)
         blocks.append(mod_block)
 
     blocks.append(DIVIDER_BLOCK)
@@ -161,18 +157,12 @@ def migrate_user_cmd(channel: str, message: str) -> None:
         old_user, old_username = parse_user(parsed_message[1])
         new_user, new_username = parse_user(parsed_message[2])
         if not old_user:
-            msg = i18n["slack"]["errors"]["unknown_username"].format(
-                username=old_username
-            )
+            msg = i18n["slack"]["errors"]["unknown_username"].format(username=old_username)
         if not new_user:
-            msg = i18n["slack"]["errors"]["unknown_username"].format(
-                username=new_username
-            )
+            msg = i18n["slack"]["errors"]["unknown_username"].format(username=new_username)
 
         if old_user and new_user:
-            migration = AccountMigration.objects.create(
-                old_user=old_user, new_user=new_user
-            )
+            migration = AccountMigration.objects.create(old_user=old_user, new_user=new_user)
             blocks = _create_blocks(migration, approve_cancel=True)
 
     else:
@@ -204,9 +194,7 @@ def process_migrate_user(data: dict) -> None:
     mod = BlossomUser.objects.filter(username=mod_username).first()
 
     if migration is None:
-        reply_to_action_with_ping(
-            data, f"I couldn't find a check with ID {migration_id}!"
-        )
+        reply_to_action_with_ping(data, f"I couldn't find a check with ID {migration_id}!")
         return
     if mod is None:
         reply_to_action_with_ping(

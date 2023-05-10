@@ -36,8 +36,7 @@ def _worker() -> None:
 
 
 def send_to_worker(func: Callable) -> Callable:
-    """
-    Pass decorated function to background thread.
+    """Pass decorated function to background thread.
 
     Note that any function passed to it should not expect to return any data.
     If communication is needed outside the function, then it should write to

@@ -95,9 +95,7 @@ def _process_unclaim_confirm(
         text=get_confirm_text(),
     )
     if not response["ok"]:
-        logger.error(
-            f"Could not update unclaim for submission {submission.id} on Slack!"
-        )
+        logger.error(f"Could not update unclaim for submission {submission.id} on Slack!")
 
 
 def _process_unclaim_cancel(
@@ -112,9 +110,7 @@ def _process_unclaim_cancel(
         text=get_cancel_text(),
     )
     if not response["ok"]:
-        logger.error(
-            f"Could not update unclaim for submission {submission.id} on Slack!"
-        )
+        logger.error(f"Could not update unclaim for submission {submission.id} on Slack!")
 
 
 def _unclaim_reddit_flair(submission: Submission) -> None:
@@ -123,6 +119,4 @@ def _unclaim_reddit_flair(submission: Submission) -> None:
         logger.error("The env variable UNCLAIM_REDDIT_FLAIR_ID is not defined!")
         return
 
-    REDDIT.submission(submission.tor_url).flair.select(
-        flair_template_id=UNCLAIM_REDDIT_FLAIR_ID
-    )
+    REDDIT.submission(submission.tor_url).flair.select(flair_template_id=UNCLAIM_REDDIT_FLAIR_ID)

@@ -28,9 +28,7 @@ def test_process_watch(message: str, percentage: float) -> None:
     )
 
     # Make sure that the overwrite is allowed
-    with patch(
-        "blossom.api.slack.commands.unwatch.client.chat_postMessage"
-    ) as mock, patch(
+    with patch("blossom.api.slack.commands.unwatch.client.chat_postMessage") as mock, patch(
         "blossom.authentication.models.BlossomUser.auto_check_percentage",
         new_callable=PropertyMock,
         return_value=0.05,
@@ -76,9 +74,7 @@ def test_process_watch_error(message: str, response: str) -> None:
     test_user = create_user(username="u123")
     assert test_user.overwrite_check_percentage is None
 
-    with patch(
-        "blossom.api.slack.commands.unwatch.client.chat_postMessage"
-    ) as mock, patch(
+    with patch("blossom.api.slack.commands.unwatch.client.chat_postMessage") as mock, patch(
         "blossom.authentication.models.BlossomUser.auto_check_percentage",
         new_callable=PropertyMock,
         return_value=0.7,

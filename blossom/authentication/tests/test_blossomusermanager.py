@@ -28,9 +28,9 @@ def test_verify_usernames_dont_affect_other_filters() -> None:
 
     for option in ["nArF", "Narf"]:
         for is_vol in [True, False]:
-            assert BlossomUser.objects.filter(
-                username=option, is_volunteer=is_vol
-            ).count() == (1 if is_vol else 0)
+            assert BlossomUser.objects.filter(username=option, is_volunteer=is_vol).count() == (
+                1 if is_vol else 0
+            )
             assert BlossomUser.objects.filter(
                 username__iexact=option, is_volunteer=is_vol
             ).count() == (1 if is_vol else 0)

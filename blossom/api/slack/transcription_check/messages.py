@@ -54,9 +54,7 @@ def update_check_message(check: TranscriptionCheck) -> None:
     """Update a transcription check message."""
     if check.slack_channel_id is None or check.slack_message_ts is None:
         # Something must have gone wrong when sending the last check, try again
-        logging.warning(
-            f"Slack properties missing for check {check.id}, sending it again..."
-        )
+        logging.warning(f"Slack properties missing for check {check.id}, sending it again...")
         send_check_message(check)
         return
 

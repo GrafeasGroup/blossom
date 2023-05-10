@@ -16,9 +16,7 @@ def watchstatus_cmd(channel: str, message: str) -> None:
         user, username = parse_user(parsed_message[1])
         if user:
             status = user.transcription_check_reason(ignore_low_activity=True)
-            msg = i18n["slack"]["watchstatus"]["success"].format(
-                user=username, status=status
-            )
+            msg = i18n["slack"]["watchstatus"]["success"].format(user=username, status=status)
         else:
             msg = i18n["slack"]["errors"]["unknown_username"].format(username=username)
 

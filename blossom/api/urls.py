@@ -22,15 +22,12 @@ from blossom.api.views import (
 
 
 class CustomOpenAPISchemaGenerator(OpenAPISchemaGenerator):
-    """
-    Custom schema generator required for Swagger to point the requests to correct URL.
+    """Custom schema generator required for Swagger to point the requests to correct URL.
 
     See https://github.com/axnsan12/drf-yasg/issues/146#issuecomment-478757552.
     """
 
-    def get_schema(
-        self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]
-    ) -> openapi.Swagger:
+    def get_schema(self, *args: Tuple[Any, ...], **kwargs: Dict[str, Any]) -> openapi.Swagger:
         """Generate a :class:`.Swagger` object representing the API schema.
 
         :param request: the request used for filtering accessible endpoints and finding
@@ -69,9 +66,7 @@ schema_view = get_schema_view(
 router = routers.DefaultRouter()
 router.register(r"volunteer", volunteer.VolunteerViewSet, basename="volunteer")
 router.register(r"submission", submission.SubmissionViewSet, basename="submission")
-router.register(
-    r"transcription", transcription.TranscriptionViewSet, basename="transcription"
-)
+router.register(r"transcription", transcription.TranscriptionViewSet, basename="transcription")
 router.register(r"source", source.SourceViewSet, basename="source")
 
 urlpatterns = [
@@ -88,9 +83,7 @@ urlpatterns = [
         schema_view.with_ui("swagger", cache_timeout=0),
         name="schema-swagger-ui",
     ),
-    url(
-        r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"
-    ),
+    url(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     url(r"^ping/", misc.PingView.as_view(), name="ping"),
     path("slack/endpoint/", slack.slack_endpoint, name="slack"),
     path(
@@ -103,9 +96,7 @@ urlpatterns = [
         proxy.iReddItProxyView.as_view(),
         name="iredditproxy",
     ),
-    url(
-        r"^imgurproxy/(?P<path>.*)$", proxy.ImgurProxyView.as_view(), name="imgurproxy"
-    ),
+    url(r"^imgurproxy/(?P<path>.*)$", proxy.ImgurProxyView.as_view(), name="imgurproxy"),
     path(
         "subredditjsonproxy/",
         proxy.subreddit_json_proxy_view,

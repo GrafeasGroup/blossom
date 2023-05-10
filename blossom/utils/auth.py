@@ -10,8 +10,7 @@ def grafeas_staff_required(
     redirect_field_name: str = REDIRECT_FIELD_NAME,
     login_url: str = None,
 ) -> Callable:
-    """
-    Login decorator for functions.
+    """Login decorator for functions.
 
     Decorator for view functions that checks that the user is logged in and is a staff
     member, redirecting to the login page if necessary.

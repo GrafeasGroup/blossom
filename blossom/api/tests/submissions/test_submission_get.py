@@ -18,18 +18,14 @@ class TestSubmissionGet:
     def test_list(self, client: Client) -> None:
         """Verify that listing all submissions works correctly."""
         client, headers, _ = setup_user_client(client)
-        result = client.get(
-            reverse("submission-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("submission-list"), content_type="application/json", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 0
 
         submission = create_submission()
 
-        result = client.get(
-            reverse("submission-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("submission-list"), content_type="application/json", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert result.json()["count"] == 1
@@ -41,9 +37,7 @@ class TestSubmissionGet:
         first = create_submission()
         second = create_submission(original_id="second")
 
-        result = client.get(
-            reverse("submission-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("submission-list"), content_type="application/json", **headers)
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == 2
         assert result.json()["results"][0]["id"] == first.id
@@ -76,9 +70,7 @@ class TestSubmissionGet:
         create_submission(source=bbb)
         create_submission(source=bbb)
 
-        result = client.get(
-            reverse("submission-list"), content_type="application/json", **headers
-        )
+        result = client.get(reverse("submission-list"), content_type="application/json", **headers)
 
         assert result.status_code == status.HTTP_200_OK
         assert len(result.json()["results"]) == 4
