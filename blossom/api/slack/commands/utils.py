@@ -13,6 +13,7 @@ def format_stats_section(name: str, section: Dict) -> str:
     """Format a given section of stats to a readable string.
 
     Example:
+    -------
     *Section name*:
     - Key 1: Value 1
     - Key 2: Value 2
