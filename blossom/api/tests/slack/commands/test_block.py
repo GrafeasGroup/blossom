@@ -33,9 +33,9 @@ def test_process_block() -> None:
 
         assert test_user.blocked is False
         assert mock.call_count == 1
-        assert mock.call_args[1]["text"] == i18n["slack"]["block"][
-            "success_undo"
-        ].format(test_user.username)
+        assert mock.call_args[1]["text"] == i18n["slack"]["block"]["success_undo"].format(
+            test_user.username
+        )
 
 
 def test_process_block_with_slack_link() -> None:

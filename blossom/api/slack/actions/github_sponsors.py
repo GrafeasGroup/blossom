@@ -18,16 +18,10 @@ def send_github_sponsors_message(data: Dict, action: str) -> None:
     emote = ":tada:"
     if action == "cancelled" or action == "pending_cancellation":
         emote = ":sob:"
-    if (
-        action == "edited"
-        or action == "tier_changed"
-        or action == "pending_tier_change"
-    ):
+    if action == "edited" or action == "tier_changed" or action == "pending_tier_change":
         emote = ":rotating_light:"
     username = data["sponsorship"]["sponsor"]["login"]
     sponsorlevel = data["sponsorship"]["tier"]["name"]
 
-    msg = i18n["slack"]["github_sponsor_update"].format(
-        emote, action, username, sponsorlevel
-    )
+    msg = i18n["slack"]["github_sponsor_update"].format(emote, action, username, sponsorlevel)
     client.chat_postMessage(channel=settings.SLACK_GITHUB_SPONSORS_CHANNEL, text=msg)

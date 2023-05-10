@@ -22,9 +22,7 @@ class LoginView(TemplateView):
             context.update({"next": next_path})
         return render(request, "website/generic_form.html", context)
 
-    def post(
-        self, request: Request, *args: object, **kwargs: object
-    ) -> HttpResponseRedirect:
+    def post(self, request: Request, *args: object, **kwargs: object) -> HttpResponseRedirect:
         """Post the response to the login form."""
         form = LoginForm(request.POST)
         if form.is_valid():

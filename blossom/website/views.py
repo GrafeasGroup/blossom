@@ -70,9 +70,7 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
     default_context = {
         "form": PostAddForm(),
         "header": "Add a new post!",
-        "subheader": (
-            'Remember to toggle "Published" if you want your post to appear!'
-        ),
+        "subheader": ('Remember to toggle "Published" if you want your post to appear!'),
         # enable the WYSIWYG editor
         "enable_trumbowyg": True,
         # id of html element we want to attach the trumbowyg to
@@ -80,9 +78,7 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
         "fullwidth_view": True,
     }
 
-    def get(
-        self, request: HttpRequest, *args: object, **kwargs: object
-    ) -> HttpResponse:
+    def get(self, request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
         """
         Build and render the page for adding a new post.
 
@@ -91,9 +87,7 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
         context = get_additional_context(self.default_context)
         return render(request, "website/generic_form.html", context)
 
-    def post(
-        self, request: HttpRequest, *args: object, **kwargs: object
-    ) -> HttpResponse:
+    def post(self, request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
         """Save a new blog post when a POST request is sent to the server."""
         form = PostAddForm(request.POST)
         if form.is_valid():
@@ -107,9 +101,7 @@ class PostAdd(GrafeasStaffRequired, TemplateView):
 
 
 class AdminView(GrafeasStaffRequired, TemplateView):
-    def get(
-        self, request: HttpRequest, *args: object, **kwargs: object
-    ) -> HttpResponse:
+    def get(self, request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
         """Render the admin view."""
         context = {"posts": Post.objects.all(), "fullwidth_view": True}
         context = get_additional_context(context)
@@ -137,11 +129,7 @@ def user_create(request: HttpRequest) -> HttpResponse:
 def handler404(request: HttpRequest, exception: Exception) -> HttpResponse:
     """View to handle 404 errors."""
     context = get_additional_context(
-        {
-            "error_message": (
-                "Hm... that page doesn't seem to exist. Try a different link?"
-            )
-        }
+        {"error_message": ("Hm... that page doesn't seem to exist. Try a different link?")}
     )
     return render(request, "website/error.html", context)
 
@@ -149,10 +137,6 @@ def handler404(request: HttpRequest, exception: Exception) -> HttpResponse:
 def handler500(request: HttpRequest) -> HttpResponse:
     """View to handle 500 errors."""
     context = get_additional_context(
-        {
-            "error_message": (
-                "Something went wrong and the site broke. Try your action again?"
-            )
-        }
+        {"error_message": ("Something went wrong and the site broke. Try your action again?")}
     )
     return render(request, "website/error.html", context)

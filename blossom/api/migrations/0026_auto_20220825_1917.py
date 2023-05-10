@@ -40,21 +40,15 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="submission",
-            index=models.Index(
-                fields=["completed_by"], name="submission_completed_by_idx"
-            ),
+            index=models.Index(fields=["completed_by"], name="submission_completed_by_idx"),
         ),
         migrations.AddIndex(
             model_name="submission",
-            index=models.Index(
-                fields=["complete_time"], name="submission_complete_time_idx"
-            ),
+            index=models.Index(fields=["complete_time"], name="submission_complete_time_idx"),
         ),
         migrations.AddIndex(
             model_name="submission",
-            index=models.Index(
-                fields=["create_time"], name="submission_create_time_idx"
-            ),
+            index=models.Index(fields=["create_time"], name="submission_create_time_idx"),
         ),
         migrations.AddIndex(
             model_name="transcription",
@@ -62,15 +56,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="transcription",
-            index=models.Index(
-                fields=["submission"], name="transcription_submission_idx"
-            ),
+            index=models.Index(fields=["submission"], name="transcription_submission_idx"),
         ),
         migrations.AddIndex(
             model_name="transcription",
-            index=models.Index(
-                fields=["original_id"], name="transcription_original_id_idx"
-            ),
+            index=models.Index(fields=["original_id"], name="transcription_original_id_idx"),
         ),
         migrations.AddIndex(
             model_name="transcription",

@@ -84,9 +84,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
 
     @csrf_exempt
     @swagger_auto_schema(
-        request_body=Schema(
-            type="object", properties={"username": Schema(type="string")}
-        ),
+        request_body=Schema(type="object", properties={"username": Schema(type="string")}),
         responses={
             201: DocResponse("User successfully updated.", schema=serializer_class),
             400: 'No "username" key in the data body.',
@@ -104,9 +102,7 @@ class VolunteerViewSet(viewsets.ModelViewSet):
         user = BlossomUser.objects.create(username=username)
         user.set_unusable_password()
 
-        return Response(
-            self.serializer_class(user).data, status=status.HTTP_201_CREATED
-        )
+        return Response(self.serializer_class(user).data, status=status.HTTP_201_CREATED)
 
     @csrf_exempt
     @swagger_auto_schema(

@@ -36,9 +36,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "original_id",
-                    models.CharField(
-                        default=blossom.api.models.create_id, max_length=36
-                    ),
+                    models.CharField(default=blossom.api.models.create_id, max_length=36),
                 ),
                 (
                     "create_time",

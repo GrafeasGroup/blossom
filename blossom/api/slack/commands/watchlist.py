@@ -20,9 +20,7 @@ def watchlist_cmd(channel: str, message: str) -> None:
 
     if len(watched_users) == 0:
         # No users are watched yet
-        response_msg += (
-            "None yet. Use `@Blossom watch <username> <percentage>` to watch a user."
-        )
+        response_msg += "None yet. Use `@Blossom watch <username> <percentage>` to watch a user."
 
         client.chat_postMessage(channel=channel, text=response_msg)
         return
@@ -47,15 +45,10 @@ def watchlist_cmd(channel: str, message: str) -> None:
         watched_users.sort(key=lambda u: u.username.casefold())
 
         for usr in watched_users:
-            response_msg += "u/{} ({:.0%})\n".format(
-                usr.username, usr.overwrite_check_percentage
-            )
+            response_msg += "u/{} ({:.0%})\n".format(usr.username, usr.overwrite_check_percentage)
     else:
         # Invalid sorting
-        response_msg = (
-            f"Invalid sorting '{sorting}'. "
-            "Use either 'percentage' or 'alphabetical'."
-        )
+        response_msg = f"Invalid sorting '{sorting}'. " "Use either 'percentage' or 'alphabetical'."
         client.chat_postMessage(channel=channel, text=response_msg)
         return
 

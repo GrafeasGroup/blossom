@@ -29,10 +29,7 @@ class TestSubmissionYeet:
         data = {"username": user.username, "count": 2}
 
         result = client.post(
-            reverse("submission-yeet"),
-            json.dumps(data),
-            content_type="application/json",
-            **headers
+            reverse("submission-yeet"), json.dumps(data), content_type="application/json", **headers
         )
 
         assert result.status_code == status.HTTP_200_OK
@@ -47,10 +44,7 @@ class TestSubmissionYeet:
         data = {"username": user.username, "count": 10}
 
         client.post(
-            reverse("submission-yeet"),
-            json.dumps(data),
-            content_type="application/json",
-            **headers
+            reverse("submission-yeet"), json.dumps(data), content_type="application/json", **headers
         )
 
         assert Submission.objects.count() == 0
@@ -65,10 +59,7 @@ class TestSubmissionYeet:
         data = {"username": user.username}
 
         client.post(
-            reverse("submission-yeet"),
-            json.dumps(data),
-            content_type="application/json",
-            **headers
+            reverse("submission-yeet"), json.dumps(data), content_type="application/json", **headers
         )
 
         assert Submission.objects.count() == 3
@@ -94,10 +85,7 @@ class TestSubmissionYeet:
         data = {"username": user.username}
 
         client.post(
-            reverse("submission-yeet"),
-            json.dumps(data),
-            content_type="application/json",
-            **headers
+            reverse("submission-yeet"), json.dumps(data), content_type="application/json", **headers
         )
 
         assert Submission.objects.count() == 0

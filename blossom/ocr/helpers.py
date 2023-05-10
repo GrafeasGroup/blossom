@@ -10,9 +10,7 @@ from requests.models import Response as RequestsResponse
 
 from blossom.ocr.errors import OCRError
 
-URL_RE = (
-    r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]" r"|[*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
-)
+URL_RE = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]" r"|[*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
 SPECIAL_CHARS = ["(", ")", "!", ".", ","]
 
 

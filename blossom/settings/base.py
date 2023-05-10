@@ -216,9 +216,7 @@ PYUWSGI_ARGS = [
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "blossom.api.pagination.StandardResultsSetPagination",
     "DEFAULT_PERMISSION_CLASSES": ("blossom.api.authentication.BlossomApiPermission",),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "blossom.authentication.backends.BlossomRestFrameworkAuth",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("blossom.authentication.backends.BlossomRestFrameworkAuth",),
     "DEFAULT_FILTER_BACKENDS": ["django_filters.rest_framework.DjangoFilterBackend"],
 }
 API_KEY_CUSTOM_HEADER = "HTTP_X_API_KEY"
@@ -325,17 +323,11 @@ SOCIAL_AUTH_PIPELINE = (
 # dev_alerts
 SLACK_DEFAULT_CHANNEL = os.environ.get("SLACK_DEFAULT_CHANNEL", "C5BSP8PV5")
 # admin_general
-SLACK_GITHUB_SPONSORS_CHANNEL = os.environ.get(
-    "SLACK_GITHUB_SPONSORS_CHANNEL", "C5WTEUWE5"
-)
+SLACK_GITHUB_SPONSORS_CHANNEL = os.environ.get("SLACK_GITHUB_SPONSORS_CHANNEL", "C5WTEUWE5")
 # qa_transcription_check
-SLACK_TRANSCRIPTION_CHECK_CHANNEL = os.environ.get(
-    "SLACK_TRANSCRIPTION_CHECK_CHANNEL", "CTE1SEPSP"
-)
+SLACK_TRANSCRIPTION_CHECK_CHANNEL = os.environ.get("SLACK_TRANSCRIPTION_CHECK_CHANNEL", "CTE1SEPSP")
 # qa_reported_posts
-SLACK_REPORTED_POST_CHANNEL = os.environ.get(
-    "SLACK_REPORTED_POST_CHANNEL", "C02RCEG0MEH"
-)
+SLACK_REPORTED_POST_CHANNEL = os.environ.get("SLACK_REPORTED_POST_CHANNEL", "C02RCEG0MEH")
 # general
 SLACK_RANK_UP_CHANNEL = os.environ.get("SLACK_RANK_UP_CHANNEL", "C4R36V9V1")
 

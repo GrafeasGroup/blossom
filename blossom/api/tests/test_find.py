@@ -111,9 +111,7 @@ def test_extract_core_url() -> None:
         ),
     ],
 )
-def test_find_by_submission_url(
-    client: Client, url: str, url_type: str, expected: bool
-) -> None:
+def test_find_by_submission_url(client: Client, url: str, url_type: str, expected: bool) -> None:
     """Verify that a submission is found by its submission URL."""
     client, headers, user = setup_user_client(client, id=123, username="test_user")
 

@@ -33,9 +33,7 @@ from blossom.management.commands import bootstrap_site
 if settings.DEBUG:
     # adapted from https://stackoverflow.com/a/7769117
     # if we don't do this, you _will_ run out of memory
-    BaseDatabaseWrapper.make_debug_cursor = lambda self, cursor: CursorWrapper(
-        cursor, self
-    )
+    BaseDatabaseWrapper.make_debug_cursor = lambda self, cursor: CursorWrapper(cursor, self)
 
 logger = logging.getLogger("blossom.management.generate_dev_data")
 TRANSCRIPTION_TEMPLATE = (
@@ -84,10 +82,7 @@ def get_image_urls(num: int) -> List[str]:
     for _ in range(number_of_calls):
         # the maximum the api will accept in a single call is 50, so we batch them
         results = (
-            results
-            + requests.get("https://dog.ceo/api/breeds/image/random/50").json()[
-                "message"
-            ]
+            results + requests.get("https://dog.ceo/api/breeds/image/random/50").json()["message"]
         )
         # be nice to their API so we don't overload it with requests
         sleep(0.5)
@@ -95,17 +90,13 @@ def get_image_urls(num: int) -> List[str]:
     if remainder > 0:
         results = (
             results
-            + requests.get(
-                f"https://dog.ceo/api/breeds/image/random/{remainder}"
-            ).json()["message"]
+            + requests.get(f"https://dog.ceo/api/breeds/image/random/{remainder}").json()["message"]
         )
 
     return results
 
 
-def gen_datetime(
-    min_year: int = 2017, max_year: datetime = datetime.now().year
-) -> datetime:
+def gen_datetime(min_year: int = 2017, max_year: datetime = datetime.now().year) -> datetime:
     """Create a random tz-aware datetime for submissions / transcriptions."""
     # Adapted from https://gist.github.com/rg3915/db907d7455a4949dbe69
     start = datetime(min_year, 1, 1, 00, 00, 00)
@@ -308,11 +299,7 @@ class Command(BaseCommand):
                 logger.info(self.style.ERROR("Exiting!"))
                 sys.exit(0)
 
-        logger.info(
-            self.style.WARNING(
-                "This process will take a few minutes. Please be patient."
-            )
-        )
+        logger.info(self.style.WARNING("This process will take a few minutes. Please be patient."))
         logger.info(self.style.NOTICE("Creating volunteers..."))
         create_dummy_volunteers(1000)
         logger.info(self.style.SUCCESS("OK!\n"))

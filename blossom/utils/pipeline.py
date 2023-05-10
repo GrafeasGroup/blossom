@@ -10,8 +10,6 @@ def load_user(
 ) -> Union[None, dict]:
     """Match the returned user from Reddit to the username that we already have."""
     if backend.name == "reddit":
-        user = BlossomUser.objects.filter(
-            username__iexact=details.get("username")
-        ).first()
+        user = BlossomUser.objects.filter(username__iexact=details.get("username")).first()
         if user:
             return {"user": user}

@@ -58,21 +58,15 @@ def check_stats_msg(mod: BlossomUser) -> str:
 
     all_stats = format_stats_section(
         "Completed Checks",
-        _all_check_stats(
-            server_checks, mod_checks, recent_server_checks, recent_mod_checks
-        ),
+        _all_check_stats(server_checks, mod_checks, recent_server_checks, recent_mod_checks),
     )
     warning_stats = format_stats_section(
         "Completed Warnings",
-        _warning_check_stats(
-            server_checks, mod_checks, recent_server_checks, recent_mod_checks
-        ),
+        _warning_check_stats(server_checks, mod_checks, recent_server_checks, recent_mod_checks),
     )
     comment_stats = format_stats_section(
         "Completed Comments",
-        _comment_check_stats(
-            server_checks, mod_checks, recent_server_checks, recent_mod_checks
-        ),
+        _comment_check_stats(server_checks, mod_checks, recent_server_checks, recent_mod_checks),
     )
 
     return f"{title}\n\n{all_stats}\n\n{warning_stats}\n\n{comment_stats}"
@@ -95,9 +89,7 @@ def _all_check_stats(
     recent_server_check_count = recent_server_checks.count()
     recent_mod_check_count = recent_mod_checks.count()
     recent_check_ratio = _get_ratio(recent_mod_check_count, recent_server_check_count)
-    recent_check_msg = (
-        f"{recent_mod_check_count} ({recent_check_ratio:.1%} of all recent checks)"
-    )
+    recent_check_msg = f"{recent_mod_check_count} ({recent_check_ratio:.1%} of all recent checks)"
 
     # Last check
     last_check = mod_checks.order_by("-complete_time").first()
@@ -139,12 +131,8 @@ def _warning_check_stats(
     # Recent warnings
     recent_server_warning_count = recent_server_checks.filter(warning_filter).count()
     recent_mod_warning_count = recent_mod_checks.filter(warning_filter).count()
-    recent_warning_ratio_checks = _get_ratio(
-        recent_mod_warning_count, recent_mod_checks.count()
-    )
-    recent_warning_ratio_all = _get_ratio(
-        recent_mod_warning_count, recent_server_warning_count
-    )
+    recent_warning_ratio_checks = _get_ratio(recent_mod_warning_count, recent_mod_checks.count())
+    recent_warning_ratio_all = _get_ratio(recent_mod_warning_count, recent_server_warning_count)
     recent_warning_msg = (
         f"{recent_mod_warning_count} "
         f"({recent_warning_ratio_checks:.1%} of recent checks, "
@@ -191,12 +179,8 @@ def _comment_check_stats(
     # Recent comments
     recent_server_comment_count = recent_server_checks.filter(comment_filter).count()
     recent_mod_comment_count = recent_mod_checks.filter(comment_filter).count()
-    recent_comment_ratio_checks = _get_ratio(
-        recent_mod_comment_count, recent_mod_checks.count()
-    )
-    recent_comment_ratio_all = _get_ratio(
-        recent_mod_comment_count, recent_server_comment_count
-    )
+    recent_comment_ratio_checks = _get_ratio(recent_mod_comment_count, recent_mod_checks.count())
+    recent_comment_ratio_all = _get_ratio(recent_mod_comment_count, recent_server_comment_count)
     recent_comment_msg = (
         f"{recent_mod_comment_count} "
         f"({recent_comment_ratio_checks:.1%} of recent checks, "

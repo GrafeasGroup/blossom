@@ -134,9 +134,7 @@ def test_github_missing_signature(rf: RequestFactory) -> None:
             "username": "bobby",
             "tier": "C",
             "action": "edited",
-            "result": (
-                ":rotating_light: GitHub Sponsors: [edited] - bobby | C :rotating_light:"
-            ),
+            "result": (":rotating_light: GitHub Sponsors: [edited] - bobby | C :rotating_light:"),
             "status_code": 200,
         },
     ],
@@ -201,9 +199,7 @@ def test_process_action_report() -> None:
     """Test that a report action is routed correctly."""
     data = {
         "channel": {"id": "C065W1189", "name": "forgotten-works"},
-        "actions": [
-            {"name": "Approve", "value": "approve_submission_3", "type": "button"}
-        ],
+        "actions": [{"name": "Approve", "value": "approve_submission_3", "type": "button"}],
         "user": {"id": "U045VRZFT", "name": "Modulo"},
         "message_ts": "1458170866.000004",
     }

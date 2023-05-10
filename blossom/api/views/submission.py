@@ -258,9 +258,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         found, an empty array is returned in the body.
         """
         source_obj = get_object_or_404(Source, pk=source)
-        delay_time = timezone.now() - timedelta(
-            hours=settings.ARCHIVIST_COMPLETED_DELAY_TIME
-        )
+        delay_time = timezone.now() - timedelta(hours=settings.ARCHIVIST_COMPLETED_DELAY_TIME)
         queryset = Submission.objects.filter(
             completed_by__isnull=False,
             complete_time__lt=delay_time,
@@ -270,9 +268,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         return Response(data=self.get_serializer(queryset[:100], many=True).data)
 
     @swagger_auto_schema(
-        operation_summary=(
-            "Retrieve a count of transcriptions for a volunteer per time frame."
-        ),
+        operation_summary=("Retrieve a count of transcriptions for a volunteer per time frame."),
         operation_description=(
             "A paginated endpoint. Pass page_size to control number of results"
             " returned, page to select a different block."
@@ -426,9 +422,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     @csrf_exempt
     @swagger_auto_schema(
-        request_body=Schema(
-            type="object", properties={"username": Schema(type="string")}
-        ),
+        request_body=Schema(type="object", properties={"username": Schema(type="string")}),
         responses={
             201: DocResponse("Successful unclaim operation", schema=serializer_class),
             400: "The volunteer username is not provided",
@@ -472,9 +466,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     @csrf_exempt
     @swagger_auto_schema(
-        request_body=Schema(
-            type="object", properties={"username": Schema(type="string")}
-        ),
+        request_body=Schema(type="object", properties={"username": Schema(type="string")}),
         responses={
             201: DocResponse("Successful claim operation", schema=serializer_class),
             400: "The volunteer username is not provided",
@@ -587,8 +579,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
         mod_override = (
-            request.data.get("mod_override", "False") == "True"
-            and request.user.is_grafeas_staff
+            request.data.get("mod_override", "False") == "True" and request.user.is_grafeas_staff
         )
 
         transcription = None
@@ -597,9 +588,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             if submission.claimed_by != user:
                 return Response(status=status.HTTP_412_PRECONDITION_FAILED)
 
-            transcription = Transcription.objects.filter(
-                submission=submission, author=user
-            ).first()
+            transcription = Transcription.objects.filter(submission=submission, author=user).first()
 
             if transcription is None:
                 return Response(status=status.HTTP_428_PRECONDITION_REQUIRED)
@@ -696,9 +685,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     )
     @validate_request(query_params={"source"})
     @action(detail=False, methods=["get"])
-    def get_transcribot_queue(
-        self, request: Request, source: str = None
-    ) -> JsonResponse:
+    def get_transcribot_queue(self, request: Request, source: str = None) -> JsonResponse:
         """
         Get the submissions that still need to be attempted by transcribot.
 
@@ -732,9 +719,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             transcription__original_id__isnull=True,
             removed_from_queue=False,
             cannot_ocr=False,
-        ).values("id", "tor_url", "transcription__id", "transcription__text")[
-            :return_limit
-        ]
+        ).values("id", "tor_url", "transcription__id", "transcription__text")[:return_limit]
         return JsonResponse({"data": list(queryset)})
 
     @csrf_exempt
@@ -745,9 +730,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             properties={"username": Schema(type="string"), "count": Schema(type="int")},
         ),
         responses={
-            200: DocResponse(
-                "Submissions were successfully yeeted", schema=serializer_class
-            ),
+            200: DocResponse("Submissions were successfully yeeted", schema=serializer_class),
             400: "Required parameters not provided",
             411: "No yeetable submissions were found",
         },
@@ -847,9 +830,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             # Add author information
             .select_related("completed_by")
             # Group by author
-            .values(
-                "completed_by", "completed_by__username", "completed_by__date_joined"
-            )
+            .values("completed_by", "completed_by__username", "completed_by__date_joined")
             # Count gamma
             .annotate(
                 gamma=Count("completed_by"),
@@ -865,9 +846,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         # https://stackoverflow.com/questions/54595867/django-model-how-to-add-order-index-annotation
         # Unfortunately that is not supported on all backends
         # Instead, we convert the query into a list and also add the ranks manually
-        rank_list = rank_list = [
-            {**entry, "rank": i + 1} for i, entry in enumerate(rank_query)
-        ]
+        rank_list = rank_list = [{**entry, "rank": i + 1} for i, entry in enumerate(rank_query)]
 
         # Find the top users
         top_data = rank_list[:top_count]
@@ -893,9 +872,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     @csrf_exempt
     @swagger_auto_schema(
-        request_body=Schema(
-            type="object", properties={"removed_from_queue": Schema(type="bool")}
-        ),
+        request_body=Schema(type="object", properties={"removed_from_queue": Schema(type="bool")}),
         responses={
             200: DocResponse("Successful removal", schema=serializer_class),
             404: "Submission not found.",
@@ -953,9 +930,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
             # The submission is already removed, reported or approved-- ignore the report
             return Response(
                 status=status.HTTP_201_CREATED,
-                data=self.serializer_class(
-                    submission, context={"request": request}
-                ).data,
+                data=self.serializer_class(submission, context={"request": request}).data,
             )
 
         # Save the report reason
@@ -972,9 +947,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
 
     @csrf_exempt
     @swagger_auto_schema(
-        request_body=Schema(
-            type="object", properties={"approved": Schema(type="bool")}
-        ),
+        request_body=Schema(type="object", properties={"approved": Schema(type="bool")}),
         responses={
             200: DocResponse("Successful approval", schema=serializer_class),
             404: "Submission not found.",
@@ -1010,9 +983,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     @swagger_auto_schema(
         request_body=Schema(type="object", properties={"nsfw": Schema(type="bool")}),
         responses={
-            200: DocResponse(
-                "Successfully marked as NSFW (or SWF)", schema=serializer_class
-            ),
+            200: DocResponse("Successfully marked as NSFW (or SWF)", schema=serializer_class),
             404: "Submission not found.",
         },
     )

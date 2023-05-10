@@ -16,8 +16,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="blossomuser",
-            index=models.Index(
-                fields=["username", "email"], name="authenticat_usernam_22da7a_idx"
-            ),
+            index=models.Index(fields=["username", "email"], name="authenticat_usernam_22da7a_idx"),
         ),
     ]

@@ -87,9 +87,7 @@ class BlossomUser(AbstractUser):
     # Each person is allowed one API key, but advanced security around this
     # means that it is not fully implemented at this time. It is used by
     # u/transcribersofreddit and the other bots, though.
-    api_key = models.OneToOneField(
-        APIKey, on_delete=models.CASCADE, null=True, blank=True
-    )
+    api_key = models.OneToOneField(APIKey, on_delete=models.CASCADE, null=True, blank=True)
 
     # The percentage used to determine if a transcription should be checked by the mods.
     # If this is set, it will overwrite the automatically determined percentage
@@ -125,9 +123,7 @@ class BlossomUser(AbstractUser):
             .order_by("-complete_time")
             .first()
         )
-        recent_complete_time = (
-            recently_completed.complete_time if recently_completed else None
-        )
+        recent_complete_time = recently_completed.complete_time if recently_completed else None
 
         if recent_claim_time and recent_complete_time:
             return max(recent_complete_time, recent_claim_time)
@@ -147,10 +143,7 @@ class BlossomUser(AbstractUser):
         return self.gamma_at_time(start_time=None, end_time=None)
 
     def gamma_at_time(
-        self,
-        *,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None
+        self, *, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
     ) -> int:
         """Return the number of transcriptions the user has made in the given time-frame.
 

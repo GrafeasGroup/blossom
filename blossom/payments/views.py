@@ -24,9 +24,7 @@ def build_url(request: HttpRequest, post_obj: Post) -> str:
 
 
 @csrf_exempt
-def charge(
-    request: HttpRequest, *args: Dict, **kwargs: Dict
-) -> Union[HttpResponse, JsonResponse]:
+def charge(request: HttpRequest, *args: Dict, **kwargs: Dict) -> Union[HttpResponse, JsonResponse]:
     """Create session information for Stripe."""
     donate_post = Post.objects.get(slug="giving-to-grafeas")
     thanks_post = Post.objects.get(slug="thank-you")

@@ -82,6 +82,4 @@ def process_command(data: Dict) -> None:
                 return
 
     # if we fall through here, we got a message that we don't understand.
-    client.chat_postMessage(
-        channel=channel, text=i18n["slack"]["errors"]["unknown_request"]
-    )
+    client.chat_postMessage(channel=channel, text=i18n["slack"]["errors"]["unknown_request"])

@@ -19,14 +19,10 @@ def _get_check_base_text(check: TranscriptionCheck) -> str:
     base_text = f"Transcription check for *{user_link}* ({gamma:,d} Γ):\n"
 
     # Add relevant links
-    tor_url = (
-        "<{}|ToR Post>".format(submission.tor_url) if submission.tor_url else "[N/A]"
-    )
+    tor_url = "<{}|ToR Post>".format(submission.tor_url) if submission.tor_url else "[N/A]"
     post_url = "<{}|Partner Post>".format(submission.url) if submission.url else "[N/A]"
     transcription_url = (
-        "<{}|Transcription>".format(transcription.url)
-        if transcription.url
-        else "[Removed]"
+        "<{}|Transcription>".format(transcription.url) if transcription.url else "[Removed]"
     )
     if transcription.removed_from_reddit and transcription.url:
         transcription_url += " [Removed]"

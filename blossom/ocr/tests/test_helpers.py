@@ -32,8 +32,7 @@ def test_is_shortlink(test_input: str, expected_result: bool) -> None:
     "test_input,expected_result",
     [
         (
-            "This has two valid links in it: https://aaa.com/aaa, and"
-            " http://bb.com/bbb/.",
+            "This has two valid links in it: https://aaa.com/aaa, and" " http://bb.com/bbb/.",
             "This has two valid links in it: <redacted link>, and <redacted link>.",
         ),
         ("Hello, https://aaaaa.com/aaa/!", "Hello, <redacted link>!"),

@@ -54,9 +54,7 @@ def test_check_cmd(client: Client, url: str) -> None:
         url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
     )
 
-    with patch(
-        "blossom.api.slack.commands.check.client.chat_postMessage"
-    ) as message_mock, patch(
+    with patch("blossom.api.slack.commands.check.client.chat_postMessage") as message_mock, patch(
         "blossom.api.slack.commands.check.send_check_message"
     ) as check_mock, patch(
         "blossom.api.slack.commands.check.client.chat_getPermalink"
@@ -93,20 +91,14 @@ def test_check_cmd_existing_check(client: Client, url: str) -> None:
         user=user,
         url="https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
     )
-    create_check(
-        transcription=transcription, slack_channel_id="asd", slack_message_ts="1234"
-    )
+    create_check(transcription=transcription, slack_channel_id="asd", slack_message_ts="1234")
 
     checks = TranscriptionCheck.objects.filter(transcription=transcription)
     assert len(checks) == 1
 
-    with patch(
-        "blossom.api.slack.commands.check.client.chat_postMessage"
-    ) as message_mock, patch(
+    with patch("blossom.api.slack.commands.check.client.chat_postMessage") as message_mock, patch(
         "blossom.api.slack.commands.check.send_check_message"
-    ) as check_mock, patch(
-        "blossom.api.slack.commands.client.chat_getPermalink"
-    ) as link_mock:
+    ) as check_mock, patch("blossom.api.slack.commands.client.chat_getPermalink") as link_mock:
         check_cmd("", f"check {url}")
 
         assert message_mock.call_count == 1
@@ -134,9 +126,7 @@ def test_check_cmd_no_transcription(client: Client, url: str) -> None:
         url="https://reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/",
     )
 
-    with patch(
-        "blossom.api.slack.commands.check.client.chat_postMessage"
-    ) as message_mock, patch(
+    with patch("blossom.api.slack.commands.check.client.chat_postMessage") as message_mock, patch(
         "blossom.api.slack.commands.check.send_check_message"
     ) as check_mock, patch(
         "blossom.api.slack.commands.check.client.chat_getPermalink"
@@ -171,13 +161,9 @@ def test_check_cmd_unknown_url(client: Client, url: str) -> None:
         user=user,
         url="https://www.reddit.com/r/CuratedTumblr/comments/t315gq/linguistics_fax/hypuw2r/",
     )
-    create_check(
-        transcription=transcription, slack_channel_id="asd", slack_message_ts="1234"
-    )
+    create_check(transcription=transcription, slack_channel_id="asd", slack_message_ts="1234")
 
-    with patch(
-        "blossom.api.slack.commands.check.client.chat_postMessage"
-    ) as message_mock, patch(
+    with patch("blossom.api.slack.commands.check.client.chat_postMessage") as message_mock, patch(
         "blossom.api.slack.commands.check.send_check_message"
     ) as check_mock, patch(
         "blossom.api.slack.commands.check.client.chat_getPermalink"

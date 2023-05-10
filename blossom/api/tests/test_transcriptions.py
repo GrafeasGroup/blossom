@@ -112,9 +112,7 @@ class TestTranscriptionCreation:
             url="https://example.org",
             text="Test Transcription",
         )
-        create_transcription(
-            submission, user, id=3, original_id=None, url=None, text=None
-        )
+        create_transcription(submission, user, id=3, original_id=None, url=None, text=None)
 
         result = client.get(
             reverse("transcription-list") + f"?{filter_str}",
@@ -180,9 +178,7 @@ class TestTranscriptionCreation:
         ]
 
         for date in dates:
-            create_transcription(
-                create_submission(), user, create_time=make_aware(date)
-            )
+            create_transcription(create_submission(), user, create_time=make_aware(date))
 
         result = client.get(
             reverse("transcription-list")

@@ -54,14 +54,10 @@ def validate_request(query_params: Set = None, data_params: Set = None) -> Calla
 
     def decorator(function: Callable) -> Callable:
         @wraps(function)
-        def wrapper(
-            self: object, request: Request, *args: object, **kwargs: object
-        ) -> Response:
+        def wrapper(self: object, request: Request, *args: object, **kwargs: object) -> Response:
             query_values = _retrieve_keys(request.query_params, query_params, "query")
             data_values = _retrieve_keys(request.data, data_params, "data")
-            return function(
-                self, request, *args, **kwargs, **query_values, **data_values
-            )
+            return function(self, request, *args, **kwargs, **query_values, **data_values)
 
         return wrapper
 

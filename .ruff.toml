@@ -17,7 +17,6 @@ ignore = [
     "D213",  # multi-line-summary-second-line
     "D404",  # docstring-starts-with-this
     "D407",  # dashed-underline-after-section
-    "E501",  # line-too-long
 ]
 
 exclude = [
@@ -29,7 +28,7 @@ exclude = [
     "./local_settings.py",
 ]
 
-line-length = 88  # Same as black
+line-length = 100  # Same as black
 
 [per-file-ignores]
 "test_*" = ["D"]  # Disable documentation lints for test files

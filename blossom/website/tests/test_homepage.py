@@ -21,9 +21,7 @@ def test_homepage_navbar_contents_while_not_logged_in(client: Client) -> None:
     assert b'id="logoutButton"' not in resp.content
 
 
-def test_homepage_navbar_contents_logged_in(
-    client: Client, django_user_model: BlossomUser
-) -> None:
+def test_homepage_navbar_contents_logged_in(client: Client, django_user_model: BlossomUser) -> None:
     """Verify that the navbar behaves appropriately when logged in as non-staff."""
     user = create_test_user(django_user_model)
     client.force_login(user)
@@ -50,17 +48,13 @@ def test_homepage_post_view(client: Client, django_user_model: BlossomUser) -> N
     user = create_test_user(django_user_model)
     resp = client.get("/")
     assert len(resp.context["posts"]) == 0
-    p1 = Post.objects.create(
-        title="TestPost1", body="testpost1", author=user, published=True
-    )
+    p1 = Post.objects.create(title="TestPost1", body="testpost1", author=user, published=True)
 
     resp = client.get("/")
     assert len(resp.context["posts"]) == 1
     assert p1 in resp.context["posts"]
 
-    p2 = Post.objects.create(
-        title="TestPost2", body="testpost2", author=user, published=True
-    )
+    p2 = Post.objects.create(title="TestPost2", body="testpost2", author=user, published=True)
 
     resp = client.get("/")
     assert len(resp.context["posts"]) == 2

@@ -60,9 +60,7 @@ def test_login_bad_user_info(client: Client) -> None:
 
 def test_login_garbage_info(client: Client) -> None:
     """Assert that attempting a login with garbage fails cleanly."""
-    response = client.post(
-        "/login/", {"AAAAAA": "BBBBBBBB", "CCCCCCC": "DDDDDDD"}, follow=True
-    )
+    response = client.post("/login/", {"AAAAAA": "BBBBBBBB", "CCCCCCC": "DDDDDDD"}, follow=True)
     assert response.status_code == 200
 
     messages = [m.message for m in response.context["messages"]]

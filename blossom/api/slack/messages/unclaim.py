@@ -5,9 +5,7 @@ from blossom.api.slack.utils import get_source
 from blossom.authentication.models import BlossomUser
 
 
-def get_ask_confirmation_blocks(
-    submission: Submission, user: BlossomUser
-) -> List[Dict]:
+def get_ask_confirmation_blocks(submission: Submission, user: BlossomUser) -> List[Dict]:
     """Get the Slack message blocks for the message asking for confirmation."""
     text_block = {
         "type": "section",
@@ -86,9 +84,7 @@ def _get_submission_info_block(submission: Submission, user: BlossomUser) -> Dic
     }
 
 
-def _get_ask_confirmation_buttons_block(
-    submission: Submission, user: BlossomUser
-) -> Dict:
+def _get_ask_confirmation_buttons_block(submission: Submission, user: BlossomUser) -> Dict:
     """Get the action buttons for the confirmation of an unclaim request."""
     return {
         "type": "actions",

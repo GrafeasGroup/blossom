@@ -54,9 +54,7 @@ def subreddit_json_proxy_view(request: HttpRequest) -> JsonResponse:
             return JsonResponse({})
 
         request_id = generate_request_id()
-        headers = {
-            "User-Agent": f"Python:Blossom:ID:{request_id} - contact u/itsthejoker"
-        }
+        headers = {"User-Agent": f"Python:Blossom:ID:{request_id} - contact u/itsthejoker"}
         response = requests.get(
             f"https://www.reddit.com{sub_name}/about/rules.json", headers=headers
         )

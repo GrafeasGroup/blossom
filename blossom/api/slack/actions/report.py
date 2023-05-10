@@ -32,14 +32,10 @@ def ask_about_removing_post(submission: Submission, reason: str) -> None:
 
     response = client.chat_postMessage(
         channel=settings.SLACK_REPORTED_POST_CHANNEL,
-        blocks=_construct_report_message_blocks(
-            submission, ReportMessageStatus.REPORTED
-        ),
+        blocks=_construct_report_message_blocks(submission, ReportMessageStatus.REPORTED),
     )
     if not response["ok"]:
-        logger.warning(
-            f"Could not send report for submission {submission.id} to Slack!"
-        )
+        logger.warning(f"Could not send report for submission {submission.id} to Slack!")
         return
 
     # See https://api.slack.com/methods/chat.postMessage
@@ -84,9 +80,7 @@ def process_submission_report_update(data: dict) -> None:
     update_submission_report(submission, status)
 
 
-def update_submission_report(
-    submission: Submission, status: ReportMessageStatus
-) -> None:
+def update_submission_report(submission: Submission, status: ReportMessageStatus) -> None:
     """Update the report of the given submission to the new status."""
     if status == ReportMessageStatus.APPROVED:
         # Approve the post on Reddit
@@ -96,9 +90,7 @@ def update_submission_report(
         submission.approved = True
         submission.save(skip_extras=True)
 
-        blocks = _construct_report_message_blocks(
-            submission, ReportMessageStatus.APPROVED
-        )
+        blocks = _construct_report_message_blocks(submission, ReportMessageStatus.APPROVED)
     elif status == ReportMessageStatus.REMOVED:
         # Remove the post from Reddit
         remove_post(submission)
@@ -109,14 +101,10 @@ def update_submission_report(
         submission.approved = False
         submission.save(skip_extras=True)
 
-        blocks = _construct_report_message_blocks(
-            submission, ReportMessageStatus.REMOVED
-        )
+        blocks = _construct_report_message_blocks(submission, ReportMessageStatus.REMOVED)
     elif status == ReportMessageStatus.REPORTED:
         # A fresh report
-        blocks = _construct_report_message_blocks(
-            submission, ReportMessageStatus.REPORTED
-        )
+        blocks = _construct_report_message_blocks(submission, ReportMessageStatus.REPORTED)
     else:
         logger.warning(f"Unknown submission update {status}!")
         return

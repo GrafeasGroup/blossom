@@ -302,12 +302,8 @@ def test_date_last_active(
             id=idx + 100,
             claimed_by=user,
             completed_by=user,
-            claim_time=None
-            if claim_time is None
-            else claim_time.replace(tzinfo=pytz.UTC),
-            complete_time=None
-            if complete_time is None
-            else complete_time.replace(tzinfo=pytz.UTC),
+            claim_time=None if claim_time is None else claim_time.replace(tzinfo=pytz.UTC),
+            complete_time=None if complete_time is None else complete_time.replace(tzinfo=pytz.UTC),
         )
 
     expected = None if expected is None else expected.replace(tzinfo=pytz.UTC)

@@ -31,9 +31,7 @@ def watch_cmd(channel: str, message: str) -> None:
                     decimal_percentage = percentage / 100
                 except ValueError:
                     # The percentage is invalid
-                    msg = i18n["slack"]["watch"]["invalid_percentage"].format(
-                        percentage=percentage
-                    )
+                    msg = i18n["slack"]["watch"]["invalid_percentage"].format(percentage=percentage)
                     client.chat_postMessage(channel=channel, text=msg)
                     return
 

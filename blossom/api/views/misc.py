@@ -34,13 +34,9 @@ class Summary(object):
 
         :return: A dictionary containing the three key-value pairs as described
         """
-        date_minus_two_weeks = datetime.datetime.now(tz=pytz.utc) - datetime.timedelta(
-            weeks=2
-        )
+        date_minus_two_weeks = datetime.datetime.now(tz=pytz.utc) - datetime.timedelta(weeks=2)
         return {
-            "volunteer_count": BlossomUser.objects.filter(
-                is_volunteer=True, is_bot=False
-            ).count(),
+            "volunteer_count": BlossomUser.objects.filter(is_volunteer=True, is_bot=False).count(),
             "active_volunteer_count": Submission.objects.filter(
                 completed_by__isnull=False,
                 complete_time__gte=date_minus_two_weeks,
@@ -48,9 +44,7 @@ class Summary(object):
             .values("completed_by")
             .distinct()
             .count(),
-            "transcription_count": Submission.objects.filter(
-                completed_by__isnull=False
-            ).count(),
+            "transcription_count": Submission.objects.filter(completed_by__isnull=False).count(),
             "days_since_inception": get_time_since_open(days=True),
         }
 
@@ -91,9 +85,7 @@ class PingView(APIView):
         responses={
             200: DocResponse(
                 "Successful pong",
-                schema=Schema(
-                    type="object", properties={"ping!": Schema(type="string")}
-                ),
+                schema=Schema(type="object", properties={"ping!": Schema(type="string")}),
             )
         }
     )

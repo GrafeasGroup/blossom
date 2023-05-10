@@ -250,8 +250,7 @@ class TestSubmissionRate:
             )
 
         result = client.get(
-            reverse("submission-rate")
-            + f"?time_frame={time_frame}&completed_by=123456",
+            reverse("submission-rate") + f"?time_frame={time_frame}&completed_by=123456",
             content_type="application/json",
             **headers,
         )

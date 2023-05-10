@@ -19,9 +19,7 @@ def test_process_watchstatus() -> None:
     )
 
     # process the message
-    with patch(
-        "blossom.api.slack.commands.watchstatus.client.chat_postMessage"
-    ) as mock:
+    with patch("blossom.api.slack.commands.watchstatus.client.chat_postMessage") as mock:
         watchstatus_cmd("", "watchstatus u123")
         test_user.refresh_from_db()
 
@@ -41,9 +39,7 @@ def test_process_watchstatus_error(message: str, response: str) -> None:
     test_user = create_user(username="u123")
 
     # process the message
-    with patch(
-        "blossom.api.slack.commands.watchstatus.client.chat_postMessage"
-    ) as mock:
+    with patch("blossom.api.slack.commands.watchstatus.client.chat_postMessage") as mock:
         watchstatus_cmd("", message)
         test_user.refresh_from_db()
 

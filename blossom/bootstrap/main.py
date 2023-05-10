@@ -42,9 +42,7 @@ def yeet_user(redis_user_obj: Dict) -> None:
 
     v = get_or_create_user(r_username).data
     if r_gamma > v["gamma"]:
-        logger.warning(
-            f"Missing dummy entries. Redis: {r_gamma} | Blossom: {v['gamma']}"
-        )
+        logger.warning(f"Missing dummy entries. Redis: {r_gamma} | Blossom: {v['gamma']}")
         for _ in range(r_gamma - v["gamma"]):
             generate_dummy_post(v)
 
@@ -81,18 +79,12 @@ def process_user(redis_user_obj: Dict):
     # after all, they might have made new transcriptions since this version of the
     # db was pulled
     if total_transcriptions_for_user >= r_gamma:
-        logger.info(
-            "All the transcriptions for this user appear to be here. Moving on!"
-        )
+        logger.info("All the transcriptions for this user appear to be here. Moving on!")
         return
 
-    logger.debug(
-        f"Gamma listed at {r_gamma}, found {len(r_transcriptions)} posts on record."
-    )
+    logger.debug(f"Gamma listed at {r_gamma}, found {len(r_transcriptions)} posts on record.")
     if r_gamma - len(r_transcriptions) != 0:
-        logger.debug(
-            f"Should generate {r_gamma - len(r_transcriptions)} dummy entries."
-        )
+        logger.debug(f"Should generate {r_gamma - len(r_transcriptions)} dummy entries.")
 
     for t in r_transcriptions:
         start_time = datetime.now()
@@ -113,13 +105,9 @@ def process_user(redis_user_obj: Dict):
                     if transcription_obj["author"] == submission["completed_by"]:
                         proper_t = transcription_obj
                 if not proper_t:
-                    logger.debug(
-                        "Cannot find transcription by {r_username} on {t} -- creating!"
-                    )
+                    logger.debug("Cannot find transcription by {r_username} on {t} -- creating!")
                 else:
-                    logger.debug(
-                        "Success! Found existing transcription! Continuing on!"
-                    )
+                    logger.debug("Success! Found existing transcription! Continuing on!")
                     continue
             else:
                 raise BootstrapException
@@ -148,9 +136,7 @@ def process_user(redis_user_obj: Dict):
             if t_comment is not None:
                 try:
                     # this is really where we should end up all the time
-                    t_comment_body = get_extended_transcript_body(
-                        t_comment, post_id, all_comments
-                    )
+                    t_comment_body = get_extended_transcript_body(t_comment, post_id, all_comments)
                     get_or_create_transcription(
                         p,
                         v,
