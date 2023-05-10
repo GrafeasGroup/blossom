@@ -15,7 +15,6 @@ ignore = [
     "D106",  # undocumented-public-nested-class
     "D203",  # one-blank-line-before-class
     "D213",  # multi-line-summary-second-line
-    "D404",  # docstring-starts-with-this
     "D407",  # dashed-underline-after-section
 ]
 
