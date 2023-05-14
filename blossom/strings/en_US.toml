@@ -43,6 +43,7 @@ Help is on the way!
 `@Blossom info <username>`: Get information about a user.
 `@Blossom migrate <source> <target>`: Creates a request to migrate the gamma count of the source to the target. Needs verification.
 `@Blossom reset <username>`: Toggle CoC status of user.
+`@Blossom submissions`: Get all submissions from a given date range.
 `@Blossom unclaim <url>`: Forcibly unclaim the post with the given Reddit URL from the user.
 `@Blossom unwatch <username>`: Reset check percentage.
 `@Blossom warnings <username>`: Get the warnings of a given user.

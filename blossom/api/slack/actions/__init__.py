@@ -12,6 +12,7 @@ from django.http import HttpRequest
 from blossom.api.slack import client
 from blossom.api.slack.actions.report import process_submission_report_update
 from blossom.api.slack.actions.unclaim import process_unclaim_action
+from blossom.api.slack.commands.list_submissions import _process_submission_list
 from blossom.api.slack.commands.migrate_user import process_migrate_user
 from blossom.api.slack.transcription_check.actions import process_check_action
 from blossom.strings import translation
@@ -33,6 +34,8 @@ def process_action(data: Dict) -> None:
     elif "migration" in value:
         # buttons related to account gamma migrations
         process_migrate_user(data)
+    elif "submission_list_" in value:
+        _process_submission_list(data)
     else:
         client.chat_postMessage(
             channel=data["channel"]["id"],
