@@ -53,7 +53,7 @@ def _build_message() -> View:
                 ),
             ),
             SectionBlock(
-                text=PlainTextObject(text="End Date:"),
+                text=PlainTextObject(text="Start Date:"),
                 accessory=DatePickerElement(
                     initial_date=datetime.now(tz=zoneinfo.ZoneInfo("UTC")).strftime("%Y-%m-%d"),
                     action_id="submission_list_select_end_date",
