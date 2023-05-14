@@ -46,18 +46,18 @@ def _build_message() -> View:
                 ),
             ),
             SectionBlock(
+                text=PlainTextObject(text="Start Date:"),
                 accessory=DatePickerElement(
                     initial_date="2017-04-01",
-                    placeholder=PlainTextObject(text="Start Date:"),
                     action_id="submission_list_select_start_date",
-                )
+                ),
             ),
             SectionBlock(
+                text=PlainTextObject(text="End Date:"),
                 accessory=DatePickerElement(
                     initial_date=datetime.now(tz=zoneinfo.ZoneInfo("UTC")).strftime("%Y-%m-%d"),
-                    placeholder=PlainTextObject(text="End Date:"),
                     action_id="submission_list_select_end_date",
-                )
+                ),
             ),
         ],
     )
