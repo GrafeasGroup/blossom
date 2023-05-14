@@ -12,4 +12,4 @@ clean:
 
 shiv:
 	mkdir -p build
-	poetry run shiv -c blossom -o build/blossom.pyz . --compressed
+	poetry run shiv --preamble blossom/preamble.py -c blossom -o build/blossom.pyz . --compressed
