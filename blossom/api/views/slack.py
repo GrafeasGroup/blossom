@@ -10,6 +10,7 @@ from blossom.api.slack.actions import (
     is_valid_github_request,
     is_valid_slack_request,
     process_action,
+    process_modal,
 )
 from blossom.api.slack.actions.github_sponsors import send_github_sponsors_message
 from blossom.api.slack.commands import process_command
@@ -21,6 +22,9 @@ def _process_slack_message(data: Dict) -> None:
     if data.get("type") == "block_actions":
         # It's an action, e.g. a button press
         process_action(data)
+    elif data.get("type").startswith("view_"):
+        # it's a modal that has UI-based inputs in it
+        process_modal(data)
     else:
         # It's a normal command
         process_command(data)
