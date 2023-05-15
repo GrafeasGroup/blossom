@@ -114,3 +114,6 @@ invalid_action="The action '{action}' is invalid for unclaiming, you should loud
 warning_entry="- {date} on {source} (<{check_url}|check> | <{tr_url}|transcription>)"
 warnings="u/{username} has *{count} warning(s)*:\n\n{warning_list}"
 no_warnings="u/{username} does not have a warning yet!"
+
+[slack.submissions]
+no_submissions="Sorry, no submissions were returned for *{username}* in the date range of *{start}* to *{end}*."

@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import logging
 import time
+from pprint import pprint
 from typing import Dict
 
 from django.conf import settings
@@ -12,7 +13,7 @@ from django.http import HttpRequest
 from blossom.api.slack import client
 from blossom.api.slack.actions.report import process_submission_report_update
 from blossom.api.slack.actions.unclaim import process_unclaim_action
-from blossom.api.slack.commands.list_submissions import _process_submission_list
+from blossom.api.slack.commands.list_submissions import process_submission_list
 from blossom.api.slack.commands.migrate_user import process_migrate_user
 from blossom.api.slack.transcription_check.actions import process_check_action
 from blossom.strings import translation
@@ -24,6 +25,9 @@ i18n = translation()
 def process_action(data: Dict) -> None:
     """Process a Slack action, e.g. a button press."""
     value: str = data["actions"][0].get("value")
+    if not value:
+        # we hit a link button. It's a block action that doesn't have a valid action.
+        return
     if value.startswith("check"):
         process_check_action(data)
     elif value.startswith("unclaim"):
@@ -35,11 +39,35 @@ def process_action(data: Dict) -> None:
         # buttons related to account gamma migrations
         process_migrate_user(data)
     elif "submission_list_" in value:
-        _process_submission_list(data)
+        process_submission_list(data)
     else:
         client.chat_postMessage(
             channel=data["channel"]["id"],
             text=i18n["slack"]["errors"]["unknown_payload"].format(value),
+        )
+
+
+def process_modal(data: dict) -> None:
+    """Process a slack modal submission with UI components.
+
+    Slack UI modal events are very different from block kit events, for reasons
+    that they do not make entirely clear. As such, modals are keyed off of the
+    *callback_id* that is listed when building the original View, as opposed to
+    the action_ids that are the cornerstone of the block kit.
+    """
+    try:
+        value = data["view"]["callback_id"]
+    except AttributeError:
+        print("Something went wrong while processing a modal submission from Slack.")
+        pprint(data)
+        return
+
+    if value == "submission_list_modal":
+        process_submission_list(data)
+    else:
+        client.chat_postMessage(
+            channel=data["view"]["response_urls"][0]["channel_id"],
+            text=i18n["slack"]["errors"]["unknown_username"].format(value),
         )
 
 
