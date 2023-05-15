@@ -183,6 +183,6 @@ def process_submission_list(data: dict) -> None:
         )
 
 
-def submissions_cmd(channel: str, _message: str) -> None:
+def submissions_cmd(slack_data: dict) -> None:
     """Get information from a date range about submissions of a user."""
-    client.views_open(trigger_id=str(uuid4()), view=_build_message())
+    client.views_open(trigger_id=slack_data.get("trigger_id"), view=_build_message())

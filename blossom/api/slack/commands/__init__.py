@@ -70,9 +70,10 @@ def process_command(data: Dict) -> None:
         "watchlist": watchlist_cmd,
         "watchstatus": watchstatus_cmd,
         "unclaim": unclaim_cmd,
+    }
+    modal_options = {
         "submissions": submissions_cmd,
     }
-
     tokens = message.split()
 
     if len(tokens) > 0:
@@ -82,6 +83,11 @@ def process_command(data: Dict) -> None:
             if cmd_name == key:
                 options[key](channel, message)
                 return
+
+        for key in modal_options.keys():
+            # modals require different data to work
+            if cmd_name == key:
+                modal_options[key](data)
 
     # if we fall through here, we got a message that we don't understand.
     client.chat_postMessage(channel=channel, text=i18n["slack"]["errors"]["unknown_request"])
