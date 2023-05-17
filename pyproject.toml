@@ -51,10 +51,8 @@ py = "^1.11.0"  # see https://github.com/kevlened/pytest-parallel/pull/119#issue
 [tool.poetry.group.dev.dependencies]
 better-exceptions = "^0.3.3"
 black = "^22.3.0"
-pep8-naming = "^0.9.1"
 pre-commit = "^2.4.0"
 ruff = "^0.0.265"
-seed-isort-config = "^2.2.0"
 coveralls = "^1.11.1"
 mimesis = "^4.0.0"
 blossom-wrapper = { git = "https://github.com/GrafeasGroup/blossom-wrapper.git", branch = "master" }
