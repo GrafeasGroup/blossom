@@ -69,6 +69,7 @@ class SubmissionSerializer(serializers.HyperlinkedModelSerializer):
             "cannot_ocr",
             "redis_id",
             "removed_from_queue",
+            "feed",
         )
         # TODO: Omitting the below line while adding `transcription_set` makes
         # a call to a single submission created with the test data set take
