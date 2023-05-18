@@ -258,10 +258,10 @@ class Submission(models.Model):
         If `skip_extras` is set, then it should bypass everything that is not
         simply "save the object to the db".
         """
-        super(Submission, self).save(*args, **kwargs)
-
         if not self.feed:
             self.feed = self.get_subreddit_name()
+
+        super(Submission, self).save(*args, **kwargs)
 
         if not skip_extras:
             if self.is_image and not self.has_ocr_transcription and not self.cannot_ocr:
