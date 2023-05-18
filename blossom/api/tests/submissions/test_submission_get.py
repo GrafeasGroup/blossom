@@ -68,7 +68,7 @@ class TestSubmissionGet:
         create_submission(source=aaa)
         create_submission(source=aaa)
         create_submission(source=bbb)
-        create_submission(source=bbb)
+        create_submission(source=bbb, feed="ccc")
 
         result = client.get(reverse("submission-list"), content_type="application/json", **headers)
 
@@ -95,6 +95,18 @@ class TestSubmissionGet:
         assert len(result.json()["results"]) == 1
         assert "AAA" in result.json()["results"][0]["source"]  # it will be a full link
         assert result.json()["results"][0]["id"] == 1
+
+        result = client.get(
+            reverse("submission-list") + "?feed=ccc",
+            content_type="application/json",
+            **headers,
+        )
+
+        assert result.status_code == status.HTTP_200_OK
+        assert len(result.json()["results"]) == 1
+        assert "BBB" in result.json()["results"][0]["source"]  # it will be a full link
+        assert result.json()["results"][0]["feed"] == "ccc"
+        assert result.json()["results"][0]["id"] == 4
 
     @pytest.mark.parametrize(
         "time_query,result_count",

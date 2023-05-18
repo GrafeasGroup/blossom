@@ -173,6 +173,10 @@ class Submission(models.Model):
     # be run through OCR, this flag should be set.
     cannot_ocr = models.BooleanField(default=False)
 
+    # For reddit posts, keep the source as "reddit" but put the subreddit here so
+    # we can search by subreddit.
+    feed = models.CharField(max_length=50, null=True, blank=True)
+
     def __str__(self) -> str:  # pragma: no cover
         return f"{self.original_id}"
 
@@ -255,8 +259,12 @@ class Submission(models.Model):
         simply "save the object to the db".
         """
         super(Submission, self).save(*args, **kwargs)
+
+        if not self.feed:
+            self.feed = self.get_subreddit_name()
+
         if not skip_extras:
-            if self.is_image and not self.has_ocr_transcription:
+            if self.is_image and not self.has_ocr_transcription and not self.cannot_ocr:
                 # TODO: This is a great candidate for a basic queue system
                 self.generate_ocr_transcription()
 

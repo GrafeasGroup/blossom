@@ -65,7 +65,7 @@ class TestSubmissionYeet:
         assert Submission.objects.count() == 3
 
     def test_yeet_with_no_user(self, client: Client) -> None:
-        """Verify that yeeting without a count only deletes one."""
+        """Verify that yeeting without a user returns an error."""
         client, headers, user = setup_user_client(client)
 
         response = client.post(
