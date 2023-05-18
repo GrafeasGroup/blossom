@@ -148,7 +148,7 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         "content_url": ["exact", "isnull"],
         "redis_id": ["exact", "isnull"],
         "removed_from_queue": ["exact"],
-        "feed": ["exact", "isnull"],
+        "feed": ["exact", "isnull", "iexact"],
     }
     ordering_fields = [
         "id",
