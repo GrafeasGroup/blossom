@@ -85,7 +85,6 @@ urlpatterns = [
     ),
     url(r"^redoc/$", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
     url(r"^ping/", misc.PingView.as_view(), name="ping"),
-    path("slack/endpoint/", slack.slack_endpoint, name="slack"),
     path(
         "slack/github/sponsors/",
         slack.github_sponsors_endpoint,

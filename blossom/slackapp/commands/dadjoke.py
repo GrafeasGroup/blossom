@@ -1,11 +1,12 @@
 import requests
 
-from blossom.api.slack import client
+from blossom.slackapp.listeners import app
 from blossom.strings import translation
 
 i18n = translation()
 
 
+@app.event("app_mention", matchers=[lambda payload: "dadjoke" in payload.get("text")])
 def dadjoke_cmd(channel: str, message: str, use_api: bool = True) -> None:
     """Send the pinged user a dad joke. Or just send everybody a joke."""
     parsed_message = message.split()

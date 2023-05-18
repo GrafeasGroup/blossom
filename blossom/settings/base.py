@@ -106,6 +106,7 @@ INSTALLED_APPS = [
     "blossom.engineeringblog",
     "blossom.ocr",
     "blossom.payments",
+    "blossom.slackapp",
     "blossom.website",
     # API
     "rest_framework",
@@ -266,8 +267,9 @@ OVERRIDE_ARCHIVIST_DELAY_TIME = None  # for testing
 ARCHIVIST_COMPLETED_DELAY_TIME = 0.5
 
 # Global flag; if this is set to False, all slack calls will fail silently
-ENABLE_SLACK = True
+ENABLE_SLACK = False
 
+SLACK_API_KEY = os.environ.get("SLACK_API_KEY")
 SLACK_SIGNING_SECRET = os.environ.get("SLACK_SIGNING_SECRET", "")
 GITHUB_SPONSORS_SECRET_KEY = os.environ.get("GITHUB_SPONSORS_SECRET_KEY", "")
 
