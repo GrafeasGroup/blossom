@@ -32,6 +32,7 @@ class TranscriptionViewSet(viewsets.ModelViewSet):
     filterset_fields = {
         "id": ["exact"],
         "submission": ["exact"],
+        "submission__feed": ["exact", "iexact", "icontains", "isnull"],
         "author": ["exact"],
         "original_id": ["exact", "isnull"],
         "source": ["exact"],

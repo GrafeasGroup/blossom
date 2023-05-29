@@ -542,6 +542,41 @@ class TestTranscriptionSearch:
         ]
         assert result_times == expected_times
 
+    @pytest.mark.parametrize(
+        "filter_str,value,expected_count",
+        [
+            ("", "/r/boneappletea", 0),
+            ("", "/r/BoneAppleTea", 2),
+            ("__iexact", "/r/boneappletea", 2),
+            ("__icontains", "/r/", 3),
+        ],
+    )
+    def test_search_with_submission_feed_filter(
+        self, client: Client, filter_str: str, value: str, expected_count: int
+    ) -> None:
+        """Ensure that transcriptions can be filtered by the feed of their submission."""
+        client, headers, user = setup_user_client(client)
+
+        for idx, feed in enumerate(["/r/me_irl", "/r/BoneAppleTea", "/r/BoneAppleTea", None]):
+            submission = create_submission(id=idx + 100, feed=feed)
+            create_transcription(submission, user, id=idx + 200)
+
+        result = client.get(
+            reverse("transcription-list") + f"?submission__feed{filter_str}={value}",
+            content_type="application/json",
+            **headers,
+        )
+        assert result.status_code == status.HTTP_200_OK
+
+        sub_results = client.get(
+            reverse("submission-list") + f"?feed{filter_str}={value}",
+            content_type="application/json",
+            **headers,
+        )
+        print(filter_str, value, sub_results.json()["results"])
+
+        assert len(result.json()["results"]) == expected_count
+
 
 class TestTranscriptionRandom:
     """Tests that validate the behavior of the Random Review process."""
