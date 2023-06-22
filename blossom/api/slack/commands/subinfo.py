@@ -72,7 +72,7 @@ def sub_info_text(subreddit: str) -> str:
 
     queue_all = query_all_queue.count()
     queue_sub = query_sub_queue.count()
-    queue_percentage = queue_all / queue_sub if queue_sub > 0.0 else 0.0
+    queue_percentage = queue_sub / queue_all if queue_sub > 0.0 else 0.0
 
     submission_info = i18n["slack"]["subinfo"]["submission_info"].format(
         total_sub=total_sub,
