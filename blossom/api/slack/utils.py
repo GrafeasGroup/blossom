@@ -26,6 +26,7 @@ SLACK_TEXT_EXTRACTOR = re.compile(
 BOLD_REGEX = re.compile(r"\*(?P<content>[^*]+)\*")
 
 USERNAME_REGEX = re.compile(r"(?:/?u/)?(?P<username>\S+)")
+SUBREDDIT_REGEX = re.compile(r"(?:/?r/)?(?P<subreddit>\S+)")
 
 
 def extract_text_from_link(text: str) -> str:
@@ -54,6 +55,27 @@ def extract_url_from_link(text: str) -> str:
     for match in results:
         text = text[: match.start()] + extract_link(match) + text[match.end() :]
     return text
+
+
+def parse_subreddit(text: str) -> str:
+    """Parse a subreddit argument of a Slack command to the name of the sub (without prefix).
+
+    This takes care of link formatting, bold formatting and the r/ prefix.
+    """
+    # Remove link formatting
+    subreddit = extract_text_from_link(text)
+
+    # Remove bold formatting
+    bold_match = BOLD_REGEX.match(subreddit)
+    if bold_match:
+        subreddit = bold_match.group("content")
+
+    # Remove u/ prefix
+    prefix_match = SUBREDDIT_REGEX.match(subreddit)
+    if prefix_match:
+        subreddit = prefix_match.group("subreddit")
+
+    return subreddit
 
 
 def parse_user(text: str) -> Tuple[Optional[BlossomUser], str]:
