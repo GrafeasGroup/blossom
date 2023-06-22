@@ -106,7 +106,7 @@ def sub_info_text(subreddit: str) -> str:
     volunteer_percentage = volunteers_sub / volunteers_all
 
     volunteer_info = i18n["slack"]["subinfo"]["volunteer_info"].format(
-        volunteer_sub=volunteers_sub,
+        volunteers_sub=volunteers_sub,
         volunteer_percentage=volunteer_percentage,
     )
 
