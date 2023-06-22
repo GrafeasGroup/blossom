@@ -43,6 +43,7 @@ Help is on the way!
 `@Blossom info <username>`: Get information about a user.
 `@Blossom migrate <source> <target>`: Creates a request to migrate the gamma count of the source to the target. Needs verification.
 `@Blossom reset <username>`: Toggle CoC status of user.
+`@Blossom subinfo <subreddit>`: Get information about the given subreddit.
 `@Blossom submissions`: Get all submissions from a given date range.
 `@Blossom unclaim <url>`: Forcibly unclaim the post with the given Reddit URL from the user.
 `@Blossom unwatch <username>`: Reset check percentage.
@@ -68,8 +69,10 @@ message_parse_error="Sorry, something went wrong and I couldn't parse your messa
 empty_message_error="Sorry, I wasn't able to get text out of that. Try again."
 too_many_params="Too many parameters; please try again."
 missing_username="I don't see a username in your request -- make sure you're formatting your request as \"@Blossom {action} {argument}\". Example: \"@Blossom dadjoke @itsthejoker\""
+missing_subreddit="I don't see a subreddit in your request -- make sure you're formatting your request as \"@Blossom {action} {argument}\""
 missing_multiple_usernames="This command uses multiple usernames -- make sure you're formatting your command as \"@Blossom {action} {argument} {argument} ...\"."
 unknown_username="Sorry, I couldn't find a user with the name `u/{username}`. Please check your spelling."
+unknown_subreddit="Sorry, there is no subreddit `r/{subreddit}` in our system. Please check your spelling (case-insensitive)."
 unknown_payload="Received unknown payload from Slack with key I don't recognize. Unknown key: {}"
 invalid_url="Sorry, `{url}` is not a valid Reddit URL. Please provide a Reddit link to a ToR post, partner post or transcription."
 
@@ -117,3 +120,19 @@ no_warnings="u/{username} does not have a warning yet!"
 
 [slack.submissions]
 no_submissions="Sorry, no submissions were returned for *{username}* in the date range of *{start}* to *{end}*."
+
+[slack.subinfo]
+message="""Info about *<https://reddit.com/r/{subreddit}|r/{subreddit}>*:
+
+{submission_info}
+
+{transcription_info}
+
+{volunteer_info}"""
+submission_info="""*Submissions*:
+- Total: {total_sub:,g} ({total_percentage:.2%} of submissions)
+- Queue: {queue_sub:,g} ({queue_percentage:.2%} of queue)"""
+transcription_info="""*Transcriptions*:
+- Total: {transcribed_sub:,g} ({transcribed_percentage_transcriptions:.2%} of transcriptions, {transcribed_percentage_sub_submissions:.2%} of sub submissions)"""
+volunteer_info="""*Volunteers*:
+- Total: {volunteers_sub:,g} ({volunteer_percentage:.2%} of volunteers)"""
