@@ -15,6 +15,7 @@ from blossom.api.slack.commands.list_submissions import submissions_cmd
 from blossom.api.slack.commands.migrate_user import migrate_user_cmd
 from blossom.api.slack.commands.ping import ping_cmd
 from blossom.api.slack.commands.reset import reset_cmd
+from blossom.api.slack.commands.subinfo import subinfo_cmd
 from blossom.api.slack.commands.unclaim import unclaim_cmd
 from blossom.api.slack.commands.unwatch import unwatch_cmd
 from blossom.api.slack.commands.warnings import warnings_cmd
@@ -64,6 +65,7 @@ def process_command(data: Dict) -> None:
         "migrate": migrate_user_cmd,
         "ping": ping_cmd,
         "reset": reset_cmd,
+        "subinfo": subinfo_cmd,
         "unwatch": unwatch_cmd,
         "warnings": warnings_cmd,
         "watch": watch_cmd,
