@@ -22,7 +22,7 @@ def subinfo_cmd(channel: str, message: str) -> None:
         # The subreddit name is missing
         client.chat_postMessage(
             channel=channel,
-            text=i18n["slack"]["errors"]["unknown_username"].format(
+            text=i18n["slack"]["errors"]["missing_subreddit"].format(
                 action="subinfo", argument="<subreddit>"
             ),
         )
@@ -63,7 +63,7 @@ def sub_info_text(subreddit: str) -> str:
 
     query_all = Submission.objects.filter(removed_from_queue=False)
     query_sub = query_all.filter(feed__iexact=prefixed_sub)
-    query_all_queue = query_all.filter(created_at__gte=queue_timeout, archived=False)
+    query_all_queue = query_all.filter(create_time__gte=queue_timeout, archived=False)
     query_sub_queue = query_all_queue.filter(feed__iexact=prefixed_sub)
 
     total_all = query_all.count()
