@@ -32,7 +32,7 @@ def subinfo_cmd(channel: str, message: str) -> None:
         subreddit = parse_subreddit(parsed_message[1])
 
         # Check if the sub exists in our system
-        sub_submissions = Submission.objects.filter(feed_iexact=f"/r/{subreddit}")
+        sub_submissions = Submission.objects.filter(feed__iexact=f"/r/{subreddit}")
 
         if sub_submissions.count() == 0:
             client.chat_postMessage(
