@@ -2,9 +2,14 @@ import logging
 import os
 from typing import Dict
 
+import praw.reddit
+import prawcore.exceptions
+
 from blossom.api.models import Submission
 from blossom.api.slack import client
 from blossom.api.slack.messages.unclaim import (
+    get_already_completed_blocks,
+    get_already_unclaimed_blocks,
     get_cancel_blocks,
     get_cancel_text,
     get_confirm_blocks,
@@ -56,26 +61,25 @@ def _process_unclaim_confirm(
 
     if submission.claimed_by is None:
         # Nobody claimed this submission, abort
-        client.chat_postMessage(
+        client.chat_update(
             channel=channel_id,
+            ts=message_ts,
+            blocks=get_already_unclaimed_blocks(submission, user),
             text=i18n["slack"]["unclaim"]["not_claimed"].format(tor_url=tor_url),
-            unfurl_links=False,
-            unfurl_media=False,
         )
         return
 
     author = submission.claimed_by
-    username = author.username
 
     if submission.completed_by is not None:
         # The submission is already completed, abort
-        client.chat_postMessage(
+        client.chat_update(
             channel=channel_id,
+            ts=message_ts,
+            blocks=get_already_completed_blocks(submission, user),
             text=i18n["slack"]["unclaim"]["already_completed"].format(
-                tor_url=tor_url, username=username
+                tor_url=submission.tor_url, username=user.username
             ),
-            unfurl_links=False,
-            unfurl_media=False,
         )
         return
 
@@ -83,9 +87,6 @@ def _process_unclaim_confirm(
     submission.claimed_by = None
     submission.claim_time = None
     submission.save()
-
-    # Update the Reddit flair
-    _unclaim_reddit_flair(submission)
 
     # Notify the mods
     response = client.chat_update(
@@ -96,6 +97,9 @@ def _process_unclaim_confirm(
     )
     if not response["ok"]:
         logger.error(f"Could not update unclaim for submission {submission.id} on Slack!")
+
+    # Update the Reddit flair
+    _unclaim_reddit_flair(submission)
 
 
 def _process_unclaim_cancel(
@@ -119,4 +123,8 @@ def _unclaim_reddit_flair(submission: Submission) -> None:
         logger.error("The env variable UNCLAIM_REDDIT_FLAIR_ID is not defined!")
         return
 
-    REDDIT.submission(submission.tor_url).flair.select(flair_template_id=UNCLAIM_REDDIT_FLAIR_ID)
+    try:
+        reddit_id = praw.reddit.Submission.id_from_url(submission.tor_url)
+        REDDIT.submission(reddit_id).flair.select(flair_template_id=UNCLAIM_REDDIT_FLAIR_ID)
+    except prawcore.ResponseException:
+        logger.exception("Failed to change flair to unclaimed on Reddit")

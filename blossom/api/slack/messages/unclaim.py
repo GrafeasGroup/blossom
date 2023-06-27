@@ -3,6 +3,9 @@ from typing import Dict, List
 from blossom.api.models import Submission
 from blossom.api.slack.utils import get_source
 from blossom.authentication.models import BlossomUser
+from blossom.strings import translation
+
+i18n = translation()
 
 
 def get_ask_confirmation_blocks(submission: Submission, user: BlossomUser) -> List[Dict]:
@@ -68,6 +71,40 @@ def get_cancel_blocks(submission: Submission, user: BlossomUser) -> List[Dict]:
 def get_cancel_text() -> str:
     """Get the text for when the unclaiming has been cancelled."""
     return "The unclaiming has been cancelled."
+
+
+def get_already_unclaimed_blocks(submission: Submission, user: BlossomUser) -> List[Dict]:
+    """Get the Slack message blocks for when the submission was already unclaimed."""
+    text_block = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": i18n["slack"]["unclaim"]["not_claimed"].format(tor_url=submission.tor_url),
+        },
+    }
+
+    return [
+        text_block,
+        _get_submission_info_block(submission, user),
+    ]
+
+
+def get_already_completed_blocks(submission: Submission, user: BlossomUser) -> List[Dict]:
+    """Get the Slack message blocks for when the submission was already completed."""
+    text_block = {
+        "type": "section",
+        "text": {
+            "type": "mrkdwn",
+            "text": i18n["slack"]["unclaim"]["already_completed"].format(
+                tor_url=submission.tor_url, username=user.username
+            ),
+        },
+    }
+
+    return [
+        text_block,
+        _get_submission_info_block(submission, user),
+    ]
 
 
 def _get_submission_info_block(submission: Submission, user: BlossomUser) -> Dict:
