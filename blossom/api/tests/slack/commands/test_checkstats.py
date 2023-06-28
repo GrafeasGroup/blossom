@@ -5,7 +5,7 @@ import pytz
 from django.test import Client
 
 from blossom.api.models import TranscriptionCheck
-from blossom.api.slack.commands.checkstats import check_stats_msg
+from blossom.api.slack.commands.checkstats import check_stats_mod_msg
 from blossom.utils.test_helpers import (
     create_check,
     create_submission,
@@ -85,6 +85,6 @@ def test_check_stats_msg(client: Client) -> None:
         "blossom.api.slack.commands.checkstats.timezone.now",
         return_value=datetime(2020, 7, 23, tzinfo=pytz.UTC),
     ):
-        actual = check_stats_msg(mod)
+        actual = check_stats_mod_msg(mod)
 
     assert actual == expected

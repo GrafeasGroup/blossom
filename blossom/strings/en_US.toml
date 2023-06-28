@@ -165,3 +165,30 @@ transcription_info="""*Transcriptions*:
 - Total: {transcribed_sub:,g} ({transcribed_percentage_transcriptions:.2%} of transcriptions, {transcribed_percentage_sub_submissions:.2%} of sub submissions)"""
 volunteer_info="""*Volunteers*:
 - Total: {volunteers_sub:,g} ({volunteer_percentage:.2%} of volunteers)"""
+
+[slack.checkstats]
+message="""Mod check stats for *everyone*:
+
+{check_info}
+
+{warning_info}
+
+{comment_info}"""
+check_info="""*Completed Checks*:
+- Total: {checks_all:,g} ({checks_percentage_all:.2%} of transcriptions)
+- Last day: {checks_one_day:,g} ({checks_percentage_one_day:.2%} of transcriptions)
+- Last week: {checks_one_week:,g} ({checks_percentage_one_week:.2%} of transcriptions)
+- Last month: {checks_one_month:,g} ({checks_percentage_one_month:.2%} of transcriptions)
+- Last year: {checks_one_year:,g} ({checks_percentage_one_year:.2%} of transcriptions)"""
+warning_info="""*Completed Warnings*:
+- Total: {warnings_all:,g} ({warnings_percentage_all:.2%} of checks)
+- Last day: {warnings_one_day:,g} ({warnings_percentage_one_day:.2%} of checks)
+- Last week: {warnings_one_week:,g} ({warnings_percentage_one_week:.2%} of checks)
+- Last month: {warnings_one_month:,g} ({warnings_percentage_one_month:.2%} of checks)
+- Last year: {warnings_one_year:,g} ({warnings_percentage_one_year:.2%} of checks)"""
+comment_info="""*Completed Comments*:
+- Total: {comments_all:,g} ({comments_percentage_all:.2%} of checks)
+- Last day: {comments_one_day:,g} ({comments_percentage_one_day:.2%} of checks)
+- Last week: {comments_one_week:,g} ({comments_percentage_one_week:.2%} of checks)
+- Last month: {comments_one_month:,g} ({comments_percentage_one_month:.2%} of checks)
+- Last year: {comments_one_year:,g} ({comments_percentage_one_year:.2%} of checks)"""
