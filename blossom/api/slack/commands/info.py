@@ -1,9 +1,9 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Dict
 
 from django.utils import timezone
 
-from blossom.api.models import TranscriptionCheck
+from blossom.api.models import Submission, TranscriptionCheck
 from blossom.api.slack import client
 from blossom.api.slack.commands.utils import bool_str, format_stats_section, format_time
 from blossom.api.slack.utils import dict_to_table, parse_user
@@ -14,15 +14,17 @@ from blossom.strings import translation
 i18n = translation()
 
 
+QUEUE_TIMEOUT = timedelta(hours=18)
+
+
 def info_cmd(channel: str, message: str) -> None:
     """Send info about a user to slack."""
     parsed_message = message.split()
     if len(parsed_message) == 1:
-        # they just sent an empty info message, create a summary response
-        data = Summary().generate_summary()
+        # they just sent an empty info message, get info about the whole project
         client.chat_postMessage(
             channel=channel,
-            text=i18n["slack"]["server_summary"].format("\n".join(dict_to_table(data))),
+            text=all_info_text(),
         )
         return
 
@@ -126,3 +128,105 @@ def user_debug_info(user: BlossomUser) -> Dict:
         "Bot": bot,
         "Accepted CoC": accepted_coc,
     }
+
+
+def all_info_text() -> str:
+    """Get the info message for all users."""
+    now = datetime.now(tz=timezone.utc)
+
+    one_day_ago = now - timedelta(days=1)
+    one_week_ago = now - timedelta(weeks=1)
+    two_weeks_ago = now - timedelta(weeks=2)
+    one_month_ago = now - timedelta(days=30)
+    one_year_ago = now - timedelta(days=365)
+
+    queue_timeout = now - QUEUE_TIMEOUT
+
+    # Submission info
+
+    query_all = Submission.objects.filter(removed_from_queue=False)
+    query_one_day = query_all.filter(create_time__gte=one_day_ago)
+    query_one_week = query_all.filter(create_time__gte=one_week_ago)
+    query_one_month = query_all.filter(create_time__gte=one_month_ago)
+    query_one_year = query_all.filter(create_time__gte=one_year_ago)
+
+    query_all_queue = query_all.filter(create_time__gte=queue_timeout, archived=False)
+
+    total_all = query_all.count()
+    total_one_day = query_one_day.count()
+    total_one_week = query_one_week.count()
+    total_one_month = query_one_month.count()
+    total_one_year = query_one_year.count()
+
+    queue_all = query_all_queue.count()
+
+    submission_info = i18n["slack"]["info"]["submission_info"].format(
+        total_all=total_all,
+        queue_all=queue_all,
+        total_one_day=total_one_day,
+        total_one_week=total_one_week,
+        total_one_month=total_one_month,
+        total_one_year=total_one_year,
+    )
+
+    # Transcription info
+
+    transcribed_all = query_all.filter(completed_by__isnull=False).count()
+    transcribed_percentage_all = transcribed_all / total_all
+    transcribed_one_day = query_one_day.filter(completed_by__isnull=False).count()
+    transcribed_percentage_one_day = transcribed_one_day / total_one_day
+    transcribed_one_week = query_one_week.filter(completed_by__isnull=False).count()
+    transcribed_percentage_one_week = transcribed_one_week / total_one_week
+    transcribed_one_month = query_one_month.filter(completed_by__isnull=False).count()
+    transcribed_percentage_one_month = transcribed_one_month / total_one_month
+    transcribed_one_year = query_one_year.filter(completed_by__isnull=False).count()
+    transcribed_percentage_one_year = transcribed_one_year / total_one_year
+
+    transcription_info = i18n["slack"]["info"]["transcription_info"].format(
+        transcribed_all=transcribed_all,
+        transcribed_percentage_all=transcribed_percentage_all,
+        transcribed_one_day=transcribed_one_day,
+        transcribed_percentage_one_day=transcribed_percentage_one_day,
+        transcribed_one_week=transcribed_one_week,
+        transcribed_percentage_one_week=transcribed_percentage_one_week,
+        transcribed_one_month=transcribed_one_month,
+        transcribed_percentage_one_month=transcribed_percentage_one_month,
+        transcribed_one_year=transcribed_one_year,
+        transcribed_percentage_one_year=transcribed_percentage_one_year,
+    )
+
+    # Volunteer info
+
+    query_volunteers = BlossomUser.objects.filter(is_bot=False)
+
+    volunteers_all = query_volunteers.count()
+    volunteers_new_one_day = query_volunteers.filter(date_joined__gte=one_day_ago).count()
+    volunteers_new_one_week = query_volunteers.filter(date_joined__gte=one_week_ago).count()
+    volunteers_new_one_month = query_volunteers.filter(date_joined__gte=one_month_ago).count()
+    volunteers_new_one_year = query_volunteers.filter(date_joined__gte=one_year_ago).count()
+
+    volunteers_active_two_weeks = (
+        Submission.objects.filter(
+            completed_by__isnull=False,
+            complete_time__gte=two_weeks_ago,
+        )
+        .values("completed_by")
+        .distinct()
+        .count()
+    )
+
+    volunteer_info = i18n["slack"]["info"]["volunteer_info"].format(
+        volunteers_all=volunteers_all,
+        volunteers_new_one_day=volunteers_new_one_day,
+        volunteers_new_one_week=volunteers_new_one_week,
+        volunteers_new_one_month=volunteers_new_one_month,
+        volunteers_new_one_year=volunteers_new_one_year,
+        volunteers_active_two_weeks=volunteers_active_two_weeks,
+    )
+
+    # Putting it all together
+    return i18n["slack"]["info"]["message"].format(
+        submission_info=submission_info,
+        transcription_info=transcription_info,
+        volunteer_info=volunteer_info,
+    )

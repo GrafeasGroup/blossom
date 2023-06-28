@@ -121,6 +121,35 @@ no_warnings="u/{username} does not have a warning yet!"
 [slack.submissions]
 no_submissions="Sorry, no submissions were returned for *{username}* in the date range of *{start}* to *{end}*."
 
+[slack.info]
+message="""Info about *everything*:
+
+{submission_info}
+
+{transcription_info}
+
+{volunteer_info}"""
+submission_info="""*Submissions*:
+- Total: {total_all:,g}
+- Queue: {queue_all:,g}
+- Last day: {total_one_day:,g}
+- Last week: {total_one_week:,g}
+- Last month: {total_one_month:,g}
+- Last year: {total_one_year:,g}"""
+transcription_info="""*Transcriptions*:
+- Total: {transcribed_all:,g} ({transcribed_percentage_all:.2%} of submissions)
+- Last day: {transcribed_one_day:,g} ({transcribed_percentage_one_day:.2%} of submissions)
+- Last week: {transcribed_one_week:,g} ({transcribed_percentage_one_week:.2%} of submissions)
+- Last month: {transcribed_one_month:,g} ({transcribed_percentage_one_month:.2%} of submissions)
+- Last year: {transcribed_one_year:,g} ({transcribed_percentage_one_year:.2%} of submissions)"""
+volunteer_info="""*Volunteers*:
+- Total: {volunteers_all:,g}
+- New (last day): {volunteers_new_one_day:,g}
+- New (last week): {volunteers_new_one_week:,g}
+- New (last month): {volunteers_new_one_month:,g}
+- New (last year): {volunteers_new_one_year:,g}
+- Active (last two weeks): {volunteers_active_two_weeks:,g}"""
+
 [slack.subinfo]
 message="""Info about *<https://reddit.com/r/{subreddit}|r/{subreddit}>*:
 
