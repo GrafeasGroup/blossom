@@ -159,7 +159,14 @@ class BlossomUser(AbstractUser):
         if end_time:
             filters["complete_time__lte"] = end_time
 
-        return Submission.objects.filter(**filters).count()
+        timed_gamma = Submission.objects.filter(**filters).count()
+
+        # Old users might not have times for the completion
+        untimed_gamma = Submission.objects.filter(
+            completed_by=self, complete_time__isnull=True
+        ).count()
+
+        return timed_gamma + untimed_gamma
 
     def __str__(self) -> str:
         return self.username
