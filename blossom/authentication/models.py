@@ -162,9 +162,11 @@ class BlossomUser(AbstractUser):
         timed_gamma = Submission.objects.filter(**filters).count()
 
         # Old users might not have times for the completion
-        untimed_gamma = Submission.objects.filter(
-            completed_by=self, complete_time__isnull=True
-        ).count()
+        untimed_gamma = (
+            0
+            if start_time is None and end_time is None
+            else Submission.objects.filter(completed_by=self, complete_time__isnull=True).count()
+        )
 
         return timed_gamma + untimed_gamma
 
