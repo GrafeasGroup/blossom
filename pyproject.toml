@@ -50,7 +50,7 @@ py = "^1.11.0"  # see https://github.com/kevlened/pytest-parallel/pull/119#issue
 
 [tool.poetry.group.dev.dependencies]
 better-exceptions = "^0.3.3"
-black = "^22.3.0"
+black = "^24.3.0"
 pre-commit = "^2.4.0"
 ruff = "^0.0.265"
 coveralls = "^1.11.1"
