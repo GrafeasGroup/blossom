@@ -28,7 +28,7 @@ slackclient = "^2.5"
 pyyaml = "^6.0"
 praw = "^7.1.0"
 django-filter = "^2.3.0"
-gunicorn = "^20.1.0"
+gunicorn = "^22.0.0"
 typed-ast = "^1.5.0"
 django-revproxy = {git = "https://github.com/hcpuk/django-revproxy.git"}
 Markdown = "^3.3.6"
