@@ -2068,19 +2068,18 @@ optional = ["aiodns (>1.0)"]
 
 [[package]]
 name = "social-auth-app-django"
-version = "3.4.0"
+version = "5.4.1"
 description = "Python Social Authentication, Django integration."
 optional = false
-python-versions = "*"
+python-versions = ">=3.8"
 files = [
-    {file = "social-auth-app-django-3.4.0.tar.gz", hash = "sha256:09575f5c7dd91465df3a898c58e7c4ae1e78f31edba36b8b7be47ab0aeef2789"},
-    {file = "social_auth_app_django-3.4.0-py2-none-any.whl", hash = "sha256:02b561e175d4a93896e4436b591586b61e647bd8eeef14c99a26344eb3b48d0e"},
-    {file = "social_auth_app_django-3.4.0-py3-none-any.whl", hash = "sha256:47d1720115a9eaad78a67e99987d556abaa01222b9c2b9538182bbdbb10304ba"},
+    {file = "social-auth-app-django-5.4.1.tar.gz", hash = "sha256:2a43cde559dd34fdc7132417b6c52c780fa99ec2332dee9f405b4763f371c367"},
+    {file = "social_auth_app_django-5.4.1-py3-none-any.whl", hash = "sha256:7519f186c63c50f2d364457b236f051338d194bcface55e318a6a705c5213477"},
 ]
 
 [package.dependencies]
-six = "*"
-social-auth-core = ">=3.3.0"
+Django = ">=3.2"
+social-auth-core = ">=4.4.1"
 
 [[package]]
 name = "social-auth-core"
@@ -2545,4 +2544,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "9a9d4dd7d4fdbd3026415674cfc442a80d3fa4f8cca92bea9aef274e264a7201"
+content-hash = "9c70a4d5e3f0a93342906ec9f85b7ad5016c079a135799ccafc39463c94dd9ec"
