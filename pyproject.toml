@@ -8,7 +8,7 @@ exclude = ["blossom/static_dev/**/*"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-django = "^3.2"
+django = "^4.2"
 django-widget-tweaks = "^1.4"
 stripe = "^2.48.0"
 requests = "^2.32.0"
